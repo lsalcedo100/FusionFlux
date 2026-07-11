@@ -2,14 +2,26 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Mapping
+from typing import TYPE_CHECKING, Any, Literal, Mapping, Protocol, cast, overload
 
-import pandas as pd
+from config import (
+    NE_20_ABSOLUTE_TOLERANCE,
+    NE_20_REFERENCE_DENSITY_M3,
+    NE_20_RELATIVE_TOLERANCE,
+    TARGET_COLUMN,
+)
 
-from config import TARGET_COLUMN
+if TYPE_CHECKING:
+    import pandas as pd
 
-NE_20_RELATIVE_TOLERANCE = 1e-3
-NE_20_ABSOLUTE_TOLERANCE = 1e-6
+class _PandasModule(Protocol):
+    def isna(self, value: object) -> object: ...
+
+    def to_numeric(self, arg: object, errors: str = "raise") -> Any: ...
+
+
+def _format_ne_20_reference_density() -> str:
+    return f"{NE_20_REFERENCE_DENSITY_M3:.0e}".replace("+", "")
 
 
 @dataclass(frozen=True)
@@ -50,17 +62,39 @@ PHYSICS_INPUT_RULES: dict[str, NumericRule] = {
 }
 
 
+def _get_numeric_rule(name: str) -> NumericRule:
+    try:
+        return PHYSICS_INPUT_RULES[name]
+    except KeyError as exc:
+        raise KeyError(f"Unknown validation field: {name}") from exc
+
+
+def is_boolean_like(value: object) -> bool:
+    value_type = type(value)
+    return isinstance(value, bool) or (
+        value_type.__module__ == "numpy" and value_type.__name__ in {"bool", "bool_"}
+    )
+
+
+@overload
+def validate_physics_value(value: object, name: str, allow_none: Literal[False] = False) -> float: ...
+
+
+@overload
+def validate_physics_value(value: object, name: str, allow_none: Literal[True]) -> float | None: ...
+
+
 def validate_physics_value(value: object, name: str, allow_none: bool = False) -> float | None:
+    rule = _get_numeric_rule(name)
     if value is None:
         if allow_none:
             return None
         raise ValueError(f"{name} is required.")
 
-    numeric_value = float(value)
+    numeric_value = _coerce_float(value, name)
     if not math.isfinite(numeric_value):
-        raise ValueError(f"{name} must be {PHYSICS_INPUT_RULES[name].description}.")
+        raise ValueError(f"{name} must be {rule.description}.")
 
-    rule = PHYSICS_INPUT_RULES[name]
     if rule.minimum is not None:
         if rule.min_inclusive and numeric_value < rule.minimum:
             raise ValueError(f"{name} must be {rule.description}.")
@@ -75,10 +109,37 @@ def validate_physics_value(value: object, name: str, allow_none: bool = False) -
 
 
 def validate_positive_finite(value: object, name: str) -> float:
-    numeric_value = float(value)
+    numeric_value = _coerce_float(value, name)
     if not math.isfinite(numeric_value) or numeric_value <= 0:
         raise ValueError(f"{name} must be a positive finite number.")
     return numeric_value
+
+
+def _coerce_float(value: object, name: str) -> float:
+    if is_boolean_like(value):
+        raise ValueError(f"{name} must be a finite number, not a boolean.")
+    try:
+        return float(value if isinstance(value, (str, bytes, bytearray)) else cast(Any, value))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{name} must be a finite number.") from exc
+
+
+def _is_missing_dataframe_value(value: object, *, pandas_module: _PandasModule | None = None) -> bool:
+    pandas_module = _require_pandas() if pandas_module is None else pandas_module
+    if isinstance(value, str):
+        return value.strip() == ""
+    return bool(pandas_module.isna(value))
+
+
+def _require_pandas() -> _PandasModule:
+    try:
+        import pandas as pandas_module
+    except ModuleNotFoundError as exc:
+        raise ModuleNotFoundError(
+            "pandas is required for dataframe validation. Install project dependencies "
+            "or avoid validate_physics_dataframe in minimal Lawson-only environments."
+        ) from exc
+    return cast(_PandasModule, pandas_module)
 
 
 def validate_physics_inputs(
@@ -89,12 +150,8 @@ def validate_physics_inputs(
 ) -> dict[str, float | None]:
     validated: dict[str, float | None] = {}
     for field in required_fields:
-        if field not in PHYSICS_INPUT_RULES:
-            raise KeyError(f"Unknown validation field: {field}")
         validated[field] = validate_physics_value(values.get(field), field)
     for field in optional_fields:
-        if field not in PHYSICS_INPUT_RULES:
-            raise KeyError(f"Unknown validation field: {field}")
         validated[field] = validate_physics_value(values.get(field), field, allow_none=True)
 
     major_radius = validated.get("R_m")
@@ -111,6 +168,7 @@ def validate_physics_dataframe(
     required_fields: tuple[str, ...],
     optional_fields: tuple[str, ...] = (),
 ) -> None:
+    pandas = _require_pandas()
     missing_columns = [field for field in required_fields if field not in df.columns]
     if missing_columns:
         raise ValueError(f"Missing required columns after mapping: {missing_columns}")
@@ -119,23 +177,30 @@ def validate_physics_dataframe(
     for field in (*required_fields, *optional_fields):
         if field not in df.columns:
             continue
-        series = pd.to_numeric(df[field], errors="coerce")
-        missing_mask = series.isna()
+        rule = _get_numeric_rule(field)
+        raw_series = df[field]
+        series = pandas.to_numeric(raw_series, errors="coerce")
+        missing_mask = raw_series.map(lambda value: _is_missing_dataframe_value(value, pandas_module=pandas))
+        boolean_mask = raw_series.map(is_boolean_like) & ~missing_mask
+        invalid_numeric_mask = series.isna() & ~missing_mask & ~boolean_mask
+
         if field in required_fields and missing_mask.any():
             invalid_messages.append(
-                _format_invalid_message(field, df.index[missing_mask].tolist(), "missing or non-numeric")
+                _format_invalid_message(field, df.index[missing_mask].tolist(), "present")
             )
-        series_to_check = series
-        if field in optional_fields:
-            series_to_check = series[~missing_mask]
-            if series_to_check.empty:
-                continue
-        elif missing_mask.any():
-            series_to_check = series[~missing_mask]
-            if series_to_check.empty:
-                continue
+        if boolean_mask.any():
+            invalid_messages.append(
+                _format_invalid_message(field, df.index[boolean_mask].tolist(), "numeric, not boolean")
+            )
+        if invalid_numeric_mask.any():
+            invalid_messages.append(
+                _format_invalid_message(field, df.index[invalid_numeric_mask].tolist(), "numeric when provided")
+            )
 
-        rule = PHYSICS_INPUT_RULES[field]
+        series_to_check = series[~missing_mask & ~boolean_mask & ~invalid_numeric_mask]
+        if series_to_check.empty:
+            continue
+
         invalid_mask = ~series_to_check.map(math.isfinite)
         if rule.minimum is not None:
             if rule.min_inclusive:
@@ -154,9 +219,12 @@ def validate_physics_dataframe(
 
     if {"R_m", "a_m"}.issubset(df.columns):
         geometry_mask = (
-            pd.to_numeric(df["R_m"], errors="coerce").notna()
-            & pd.to_numeric(df["a_m"], errors="coerce").notna()
-            & (pd.to_numeric(df["a_m"], errors="coerce") >= pd.to_numeric(df["R_m"], errors="coerce"))
+            pandas.to_numeric(df["R_m"], errors="coerce").notna()
+            & pandas.to_numeric(df["a_m"], errors="coerce").notna()
+            & (
+                pandas.to_numeric(df["a_m"], errors="coerce")
+                >= pandas.to_numeric(df["R_m"], errors="coerce")
+            )
         )
         if geometry_mask.any():
             invalid_messages.append(
@@ -164,11 +232,11 @@ def validate_physics_dataframe(
             )
 
     if {"fuel_density_m3", "ne_20"}.issubset(df.columns):
-        density = pd.to_numeric(df["fuel_density_m3"], errors="coerce")
-        ne_20 = pd.to_numeric(df["ne_20"], errors="coerce")
+        density = pandas.to_numeric(df["fuel_density_m3"], errors="coerce")
+        ne_20 = pandas.to_numeric(df["ne_20"], errors="coerce")
         comparable_mask = density.notna() & ne_20.notna()
         if comparable_mask.any():
-            expected_ne_20 = density[comparable_mask] / 1e20
+            expected_ne_20 = density[comparable_mask] / NE_20_REFERENCE_DENSITY_M3
             consistent_mask = expected_ne_20.combine(
                 ne_20[comparable_mask],
                 lambda expected, actual: math.isclose(
@@ -184,7 +252,7 @@ def validate_physics_dataframe(
                     _format_invalid_message(
                         "ne_20",
                         inconsistent_rows,
-                        "consistent with fuel_density_m3 / 1e20",
+                        f"consistent with fuel_density_m3 / {_format_ne_20_reference_density()}",
                     )
                 )
 
@@ -204,7 +272,7 @@ def _validate_or_derive_ne_20_mapping(values: dict[str, float | None]) -> None:
     if fuel_density is None:
         return
 
-    derived_ne_20 = fuel_density / 1e20
+    derived_ne_20 = fuel_density / NE_20_REFERENCE_DENSITY_M3
     provided_ne_20 = values.get("ne_20")
     if provided_ne_20 is None:
         values["ne_20"] = derived_ne_20
@@ -217,7 +285,7 @@ def _validate_or_derive_ne_20_mapping(values: dict[str, float | None]) -> None:
         abs_tol=NE_20_ABSOLUTE_TOLERANCE,
     ):
         raise ValueError(
-            "ne_20 must match fuel_density_m3 / 1e20 within tolerance "
+            f"ne_20 must match fuel_density_m3 / {_format_ne_20_reference_density()} within tolerance "
             f"(expected {derived_ne_20:.6g}, got {provided_ne_20:.6g})."
         )
     values["ne_20"] = derived_ne_20

@@ -17,6 +17,7 @@ class LawsonResult:
     lawson_ratio: float
     status: str
 
+
 def ev_to_kelvin(temperature_ev: float) -> float:
     return validate_positive_finite(temperature_ev, "temperature_ev") * EV_TO_K
 
@@ -44,7 +45,7 @@ def kev_to_ev(temperature_kev: float) -> float:
 def to_kev(temperature: float, unit: str = "keV") -> float:
     normalized_unit = unit.strip().lower()
     if normalized_unit == "kev":
-        return float(validate_physics_value(temperature, "temperature_keV"))
+        return validate_physics_value(temperature, "temperature_keV")
     if normalized_unit == "ev":
         return ev_to_kev(temperature)
     if normalized_unit == "k":
@@ -58,8 +59,8 @@ def calculate_lawson_status(
     confinement_time_s: float,
     temp_unit: str = "keV",
 ) -> LawsonResult:
-    density_m3 = float(validate_physics_value(density_m3, "fuel_density_m3"))
-    confinement_time_s = float(validate_physics_value(confinement_time_s, "confinement_time_s"))
+    density_m3 = validate_physics_value(density_m3, "fuel_density_m3")
+    confinement_time_s = validate_physics_value(confinement_time_s, "confinement_time_s")
     temperature_kev = to_kev(temperature, temp_unit)
 
     triple_product = density_m3 * temperature_kev * confinement_time_s

@@ -5,12 +5,30 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent
 DATA_RAW_DIR = PROJECT_ROOT / "data" / "raw"
 DATA_PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
-PLOTS_DIR = DATA_PROCESSED_DIR / "plots"
-MODELS_DIR = DATA_PROCESSED_DIR / "models"
+
+
+def get_data_raw_dir() -> Path:
+    return DATA_RAW_DIR
+
+
+def get_data_processed_dir() -> Path:
+    return DATA_PROCESSED_DIR
+
+ORIGINAL_ROW_INDEX_COLUMN = "original_row_index"
+RAW_CSV_ROW_NUMBER_COLUMN = "raw_csv_row_number"
 
 RANDOM_STATE = 42
 LAWSON_DT_IGNITION = 3e21
+NE_20_REFERENCE_DENSITY_M3 = 1e20
+NE_20_RELATIVE_TOLERANCE = 1e-3
+NE_20_ABSOLUTE_TOLERANCE = 1e-6
+PHYSICS_MISMATCH_FLAG_MODE = "predicted_percentile"
+SUPPORTED_PHYSICS_MISMATCH_FLAG_MODES = (
+    "predicted_percentile",
+    "predicted_yield_threshold",
+)
 HIGH_YIELD_PERCENTILE = 0.90
+PREDICTED_YIELD_THRESHOLD = None
 LOW_LAWSON_RATIO_THRESHOLD = 0.50
 SYNTHETIC_DATASET_ROWS = 600
 HOLDOUT_TEST_SIZE = 0.2
@@ -20,13 +38,6 @@ MIN_TEST_SAMPLES = 3
 MIN_GROUPED_HOLDOUT_GROUPS = 5
 MIN_CV_FOLDS = 3
 MAX_CV_FOLDS = 5
-
-DATASET_FILENAME_CANDIDATES = (
-    "nuclear_fusion_experiment.csv",
-    "nuclear_fusion_data.csv",
-    "fusion_dataset.csv",
-    "synthetic_nuclear_fusion_experiment.csv",
-)
 
 COLUMN_ALIASES = {
     "shot_id": ["shot_id", "shot", "experiment_id", "pulse_id", "pulse", "run_id"],

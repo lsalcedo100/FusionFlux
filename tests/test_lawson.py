@@ -1,4 +1,7 @@
 import math
+import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -24,3 +27,25 @@ def test_invalid_inputs_raise_value_error():
         calculate_lawson_status(-1e20, 15, 4)
     with pytest.raises(ValueError):
         calculate_lawson_status(1e20, 0, 4)
+
+
+def test_lawson_import_does_not_require_pandas():
+    project_root = Path(__file__).resolve().parents[1]
+    script = """
+import sys
+sys.path.insert(0, '.')
+sys.modules['pandas'] = None
+import lawson
+result = lawson.calculate_lawson_status(1e20, 15, 4)
+print(result.status)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", script],
+        cwd=project_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "IGNITION REACHED"
