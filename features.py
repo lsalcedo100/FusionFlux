@@ -4,14 +4,15 @@ import ast
 import hashlib
 import io
 import json
+import tokenize
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 from types import CodeType
-from typing import Callable, Mapping, Optional, Union, cast
+from typing import Callable, Optional, Union, cast
 from uuid import uuid4
-import tokenize
 
 import numpy as np
 import pandas as pd
@@ -244,7 +245,8 @@ def resolve_column_mapping(df: pd.DataFrame) -> dict[str, str]:
 def _is_missing_tabular_value(value: object) -> bool:
     if isinstance(value, str):
         return value.strip() == ""
-    return bool(pd.isna(value))
+    # pd.isna accepts arbitrary scalars here; the typed overloads omit plain `object`.
+    return bool(pd.isna(value))  # type: ignore[call-overload]
 
 
 def _format_rows(rows: list[object]) -> str:

@@ -7,3 +7,9 @@ pandas==2.3.3
 pytest==8.4.2
 scikit-learn==1.6.1
 seaborn==0.13.2
+
+# Development and CI tooling (requirements-dev.txt).
+ruff==0.15.21
+mypy==1.19.1
+pytest-cov==7.1.0
+pandas-stubs==2.2.2.240807

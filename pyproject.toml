@@ -1,0 +1,71 @@
+[tool.ruff]
+# The codebase targets Python 3.9+ (runtime-safe modern annotations via
+# `from __future__ import annotations`).
+target-version = "py39"
+line-length = 100
+
+[tool.ruff.lint]
+# Pyflakes (F) + a conservative pycodestyle/bugbear/isort/pyupgrade set.
+# Line-length (E501) is intentionally left off — several modules use long,
+# descriptive lines and reflowing them adds churn without value.
+select = ["E4", "E7", "E9", "F", "W", "I", "B", "UP"]
+# UP007/UP045 rewrite typing.Optional/Union to PEP 604 `X | None`. That form is
+# runtime-safe here only because of `from __future__ import annotations`, so ruff
+# marks the fixes "unsafe" on a py39 target. Leave the existing style in place.
+ignore = ["UP007", "UP045"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "artifact_model",
+    "config",
+    "features",
+    "fusionflux_cli",
+    "hdb5",
+    "inference",
+    "lawson",
+    "storage",
+    "train_model",
+    "training",
+    "validation",
+]
+
+[tool.mypy]
+python_version = "3.9"
+ignore_missing_imports = true
+warn_unused_ignores = false
+# Not strict mode: this catches real defects (redefinitions, bad overloads)
+# without demanding full annotation coverage on an existing codebase.
+# Scoped to source modules — the test suite is intentionally loosely typed, so
+# type-checking it would add noise without value. Run with a bare `mypy`.
+files = [
+    "artifact_model.py",
+    "config.py",
+    "features.py",
+    "fusionflux_cli.py",
+    "hdb5.py",
+    "inference.py",
+    "lawson.py",
+    "storage.py",
+    "train_model.py",
+    "training.py",
+    "validation.py",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.coverage.run]
+source = [
+    "artifact_model",
+    "config",
+    "features",
+    "fusionflux_cli",
+    "hdb5",
+    "inference",
+    "lawson",
+    "storage",
+    "train_model",
+    "training",
+    "validation",
+]

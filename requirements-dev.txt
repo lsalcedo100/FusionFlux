@@ -1,0 +1,6 @@
+# Development and CI tooling. Install with:
+#   python3 -m pip install -c constraints.txt -r requirements.txt -r requirements-dev.txt
+ruff
+mypy
+pytest-cov
+pandas-stubs

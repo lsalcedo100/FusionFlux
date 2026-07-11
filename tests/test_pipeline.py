@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import inspect
 import json
-from pathlib import Path
 import re
 import shutil
 import sys
+from pathlib import Path
 
 import joblib
 import numpy as np
@@ -15,15 +15,15 @@ from sklearn.compose import TransformedTargetRegressor
 from sklearn.dummy import DummyRegressor
 from sklearn.pipeline import Pipeline
 
-from artifact_model import FusionFluxModelArtifact
 import config
 import features
 import inference
 import storage
 import train_model
 import training
-from config import ORIGINAL_ROW_INDEX_COLUMN, RAW_CSV_ROW_NUMBER_COLUMN
 import validation
+from artifact_model import FusionFluxModelArtifact
+from config import ORIGINAL_ROW_INDEX_COLUMN, RAW_CSV_ROW_NUMBER_COLUMN
 
 
 class NegativePredictingModel:
@@ -871,7 +871,7 @@ def test_extract_cross_validated_feature_importance_zero_fills_features_missing_
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class NoOpModel:
-        def fit(self, _X: pd.DataFrame, _y: pd.Series) -> "NoOpModel":
+        def fit(self, _X: pd.DataFrame, _y: pd.Series) -> NoOpModel:
             return self
 
     feature_columns = ["fuel_density_m3", "pressure_Pa", "temperature_keV"]

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from contextvars import ContextVar
 import warnings
+from collections.abc import Mapping, Sequence
+from contextvars import ContextVar
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 import numpy as np
 

@@ -34,3 +34,6 @@ dist/
 # Model and training outputs
 data/processed/
 *.joblib
+
+# Third-party datasets fetched on demand (not redistributed). See hdb5.py.
+data/raw/hdb5_std5.csv

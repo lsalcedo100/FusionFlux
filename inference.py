@@ -1302,7 +1302,7 @@ def predict_batch(
         raise ValueError("predict_batch(return_predictions=False) requires an output_path.")
 
     prediction_frame: pd.DataFrame | None = None
-    column_mapping: dict[str, str]
+    column_mapping: dict[str, str] | None = None
     clipped_negative_prediction_count = 0
     chunk_prediction_warnings: list[str] = []
     row_count = 0
@@ -1327,7 +1327,7 @@ def predict_batch(
         if not input_path.exists():
             raise FileNotFoundError(f"Batch prediction input not found: {input_path}")
         if _can_stream_batch_prediction_csv(input_path):
-            column_mapping: dict[str, str] | None = None
+            column_mapping = None
             row_offset = 0
 
             def process_streamed_chunks(*, sink_path: Path) -> int:

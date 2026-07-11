@@ -6,6 +6,47 @@
 
 The repository ingests a fusion experiment CSV, normalizes common column names, validates and engineers features, trains multiple regression models, and saves the selected production model along with evaluation artifacts. Training now requires an explicit dataset choice: provide `--dataset-path` for a real CSV, or pass `--allow-synthetic` to generate demo data intentionally.
 
+The project has two modeling paths:
+
+1. **Neutron-yield pipeline** (`train_model.py`) — the original pipeline described throughout this README. Real 0D neutron-yield data is not publicly available, so this path ships with a synthetic generator for demos and pipeline validation.
+2. **Real-data confinement model** (`hdb5.py`) — trains on the real ITPA Global H-mode Confinement Database and predicts energy confinement time. See [Real-Data Model: Energy Confinement Time](#real-data-model-energy-confinement-time-hdb5).
+
+## Real-Data Model: Energy Confinement Time (HDB5)
+
+`hdb5.py` trains on **real experimental data**: the ITPA Global H-mode Confinement Database, standard analysis set `STD5` (v5.2.3), published openly on the Open Science Framework at [osf.io/drwcq](https://osf.io/drwcq). Each of the 6,228 rows is a quasi-stationary time slice from a real tokamak discharge, spanning 18 machines (JET, ASDEX Upgrade, DIII-D, C-Mod, JT-60U, NSTX, MAST, TCV, and more).
+
+Because public fusion data does not include 0D neutron-yield labels, this path predicts the **thermal energy confinement time** (`TAUTH`, seconds) — the quantity the published IPB98(y,2) and ITPA20 scaling laws are built to describe. Features are the engineering/operating parameters only (plasma current, toroidal field, line-averaged density, loss power, major radius, elongation, inverse aspect ratio, effective mass, derived minor radius, and the analytic IPB98 prediction as a physics prior). **The confinement time is never used as an input, so there is no target leakage.**
+
+Every model is scored against the analytic IPB98(y,2) scaling law evaluated on the same data, so "did the model learn real physics" is answered against a real baseline rather than against the mean. On grouped (per shot) cross-validation:
+
+| Model | RMSLE (log space) | R² (log space) |
+| --- | --- | --- |
+| Random forest (selected) | ~0.118 | ~0.981 |
+| Hist gradient boosting | ~0.119 | ~0.981 |
+| Ridge log-linear | ~0.181 | ~0.957 |
+| **IPB98(y,2) analytic law (baseline)** | ~0.199 | ~0.947 |
+| Mean baseline | ~0.869 | ~0.000 |
+
+The tree models measurably beat the published scaling law on real data, and the log-linear model approximately reproduces it — a useful sanity check.
+
+### Usage
+
+```bash
+# 1. Fetch the real dataset from OSF into data/raw/ (not redistributed in-repo)
+python3 hdb5.py download
+
+# 2. Cross-validate every model and print a report (no artifacts written)
+python3 hdb5.py evaluate
+
+# 3. Train the selected model and save artifacts under
+#    data/processed/hdb5_confinement/
+python3 hdb5.py train
+```
+
+Training writes `confinement_model.joblib` (a portable `ConfinementArtifact` whose `.predict()` returns confinement time in seconds), `confinement_metrics.csv`, and `confinement_metadata.json` (dataset provenance, selected model, and whether it beat the physics baseline).
+
+> Data attribution: please cite Verdoolaege G. *et al.*, "The updated ITPA global H-mode confinement database: description and analysis," *Nucl. Fusion* **61** 076006 (2021). The dataset is fetched on demand rather than redistributed here, and `data/raw/hdb5_std5.csv` is git-ignored.
+
 ## Features
 
 - Predicts `neutron_yield` from plasma and machine operating conditions.
@@ -31,6 +72,7 @@ FusionFlux/
 ├── config.py
 ├── features.py
 ├── fusionflux_cli.py
+├── hdb5.py
 ├── inference.py
 ├── lawson.py
 ├── storage.py
@@ -38,8 +80,16 @@ FusionFlux/
 ├── training.py
 ├── validation.py
 ├── requirements.txt
+├── requirements-dev.txt
+├── constraints.txt
+├── pyproject.toml
+├── Makefile
+├── .github/
+│   └── workflows/
+│       └── ci.yml
 ├── tests/
 │   ├── conftest.py
+│   ├── test_hdb5.py
 │   ├── test_lawson.py
 │   └── test_pipeline.py
 └── data/
@@ -71,6 +121,45 @@ source .venv/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install -c constraints.txt -r requirements.txt
 ```
+
+To also install the linting, type-checking, and coverage tooling, add the dev
+requirements (or just run `make setup`, which does all of the above):
+
+```bash
+python3 -m pip install -c constraints.txt -r requirements.txt -r requirements-dev.txt
+```
+
+## Development Workflow
+
+A `Makefile` wraps the common tasks against a local `.venv`:
+
+```bash
+make setup       # create .venv and install runtime + dev dependencies
+make lint        # ruff lint checks
+make typecheck   # mypy on the source modules
+make test        # train on synthetic data, then run pytest with coverage
+make check       # the full CI gate: lint + typecheck + test
+make fmt         # auto-fix safe lint issues
+make clean       # remove caches and generated training artifacts
+```
+
+Tooling is configured in `pyproject.toml` (ruff, mypy, pytest, coverage). Ruff
+runs Pyflakes plus a conservative pycodestyle/bugbear/isort/pyupgrade set; mypy
+is scoped to the source modules (`ignore_missing_imports`, non-strict) since the
+test suite is intentionally loosely typed.
+
+## Continuous Integration
+
+`.github/workflows/ci.yml` runs on every push to `main` and on pull requests:
+
+- a **quality** job running `ruff check` and `mypy`, and
+- a **test** matrix (Python 3.9, 3.11, 3.12) that trains once on synthetic data
+  to materialize the saved artifact, then runs the suite with coverage.
+
+The training step is required before `pytest` because one test
+(`test_committed_artifact_manifest_supports_relocation`) loads a real saved
+artifact, and `data/processed/` is git-ignored. `make test` performs the same
+train-then-test sequence locally.
 
 ## How to Run Training
 
@@ -233,8 +322,13 @@ Training writes outputs under `data/processed/runs/<training_run_id>/`, and `dat
 Run the test suite with:
 
 ```bash
+.venv/bin/python train_model.py train --allow-synthetic   # one-time: create a saved artifact
 .venv/bin/python -m pytest -q
 ```
+
+Or simply `make test`, which runs both steps for you (with coverage). The
+training step is only needed once per checkout; it materializes the saved
+artifact that the artifact-relocation test loads.
 
 The current suite covers Lawson calculations, temperature conversions, preprocessing and validation rules, grouped-shot aggregation, training split behavior, training artifact cleanup, preprocessing-contract compatibility checks, negative prediction clipping, and single/batch inference edge cases.
 
