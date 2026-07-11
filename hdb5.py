@@ -414,6 +414,87 @@ def train_confinement_model(
     return metadata
 
 
+# --- Prediction -------------------------------------------------------------
+
+# The engineering inputs a caller must supply to score a single operating point.
+# ``a_m`` is derived from ``inverse_aspect_ratio * r_m`` exactly as in cleaning,
+# so it is not requested directly.
+SINGLE_CASE_INPUT_COLUMNS = (
+    "ip_ma",
+    "bt_t",
+    "ne_line_1e19_m3",
+    "p_loss_mw",
+    "r_m",
+    "kappa",
+    "inverse_aspect_ratio",
+    "m_eff_amu",
+)
+
+
+def default_model_path() -> Path:
+    return config.get_data_processed_dir() / "hdb5_confinement" / "confinement_model.joblib"
+
+
+def load_confinement_artifact(model_path: Path | str | None = None) -> ConfinementArtifact:
+    """Load a saved :class:`ConfinementArtifact` from disk."""
+    import joblib
+
+    resolved = (
+        Path(model_path).expanduser().resolve() if model_path is not None else default_model_path()
+    )
+    if not resolved.exists():
+        raise FileNotFoundError(
+            f"Confinement model not found: {resolved}. Run `python3 hdb5.py train` first, "
+            "or pass --model-path."
+        )
+    artifact = joblib.load(resolved)
+    if not isinstance(artifact, ConfinementArtifact):
+        raise TypeError(
+            f"{resolved} does not contain a ConfinementArtifact (got {type(artifact).__name__})."
+        )
+    return artifact
+
+
+def build_single_case_frame(inputs: dict[str, float]) -> pd.DataFrame:
+    """Build a one-row featured frame from raw engineering inputs.
+
+    Applies the same derivation (``a_m``), positivity, and feature engineering
+    used in training so a single prediction goes through identical preprocessing.
+    """
+    missing = [column for column in SINGLE_CASE_INPUT_COLUMNS if inputs.get(column) is None]
+    if missing:
+        raise ValueError(f"Missing required inputs: {sorted(missing)}")
+
+    frame = pd.DataFrame([{column: float(inputs[column]) for column in SINGLE_CASE_INPUT_COLUMNS}])
+    invalid = [
+        column
+        for column in SINGLE_CASE_INPUT_COLUMNS
+        if not (np.isfinite(frame[column]) & (frame[column] > 0)).all()
+    ]
+    if invalid:
+        raise ValueError(f"Inputs must be finite and strictly positive: {sorted(invalid)}")
+
+    frame["a_m"] = frame["inverse_aspect_ratio"] * frame["r_m"]
+    return build_features(frame)
+
+
+def predict_single_case(
+    inputs: dict[str, float], *, model_path: Path | str | None = None
+) -> dict[str, object]:
+    """Predict confinement time for one operating point using a saved artifact."""
+    artifact = load_confinement_artifact(model_path)
+    featured = build_single_case_frame(inputs)
+    predicted = float(artifact.predict(featured)[0])
+    return {
+        "predicted_tau_th_s": predicted,
+        "ipb98y2_tau_s": float(featured["ipb98y2_tau_s"].iloc[0]),
+        "model_name": artifact.model_name,
+        "model_path": str(
+            Path(model_path).expanduser().resolve() if model_path is not None else default_model_path()
+        ),
+    }
+
+
 # --- CLI --------------------------------------------------------------------
 
 
@@ -435,6 +516,36 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=N_CV_FOLDS,
         help="Number of grouped cross-validation folds.",
+    )
+    train.add_argument(
+        "--download-if-missing",
+        action="store_true",
+        help="Fetch the default HDB5 dataset from OSF first if it is not present.",
+    )
+
+    predict = subparsers.add_parser(
+        "predict", help="Predict confinement time for one operating point."
+    )
+    predict.add_argument("--ip-ma", type=float, required=True, help="Plasma current (MA).")
+    predict.add_argument("--bt-t", type=float, required=True, help="Toroidal field (T).")
+    predict.add_argument(
+        "--ne-line-1e19-m3",
+        type=float,
+        required=True,
+        help="Line-averaged density (1e19 m^-3).",
+    )
+    predict.add_argument("--p-loss-mw", type=float, required=True, help="Loss power (MW).")
+    predict.add_argument("--r-m", type=float, required=True, help="Major radius (m).")
+    predict.add_argument("--kappa", type=float, required=True, help="Elongation.")
+    predict.add_argument(
+        "--inverse-aspect-ratio", type=float, required=True, help="Inverse aspect ratio (a/R)."
+    )
+    predict.add_argument("--m-eff-amu", type=float, required=True, help="Effective ion mass (amu).")
+    predict.add_argument(
+        "--model-path",
+        type=str,
+        default=None,
+        help="Path to a saved confinement_model.joblib (defaults to the trained artifact).",
     )
 
     evaluate = subparsers.add_parser("evaluate", help="Cross-validate models, print a report.")
@@ -470,6 +581,24 @@ def main(argv: list[str] | None = None) -> None:
         ]
         print(json.dumps(report, indent=2))
         return
+    if args.command == "predict":
+        result = predict_single_case(
+            {
+                "ip_ma": args.ip_ma,
+                "bt_t": args.bt_t,
+                "ne_line_1e19_m3": args.ne_line_1e19_m3,
+                "p_loss_mw": args.p_loss_mw,
+                "r_m": args.r_m,
+                "kappa": args.kappa,
+                "inverse_aspect_ratio": args.inverse_aspect_ratio,
+                "m_eff_amu": args.m_eff_amu,
+            },
+            model_path=args.model_path,
+        )
+        print(json.dumps(result, indent=2))
+        return
+    if args.download_if_missing and args.dataset_path is None:
+        download_hdb5_std5()
     metadata = train_confinement_model(args.dataset_path, n_splits=args.cv_folds)
     print(json.dumps(metadata, indent=2))
 

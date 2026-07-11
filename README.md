@@ -40,10 +40,18 @@ python3 hdb5.py evaluate
 
 # 3. Train the selected model and save artifacts under
 #    data/processed/hdb5_confinement/
+#    (add --download-if-missing to fetch the dataset automatically first)
 python3 hdb5.py train
+
+# 4. Predict confinement time (seconds) for one operating point
+python3 hdb5.py predict \
+  --ip-ma 2.0 --bt-t 2.5 --ne-line-1e19-m3 6.0 --p-loss-mw 8.0 \
+  --r-m 1.7 --kappa 1.7 --inverse-aspect-ratio 0.32 --m-eff-amu 2.0
 ```
 
 Training writes `confinement_model.joblib` (a portable `ConfinementArtifact` whose `.predict()` returns confinement time in seconds), `confinement_metrics.csv`, and `confinement_metadata.json` (dataset provenance, selected model, and whether it beat the physics baseline).
+
+`predict` loads the saved artifact (or a `--model-path` you pass), applies the same feature engineering used in training, and returns JSON with the model's `predicted_tau_th_s` alongside the analytic `ipb98y2_tau_s` for comparison. Minor radius (`a_m`) is derived from `inverse_aspect_ratio * r_m`, so it is not requested directly.
 
 > Data attribution: please cite Verdoolaege G. *et al.*, "The updated ITPA global H-mode confinement database: description and analysis," *Nucl. Fusion* **61** 076006 (2021). The dataset is fetched on demand rather than redistributed here, and `data/raw/hdb5_std5.csv` is git-ignored.
 
