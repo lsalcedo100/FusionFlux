@@ -36,7 +36,7 @@ from config import ORIGINAL_ROW_INDEX_COLUMN, RAW_CSV_ROW_NUMBER_COLUMN
     [
         ({"confinement_time_s": -1.0}, "confinement_time_s"),
         ({"pressure_pa": -1.0}, "pressure_Pa"),
-        ({"ne_20": 1.25}, "ne_20 must match fuel_density_m3 / 1e20"),
+        ({"ne_20": 12.0}, "ne_20 must match fuel_density_m3 / 1e20"),
     ],
 )
 def test_predict_single_case_rejects_invalid_inputs_before_loading_model(

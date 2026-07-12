@@ -145,13 +145,38 @@ def test_prepare_dataset_rejects_inconsistent_ne_20(
             "temperature_keV": [12.0, 13.0],
             "confinement_time_s": [1.0, 1.1],
             "neutron_yield": [100.0, 110.0],
-            "ne_20": [1.0, 1.5],
+            # Second row is a gross unit mistake (~11x the expected ne_20),
+            # which the loosened consistency check must still reject.
+            "ne_20": [1.0, 12.0],
         }
     )
     dataset_path = _write_dataset(tmp_path, frame, "inconsistent_ne20.csv")
 
     with pytest.raises(ValueError, match="ne_20.*fuel_density_m3 / 1e20"):
         features.prepare_dataset(dataset_path)
+
+
+def test_prepare_dataset_accepts_physically_divergent_ne_20(
+    isolated_project_dirs: dict[str, Path],
+    tmp_path: Path,
+) -> None:
+    # Electron density can differ from fuel-ion density by an order-unity factor
+    # (impurities / Z_eff / isotope mix); such rows must be accepted rather than
+    # rejected as "inconsistent".
+    frame = pd.DataFrame(
+        {
+            "fuel_density_m3": [1.0e20, 1.1e20],
+            "temperature_keV": [12.0, 13.0],
+            "confinement_time_s": [1.0, 1.1],
+            "neutron_yield": [100.0, 110.0],
+            "ne_20": [1.3, 1.4],
+        }
+    )
+    dataset_path = _write_dataset(tmp_path, frame, "divergent_ne20.csv")
+
+    prepared = features.prepare_dataset(dataset_path)
+
+    assert len(prepared.dataframe) == 2
 
 
 def test_prepare_dataset_derives_missing_ne_20_before_ipb98(

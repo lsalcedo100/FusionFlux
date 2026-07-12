@@ -159,14 +159,29 @@ def _publish_staged_training_run(artifact_paths: dict[str, Path | str]) -> None:
         pass
 
 
+# Upper bound applied to predictions before scoring. log1p target models with an
+# np.expm1 inverse can overflow to +inf for a pathological log-space prediction
+# (expm1(>~709) == inf); left unclipped that single value makes compute_metrics'
+# finite guard abort the entire run. Capping to a finite (if physically absurd)
+# value keeps mean-squared-error finite, so an overflowing model simply scores
+# terribly and loses selection instead of killing an otherwise-successful run.
+# The bound is chosen so that CAP**2 stays well within float64 range.
+PREDICTION_FINITE_UPPER_BOUND = 1e150
+
+
 def _clip_negative_predictions(predictions: np.ndarray) -> tuple[np.ndarray, int]:
     clipped_predictions = np.asarray(predictions, dtype=float)
     negative_mask = clipped_predictions < 0
+    # NaN is deliberately left untouched: it signals a genuinely broken model
+    # rather than overflow, and compute_metrics should still refuse to train on
+    # it. Only negatives and +inf/overflowed magnitudes are sanitized here.
+    overflow_mask = clipped_predictions > PREDICTION_FINITE_UPPER_BOUND
     clipped_count = int(np.count_nonzero(negative_mask))
-    if clipped_count == 0:
+    if clipped_count == 0 and not overflow_mask.any():
         return clipped_predictions, 0
     clipped_predictions = clipped_predictions.copy()
     clipped_predictions[negative_mask] = 0.0
+    clipped_predictions[overflow_mask] = PREDICTION_FINITE_UPPER_BOUND
     return clipped_predictions, clipped_count
 
 
@@ -831,11 +846,37 @@ def train_models(
 
         mismatch_output_path = cast(Path, artifact_paths["staging_mismatch_path"])
         ensure_parent_directory(mismatch_output_path)
-        flagged_cases, mismatch_summary = flag_physics_mismatches(
-            prediction_frame,
-            best_predictions,
-            mismatch_output_path,
-        )
+        # Physics-mismatch flagging runs after the model, metrics, and predictions
+        # are already computed, so a failure here (e.g. an all-NaN lawson_ratio
+        # edge or a CSV write error) must not discard an otherwise-successful run.
+        # Degrade to an empty flag set with a placeholder summary, matching the
+        # report-generation guard below.
+        try:
+            flagged_cases, mismatch_summary = flag_physics_mismatches(
+                prediction_frame,
+                best_predictions,
+                mismatch_output_path,
+            )
+        except Exception as mismatch_error:  # noqa: BLE001 - degrade, don't fail the run
+            warnings.warn(
+                f"Physics-mismatch flagging failed and was skipped; the trained model and metrics "
+                f"are unaffected: {mismatch_error}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            flagged_cases = pd.DataFrame()
+            mismatch_summary = PhysicsMismatchFlagSummary(
+                flag_mode=PHYSICS_MISMATCH_FLAG_MODE,
+                high_yield_threshold=float("nan"),
+                high_yield_threshold_source="unavailable",
+                high_yield_percentile=None,
+                predicted_yield_threshold=None,
+                low_lawson_ratio_threshold=float("nan"),
+            )
+            try:
+                flagged_cases.to_csv(mismatch_output_path, index=False)
+            except OSError:
+                pass
 
         residual_plot_path: Path | None = None
         importance_output_path: Path | None = None

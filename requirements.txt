@@ -1,8 +1,10 @@
 joblib
 jupyter
 matplotlib
+mypy
 numpy
 pandas
 pytest
+ruff
 scikit-learn
 seaborn

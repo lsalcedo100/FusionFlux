@@ -177,7 +177,7 @@ By default, prediction loads saved artifacts using `--default-artifact-selection
 `ne_20` is treated consistently with density:
 
 - if you omit `--ne-20`, inference derives it as `fuel_density_m3 / 1e20` by default
-- if you supply `--ne-20`, it must agree with `fuel_density_m3 / 1e20` within a small tolerance or prediction fails fast with a clear error
+- if you supply `--ne-20`, it only has to agree with `fuel_density_m3 / 1e20` to within an order-unity tolerance; the check is deliberately loose so that genuine electron/ion density divergence (impurities, Z_eff, isotope mix) is accepted while gross unit mistakes still fail fast with a clear error
 
 The prediction command returns JSON with these fields:
 
@@ -242,7 +242,7 @@ The utility accepts temperatures in `keV`, `eV`, or `K` and returns:
 
 - All required physics inputs are finite numbers. Most must be strictly positive, `fuel_purity` must be between `0` and `1` inclusive, `neutron_yield` must be non-negative, and `a_m` must be smaller than `R_m`.
 - Temperatures must be expressible as `keV`, `eV`, or `K`. A generic `temperature` column is only valid when paired with `temperature_unit` or an explicit `--assume-temperature-unit`.
-- `ne_20` is not treated as an independent input. It must match `fuel_density_m3 / 1e20` within tolerance when supplied, or it is derived from `fuel_density_m3` when omitted. The reference density and tolerances are centralized in `config.py`.
+- `ne_20` is derived from `fuel_density_m3 / 1e20` when omitted. When supplied it is kept as an independent value and only checked against `fuel_density_m3 / 1e20` within an order-unity tolerance that catches unit mistakes without rejecting physical electron/ion density divergence. The reference density and tolerances are centralized in `config.py`.
 - Repeated `shot_id` rows are treated as time-resolved measurements from the same shot. When timestamps are present, the pipeline collapses each shot to one example using only the first `shot_prediction_cutoff_rows` rows, medians for most numeric covariates, and the cutoff-row value for `neutron_yield`, `time_s`, and `time_ms`.
 - Missing optional machine parameters are allowed and are median-imputed by the model preprocessor during training and inference.
 - The engineered `tau_E_ipb98_s` feature is only computed when `Ip_MA`, `Bt_T`, `R_m`, `a_m`, `kappa`, and `Pin_MW` are available. `M_amu` defaults to `2.5` inside that proxy when it is missing.

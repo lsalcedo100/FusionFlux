@@ -20,7 +20,13 @@ RAW_CSV_ROW_NUMBER_COLUMN = "raw_csv_row_number"
 RANDOM_STATE = 42
 LAWSON_DT_IGNITION = 3e21
 NE_20_REFERENCE_DENSITY_M3 = 1e20
-NE_20_RELATIVE_TOLERANCE = 1e-3
+# Electron density (ne_20) and fuel-ion density (fuel_density_m3 / 1e20) are
+# physically distinct: they diverge with impurity content, Z_eff, and isotope
+# mix, so requiring them to be numerically identical wrongly rejects valid
+# experimental rows. This consistency check is intentionally loose -- it only
+# catches gross unit mistakes (e.g. raw m^-3 or a 1e19/1e20 slip fed into
+# ne_20), while accepting the order-unity divergence expected in real plasmas.
+NE_20_RELATIVE_TOLERANCE = 0.5
 NE_20_ABSOLUTE_TOLERANCE = 1e-6
 # IPB98(y,2) energy-confinement scaling is defined for line-averaged density in
 # units of 1e19 m^-3, distinct from the 1e20 m^-3 normalization used for ne_20.

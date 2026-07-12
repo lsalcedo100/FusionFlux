@@ -1323,37 +1323,41 @@ def predict_batch(
                 nonlocal column_mapping, row_offset, clipped_negative_prediction_count
                 write_header = True
                 streamed_row_count = 0
-                for raw_chunk in pd.read_csv(input_path, chunksize=BATCH_PREDICTION_CSV_CHUNK_ROWS):
-                    prepared_frame, chunk_column_mapping = _prepare_batch_inference_frame(
-                        raw_chunk,
-                        runtime=prediction_runtime,
-                        assume_temperature_unit=assume_temperature_unit,
-                        start_index=row_offset,
-                    )
-                    row_offset += len(raw_chunk)
-                    if column_mapping is None:
-                        column_mapping = chunk_column_mapping
-                    elif chunk_column_mapping != column_mapping:
-                        raise ValueError(
-                            "Batch prediction input changed its column mapping across streamed chunks."
+                # Use the reader as a context manager so the underlying file
+                # handle is closed even if a chunk raises mid-stream (e.g. the
+                # column-mapping-change guard below).
+                with pd.read_csv(input_path, chunksize=BATCH_PREDICTION_CSV_CHUNK_ROWS) as chunk_reader:
+                    for raw_chunk in chunk_reader:
+                        prepared_frame, chunk_column_mapping = _prepare_batch_inference_frame(
+                            raw_chunk,
+                            runtime=prediction_runtime,
+                            assume_temperature_unit=assume_temperature_unit,
+                            start_index=row_offset,
                         )
-                    chunk_prediction_frame, chunk_clipped_count, chunk_warnings = _predict_prepared_batch_frame(
-                        prepared_frame,
-                        prediction_runtime=prediction_runtime,
-                    )
-                    clipped_negative_prediction_count += chunk_clipped_count
-                    for warning in chunk_warnings:
-                        _append_prediction_warning(chunk_prediction_warnings, warning)
-                    streamed_row_count += int(len(chunk_prediction_frame))
-                    if return_predictions:
-                        collected_prediction_frames.append(chunk_prediction_frame)
-                    chunk_prediction_frame.to_csv(
-                        sink_path,
-                        mode="w" if write_header else "a",
-                        header=write_header,
-                        index=False,
-                    )
-                    write_header = False
+                        row_offset += len(raw_chunk)
+                        if column_mapping is None:
+                            column_mapping = chunk_column_mapping
+                        elif chunk_column_mapping != column_mapping:
+                            raise ValueError(
+                                "Batch prediction input changed its column mapping across streamed chunks."
+                            )
+                        chunk_prediction_frame, chunk_clipped_count, chunk_warnings = _predict_prepared_batch_frame(
+                            prepared_frame,
+                            prediction_runtime=prediction_runtime,
+                        )
+                        clipped_negative_prediction_count += chunk_clipped_count
+                        for warning in chunk_warnings:
+                            _append_prediction_warning(chunk_prediction_warnings, warning)
+                        streamed_row_count += int(len(chunk_prediction_frame))
+                        if return_predictions:
+                            collected_prediction_frames.append(chunk_prediction_frame)
+                        chunk_prediction_frame.to_csv(
+                            sink_path,
+                            mode="w" if write_header else "a",
+                            header=write_header,
+                            index=False,
+                        )
+                        write_header = False
                 return streamed_row_count
 
             if resolved_output_path is not None:

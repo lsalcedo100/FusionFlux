@@ -588,6 +588,11 @@ def aggregate_time_resolved_shots_at_cutoff(
         normalized_df["time_ms"] = _validated_time_series_for_aggregation(normalized_df, "time_ms")
         normalized_df["time_s"] = cast(pd.Series, normalized_df["time_ms"] / 1e3)
     else:
+        # No time column: the repeated shot_id rows are treated as independent
+        # measurement rows and kept as-is. Cross-fold contamination is prevented
+        # downstream by the grouped (shot_id-aware) holdout and GroupKFold CV,
+        # which keep all rows of a shot on the same side of every split, so
+        # aggregating here is unnecessary.
         return df
 
     aggregated_rows: list[dict[str, object]] = []
@@ -728,7 +733,15 @@ def add_ipb98_proxy(df: pd.DataFrame) -> pd.DataFrame:
         * np.power(ion_mass_amu_array[valid_mask_array], 0.19)
         * np.power(pin_mw_array[valid_mask_array], -0.69)
     )
-    df["tau_E_ipb98_s"] = tau_e_ipb98
+    computed_proxy = pd.Series(tau_e_ipb98, index=df.index)
+    if "tau_E_ipb98_s" in df.columns:
+        # Only fill gaps: a measured/provided tau_E_ipb98_s must not be discarded,
+        # and rows with invalid geometry (proxy == NaN) keep their existing value
+        # instead of being blanked out.
+        existing = _numeric_series(df, "tau_E_ipb98_s")
+        df["tau_E_ipb98_s"] = existing.where(existing.notna(), computed_proxy)
+    else:
+        df["tau_E_ipb98_s"] = computed_proxy
     return df
 
 
