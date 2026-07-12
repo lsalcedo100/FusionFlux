@@ -6,6 +6,7 @@ mypy==1.19.1
 numpy==2.0.2
 pandas==2.3.3
 pytest==8.4.2
+pytest-cov==7.1.0
 ruff==0.15.21
 scikit-learn==1.6.1
 seaborn==0.13.2

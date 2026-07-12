@@ -65,6 +65,11 @@ ModelFactory = Callable[[], TransformedTargetRegressor]
 MetricValue = Union[float, int]
 MetricSummaryValue = Union[MetricValue, str]
 MODEL_SELECTION_COLUMNS = ["cv_rmse_log_mean", "cv_mae_log_mean", "model"]
+# The median DummyRegressor is a reference floor, not a shippable model. On an
+# exact metric tie the alphabetical "model" tie-break would rank "baseline" first
+# and ship it, so selection demotes it to last and it can only win by being
+# strictly better than every real model family.
+BASELINE_MODEL_NAME = "baseline"
 TRAINING_RUNS_DIRNAME = "runs"
 
 
@@ -355,7 +360,7 @@ def build_preprocessor(feature_columns: list[str]) -> ColumnTransformer:
 
 def build_model_registry(feature_columns: list[str]) -> dict[str, ModelFactory]:
     return {
-        "baseline": lambda: TransformedTargetRegressor(
+        BASELINE_MODEL_NAME: lambda: TransformedTargetRegressor(
             regressor=Pipeline([("prep", build_preprocessor(feature_columns)), ("model", DummyRegressor(strategy="median"))]),
             func=np.log1p,
             inverse_func=np.expm1,
@@ -831,7 +836,15 @@ def train_models(
         ensure_parent_directory(metrics_output_path)
         write_dataframe_csv_atomic(metrics_output_path, metrics_df, index=False)
 
-        best_model_name = str(metrics_df.iloc[0]["model"])
+        # metrics_df (already written to CSV above) keeps its documented sort. For
+        # selection only, demote the baseline dummy so it never wins a metric tie.
+        selection_frame = metrics_df.assign(
+            _is_baseline=(metrics_df["model"] == BASELINE_MODEL_NAME).astype(int)
+        ).sort_values(
+            ["cv_rmse_log_mean", "cv_mae_log_mean", "_is_baseline", "model"],
+            kind="mergesort",
+        )
+        best_model_name = str(selection_frame.iloc[0]["model"])
         best_predictions = predictions_by_model[best_model_name]
 
         prediction_frame = df.iloc[test_idx].copy()
@@ -1009,7 +1022,7 @@ def train_models(
             "model_selection": {
                 "basis": "cross_validation",
                 "primary_metric": "cv_rmse_log_mean",
-                "tie_breakers": ["cv_mae_log_mean", "model"],
+                "tie_breakers": ["cv_mae_log_mean", "baseline_last", "model"],
                 "metric_space": "log1p_neutron_yield",
                 "selected_model_name": best_model_name,
                 "candidate_models": metrics_df["model"].astype(str).tolist(),

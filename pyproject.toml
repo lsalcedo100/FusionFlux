@@ -24,6 +24,7 @@ dev = [
     "jupyter",
     "mypy",
     "pytest",
+    "pytest-cov",
     "ruff",
 ]
 
@@ -69,3 +70,19 @@ warn_unused_ignores = true
 [[tool.mypy.overrides]]
 module = ["joblib.*", "sklearn.*", "seaborn.*", "matplotlib.*"]
 ignore_missing_imports = true
+
+[tool.coverage.run]
+source = [
+    "artifact_model",
+    "config",
+    "features",
+    "fusionflux_cli",
+    "inference",
+    "lawson",
+    "storage",
+    "training",
+    "validation",
+]
+
+[tool.coverage.report]
+show_missing = true

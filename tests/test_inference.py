@@ -1464,3 +1464,80 @@ def test_committed_artifact_manifest_supports_relocation(
         metadata_path=resolved_metadata_path,
     )
     assert np.isfinite(prediction["predicted_neutron_yield"])
+
+
+def test_predict_cli_dispatch_scores_single_case(
+    isolated_project_dirs: dict[str, Path],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    dataset_path = features.create_synthetic_dataset(tmp_path / "synthetic_train.csv", n_rows=60, random_state=7)
+    train_model.train_models(dataset_path)
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "train_model.py",
+            "predict",
+            "--density-m3",
+            "1e20",
+            "--temperature",
+            "12",
+            "--temp-unit",
+            "keV",
+            "--confinement-time-s",
+            "1",
+        ],
+    )
+
+    train_model.main()
+
+    payload = json.loads(capsys.readouterr().out)
+    assert np.isfinite(payload["predicted_neutron_yield"])
+    assert payload["predicted_neutron_yield"] >= 0.0
+
+
+def test_predict_batch_cli_dispatch_writes_scored_csv(
+    isolated_project_dirs: dict[str, Path],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    dataset_path = features.create_synthetic_dataset(tmp_path / "synthetic_train.csv", n_rows=60, random_state=9)
+    train_model.train_models(dataset_path)
+
+    input_frame = pd.DataFrame(
+        {
+            "fuel_density_m3": [1.0e20, 1.4e20, 1.8e20],
+            "temperature_keV": [10.0, 14.0, 18.0],
+            "confinement_time_s": [0.9, 1.3, 1.7],
+        }
+    )
+    input_csv = tmp_path / "batch_input.csv"
+    input_frame.to_csv(input_csv, index=False)
+    output_csv = tmp_path / "batch_output.csv"
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "train_model.py",
+            "predict-batch",
+            "--input-csv",
+            str(input_csv),
+            "--output-path",
+            str(output_csv),
+        ],
+    )
+
+    train_model.main()
+
+    payload = json.loads(capsys.readouterr().out)
+    assert Path(payload["output_path"]) == output_csv.resolve()
+    assert payload["row_count"] == 3
+    scored = pd.read_csv(output_csv)
+    assert len(scored) == 3
+    assert "predicted_neutron_yield" in scored.columns
+    assert (scored["predicted_neutron_yield"] >= 0.0).all()

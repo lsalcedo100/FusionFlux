@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 from contextlib import contextmanager
 from pathlib import Path
@@ -31,10 +32,25 @@ def write_text_atomic(path: Path, text: str, *, encoding: str = "utf-8") -> None
         temp_path.write_text(text, encoding=encoding)
 
 
+def _json_safe(value: object) -> object:
+    # JSON has no representation for NaN/Infinity, and we serialize with
+    # allow_nan=False so that readers never have to parse non-standard tokens.
+    # Metadata can legitimately carry non-finite floats (e.g. an r2 or high-yield
+    # threshold that is undefined for a given run), so map those to null rather
+    # than letting json.dumps raise and abort an otherwise-complete training run.
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    return value
+
+
 def write_json_strict(path: Path, payload: dict[str, object]) -> None:
     write_text_atomic(
         path,
-        json.dumps(payload, indent=2, allow_nan=False),
+        json.dumps(_json_safe(payload), indent=2, allow_nan=False),
     )
 
 

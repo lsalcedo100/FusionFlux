@@ -1,0 +1,23 @@
+version: 2
+updates:
+  # Keep GitHub Actions pinned digests/tags current.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  # Surface upstream numpy/pandas/scikit-learn/tooling releases as PRs so the
+  # deliberately-unpinned newer-Python CI jobs (and the pinned 3.9 constraints)
+  # can be bumped intentionally instead of breaking silently.
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"

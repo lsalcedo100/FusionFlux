@@ -4,7 +4,6 @@ import json
 import os
 import platform
 import re
-import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from json import JSONDecodeError
@@ -1319,7 +1318,7 @@ def predict_batch(
             # streaming path keeps its constant-memory behavior.
             collected_prediction_frames: list[pd.DataFrame] = []
 
-            def process_streamed_chunks(*, sink_path: Path) -> int:
+            def process_streamed_chunks(*, sink_path: Path | None) -> int:
                 nonlocal column_mapping, row_offset, clipped_negative_prediction_count
                 write_header = True
                 streamed_row_count = 0
@@ -1351,13 +1350,17 @@ def predict_batch(
                         streamed_row_count += int(len(chunk_prediction_frame))
                         if return_predictions:
                             collected_prediction_frames.append(chunk_prediction_frame)
-                        chunk_prediction_frame.to_csv(
-                            sink_path,
-                            mode="w" if write_header else "a",
-                            header=write_header,
-                            index=False,
-                        )
-                        write_header = False
+                        # When there is no real output target (caller only wants the
+                        # predictions returned in memory) skip the CSV write entirely
+                        # instead of streaming every chunk to a throwaway temp file.
+                        if sink_path is not None:
+                            chunk_prediction_frame.to_csv(
+                                sink_path,
+                                mode="w" if write_header else "a",
+                                header=write_header,
+                                index=False,
+                            )
+                            write_header = False
                 return streamed_row_count
 
             if resolved_output_path is not None:
@@ -1366,11 +1369,9 @@ def predict_batch(
                     if column_mapping is None:
                         raise ValueError("Batch prediction input must contain at least one row.")
             else:
-                with tempfile.TemporaryDirectory(prefix="fusionflux_batch_predictions_") as temp_dir:
-                    temp_prediction_path = Path(temp_dir) / "batch_predictions.csv"
-                    row_count = process_streamed_chunks(sink_path=temp_prediction_path)
-                    if column_mapping is None:
-                        raise ValueError("Batch prediction input must contain at least one row.")
+                row_count = process_streamed_chunks(sink_path=None)
+                if column_mapping is None:
+                    raise ValueError("Batch prediction input must contain at least one row.")
             if return_predictions:
                 # Reuse the in-memory per-chunk frames instead of round-tripping
                 # the streamed CSV back through pd.read_csv, which would re-infer
