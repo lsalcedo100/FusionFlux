@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+import warnings
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -63,7 +64,7 @@ from storage import ensure_parent_directory, write_dataframe_csv_atomic, write_j
 ModelFactory = Callable[[], TransformedTargetRegressor]
 MetricValue = Union[float, int]
 MetricSummaryValue = Union[MetricValue, str]
-MODEL_SELECTION_COLUMNS = ["cv_rmse_mean", "cv_mae_mean", "model"]
+MODEL_SELECTION_COLUMNS = ["cv_rmse_log_mean", "cv_mae_log_mean", "model"]
 TRAINING_RUNS_DIRNAME = "runs"
 
 
@@ -177,12 +178,47 @@ def _group_holdout_total_score(total_rows: int, *, target_test_rows: int) -> tup
     )
 
 
+# Work bound on the exact subset-sum search: it fills up to
+# ``len(group_counts) * (max_test_rows + 1)`` reachable-total cells. Above this
+# a large real dataset (many shots and rows) would turn split selection into a
+# Python-object bottleneck, so we fall back to a linear greedy fill instead.
+MAX_GROUP_HOLDOUT_SUBSET_SUM_CELLS = 2_000_000
+
+_GROUP_HOLDOUT_TOO_FEW_ROWS_MESSAGE = (
+    "Grouped holdout could not find a test split with enough rows while keeping groups intact. "
+    "Provide more shots before training."
+)
+
+
+def _greedy_group_holdout_positions(
+    group_counts: list[int],
+    *,
+    target_test_rows: int,
+    max_test_rows: int,
+) -> tuple[int, ...]:
+    """Linear fallback for large group sets: fill whole groups in the caller's
+    (already shuffled) order until reaching ``target_test_rows`` without exceeding
+    ``max_test_rows``. Deterministic for a given shuffle, and never splits a shot.
+    """
+    selected_positions: list[int] = []
+    total_rows = 0
+    for position, group_row_count in enumerate(group_counts):
+        if total_rows >= target_test_rows:
+            break
+        if total_rows + group_row_count <= max_test_rows:
+            selected_positions.append(position)
+            total_rows += group_row_count
+    if total_rows < MIN_TEST_SAMPLES:
+        raise ValueError(_GROUP_HOLDOUT_TOO_FEW_ROWS_MESSAGE)
+    return tuple(selected_positions)
+
+
 def _select_group_holdout_positions(
     group_counts: list[int],
     *,
     target_test_rows: int,
     max_test_rows: int,
-) -> tuple[int, tuple[int, ...]]:
+) -> tuple[int, ...]:
     """Choose whole groups whose combined row count best hits ``target_test_rows``.
 
     This is a bounded subset-sum over the group row counts: each group is used at
@@ -191,8 +227,17 @@ def _select_group_holdout_positions(
     totals that also clear ``MIN_TEST_SAMPLES`` we keep the one whose
     ``_group_holdout_total_score`` is best (closest to the target, preferring a
     total at or above it). Groups are pre-shuffled by the caller, so the first
-    subset discovered for each total reflects that random order.
+    subset discovered for each total reflects that random order. For very large
+    group sets the exact search is replaced by ``_greedy_group_holdout_positions``.
     """
+    estimated_cells = len(group_counts) * (max_test_rows + 1)
+    if estimated_cells > MAX_GROUP_HOLDOUT_SUBSET_SUM_CELLS:
+        return _greedy_group_holdout_positions(
+            group_counts,
+            target_test_rows=target_test_rows,
+            max_test_rows=max_test_rows,
+        )
+
     # Map every reachable test-row total to the group positions that produce it.
     reachable: dict[int, tuple[int, ...]] = {0: ()}
     for position, group_row_count in enumerate(group_counts):
@@ -205,16 +250,13 @@ def _select_group_holdout_positions(
         total_rows for total_rows in reachable if MIN_TEST_SAMPLES <= total_rows <= max_test_rows
     ]
     if not candidate_totals:
-        raise ValueError(
-            "Grouped holdout could not find a test split with enough rows while keeping groups intact. "
-            "Provide more shots before training."
-        )
+        raise ValueError(_GROUP_HOLDOUT_TOO_FEW_ROWS_MESSAGE)
 
     best_total = min(
         candidate_totals,
         key=lambda total_rows: _group_holdout_total_score(total_rows, target_test_rows=target_test_rows),
     )
-    return best_total, reachable[best_total]
+    return reachable[best_total]
 
 
 def _select_group_holdout_indices(
@@ -233,7 +275,7 @@ def _select_group_holdout_indices(
     shuffled_counts = [int(group_counts[index]) for index in shuffled_order]
 
     max_test_rows = len(df) - MIN_TRAIN_SAMPLES
-    _, selected_positions = _select_group_holdout_positions(
+    selected_positions = _select_group_holdout_positions(
         shuffled_counts,
         target_test_rows=target_test_rows,
         max_test_rows=max_test_rows,
@@ -359,9 +401,18 @@ def compute_metrics(y_true: pd.Series, predictions: np.ndarray, *, context: str)
         candidate_r2 = float(r2_score(y_true, predictions, force_finite=False))
         if np.isfinite(candidate_r2):
             r2 = candidate_r2
+    # Neutron yield spans many orders of magnitude, so raw-space RMSE/MAE are
+    # dominated by the largest shots. Log-space metrics (on the same log1p target
+    # the models are trained against) are the primary selection signal; raw-space
+    # metrics are still reported for interpretability. Predictions are clipped at
+    # 0 first, matching the artifact's negative-prediction guardrail.
+    log_y_true = np.log1p(np.asarray(y_true, dtype=float))
+    log_predictions = np.log1p(np.clip(np.asarray(predictions, dtype=float), a_min=0.0, a_max=None))
     metrics: dict[str, MetricValue] = {
         "mae": float(mean_absolute_error(y_true, predictions)),
         "rmse": float(np.sqrt(mse)),
+        "mae_log": float(mean_absolute_error(log_y_true, log_predictions)),
+        "rmse_log": float(np.sqrt(mean_squared_error(log_y_true, log_predictions))),
         "r2": r2,
     }
 
@@ -664,6 +715,8 @@ def cross_validate_model(
 ) -> dict[str, float]:
     fold_rmse: list[float] = []
     fold_mae: list[float] = []
+    fold_rmse_log: list[float] = []
+    fold_mae_log: list[float] = []
     for fold_index, (fit_idx, validation_idx) in enumerate(cv_splits, start=1):
         model = model_factory()
         model.fit(X_train.iloc[fit_idx], y_train.iloc[fit_idx])
@@ -671,12 +724,18 @@ def cross_validate_model(
         metrics = compute_metrics(y_train.iloc[validation_idx], predictions, context=f"cross-validation fold {fold_index}")
         fold_rmse.append(float(metrics["rmse"]))
         fold_mae.append(float(metrics["mae"]))
+        fold_rmse_log.append(float(metrics["rmse_log"]))
+        fold_mae_log.append(float(metrics["mae_log"]))
 
     return {
         "cv_rmse_mean": float(np.mean(fold_rmse)),
         "cv_rmse_std": float(np.std(fold_rmse, ddof=0)),
         "cv_mae_mean": float(np.mean(fold_mae)),
         "cv_mae_std": float(np.std(fold_mae, ddof=0)),
+        "cv_rmse_log_mean": float(np.mean(fold_rmse_log)),
+        "cv_rmse_log_std": float(np.std(fold_rmse_log, ddof=0)),
+        "cv_mae_log_mean": float(np.mean(fold_mae_log)),
+        "cv_mae_log_std": float(np.std(fold_mae_log, ddof=0)),
     }
 
 
@@ -743,6 +802,8 @@ def train_models(
                     **cv_metrics,
                     "holdout_mae": model_metrics["mae"],
                     "holdout_rmse": model_metrics["rmse"],
+                    "holdout_mae_log": model_metrics["mae_log"],
+                    "holdout_rmse_log": model_metrics["rmse_log"],
                     "holdout_r2": model_metrics["r2"],
                     "holdout_high_yield_mae": model_metrics["high_yield_mae"],
                     "holdout_high_yield_count": model_metrics["high_yield_count"],
@@ -780,30 +841,48 @@ def train_models(
         importance_output_path: Path | None = None
         importance_plot_path: Path | None = None
         importance_method: str | None = None
+        reports_generated = generate_reports
         if generate_reports:
-            residual_plot_path = cast(Path, artifact_paths["staging_plots_dir"]) / f"{best_model_name}_residuals.png"
-            ensure_parent_directory(residual_plot_path)
-            save_residual_plots(y_test, best_predictions, residual_plot_path, best_model_name)
+            # Report/plot generation runs after the model, metrics, and predictions
+            # are already computed. Isolate its failures (e.g. a matplotlib/seaborn
+            # backend error) so they degrade to "reports skipped" instead of
+            # discarding an otherwise-successful training run.
+            try:
+                residual_plot_path = cast(Path, artifact_paths["staging_plots_dir"]) / f"{best_model_name}_residuals.png"
+                ensure_parent_directory(residual_plot_path)
+                save_residual_plots(y_test, best_predictions, residual_plot_path, best_model_name)
 
-            importance_df, importance_method = extract_cross_validated_feature_importance(
-                holdout_models[best_model_name],
-                holdout_feature_columns,
-                X_train=X_train,
-                y_train=y_train,
-                cv_splits=cv_splits,
-                model_name=best_model_name,
-            )
-            importance_output_path = cast(Path, artifact_paths["staging_feature_importance_path"])
-            ensure_parent_directory(importance_output_path)
-            write_dataframe_csv_atomic(importance_output_path, importance_df, index=False)
-            importance_plot_path = cast(Path, artifact_paths["staging_importance_plot_path"])
-            ensure_parent_directory(importance_plot_path)
-            save_feature_importance_plot(
-                importance_df,
-                importance_plot_path,
-                model_name=best_model_name,
-                importance_method=cast(str, importance_method),
-            )
+                importance_df, importance_method = extract_cross_validated_feature_importance(
+                    holdout_models[best_model_name],
+                    holdout_feature_columns,
+                    X_train=X_train,
+                    y_train=y_train,
+                    cv_splits=cv_splits,
+                    model_name=best_model_name,
+                )
+                importance_output_path = cast(Path, artifact_paths["staging_feature_importance_path"])
+                ensure_parent_directory(importance_output_path)
+                write_dataframe_csv_atomic(importance_output_path, importance_df, index=False)
+                importance_plot_path = cast(Path, artifact_paths["staging_importance_plot_path"])
+                ensure_parent_directory(importance_plot_path)
+                save_feature_importance_plot(
+                    importance_df,
+                    importance_plot_path,
+                    model_name=best_model_name,
+                    importance_method=cast(str, importance_method),
+                )
+            except Exception as report_error:  # noqa: BLE001 - degrade, don't fail the run
+                reports_generated = False
+                residual_plot_path = None
+                importance_output_path = None
+                importance_plot_path = None
+                importance_method = None
+                warnings.warn(
+                    f"Report generation failed and was skipped; the trained model and metrics are unaffected: "
+                    f"{report_error}",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
 
         production_model = build_model_registry(saved_feature_columns)[best_model_name]()
         production_model.fit(align_to_feature_schema(df, saved_feature_columns), y)
@@ -825,13 +904,13 @@ def train_models(
         final_metadata_path = cast(Path, artifact_paths["metadata_path"])
         final_processed_dataset_path = cast(Path, artifact_paths["processed_dataset_path"])
         final_residual_plot_path = (
-            cast(Path, artifact_paths["plots_dir"]) / f"{best_model_name}_residuals.png" if generate_reports else None
+            cast(Path, artifact_paths["plots_dir"]) / f"{best_model_name}_residuals.png" if reports_generated else None
         )
         final_importance_output_path = (
-            cast(Path, artifact_paths["feature_importance_path"]) if generate_reports else None
+            cast(Path, artifact_paths["feature_importance_path"]) if reports_generated else None
         )
         final_importance_plot_path = (
-            cast(Path, artifact_paths["importance_plot_path"]) if generate_reports else None
+            cast(Path, artifact_paths["importance_plot_path"]) if reports_generated else None
         )
         resolved_source_dataset_path = (
             cast(Path, artifact_paths["synthetic_dataset_path"]) if prepared.synthetic_data_used else prepared.raw_path
@@ -888,8 +967,9 @@ def train_models(
             },
             "model_selection": {
                 "basis": "cross_validation",
-                "primary_metric": "cv_rmse_mean",
-                "tie_breakers": ["cv_mae_mean", "model"],
+                "primary_metric": "cv_rmse_log_mean",
+                "tie_breakers": ["cv_mae_log_mean", "model"],
+                "metric_space": "log1p_neutron_yield",
                 "selected_model_name": best_model_name,
                 "candidate_models": metrics_df["model"].astype(str).tolist(),
             },
@@ -914,6 +994,7 @@ def train_models(
                 "metrics_characterize_saved_model_schema": not saved_model_only_feature_columns,
                 "saved_model_only_feature_columns": saved_model_only_feature_columns,
                 "report_generation_enabled": generate_reports,
+                "report_generation_succeeded": reports_generated,
                 "physics_mismatch_flagging": mismatch_summary.to_metadata_dict(flagged_case_count=len(flagged_cases)),
             },
             "model_explainability": {
@@ -953,7 +1034,22 @@ def train_models(
         )
         _publish_staged_training_run(artifact_paths)
         published_run = True
-        _write_latest_training_run_manifest(run_id=run_id, model_path=final_model_path, metadata_path=final_metadata_path)
+        # The run is now published and discoverable by directory scan; the latest
+        # manifest is only a discovery hint. If writing it fails, don't raise past
+        # this point (the except block would skip cleanup because published_run is
+        # True, leaving a published run with a stale pointer). Degrade to a warning
+        # instead so the successful run stays usable.
+        try:
+            _write_latest_training_run_manifest(
+                run_id=run_id, model_path=final_model_path, metadata_path=final_metadata_path
+            )
+        except Exception as manifest_error:  # noqa: BLE001 - hint write, run already published
+            warnings.warn(
+                "Training run was published but the latest-run manifest could not be updated; "
+                f"the run is still discoverable by directory scan: {manifest_error}",
+                RuntimeWarning,
+                stacklevel=2,
+            )
 
         return {
             "metrics_path": str(cast(Path, artifact_paths["metrics_path"])),
@@ -972,6 +1068,7 @@ def train_models(
             "saved_model_fit_scope": "full_prepared_dataset",
             "holdout_metrics_characterize_saved_model_schema": not saved_model_only_feature_columns,
             "report_generation_enabled": generate_reports,
+            "report_generation_succeeded": reports_generated,
         }
     except Exception:
         if not published_run:

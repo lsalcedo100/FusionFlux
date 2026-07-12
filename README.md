@@ -2,6 +2,25 @@
 
 `FusionFlux` is a Python machine learning project for estimating fusion experiment neutron yield from plasma operating conditions such as density, temperature, and confinement time. It pairs a practical regression pipeline with a small Lawson criterion utility, so you can compare data-driven predictions with a simple physics-based ignition check.
 
+## Quickstart
+
+```bash
+# 1. Install (editable, with dev tooling) into a virtualenv
+python3 -m venv .venv && source .venv/bin/activate
+python3 -m pip install -e ".[dev]" -c constraints.txt
+
+# 2. Train on the bundled synthetic demo data (writes the default saved model)
+python3 train_model.py train --allow-synthetic
+
+# 3. Predict a single operating point
+python3 train_model.py predict --density-m3 1e20 --temperature 15 --temp-unit keV --confinement-time-s 4
+
+# 4. Reproduce the CI quality gate locally
+make check        # == ruff check . && mypy . && pytest -q
+```
+
+Use `--dataset-path data/raw/your_dataset.csv` instead of `--allow-synthetic` to train on a real CSV. The sections below document every option in detail.
+
 ## Project Overview
 
 The repository ingests a fusion experiment CSV, normalizes common column names, validates and engineers features, trains multiple regression models, and saves the selected production model along with evaluation artifacts. Training now requires an explicit dataset choice: provide `--dataset-path` for a real CSV, or pass `--allow-synthetic` to generate demo data intentionally.
@@ -12,11 +31,11 @@ The repository ingests a fusion experiment CSV, normalizes common column names, 
 - Requires an explicit training data source: `--dataset-path` for a real CSV or `--allow-synthetic` for generated demo data.
 - Standardizes input columns through alias mapping and temperature normalization, and fails fast on bare `temperature` values unless a `temperature_unit` column is present or training is run with an explicit `--assume-temperature-unit`.
 - Removes duplicate rows, fails fast on invalid physics inputs, and can aggregate time-resolved shots into shot-level records when grouping data is available.
-- Engineers physics-inspired features such as `triple_product`, `lawson_ratio`, `density_temp`, `density_tau`, `purity_weighted_density`, and `tau_E_ipb98_s`.
+- Engineers physics-inspired features such as `triple_product`, `lawson_ratio`, `density_temp`, `density_tau`, and `tau_E_ipb98_s`, plus `purity_weighted_density` when `fuel_purity` is available (it is skipped rather than imputed to a constant when purity is absent).
 - Excludes configured leakage-style columns from the training feature set.
 - Uses a row-targeted grouped holdout when repeated `shot_id` values exist, with an exact bitset-based selector that scales better than naive subset tracking as group counts grow.
 - Selects holdout evaluation and explainability features from the training split, then rebuilds the saved production feature schema from the full prepared dataset before refitting the winning model family and saving `best_model.joblib`.
-- Persists a preprocessing contract hash with each training run and hard-fails inference when the current runtime preprocessing code no longer matches the saved artifact.
+- Persists an explicit, versioned preprocessing contract (column set, feature schema, physics constants and tolerances, plus a hash of that structural description) with each training run and hard-fails inference when the saved contract no longer matches the current runtime contract. Retrain, or bump `PREPROCESSING_CONTRACT_VERSION` when preprocessing semantics change, to invalidate stale artifacts.
 - Saves a small wrapper artifact around the trained regressor so even direct `joblib.load(...).predict(...)` usage still enforces preprocessing compatibility and clips negative predictions.
 - Produces metrics, feature-importance reports, residual plots, physics mismatch flags with explicit threshold metadata, and training metadata under a per-run artifact directory.
 - Supports single-case CLI inference, deriving `ne_20` from `fuel_density_m3` when omitted, rejecting contradictory `ne_20` inputs when supplied, clipping any negative model output back to `0.0`, and exposing explicit default artifact selection modes.
@@ -37,13 +56,17 @@ FusionFlux/
 ├── train_model.py
 ├── training.py
 ├── validation.py
+├── Makefile
 ├── pyproject.toml
 ├── requirements.txt
 ├── constraints.txt
 ├── tests/
 │   ├── conftest.py
+│   ├── helpers.py
 │   ├── test_lawson.py
-│   └── test_pipeline.py
+│   ├── test_preprocessing.py
+│   ├── test_training.py
+│   └── test_inference.py
 └── data/
     ├── raw/
     │   └── synthetic_nuclear_fusion_experiment.csv
@@ -125,7 +148,7 @@ Training will:
 - split the data with a row-targeted grouped holdout when repeated `shot_id` groups exist, otherwise use a standard random split
 - choose grouped holdout rows with an exact bitset-based search so larger numbers of shots do not turn split selection into a Python object bottleneck
 - train multiple regressors on a log-transformed target
-- select the winner by cross-validation metrics (`cv_rmse_mean`, then `cv_mae_mean`)
+- select the winner by log-space cross-validation metrics (`cv_rmse_log_mean`, then `cv_mae_log_mean`) so selection is not dominated by the few highest-magnitude shots; raw-space `cv_rmse_mean`/`cv_mae_mean` are still reported for interpretability
 - choose the holdout evaluation feature schema from the training split
 - evaluate the selected model family on a true holdout split for reporting artifacts
 - rebuild the saved production feature schema from the full prepared dataset so late-appearing features are not dropped from the refit model
@@ -236,7 +259,7 @@ Training writes outputs under `data/processed/runs/<training_run_id>/`, and `dat
 | --- | --- |
 | `data/processed/latest_training_run.json` | Manifest written by training for the most recent run, including its model and metadata paths |
 | `data/processed/runs/<training_run_id>/fusion_dataset_processed.csv` | Deduplicated, validated, and feature-engineered dataset used for modeling |
-| `data/processed/runs/<training_run_id>/metrics.csv` | Cross-validation and holdout metrics for each trained regressor |
+| `data/processed/runs/<training_run_id>/metrics.csv` | Cross-validation and holdout metrics for each trained regressor, in both log space (`cv_rmse_log_mean`, `holdout_rmse_log`, used for selection) and raw yield space (`cv_rmse_mean`, `holdout_rmse`, reported for interpretability) |
 | `data/processed/runs/<training_run_id>/test_predictions.csv` | Held-out predictions, actual values, residuals, `shot_id`, and preserved source-row identity columns |
 | `data/processed/runs/<training_run_id>/feature_importance.csv` | Cross-validated feature-importance values for the selected model family |
 | `data/processed/runs/<training_run_id>/physics_mismatch_flags.csv` | Holdout rows flagged by the configured mismatch rule, including the threshold mode and concrete thresholds used |
@@ -253,7 +276,9 @@ Run the test suite with:
 .venv/bin/python -m pytest -q
 ```
 
-The current suite covers Lawson calculations, temperature conversions, preprocessing and validation rules, grouped-shot aggregation, training split behavior, training artifact cleanup, preprocessing-contract compatibility checks, negative prediction clipping, and single/batch inference edge cases.
+or run the full lint/type/test gate with `make check`. The suite is split by concern into `tests/test_preprocessing.py`, `tests/test_training.py`, and `tests/test_inference.py` (plus `tests/test_lawson.py`), with shared fixtures in `tests/conftest.py` and shared stubs/builders in `tests/helpers.py`. It covers Lawson calculations, temperature conversions, preprocessing and validation rules, grouped-shot aggregation, training split behavior, training artifact cleanup, preprocessing-contract compatibility checks, negative prediction clipping, and single/batch inference edge cases. CI runs the same gate on Python 3.9–3.12.
+
+`test_committed_artifact_manifest_supports_relocation` needs a locally trained artifact under `data/processed/` (gitignored); it skips automatically on a fresh clone until you run training once.
 
 ## Notes / Limitations
 
@@ -262,7 +287,7 @@ The current suite covers Lawson calculations, temperature conversions, preproces
 - Model quality depends on the dataset, feature coverage, and split behavior; holdout artifacts are for reporting, while the saved production model is refit on all prepared rows.
 - The prediction CLIs expect a trained model and metadata file unless you provide custom `--model-path` and `--metadata-path` values. They validate the saved preprocessing contract against the current runtime code before scoring. Explicit artifact selection requires exact recorded runtime versions, while default artifact selection may accept limited compatible drift with warnings.
 - Batch CSV prediction only streams non-grouped inputs. Grouped time-series inputs are read as a whole file so shot-level aggregation can see every row for a shot.
-- The strict preprocessing contract is intentional. In this repo, silent feature drift is more dangerous than the inconvenience of regenerating artifacts, because the goal is fail-fast behavior around physics results. If retraining ever becomes unusually expensive, prefer better artifact/tooling workflows over weakening the validation.
+- The strict preprocessing contract is intentional. In this repo, silent feature drift is more dangerous than the inconvenience of regenerating artifacts, because the goal is fail-fast behavior around physics results. The contract is an explicit, versioned structural description (columns, feature schema, physics constants and tolerances); it deliberately does not fingerprint function source or bytecode, since that broke on harmless reformatting and forced spurious retrains. Bump `PREPROCESSING_CONTRACT_VERSION` in `features.py` whenever you change preprocessing semantics.
 - The test suite exercises many pipeline paths, but ML changes should still be validated by rerunning training and reviewing the saved artifacts.
 
 ## Module Ownership

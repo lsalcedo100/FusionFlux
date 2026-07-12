@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-import ast
 import hashlib
-import io
 import json
-import tokenize
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from functools import lru_cache
 from pathlib import Path
-from types import CodeType
-from typing import Any, Callable, Mapping, Optional, Union, cast
+from typing import Any, Mapping, Optional, Union, cast
 from uuid import uuid4
 
 import numpy as np
@@ -35,7 +30,7 @@ from config import (
     TARGET_COLUMN,
     TARGET_LOG_COLUMN,
 )
-from lawson import KEV_TO_K, to_kev
+from lawson import KEV_TO_K
 from storage import write_dataframe_csv_atomic
 from validation import is_boolean_like, validate_physics_dataframe
 
@@ -59,11 +54,12 @@ SUPPORTED_TEMPERATURE_UNITS = ("keV", "eV", "K")
 # Multiplier converting an ne_20 value (density / 1e20 m^-3) into the 1e19 m^-3
 # normalization the IPB98(y,2) confinement scaling is defined against.
 IPB98_NE19_PER_NE20 = NE_20_REFERENCE_DENSITY_M3 / IPB98_DENSITY_REFERENCE_M3
-PREPROCESSING_CONTRACT_VERSION = 2
+# Bumped to 3 when the contract dropped source/bytecode fingerprinting in favor
+# of this explicit structural description; artifacts trained under v2 are treated
+# as incompatible and must be retrained.
+PREPROCESSING_CONTRACT_VERSION = 3
 ROW_IDENTITY_COLUMNS = (ORIGINAL_ROW_INDEX_COLUMN, RAW_CSV_ROW_NUMBER_COLUMN)
 DEFAULT_SHOT_PREDICTION_CUTOFF_ROWS = 2
-PREPROCESSING_LOGIC_FINGERPRINT_METHOD = "python_source_tokens_v1"
-LEGACY_PREPROCESSING_LOGIC_FINGERPRINT_METHOD = "python_code_object_v1"
 
 
 @dataclass
@@ -414,6 +410,33 @@ def validate_group_identifier_column(df: pd.DataFrame) -> None:
         )
 
 
+_TEMPERATURE_UNIT_TO_KEV_FACTOR = {
+    "kev": 1.0,
+    "ev": 1e-3,
+    "k": 1.0 / KEV_TO_K,
+}
+
+
+def _temperature_value_to_kev_unchecked(value: object, unit: object) -> float:
+    """Convert a single temperature to keV by unit, deferring range checks.
+
+    Raises ``ValueError`` only when the value is non-numeric/boolean or the unit
+    is unrecognized. Out-of-range magnitudes (e.g. <= 0) are passed through so
+    the shared dataframe range validation can report them with proper per-row
+    context, matching how the dedicated temperature_keV/eV/K column paths behave
+    instead of raising a misleading "unit" error on the first bad value.
+    """
+    if is_boolean_like(value):
+        raise ValueError("temperature must be numeric, not boolean.")
+    numeric_value = float(cast(Any, value))
+    normalized_unit = str(unit).strip().lower()
+    try:
+        factor = _TEMPERATURE_UNIT_TO_KEV_FACTOR[normalized_unit]
+    except KeyError as exc:
+        raise ValueError("temperature unit must be 'keV', 'eV', or 'K'.") from exc
+    return numeric_value * factor
+
+
 def _temperature_series_with_units(temperature: pd.Series, units: pd.Series) -> tuple[pd.Series, list[object]]:
     converted_values: list[float] = []
     invalid_rows: list[object] = []
@@ -428,8 +451,8 @@ def _temperature_series_with_units(temperature: pd.Series, units: pd.Series) -> 
             converted_values.append(np.nan)
             continue
         try:
-            converted_values.append(float(to_kev(value, str(unit))))
-        except ValueError:
+            converted_values.append(_temperature_value_to_kev_unchecked(value, unit))
+        except (ValueError, TypeError):
             invalid_rows.append(index)
             converted_values.append(np.nan)
     return pd.Series(converted_values, index=temperature.index, dtype=float), invalid_rows
@@ -446,8 +469,8 @@ def _convert_temperature_series(
             converted_values.append(np.nan)
             continue
         try:
-            converted_values.append(float(to_kev(value, unit)))
-        except ValueError:
+            converted_values.append(_temperature_value_to_kev_unchecked(value, unit))
+        except (ValueError, TypeError):
             invalid_rows.append(index)
             converted_values.append(np.nan)
     return pd.Series(converted_values, index=temperature.index, dtype=float), invalid_rows
@@ -729,20 +752,23 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     confinement_time = _numeric_series(df, "confinement_time_s")
     df["ne_20"] = _derive_ne_20_series(df)
 
-    df["triple_product"] = fuel_density * temperature * confinement_time
-    triple_product = _numeric_series(df, "triple_product")
+    triple_product = fuel_density * temperature * confinement_time
+    df["triple_product"] = triple_product
     df["lawson_ratio"] = triple_product / LAWSON_DT_IGNITION
     df["density_temp"] = fuel_density * temperature
     df["density_tau"] = fuel_density * confinement_time
-    purity = _numeric_series(df, "fuel_purity") if "fuel_purity" in df.columns else pd.Series(1.0, index=df.index, dtype=float)
-    df["purity_weighted_density"] = fuel_density * purity
+    # Only build the purity-weighted feature when purity is actually available.
+    # Imputing a constant 1.0 would both duplicate fuel_density_m3 and silently
+    # assume perfect fuel purity, so leave the feature absent instead and let
+    # get_model_feature_columns drop it from the schema.
+    if "fuel_purity" in df.columns:
+        df["purity_weighted_density"] = fuel_density * _numeric_series(df, "fuel_purity")
 
-    if "fuel_density_m3" in df.columns:
-        df["log_fuel_density_m3"] = np.log1p(fuel_density)
-    if "temperature_keV" in df.columns:
-        df["log_temperature_keV"] = np.log1p(temperature)
-    if "confinement_time_s" in df.columns:
-        df["log_confinement_time_s"] = np.log1p(confinement_time)
+    # fuel_density_m3 / temperature_keV / confinement_time_s are required fields
+    # validated above, so they are always present here.
+    df["log_fuel_density_m3"] = np.log1p(fuel_density)
+    df["log_temperature_keV"] = np.log1p(temperature)
+    df["log_confinement_time_s"] = np.log1p(confinement_time)
     if "energy_input_MJ" in df.columns:
         df["log_energy_input_MJ"] = np.log1p(_numeric_series(df, "energy_input_MJ"))
     if "pressure_Pa" in df.columns:
@@ -815,197 +841,32 @@ def _build_preprocessing_contract_compatibility_payload() -> dict[str, object]:
     }
 
 
-def _normalize_fingerprint_value(value: object) -> object:
-    if isinstance(value, CodeType):
-        return {
-            "argcount": value.co_argcount,
-            "posonlyargcount": value.co_posonlyargcount,
-            "kwonlyargcount": value.co_kwonlyargcount,
-            "nlocals": value.co_nlocals,
-            "stacksize": value.co_stacksize,
-            "flags": value.co_flags,
-            "code_hex": value.co_code.hex(),
-            "names": list(value.co_names),
-            "varnames": list(value.co_varnames),
-            "freevars": list(value.co_freevars),
-            "cellvars": list(value.co_cellvars),
-            "consts": [_normalize_fingerprint_value(constant) for constant in value.co_consts],
-        }
-    if isinstance(value, bytes):
-        return {"bytes_hex": value.hex()}
-    if isinstance(value, tuple):
-        return [_normalize_fingerprint_value(item) for item in value]
-    if isinstance(value, list):
-        return [_normalize_fingerprint_value(item) for item in value]
-    if isinstance(value, (set, frozenset)):
-        normalized_items = [_normalize_fingerprint_value(item) for item in value]
-        return sorted(normalized_items, key=lambda item: json.dumps(item, sort_keys=True))
-    if isinstance(value, dict):
-        return {
-            str(key): _normalize_fingerprint_value(inner_value)
-            for key, inner_value in sorted(value.items(), key=lambda item: str(item[0]))
-        }
-    if isinstance(value, (str, int, float, bool)) or value is None:
-        return value
-    return repr(value)
-
-
-@lru_cache(maxsize=1)
-def _features_module_source() -> str | None:
-    try:
-        return Path(__file__).read_text(encoding="utf-8")
-    except OSError:
-        return None
-
-
-@lru_cache(maxsize=1)
-def _features_module_definition_sources() -> dict[str, str]:
-    module_source = _features_module_source()
-    if module_source is None:
-        return {}
-    module_ast = ast.parse(module_source)
-    definition_sources: dict[str, str] = {}
-    for node in module_ast.body:
-        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            continue
-        source_segment = ast.get_source_segment(module_source, node)
-        if source_segment is None:
-            continue
-        definition_sources[node.name] = source_segment
-    return definition_sources
-
-
-def _normalize_source_tokens(source_text: str) -> str:
-    normalized_tokens: list[str] = []
-    for token in tokenize.generate_tokens(io.StringIO(source_text).readline):
-        if token.type in {
-            tokenize.COMMENT,
-            tokenize.ENCODING,
-            tokenize.INDENT,
-            tokenize.DEDENT,
-            tokenize.ENDMARKER,
-            tokenize.NEWLINE,
-            tokenize.NL,
-        }:
-            continue
-        normalized_tokens.append(f"{token.type}:{token.string}")
-    return "\n".join(normalized_tokens)
-
-
-def _fingerprint_callable_from_source(function: Callable[..., object]) -> str | None:
-    definition_sources = _features_module_definition_sources()
-    source_text = definition_sources.get(function.__name__)
-    if source_text is None:
-        return None
-    normalized_source = _normalize_source_tokens(source_text)
-    return _compute_preprocessing_contract_hash({"normalized_source": normalized_source})
-
-
-def _fingerprint_callable_from_code_object(function: Callable[..., object]) -> str:
-    payload = {
-        "qualname": function.__qualname__,
-        "module": function.__module__,
-        "defaults": _normalize_fingerprint_value(function.__defaults__),
-        "kwdefaults": _normalize_fingerprint_value(function.__kwdefaults__),
-        "code": _normalize_fingerprint_value(function.__code__),
-    }
-    return _compute_preprocessing_contract_hash(payload)
-
-
-def _fingerprint_callable(
-    function: Callable[..., object],
-    *,
-    fingerprint_method: str,
-) -> str:
-    if fingerprint_method == PREPROCESSING_LOGIC_FINGERPRINT_METHOD:
-        source_fingerprint = _fingerprint_callable_from_source(function)
-        if source_fingerprint is not None:
-            return source_fingerprint
-    return _fingerprint_callable_from_code_object(function)
-
-
-def _build_preprocessing_logic_fingerprints(*, fingerprint_method: str) -> dict[str, str]:
-    return {
-        "to_kev": _fingerprint_callable(to_kev, fingerprint_method=fingerprint_method),
-        "_convert_temperature_series": _fingerprint_callable(
-            _convert_temperature_series,
-            fingerprint_method=fingerprint_method,
-        ),
-        "_temperature_series_with_units": _fingerprint_callable(
-            _temperature_series_with_units,
-            fingerprint_method=fingerprint_method,
-        ),
-        "standardize_temperature_column": _fingerprint_callable(
-            standardize_temperature_column,
-            fingerprint_method=fingerprint_method,
-        ),
-        "aggregate_time_resolved_shots_at_cutoff": _fingerprint_callable(
-            aggregate_time_resolved_shots_at_cutoff,
-            fingerprint_method=fingerprint_method,
-        ),
-        "add_ipb98_proxy": _fingerprint_callable(add_ipb98_proxy, fingerprint_method=fingerprint_method),
-        "_derive_ne_20_series": _fingerprint_callable(_derive_ne_20_series, fingerprint_method=fingerprint_method),
-        "align_to_feature_schema": _fingerprint_callable(align_to_feature_schema, fingerprint_method=fingerprint_method),
-        "engineer_features": _fingerprint_callable(engineer_features, fingerprint_method=fingerprint_method),
-        "get_model_feature_columns": _fingerprint_callable(
-            get_model_feature_columns,
-            fingerprint_method=fingerprint_method,
-        ),
-        "validate_physics_dataframe": _fingerprint_callable(
-            validate_physics_dataframe,
-            fingerprint_method=fingerprint_method,
-        ),
-    }
-
-
 def _compute_preprocessing_contract_hash(payload: Mapping[str, object]) -> str:
     return hashlib.sha256(
         json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()
 
 
-def _build_preprocessing_contract_payload(*, fingerprint_method: str) -> dict[str, object]:
-    compatibility_payload = _build_preprocessing_contract_compatibility_payload()
-    logic_fingerprints = _build_preprocessing_logic_fingerprints(fingerprint_method=fingerprint_method)
+def _build_preprocessing_contract_payload() -> dict[str, object]:
     return {
-        **compatibility_payload,
+        **_build_preprocessing_contract_compatibility_payload(),
         "lawson_dt_ignition": LAWSON_DT_IGNITION,
         "supported_temperature_units": list(SUPPORTED_TEMPERATURE_UNITS),
-        "source_fingerprint_method": fingerprint_method,
-        "logic_fingerprints": logic_fingerprints,
     }
 
 
-PREPROCESSING_CONTRACT_COMPARISON_FIELDS = tuple(
-    _build_preprocessing_contract_payload(
-        fingerprint_method=PREPROCESSING_LOGIC_FINGERPRINT_METHOD,
-    ).keys()
-) + (
-    "source_sha256",
-    "sha256",
-)
-PREPROCESSING_CONTRACT_CORE_FIELDS = tuple(_build_preprocessing_contract_compatibility_payload().keys()) + (
-    "lawson_dt_ignition",
-    "supported_temperature_units",
-)
-PREPROCESSING_CONTRACT_LEGACY_OPTIONAL_CORE_FIELDS = (
-    "ne_20_reference_density_m3",
-    "ne_20_relative_tolerance",
-    "ne_20_absolute_tolerance",
-)
-PREPROCESSING_CONTRACT_FINGERPRINT_FIELDS = (
-    "source_fingerprint_method",
-    "logic_fingerprints",
-    "source_sha256",
-    "sha256",
-)
+# The preprocessing contract is an explicit, versioned description of the
+# preprocessing behavior (column set, feature schema, physics constants and
+# tolerances). Bumping PREPROCESSING_CONTRACT_VERSION whenever preprocessing
+# semantics change is what invalidates stale artifacts. We intentionally no
+# longer fingerprint function source text or bytecode: that broke on harmless
+# reformatting/refactors and forced spurious retrains, which was more dangerous
+# than the explicit-version discipline it was meant to add.
+PREPROCESSING_CONTRACT_COMPARISON_FIELDS = tuple(_build_preprocessing_contract_payload().keys()) + ("sha256",)
 
 
 def normalize_preprocessing_contract(contract: Mapping[str, object]) -> dict[str, object]:
-    return {
-        key: contract.get(key)
-        for key in PREPROCESSING_CONTRACT_COMPARISON_FIELDS
-    }
+    return {key: contract.get(key) for key in PREPROCESSING_CONTRACT_COMPARISON_FIELDS}
 
 
 def preprocessing_contract_matches(left: Mapping[str, object], right: Mapping[str, object]) -> bool:
@@ -1028,96 +889,36 @@ def describe_preprocessing_contract_differences(
 def assess_runtime_preprocessing_contract_compatibility(
     saved_contract: Mapping[str, object],
     current_contract: Mapping[str, object],
-    *,
-    legacy_runtime_contract: Mapping[str, object] | None = None,
 ) -> PreprocessingContractCompatibilityReport:
-    compatibility_warnings: list[str] = []
-    core_differences: list[str] = []
-    for field in PREPROCESSING_CONTRACT_CORE_FIELDS:
-        if saved_contract.get(field) == current_contract.get(field):
-            continue
-        if field in PREPROCESSING_CONTRACT_LEGACY_OPTIONAL_CORE_FIELDS and field not in saved_contract:
-            compatibility_warnings.append(
-                "Runtime source compatibility was accepted using legacy preprocessing contract defaults for "
-                f"{field}; retrain to persist the explicit value."
-            )
-            continue
-        core_differences.append(field)
-    if core_differences:
-        fingerprint_differences = [
-            field
-            for field in PREPROCESSING_CONTRACT_FINGERPRINT_FIELDS
-            if saved_contract.get(field) != current_contract.get(field)
-        ]
-        return PreprocessingContractCompatibilityReport(
-            compatible=False,
-            differing_fields=tuple(core_differences + fingerprint_differences),
-        )
-
-    saved_method = saved_contract.get("source_fingerprint_method")
-    current_method = current_contract.get("source_fingerprint_method")
-    if saved_method == current_method:
-        differing_fields = [
-            field
-            for field in PREPROCESSING_CONTRACT_FINGERPRINT_FIELDS
-            if saved_contract.get(field) != current_contract.get(field)
-        ]
-        return PreprocessingContractCompatibilityReport(
-            compatible=not differing_fields,
-            differing_fields=tuple(differing_fields),
-            warnings=tuple(compatibility_warnings),
-        )
-
-    if saved_method == LEGACY_PREPROCESSING_LOGIC_FINGERPRINT_METHOD and legacy_runtime_contract is not None:
-        legacy_fingerprint_differences = [
-            field
-            for field in PREPROCESSING_CONTRACT_FINGERPRINT_FIELDS
-            if saved_contract.get(field) != legacy_runtime_contract.get(field)
-        ]
-        if not legacy_fingerprint_differences:
-            return PreprocessingContractCompatibilityReport(
-                compatible=True,
-                differing_fields=(),
-                warnings=tuple(compatibility_warnings),
-            )
-
-    if saved_method == LEGACY_PREPROCESSING_LOGIC_FINGERPRINT_METHOD:
-        return PreprocessingContractCompatibilityReport(
-            compatible=True,
-            differing_fields=("source_fingerprint_method",),
-            warnings=(
-                *compatibility_warnings,
-                "Saved model uses legacy bytecode-based preprocessing fingerprints. "
-                "Runtime source compatibility was accepted using the stable contract fields only; "
-                "retrain to refresh the artifact with source-based fingerprints.",
-            ),
-        )
-
-    differing_fields = ["source_fingerprint_method"]
-    differing_fields.extend(
-        field
-        for field in ("logic_fingerprints", "source_sha256", "sha256")
-        if saved_contract.get(field) != current_contract.get(field)
-    )
+    differing_fields = describe_preprocessing_contract_differences(saved_contract, current_contract)
     return PreprocessingContractCompatibilityReport(
-        compatible=False,
+        compatible=not differing_fields,
         differing_fields=tuple(differing_fields),
     )
 
 
-def build_preprocessing_contract(
-    *,
-    fingerprint_method: str = PREPROCESSING_LOGIC_FINGERPRINT_METHOD,
-) -> dict[str, object]:
-    contract_payload = _build_preprocessing_contract_payload(
-        fingerprint_method=fingerprint_method,
-    )
-    logic_payload = cast(dict[str, object], contract_payload["logic_fingerprints"])
-    return {
-        **contract_payload,
-        "source_sha256": _compute_preprocessing_contract_hash(logic_payload),
-        "sha256": _compute_preprocessing_contract_hash(contract_payload),
-    }
+def build_preprocessing_contract() -> dict[str, object]:
+    payload = _build_preprocessing_contract_payload()
+    return {**payload, "sha256": _compute_preprocessing_contract_hash(payload)}
+
+
+def read_dataset_csv(path: Path, *, context: str) -> pd.DataFrame:
+    """Read a CSV, converting raw pandas failures into pipeline-level errors.
+
+    Empty/headerless and malformed files raise a ``ValueError`` that names the
+    dataset context instead of leaking ``pandas.errors.EmptyDataError`` /
+    ``ParserError``, and a file that parses but has no data rows is rejected up
+    front rather than flowing through as an empty prepared dataset.
+    """
+    try:
+        frame = pd.read_csv(path)
+    except pd.errors.EmptyDataError as exc:
+        raise ValueError(f"{context} is empty or has no header row: {path}") from exc
+    except pd.errors.ParserError as exc:
+        raise ValueError(f"{context} could not be parsed as CSV: {path} ({exc}).") from exc
+    if frame.empty:
+        raise ValueError(f"{context} contains no data rows: {path}")
+    return frame
 
 
 def prepare_dataset(
@@ -1142,7 +943,7 @@ def prepare_dataset(
         synthetic_n_rows=synthetic_n_rows,
         synthetic_random_state=synthetic_random_state,
     )
-    raw_df = pd.read_csv(raw_path)
+    raw_df = read_dataset_csv(raw_path, context="Training dataset")
     audit_summary = audit_dataframe(raw_df)
     raw_df = add_source_identity_columns(raw_df)
     prepared_frame = prepare_model_frame(

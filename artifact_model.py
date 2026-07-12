@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import warnings
-from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 
@@ -39,52 +38,26 @@ class FusionFluxModelArtifact:
         self.fusionflux_feature_columns = tuple(feature_columns)
         self.fusionflux_model_name = model_name
         self.fusionflux_preprocessing_contract = dict(preprocessing_contract)
-        self._reset_prediction_info_context()
+        # Diagnostic record of the most recent predict() call. predict_with_info
+        # always overwrites it before anyone reads it, so a plain attribute is
+        # sufficient; __setstate__ backfills it for artifacts pickled elsewhere.
         self.last_prediction_info = _DEFAULT_PREDICTION_INFO
-
-    def _reset_prediction_info_context(self) -> None:
-        self._prediction_info_context: ContextVar[ArtifactPredictionInfo] = ContextVar(
-            f"fusionflux_last_prediction_info_{id(self)}",
-            default=_DEFAULT_PREDICTION_INFO,
-        )
-
-    @property
-    def last_prediction_info(self) -> ArtifactPredictionInfo:
-        return self._prediction_info_context.get()
-
-    @last_prediction_info.setter
-    def last_prediction_info(self, value: ArtifactPredictionInfo) -> None:
-        self._prediction_info_context.set(value)
-
-    def __getstate__(self) -> dict[str, object]:
-        state = self.__dict__.copy()
-        state.pop("_prediction_info_context", None)
-        return state
 
     def __setstate__(self, state: dict[str, object]) -> None:
         self.__dict__.update(state)
-        self._reset_prediction_info_context()
-        self.last_prediction_info = _DEFAULT_PREDICTION_INFO
+        self.__dict__.setdefault("last_prediction_info", _DEFAULT_PREDICTION_INFO)
 
     def validate_runtime_preprocessing(self) -> tuple[str, ...]:
         from features import (
-            LEGACY_PREPROCESSING_LOGIC_FINGERPRINT_METHOD,
             assess_runtime_preprocessing_contract_compatibility,
             build_preprocessing_contract,
             describe_preprocessing_contract_differences,
         )
 
         current_preprocessing = build_preprocessing_contract()
-        try:
-            legacy_runtime_preprocessing = build_preprocessing_contract(
-                fingerprint_method=LEGACY_PREPROCESSING_LOGIC_FINGERPRINT_METHOD,
-            )
-        except TypeError:
-            legacy_runtime_preprocessing = current_preprocessing
         compatibility_report = assess_runtime_preprocessing_contract_compatibility(
             self.fusionflux_preprocessing_contract,
             current_preprocessing,
-            legacy_runtime_contract=legacy_runtime_preprocessing,
         )
         if not compatibility_report.compatible:
             differing_fields = list(compatibility_report.differing_fields) or describe_preprocessing_contract_differences(
@@ -99,8 +72,20 @@ class FusionFluxModelArtifact:
             )
         return compatibility_report.warnings
 
-    def predict_with_info(self, features: Any) -> tuple[np.ndarray, ArtifactPredictionInfo]:
-        self.validate_runtime_preprocessing()
+    def predict_with_info(
+        self,
+        features: Any,
+        *,
+        revalidate_runtime: bool = True,
+    ) -> tuple[np.ndarray, ArtifactPredictionInfo]:
+        # ``predict``/direct ``joblib.load(...).predict(...)`` callers revalidate
+        # the preprocessing contract on every call so bypassing the inference
+        # loader still fails fast on drift. Callers that already validated the
+        # contract once (e.g. the batch inference loop that validated at load
+        # time) pass ``revalidate_runtime=False`` to skip the repeated, identical
+        # fingerprinting work per chunk.
+        if revalidate_runtime:
+            self.validate_runtime_preprocessing()
 
         if hasattr(features, "columns"):
             missing_feature_columns = [

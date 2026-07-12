@@ -33,6 +33,7 @@ from features import (
     ensure_project_directories,
     prepare_model_frame,
     preprocessing_contract_matches,
+    read_dataset_csv,
     resolve_column_mapping,
 )
 from lawson import calculate_lawson_status, to_kev
@@ -612,12 +613,10 @@ def _inspect_available_prediction_artifact_candidates() -> tuple[list[Prediction
             attempted_failures.append(
                 f"Skipped default artifact candidate {resolved_metadata_path.parent}: {exc}"
             )
-    inspected_candidates.sort(
-        key=lambda candidate: (
-            candidate.runtime_compatibility_rank,
-            -_artifact_candidate_recency_key(candidate),
-        )
-    )
+    # Callers impose their own ordering (list_prediction_artifacts sorts by
+    # recency, _select_loadable_default_artifact sorts via
+    # _sorted_default_artifact_candidates, and the training_run_id lookup is
+    # order-independent), so sorting here would just be redundant work.
     return inspected_candidates, attempted_failures
 
 
@@ -1104,7 +1103,12 @@ def _default_batch_prediction_output_path(input_path: Path) -> Path:
 
 
 def _canonicalized_batch_input_columns(input_path: Path) -> set[str]:
-    header_frame = pd.read_csv(input_path, nrows=0)
+    try:
+        header_frame = pd.read_csv(input_path, nrows=0)
+    except pd.errors.EmptyDataError as exc:
+        raise ValueError(f"Batch prediction input is empty or has no header row: {input_path}") from exc
+    except pd.errors.ParserError as exc:
+        raise ValueError(f"Batch prediction input could not be parsed as CSV: {input_path} ({exc}).") from exc
     rename_map = resolve_column_mapping(header_frame)
     return (set(header_frame.columns) - set(rename_map.keys())) | set(rename_map.values())
 
@@ -1142,8 +1146,11 @@ def _predict_prepared_batch_frame(
     *,
     prediction_runtime: PredictionRuntime,
 ) -> tuple[pd.DataFrame, int, list[str]]:
+    # The runtime already validated the preprocessing contract when the artifact
+    # was loaded, so skip the identical per-chunk revalidation on every batch.
     predictions, prediction_info = prediction_runtime.model.predict_with_info(
-        align_to_feature_schema(prepared_frame, prediction_runtime.metadata.feature_columns)
+        align_to_feature_schema(prepared_frame, prediction_runtime.metadata.feature_columns),
+        revalidate_runtime=False,
     )
     return (
         _build_prediction_output_frame(
@@ -1159,10 +1166,6 @@ def _predict_prepared_batch_frame(
 def _append_prediction_warning(prediction_warnings: list[str], warning: str) -> None:
     if warning not in prediction_warnings:
         prediction_warnings.append(warning)
-
-
-def _read_batch_prediction_frame(path: Path) -> pd.DataFrame:
-    return pd.read_csv(path)
 
 
 def predict_single_case(
@@ -1232,8 +1235,10 @@ def predict_single_case(
     ).dataframe
 
     feature_columns = prediction_runtime.metadata.feature_columns
+    # Contract already validated at load time; avoid redundant revalidation here.
     predicted_yield, prediction_info = prediction_runtime.model.predict_with_info(
-        align_to_feature_schema(inference_df, feature_columns)
+        align_to_feature_schema(inference_df, feature_columns),
+        revalidate_runtime=False,
     )
     prediction_warnings = list(prediction_runtime.load_warnings)
     for warning in prediction_info.prediction_warnings:
@@ -1309,6 +1314,10 @@ def predict_batch(
             raise FileNotFoundError(f"Batch prediction input not found: {input_path}")
         if _can_stream_batch_prediction_csv(input_path):
             row_offset = 0
+            # Only retained when the caller wants the predictions returned in
+            # memory; when return_predictions is False this stays empty so the
+            # streaming path keeps its constant-memory behavior.
+            collected_prediction_frames: list[pd.DataFrame] = []
 
             def process_streamed_chunks(*, sink_path: Path) -> int:
                 nonlocal column_mapping, row_offset, clipped_negative_prediction_count
@@ -1336,6 +1345,8 @@ def predict_batch(
                     for warning in chunk_warnings:
                         _append_prediction_warning(chunk_prediction_warnings, warning)
                     streamed_row_count += int(len(chunk_prediction_frame))
+                    if return_predictions:
+                        collected_prediction_frames.append(chunk_prediction_frame)
                     chunk_prediction_frame.to_csv(
                         sink_path,
                         mode="w" if write_header else "a",
@@ -1350,19 +1361,20 @@ def predict_batch(
                     row_count = process_streamed_chunks(sink_path=temp_output_path)
                     if column_mapping is None:
                         raise ValueError("Batch prediction input must contain at least one row.")
-                    if return_predictions:
-                        prediction_frame = _read_batch_prediction_frame(temp_output_path)
             else:
                 with tempfile.TemporaryDirectory(prefix="fusionflux_batch_predictions_") as temp_dir:
                     temp_prediction_path = Path(temp_dir) / "batch_predictions.csv"
                     row_count = process_streamed_chunks(sink_path=temp_prediction_path)
                     if column_mapping is None:
                         raise ValueError("Batch prediction input must contain at least one row.")
-                    if return_predictions:
-                        prediction_frame = _read_batch_prediction_frame(temp_prediction_path)
+            if return_predictions:
+                # Reuse the in-memory per-chunk frames instead of round-tripping
+                # the streamed CSV back through pd.read_csv, which would re-infer
+                # dtypes and diverge from the non-streaming return frame.
+                prediction_frame = pd.concat(collected_prediction_frames, ignore_index=True)
             assert column_mapping is not None
         else:
-            raw_frame = pd.read_csv(input_path)
+            raw_frame = read_dataset_csv(input_path, context="Batch prediction input")
             prepared_frame, column_mapping = _prepare_batch_inference_frame(
                 raw_frame,
                 runtime=prediction_runtime,
