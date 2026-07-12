@@ -11,7 +11,6 @@ from uuid import uuid4
 import joblib
 import numpy as np
 import pandas as pd
-import sklearn
 from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import HistGradientBoostingRegressor, RandomForestRegressor
