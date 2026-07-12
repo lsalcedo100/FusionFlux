@@ -36,7 +36,7 @@ from features import (
     resolve_column_mapping,
 )
 from lawson import calculate_lawson_status, to_kev
-from storage import atomic_output_path, ensure_parent_directory, write_json_strict
+from storage import atomic_output_path, write_json_strict
 from validation import validate_physics_inputs
 
 ARTIFACT_SCHEMA_VERSION = 3
@@ -231,10 +231,6 @@ def _validate_default_artifact_selection_mode(selection_mode: str) -> str:
             f"{list(SUPPORTED_DEFAULT_ARTIFACT_SELECTION_MODES)}, got {selection_mode!r}."
         )
     return selection_mode
-
-
-def _write_json_strict(path: Path, payload: dict[str, object]) -> None:
-    write_json_strict(path, payload)
 
 
 def _read_json_object(path: Path, *, object_name: str) -> dict[str, object]:
@@ -511,8 +507,7 @@ def _validate_runtime_versions_for_loading(
     return max_runtime_compatibility_rank, warnings
 
 
-def _ensure_parent_directory(path: Path) -> None:
-    ensure_parent_directory(path)
+# --- Artifact writers (used by training.py to persist runs the loader reads) ---
 
 
 def _serialize_training_metadata_paths(metadata: dict[str, object], *, metadata_path: Path) -> dict[str, object]:
