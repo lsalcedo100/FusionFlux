@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import inspect
 import json
-from pathlib import Path
 import re
 import shutil
 import sys
+from pathlib import Path
+from typing import Any
 
 import joblib
 import numpy as np
@@ -15,15 +16,15 @@ from sklearn.compose import TransformedTargetRegressor
 from sklearn.dummy import DummyRegressor
 from sklearn.pipeline import Pipeline
 
-from artifact_model import FusionFluxModelArtifact
 import config
 import features
 import inference
 import storage
 import train_model
 import training
-from config import ORIGINAL_ROW_INDEX_COLUMN, RAW_CSV_ROW_NUMBER_COLUMN
 import validation
+from artifact_model import FusionFluxModelArtifact
+from config import ORIGINAL_ROW_INDEX_COLUMN, RAW_CSV_ROW_NUMBER_COLUMN
 
 
 class NegativePredictingModel:
@@ -147,7 +148,7 @@ def _build_artifact_metadata(
     preprocessing_contract: dict[str, object] | None = None,
     assume_temperature_unit: str | None = None,
     shot_prediction_cutoff_rows: int = features.DEFAULT_SHOT_PREDICTION_CUTOFF_ROWS,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     resolved_feature_columns = feature_columns or [
         "fuel_density_m3",
         "temperature_keV",
@@ -1110,6 +1111,7 @@ def test_predict_batch_scores_rows_and_emits_artifact_metadata(
     assert result.output_path == output_path.resolve()
     assert result.column_mapping["density_m3"] == "fuel_density_m3"
     assert output_path.exists()
+    assert result.predictions is not None
     assert len(result.predictions) == 3
     assert ORIGINAL_ROW_INDEX_COLUMN in result.predictions.columns
     assert RAW_CSV_ROW_NUMBER_COLUMN in result.predictions.columns
@@ -1254,6 +1256,7 @@ def test_predict_batch_aggregates_time_resolved_shots_using_saved_cutoff_and_run
     assert runtime.shot_prediction_cutoff_rows == 3
     assert result.column_mapping["pulse_id"] == "shot_id"
     assert result.column_mapping["density_m3"] == "fuel_density_m3"
+    assert result.predictions is not None
     assert len(result.predictions) == 2
     assert result.predictions["shot_id"].tolist() == [11, 22]
     assert result.predictions["temperature_keV"].tolist() == pytest.approx([20.0, 50.0])
@@ -1308,6 +1311,7 @@ def test_predict_batch_preserves_duplicate_input_rows(
         metadata_path=metadata_path,
     )
 
+    assert result.predictions is not None
     assert len(result.predictions) == 2
     assert result.predictions["predicted_neutron_yield"].tolist() == pytest.approx([12.0, 12.0])
     assert result.predictions[ORIGINAL_ROW_INDEX_COLUMN].tolist() == [0, 1]
@@ -1366,6 +1370,7 @@ def test_predict_batch_streams_row_wise_csv_inputs_and_preserves_global_row_iden
     )
     written_output = pd.read_csv(output_path)
 
+    assert result.predictions is not None
     assert result.predictions["predicted_neutron_yield"].tolist() == pytest.approx([10.0, 11.0, 12.0, 13.0, 14.0])
     assert result.predictions[ORIGINAL_ROW_INDEX_COLUMN].tolist() == [0, 1, 2, 3, 4]
     assert result.predictions[RAW_CSV_ROW_NUMBER_COLUMN].tolist() == [2, 3, 4, 5, 6]

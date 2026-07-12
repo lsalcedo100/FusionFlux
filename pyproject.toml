@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fusionflux"
+version = "0.1.0"
+description = "Train and run FusionFlux: a physics-aware ML pipeline for predicting D-T fusion neutron yield."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "Liam" }]
+dependencies = [
+    "joblib",
+    "matplotlib",
+    "numpy",
+    "pandas",
+    "scikit-learn",
+    "seaborn",
+]
+
+[project.optional-dependencies]
+dev = [
+    "jupyter",
+    "mypy",
+    "pytest",
+    "ruff",
+]
+
+[project.scripts]
+fusionflux = "fusionflux_cli:main"
+
+[tool.setuptools]
+py-modules = [
+    "artifact_model",
+    "config",
+    "features",
+    "fusionflux_cli",
+    "inference",
+    "lawson",
+    "storage",
+    "train_model",
+    "training",
+    "validation",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+# The codebase intentionally uses long, descriptive lines; enforce everything
+# except the line-length rule.
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.mypy]
+python_version = "3.9"
+ignore_missing_imports = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["joblib.*", "sklearn.*", "seaborn.*", "matplotlib.*"]
+ignore_missing_imports = true

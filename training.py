@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import shutil
-from array import array
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -184,59 +183,38 @@ def _select_group_holdout_positions(
     target_test_rows: int,
     max_test_rows: int,
 ) -> tuple[int, tuple[int, ...]]:
-    reachable_bits = 1
-    reachable_mask = (1 << (max_test_rows + 1)) - 1
-    parent_totals = array("i", [-1]) * (max_test_rows + 1)
-    chosen_positions = array("i", [-1]) * (max_test_rows + 1)
+    """Choose whole groups whose combined row count best hits ``target_test_rows``.
 
+    This is a bounded subset-sum over the group row counts: each group is used at
+    most once (so no shot is split across train/test), and reachable totals are
+    capped at ``max_test_rows`` to protect the minimum training size. Among the
+    totals that also clear ``MIN_TEST_SAMPLES`` we keep the one whose
+    ``_group_holdout_total_score`` is best (closest to the target, preferring a
+    total at or above it). Groups are pre-shuffled by the caller, so the first
+    subset discovered for each total reflects that random order.
+    """
+    # Map every reachable test-row total to the group positions that produce it.
+    reachable: dict[int, tuple[int, ...]] = {0: ()}
     for position, group_row_count in enumerate(group_counts):
-        new_bits = ((reachable_bits << group_row_count) & reachable_mask) & ~reachable_bits
-        pending_bits = new_bits
-        while pending_bits:
-            next_total_bit = pending_bits & -pending_bits
-            total_rows = next_total_bit.bit_length() - 1
-            parent_totals[total_rows] = total_rows - group_row_count
-            chosen_positions[total_rows] = position
-            pending_bits ^= next_total_bit
-        reachable_bits |= new_bits
+        for total_rows, positions in list(reachable.items()):
+            new_total = total_rows + group_row_count
+            if new_total <= max_test_rows and new_total not in reachable:
+                reachable[new_total] = (*positions, position)
 
-    candidate_bits = reachable_bits >> MIN_TEST_SAMPLES
-    if not candidate_bits:
+    candidate_totals = [
+        total_rows for total_rows in reachable if MIN_TEST_SAMPLES <= total_rows <= max_test_rows
+    ]
+    if not candidate_totals:
         raise ValueError(
             "Grouped holdout could not find a test split with enough rows while keeping groups intact. "
             "Provide more shots before training."
         )
 
-    best_total: int | None = None
-    pending_candidate_bits = candidate_bits
-    while pending_candidate_bits:
-        next_total_bit = pending_candidate_bits & -pending_candidate_bits
-        total_rows = next_total_bit.bit_length() - 1 + MIN_TEST_SAMPLES
-        if total_rows <= max_test_rows and (
-            best_total is None
-            or _group_holdout_total_score(total_rows, target_test_rows=target_test_rows)
-            < _group_holdout_total_score(best_total, target_test_rows=target_test_rows)
-        ):
-            best_total = total_rows
-        pending_candidate_bits ^= next_total_bit
-
-    if best_total is None:
-        raise ValueError(
-            "Grouped holdout could not find a test split with enough rows while keeping groups intact. "
-            "Provide more shots before training."
-        )
-
-    selected_positions: list[int] = []
-    total_rows = best_total
-    while total_rows > 0:
-        position = int(chosen_positions[total_rows])
-        if position < 0:
-            raise RuntimeError("Failed to reconstruct grouped holdout split.")
-        selected_positions.append(position)
-        total_rows = int(parent_totals[total_rows])
-
-    selected_positions.reverse()
-    return best_total, tuple(selected_positions)
+    best_total = min(
+        candidate_totals,
+        key=lambda total_rows: _group_holdout_total_score(total_rows, target_test_rows=target_test_rows),
+    )
+    return best_total, reachable[best_total]
 
 
 def _select_group_holdout_indices(
@@ -927,6 +905,14 @@ def train_models(
                 "mismatch_artifact_path": str(cast(Path, artifact_paths["mismatch_path"])),
                 "residual_plot_path": str(final_residual_plot_path) if final_residual_plot_path is not None else None,
                 "selected_model_fit_scope": "training_split_only",
+                # These metrics come from the selected model fit on the training
+                # split with holdout_feature_columns. The shipped saved_model is
+                # refit on the full dataset with feature_columns; when
+                # saved_model_only_feature_columns is non-empty it uses a
+                # different feature schema, so the metrics only approximate the
+                # shipped model's performance rather than measuring it directly.
+                "metrics_characterize_saved_model_schema": not saved_model_only_feature_columns,
+                "saved_model_only_feature_columns": saved_model_only_feature_columns,
                 "report_generation_enabled": generate_reports,
                 "physics_mismatch_flagging": mismatch_summary.to_metadata_dict(flagged_case_count=len(flagged_cases)),
             },
@@ -984,6 +970,7 @@ def train_models(
             "dataset_source_kind": prepared.dataset_source_kind,
             "synthetic_data_used": prepared.synthetic_data_used,
             "saved_model_fit_scope": "full_prepared_dataset",
+            "holdout_metrics_characterize_saved_model_schema": not saved_model_only_feature_columns,
             "report_generation_enabled": generate_reports,
         }
     except Exception:

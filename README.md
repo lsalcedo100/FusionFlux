@@ -37,7 +37,9 @@ FusionFlux/
 ├── train_model.py
 ├── training.py
 ├── validation.py
+├── pyproject.toml
 ├── requirements.txt
+├── constraints.txt
 ├── tests/
 │   ├── conftest.py
 │   ├── test_lawson.py
@@ -70,6 +72,21 @@ python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install -c constraints.txt -r requirements.txt
+```
+
+Or install the project as an editable package (exposes the `fusionflux` command
+and pulls in the lint/type/test tooling via the `dev` extra):
+
+```bash
+python3 -m pip install -e ".[dev]" -c constraints.txt
+```
+
+Then lint, type-check, and test with:
+
+```bash
+ruff check .
+mypy .
+python3 -m pytest -q
 ```
 
 ## How to Run Training

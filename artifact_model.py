@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from contextvars import ContextVar
 import warnings
+from contextvars import ContextVar
 from dataclasses import dataclass
 from typing import Any, Mapping, Sequence
 

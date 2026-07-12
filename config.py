@@ -22,6 +22,9 @@ LAWSON_DT_IGNITION = 3e21
 NE_20_REFERENCE_DENSITY_M3 = 1e20
 NE_20_RELATIVE_TOLERANCE = 1e-3
 NE_20_ABSOLUTE_TOLERANCE = 1e-6
+# IPB98(y,2) energy-confinement scaling is defined for line-averaged density in
+# units of 1e19 m^-3, distinct from the 1e20 m^-3 normalization used for ne_20.
+IPB98_DENSITY_REFERENCE_M3 = 1e19
 PHYSICS_MISMATCH_FLAG_MODE = "predicted_percentile"
 SUPPORTED_PHYSICS_MISMATCH_FLAG_MODES = (
     "predicted_percentile",
@@ -101,11 +104,6 @@ COLUMN_ALIASES = {
     "ne_20": ["ne_20", "electron_density_1e20_m3", "electron_density_norm"],
     "M_amu": ["M_amu", "ion_mass_amu", "fuel_mass_amu"],
     "Pin_MW": ["Pin_MW", "input_power_MW", "heating_power_MW", "power_input_MW"],
-    "tau_E_measured_s": [
-        "tau_E_measured_s",
-        "tau_e_measured",
-        "measured_confinement_time_s",
-    ],
     "time_s": ["time_s", "time", "time_seconds"],
     "time_ms": ["time_ms", "time_milliseconds"],
 }
@@ -147,6 +145,9 @@ TARGET_LOG_COLUMN = "log_neutron_yield"
 GROUP_COLUMN = "shot_id"
 
 LEAKAGE_COLUMNS = [
+    # Direct log transform of the target: never a feature, excluded defensively
+    # so it can never leak even if added to an engineered-feature list.
+    TARGET_LOG_COLUMN,
     "power_output_MW",
     "power_output",
     "fusion_gain_Q",

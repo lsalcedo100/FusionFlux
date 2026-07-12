@@ -4,14 +4,14 @@ import ast
 import hashlib
 import io
 import json
+import tokenize
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 from types import CodeType
-from typing import Callable, Mapping, Optional, Union, cast
+from typing import Any, Callable, Mapping, Optional, Union, cast
 from uuid import uuid4
-import tokenize
 
 import numpy as np
 import pandas as pd
@@ -22,6 +22,7 @@ from config import (
     COLUMN_ALIASES,
     ENGINEERED_FEATURE_COLUMNS,
     GROUP_COLUMN,
+    IPB98_DENSITY_REFERENCE_M3,
     LAWSON_DT_IGNITION,
     LEAKAGE_COLUMNS,
     NE_20_ABSOLUTE_TOLERANCE,
@@ -34,7 +35,7 @@ from config import (
     TARGET_COLUMN,
     TARGET_LOG_COLUMN,
 )
-from lawson import to_kev
+from lawson import KEV_TO_K, to_kev
 from storage import write_dataframe_csv_atomic
 from validation import is_boolean_like, validate_physics_dataframe
 
@@ -55,6 +56,9 @@ OPTIONAL_PHYSICS_COLUMNS = (
 ALIAS_RELATIVE_TOLERANCE = 1e-6
 ALIAS_ABSOLUTE_TOLERANCE = 1e-12
 SUPPORTED_TEMPERATURE_UNITS = ("keV", "eV", "K")
+# Multiplier converting an ne_20 value (density / 1e20 m^-3) into the 1e19 m^-3
+# normalization the IPB98(y,2) confinement scaling is defined against.
+IPB98_NE19_PER_NE20 = NE_20_REFERENCE_DENSITY_M3 / IPB98_DENSITY_REFERENCE_M3
 PREPROCESSING_CONTRACT_VERSION = 2
 ROW_IDENTITY_COLUMNS = (ORIGINAL_ROW_INDEX_COLUMN, RAW_CSV_ROW_NUMBER_COLUMN)
 DEFAULT_SHOT_PREDICTION_CUTOFF_ROWS = 2
@@ -77,10 +81,6 @@ class PreparedDataset:
     requested_dataset_path: Path | None
     synthetic_random_state: int | None
     synthetic_row_count: int | None
-
-    @property
-    def feature_columns(self) -> list[str]:
-        return self.candidate_feature_columns
 
 
 @dataclass(frozen=True)
@@ -139,7 +139,7 @@ def create_synthetic_dataset(
         * np.power(r_m, 1.97)
         * np.power(epsilon, 0.58)
         * np.power(kappa, 0.78)
-        * np.power(ne_20, 0.41)
+        * np.power(ne_20 * IPB98_NE19_PER_NE20, 0.41)
         * np.power(m_amu, 0.19)
         * np.power(pin_mw, -0.69)
     )
@@ -244,7 +244,7 @@ def resolve_column_mapping(df: pd.DataFrame) -> dict[str, str]:
 def _is_missing_tabular_value(value: object) -> bool:
     if isinstance(value, str):
         return value.strip() == ""
-    return bool(pd.isna(value))
+    return bool(pd.isna(cast(Any, value)))
 
 
 def _format_rows(rows: list[object]) -> str:
@@ -488,9 +488,10 @@ def standardize_temperature_column(
             raise ValueError(
                 f"temperature_K rows [{_format_rows(invalid_rows)}] must be numeric when provided."
             )
-        temperature_candidates["temperature_K"] = temperature_k.apply(
-            lambda value: to_kev(float(value), "K") if pd.notna(value) else np.nan
-        )
+        # Convert numerically like the keV/eV branches and let the shared
+        # dataframe range validation report out-of-range values (e.g. <= 0)
+        # with proper per-row context, instead of raising here on the first bad value.
+        temperature_candidates["temperature_K"] = temperature_k / KEV_TO_K
 
     if "temperature" in df.columns and "temperature_unit" in df.columns:
         temperature_with_units, invalid_rows = _temperature_series_with_units(
@@ -608,17 +609,6 @@ def _deduplicate_dataframe_rows(df: pd.DataFrame) -> pd.DataFrame:
     return df.drop_duplicates(subset=dedupe_columns).reset_index(drop=True)
 
 
-def clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
-    df = _deduplicate_dataframe_rows(df)
-    validate_physics_dataframe(
-        df,
-        required_fields=REQUIRED_PHYSICS_COLUMNS,
-        optional_fields=OPTIONAL_PHYSICS_COLUMNS,
-    )
-    return df
-
-
 def prepare_model_frame(
     frame: pd.DataFrame,
     *,
@@ -711,7 +701,7 @@ def add_ipb98_proxy(df: pd.DataFrame) -> pd.DataFrame:
         * np.power(r_m_array[valid_mask_array], 1.97)
         * np.power(epsilon_array[valid_mask_array], 0.58)
         * np.power(kappa_array[valid_mask_array], 0.78)
-        * np.power(ne_20_array[valid_mask_array], 0.41)
+        * np.power(ne_20_array[valid_mask_array] * IPB98_NE19_PER_NE20, 0.41)
         * np.power(ion_mass_amu_array[valid_mask_array], 0.19)
         * np.power(pin_mw_array[valid_mask_array], -0.69)
     )

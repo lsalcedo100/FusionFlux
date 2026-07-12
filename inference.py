@@ -123,7 +123,6 @@ class PredictionArtifactCandidate:
     training_run_id: str
     created_at_utc: datetime | None
     runtime_compatibility_rank: int
-    is_manifest_default: bool = False
 
 
 @dataclass(frozen=True)
@@ -544,7 +543,7 @@ def _write_latest_training_run_manifest(
     metadata_path: Path,
 ) -> Path:
     manifest_path = config.get_data_processed_dir() / LATEST_TRAINING_RUN_FILENAME
-    _write_json_strict(
+    write_json_strict(
         manifest_path,
         {
             "schema_version": ARTIFACT_SCHEMA_VERSION,
@@ -557,9 +556,9 @@ def _write_latest_training_run_manifest(
     return manifest_path
 
 
-def _discover_prediction_artifact_candidate_paths() -> tuple[list[tuple[Path, Path, bool]], list[str]]:
+def _discover_prediction_artifact_candidate_paths() -> tuple[list[tuple[Path, Path]], list[str]]:
     manifest_path = config.get_data_processed_dir() / LATEST_TRAINING_RUN_FILENAME
-    candidate_paths: list[tuple[Path, Path, bool]] = []
+    candidate_paths: list[tuple[Path, Path]] = []
     discovery_failures: list[str] = []
     seen_candidates: set[tuple[Path, Path]] = set()
 
@@ -573,7 +572,7 @@ def _discover_prediction_artifact_candidate_paths() -> tuple[list[tuple[Path, Pa
             discovery_failures.append(f"Latest artifact manifest could not be used: {exc}")
         else:
             manifest_candidate = (manifest.model_path.resolve(), manifest.metadata_path.resolve())
-            candidate_paths.append((manifest_candidate[0], manifest_candidate[1], True))
+            candidate_paths.append(manifest_candidate)
             seen_candidates.add(manifest_candidate)
 
     runs_dir = config.get_data_processed_dir() / "runs"
@@ -591,7 +590,7 @@ def _discover_prediction_artifact_candidate_paths() -> tuple[list[tuple[Path, Pa
                 continue
             if not candidate[0].exists() or not candidate[1].exists():
                 continue
-            candidate_paths.append((candidate[0], candidate[1], False))
+            candidate_paths.append(candidate)
             seen_candidates.add(candidate)
 
     return candidate_paths, discovery_failures
@@ -601,13 +600,12 @@ def _inspect_available_prediction_artifact_candidates() -> tuple[list[Prediction
     candidate_paths, discovery_failures = _discover_prediction_artifact_candidate_paths()
     attempted_failures = list(discovery_failures)
     inspected_candidates: list[PredictionArtifactCandidate] = []
-    for resolved_model_path, resolved_metadata_path, is_manifest_default in candidate_paths:
+    for resolved_model_path, resolved_metadata_path in candidate_paths:
         try:
             inspected_candidates.append(
                 _inspect_prediction_artifact_candidate(
                     model_path=resolved_model_path,
                     metadata_path=resolved_metadata_path,
-                    is_manifest_default=is_manifest_default,
                 )
             )
         except Exception as exc:
@@ -723,19 +721,10 @@ def _resolve_prediction_artifact_selection(
             training_run_id=training_run_id,
         )
 
-    inspected_candidates, attempted_failures = _inspect_available_prediction_artifact_candidates()
-    if not inspected_candidates:
-        if attempted_failures:
-            failure_excerpt = " ".join(attempted_failures[:3])
-            raise ValueError(
-                "No usable training artifacts were found for default prediction. "
-                f"{failure_excerpt}"
-            )
-        raise FileNotFoundError(
-            "No training artifacts were found. Train a model first or pass both --model-path and --metadata-path."
-        )
-
     if training_run_id is not None:
+        inspected_candidates, attempted_failures = _inspect_available_prediction_artifact_candidates()
+        if not inspected_candidates:
+            raise _no_usable_default_artifact_error(attempted_failures)
         for candidate in inspected_candidates:
             if candidate.training_run_id == training_run_id:
                 return ResolvedPredictionArtifactSelection(
@@ -747,32 +736,17 @@ def _resolve_prediction_artifact_selection(
             f"No training artifact run was found for training_run_id={training_run_id!r}."
         )
 
-    if selection_mode == DEFAULT_ARTIFACT_SELECTION_BEST_COMPATIBILITY:
-        selected_candidate = min(
-            inspected_candidates,
-            key=lambda candidate: (
-                candidate.runtime_compatibility_rank,
-                -_artifact_candidate_recency_key(candidate),
-            ),
-        )
-    else:
-        selected_candidate = max(
-            inspected_candidates,
-            key=lambda candidate: (
-                _artifact_candidate_recency_key(candidate),
-                -candidate.runtime_compatibility_rank,
-            ),
-        )
+    # Default selection must agree with the loader: return the highest-priority
+    # candidate that actually deserializes and passes compatibility checks, not
+    # merely the one whose metadata ranks best. Otherwise resolve_prediction_
+    # artifact_paths() could hand back an artifact that load_prediction_runtime()
+    # would then skip.
+    loaded_artifact = _select_loadable_default_artifact(selection_mode=selection_mode)
     return ResolvedPredictionArtifactSelection(
-        model_path=selected_candidate.model_path,
-        metadata_path=selected_candidate.metadata_path,
-        training_run_id=selected_candidate.training_run_id,
-        resolution_warnings=_build_default_artifact_selection_warnings(
-            selected_candidate,
-            inspected_candidates,
-            attempted_failures,
-            selection_mode=selection_mode,
-        ),
+        model_path=loaded_artifact.model_path,
+        metadata_path=loaded_artifact.metadata_path,
+        training_run_id=loaded_artifact.metadata.training_run_id,
+        resolution_warnings=loaded_artifact.load_warnings,
     )
 
 
@@ -851,7 +825,6 @@ def _inspect_prediction_artifact_candidate(
     *,
     model_path: Path,
     metadata_path: Path,
-    is_manifest_default: bool = False,
 ) -> PredictionArtifactCandidate:
     if not model_path.exists():
         raise FileNotFoundError(f"Model not found: {model_path}")
@@ -877,118 +850,110 @@ def _inspect_prediction_artifact_candidate(
         training_run_id=metadata_record.training_run_id,
         created_at_utc=_parse_artifact_created_at(metadata_record.payload.get("created_at_utc")),
         runtime_compatibility_rank=runtime_compatibility_rank,
-        is_manifest_default=is_manifest_default,
     )
 
 
-def _load_prediction_artifact(
-    model_path: str | Path | None,
-    metadata_path: str | Path | None,
+def _no_usable_default_artifact_error(attempted_failures: list[str]) -> Exception:
+    if attempted_failures:
+        failure_excerpt = " ".join(attempted_failures[:3])
+        return ValueError(
+            "No usable training artifacts were found for default prediction. "
+            f"{failure_excerpt}"
+        )
+    return FileNotFoundError(
+        "No training artifacts were found. Train a model first or pass both --model-path and --metadata-path."
+    )
+
+
+def _sorted_default_artifact_candidates(
+    inspected_candidates: list[PredictionArtifactCandidate],
     *,
-    training_run_id: str | None = None,
-    default_artifact_selection: str = DEFAULT_ARTIFACT_SELECTION_BEST_COMPATIBILITY,
+    selection_mode: str,
+) -> list[PredictionArtifactCandidate]:
+    if selection_mode == DEFAULT_ARTIFACT_SELECTION_BEST_COMPATIBILITY:
+        return sorted(
+            inspected_candidates,
+            key=lambda candidate: (
+                candidate.runtime_compatibility_rank,
+                -_artifact_candidate_recency_key(candidate),
+            ),
+        )
+    return sorted(
+        inspected_candidates,
+        key=lambda candidate: (
+            -_artifact_candidate_recency_key(candidate),
+            candidate.runtime_compatibility_rank,
+        ),
+    )
+
+
+def _load_prediction_artifact_from_resolved_paths(
+    resolved_model_path: Path,
+    resolved_metadata_path: Path,
+    *,
+    allow_compatible_runtime_drift: bool,
 ) -> LoadedPredictionArtifact:
-    selection_mode = _validate_default_artifact_selection_mode(default_artifact_selection)
+    if not resolved_model_path.exists():
+        raise FileNotFoundError(f"Model not found: {resolved_model_path}")
+    if not resolved_metadata_path.exists():
+        raise FileNotFoundError(f"Metadata not found: {resolved_metadata_path}")
 
-    def _load_prediction_artifact_from_resolved_paths(
-        resolved_model_path: Path,
-        resolved_metadata_path: Path,
-        *,
-        allow_compatible_runtime_drift: bool,
-    ) -> LoadedPredictionArtifact:
-        if not resolved_model_path.exists():
-            raise FileNotFoundError(f"Model not found: {resolved_model_path}")
-        if not resolved_metadata_path.exists():
-            raise FileNotFoundError(f"Metadata not found: {resolved_metadata_path}")
+    raw_metadata = _read_json_object(resolved_metadata_path, object_name="Training metadata")
+    metadata = _resolve_training_metadata_paths(
+        raw_metadata,
+        metadata_path=resolved_metadata_path,
+    )
+    metadata_record = _parse_training_artifact_metadata(metadata, metadata_path=resolved_metadata_path)
+    _validate_saved_model_metadata_paths(
+        metadata,
+        metadata_path=resolved_metadata_path,
+        model_path=resolved_model_path,
+    )
+    _, runtime_warnings = _validate_runtime_versions_for_loading(
+        metadata_record,
+        metadata_path=resolved_metadata_path,
+        allow_compatible_drift=allow_compatible_runtime_drift,
+    )
+    load_warnings = tuple(runtime_warnings)
 
-        raw_metadata = _read_json_object(resolved_metadata_path, object_name="Training metadata")
-        metadata = _resolve_training_metadata_paths(
-            raw_metadata,
-            metadata_path=resolved_metadata_path,
-        )
-        metadata_record = _parse_training_artifact_metadata(metadata, metadata_path=resolved_metadata_path)
-        _validate_saved_model_metadata_paths(
-            metadata,
-            metadata_path=resolved_metadata_path,
-            model_path=resolved_model_path,
-        )
-        _, runtime_warnings = _validate_runtime_versions_for_loading(
-            metadata_record,
-            metadata_path=resolved_metadata_path,
-            allow_compatible_drift=allow_compatible_runtime_drift,
-        )
-        load_warnings = tuple(runtime_warnings)
+    try:
+        loaded_model = joblib.load(resolved_model_path)
+    except Exception as exc:
+        raise ValueError(
+            f"Failed to deserialize model artifact at {resolved_model_path}. "
+            "The file may be corrupted or incompatible with this runtime."
+        ) from exc
 
-        try:
-            loaded_model = joblib.load(resolved_model_path)
-        except Exception as exc:
-            raise ValueError(
-                f"Failed to deserialize model artifact at {resolved_model_path}. "
-                "The file may be corrupted or incompatible with this runtime."
-            ) from exc
+    model = cast(FusionFluxModelArtifact, loaded_model)
+    _ensure_artifact_compatibility(
+        model,
+        metadata_record,
+        model_path=resolved_model_path,
+        metadata_path=resolved_metadata_path,
+    )
+    preprocessing_warnings = model.validate_runtime_preprocessing()
+    return LoadedPredictionArtifact(
+        model=model,
+        metadata=metadata_record,
+        model_path=resolved_model_path,
+        metadata_path=resolved_metadata_path,
+        load_warnings=(*load_warnings, *preprocessing_warnings),
+    )
 
-        model = cast(FusionFluxModelArtifact, loaded_model)
-        _ensure_artifact_compatibility(
-            model,
-            metadata_record,
-            model_path=resolved_model_path,
-            metadata_path=resolved_metadata_path,
-        )
-        preprocessing_warnings = model.validate_runtime_preprocessing()
-        return LoadedPredictionArtifact(
-            model=model,
-            metadata=metadata_record,
-            model_path=resolved_model_path,
-            metadata_path=resolved_metadata_path,
-            load_warnings=(*load_warnings, *preprocessing_warnings),
-        )
 
-    ensure_project_directories()
-    if model_path is not None or metadata_path is not None or training_run_id is not None:
-        # Explicit artifact paths stay strict so callers never silently fall back
-        # to a different training run than the one they requested.
-        resolved_model_path, resolved_metadata_path = _resolve_prediction_artifact_paths(
-            model_path,
-            metadata_path,
-            training_run_id=training_run_id,
-            default_artifact_selection=selection_mode,
-        )
-        return _load_prediction_artifact_from_resolved_paths(
-            resolved_model_path,
-            resolved_metadata_path,
-            allow_compatible_runtime_drift=False,
-        )
+def _select_loadable_default_artifact(*, selection_mode: str) -> LoadedPredictionArtifact:
+    """Pick the highest-priority default artifact that actually loads.
 
+    Candidates are ranked by ``selection_mode`` and attempted in order; any that
+    fail to deserialize or fail a compatibility check are skipped. This is the
+    single source of truth for default selection so ``resolve_prediction_artifact_paths``
+    and ``load_prediction_runtime`` can never disagree on which artifact is default.
+    """
     inspected_candidates, attempted_failures = _inspect_available_prediction_artifact_candidates()
     if not inspected_candidates:
-        if attempted_failures:
-            failure_excerpt = " ".join(attempted_failures[:3])
-            raise ValueError(
-                "No usable training artifacts were found for default prediction. "
-                f"{failure_excerpt}"
-            )
-        raise FileNotFoundError(
-            "No training artifacts were found. Train a model first or pass both --model-path and --metadata-path."
-        )
+        raise _no_usable_default_artifact_error(attempted_failures)
 
-    if selection_mode == DEFAULT_ARTIFACT_SELECTION_BEST_COMPATIBILITY:
-        candidate_order = sorted(
-            inspected_candidates,
-            key=lambda candidate: (
-                candidate.runtime_compatibility_rank,
-                -_artifact_candidate_recency_key(candidate),
-            ),
-        )
-    else:
-        candidate_order = sorted(
-            inspected_candidates,
-            key=lambda candidate: (
-                -_artifact_candidate_recency_key(candidate),
-                candidate.runtime_compatibility_rank,
-            ),
-        )
-
-    for candidate in candidate_order:
+    for candidate in _sorted_default_artifact_candidates(inspected_candidates, selection_mode=selection_mode):
         try:
             loaded_artifact = _load_prediction_artifact_from_resolved_paths(
                 candidate.model_path,
@@ -1012,18 +977,39 @@ def _load_prediction_artifact(
                 metadata=loaded_artifact.metadata,
                 model_path=loaded_artifact.model_path,
                 metadata_path=loaded_artifact.metadata_path,
-                load_warnings=(
-                    *selection_warnings,
-                    *loaded_artifact.load_warnings,
-                ),
+                load_warnings=(*selection_warnings, *loaded_artifact.load_warnings),
             )
         return loaded_artifact
 
-    failure_excerpt = " ".join(attempted_failures[:3])
-    raise ValueError(
-        "No usable training artifacts were found for default prediction. "
-        f"{failure_excerpt}"
-    )
+    raise _no_usable_default_artifact_error(attempted_failures)
+
+
+def _load_prediction_artifact(
+    model_path: str | Path | None,
+    metadata_path: str | Path | None,
+    *,
+    training_run_id: str | None = None,
+    default_artifact_selection: str = DEFAULT_ARTIFACT_SELECTION_BEST_COMPATIBILITY,
+) -> LoadedPredictionArtifact:
+    selection_mode = _validate_default_artifact_selection_mode(default_artifact_selection)
+    ensure_project_directories()
+
+    if model_path is not None or metadata_path is not None or training_run_id is not None:
+        # Explicit artifact paths stay strict so callers never silently fall back
+        # to a different training run than the one they requested.
+        resolved_model_path, resolved_metadata_path = _resolve_prediction_artifact_paths(
+            model_path,
+            metadata_path,
+            training_run_id=training_run_id,
+            default_artifact_selection=selection_mode,
+        )
+        return _load_prediction_artifact_from_resolved_paths(
+            resolved_model_path,
+            resolved_metadata_path,
+            allow_compatible_runtime_drift=False,
+        )
+
+    return _select_loadable_default_artifact(selection_mode=selection_mode)
 
 
 def load_prediction_runtime(
@@ -1297,7 +1283,7 @@ def predict_batch(
         raise ValueError("predict_batch(return_predictions=False) requires an output_path.")
 
     prediction_frame: pd.DataFrame | None = None
-    column_mapping: dict[str, str]
+    column_mapping: dict[str, str] | None = None
     clipped_negative_prediction_count = 0
     chunk_prediction_warnings: list[str] = []
     row_count = 0
@@ -1322,7 +1308,6 @@ def predict_batch(
         if not input_path.exists():
             raise FileNotFoundError(f"Batch prediction input not found: {input_path}")
         if _can_stream_batch_prediction_csv(input_path):
-            column_mapping: dict[str, str] | None = None
             row_offset = 0
 
             def process_streamed_chunks(*, sink_path: Path) -> int:
@@ -1398,6 +1383,7 @@ def predict_batch(
     for warning in chunk_prediction_warnings:
         _append_prediction_warning(prediction_warnings, warning)
 
+    assert column_mapping is not None
     return BatchPredictionResult(
         predictions=prediction_frame,
         output_path=resolved_output_path,

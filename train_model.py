@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from typing import Any
+
 import inference as _inference
 import training as _training
 
 
-def __getattr__(name: str) -> object:
+def __getattr__(name: str) -> Any:
     if hasattr(_training, name):
         return getattr(_training, name)
     if hasattr(_inference, name):
