@@ -9,6 +9,7 @@ import joblib
 import numpy as np
 import pandas as pd
 import pytest
+import sklearn
 from helpers import (
     FeatureEchoModel,
     _build_artifact_metadata,
@@ -1096,7 +1097,7 @@ def test_default_artifact_selection_mode_can_prefer_newest_compatible_run(
     current_versions = {
         "python": sys.version.split()[0],
         "pandas": pd.__version__,
-        "scikit_learn": train_model.sklearn.__version__,
+        "scikit_learn": sklearn.__version__,
         "joblib": joblib.__version__,
     }
     older_run_id = "exact_runtime_run"

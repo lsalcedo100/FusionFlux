@@ -1,37 +1,25 @@
 from __future__ import annotations
 
-import shutil
 import warnings
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable, Union, cast
-from uuid import uuid4
+from typing import Union, cast
 
 import joblib
 import numpy as np
 import pandas as pd
 from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
-from sklearn.dummy import DummyRegressor
-from sklearn.ensemble import HistGradientBoostingRegressor, RandomForestRegressor
-from sklearn.impute import SimpleImputer
 from sklearn.inspection import permutation_importance
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import GroupKFold, KFold, train_test_split
 from sklearn.pipeline import Pipeline
 
 import config
 from artifact_model import FusionFluxModelArtifact
 from config import (
-    GROUP_COLUMN,
     HIGH_YIELD_PERCENTILE,
     HOLDOUT_TEST_SIZE,
     LOW_LAWSON_RATIO_THRESHOLD,
-    MAX_CV_FOLDS,
-    MIN_CV_FOLDS,
-    MIN_GROUPED_HOLDOUT_GROUPS,
     MIN_TEST_SAMPLES,
-    MIN_TOTAL_SAMPLES,
     MIN_TRAIN_SAMPLES,
     ORIGINAL_ROW_INDEX_COLUMN,
     PHYSICS_MISMATCH_FLAG_MODE,
@@ -53,24 +41,30 @@ from features import (
 from inference import (
     ARTIFACT_SCHEMA_VERSION,
     LATEST_TRAINING_RUN_FILENAME,
-    TRAINING_METADATA_FILENAME,
-    TRAINING_MODEL_FILENAME,
     _current_runtime_versions,
     _serialize_training_metadata_paths,
     _write_latest_training_run_manifest,
 )
 from storage import ensure_parent_directory, write_dataframe_csv_atomic, write_json_strict
+from training_artifacts import (
+    TRAINING_RUNS_DIRNAME,
+    _build_training_artifact_paths,
+    _cleanup_staged_training_run,
+    _publish_staged_training_run,
+    _timestamp_utc,
+)
+from training_registry import (
+    BASELINE_MODEL_NAME,
+    ModelFactory,
+    build_model_registry,
+    build_preprocessor,
+)
+from training_reports import save_feature_importance_plot, save_residual_plots
+from training_split import build_cv_splits, select_split_indices, validate_training_frame
 
-ModelFactory = Callable[[], TransformedTargetRegressor]
 MetricValue = Union[float, int]
 MetricSummaryValue = Union[MetricValue, str]
 MODEL_SELECTION_COLUMNS = ["cv_rmse_log_mean", "cv_mae_log_mean", "model"]
-# The median DummyRegressor is a reference floor, not a shippable model. On an
-# exact metric tie the alphabetical "model" tie-break would rank "baseline" first
-# and ship it, so selection demotes it to last and it can only win by being
-# strictly better than every real model family.
-BASELINE_MODEL_NAME = "baseline"
-TRAINING_RUNS_DIRNAME = "runs"
 
 
 @dataclass(frozen=True)
@@ -92,76 +86,6 @@ class PhysicsMismatchFlagSummary:
             "low_lawson_ratio_threshold": self.low_lawson_ratio_threshold,
             "flagged_case_count": int(flagged_case_count),
         }
-
-
-def _timestamp_utc() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-
-
-def _build_training_run_id() -> str:
-    return f"train_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_{uuid4().hex[:8]}"
-
-
-def _build_training_artifact_paths() -> dict[str, Path | str]:
-    run_id = _build_training_run_id()
-    runs_dir = config.get_data_processed_dir() / TRAINING_RUNS_DIRNAME
-    run_dir = runs_dir / run_id
-    staging_run_dir = runs_dir / ".staging" / run_id
-    plots_dir = run_dir / "plots"
-    models_dir = run_dir / "models"
-    staging_plots_dir = staging_run_dir / "plots"
-    staging_models_dir = staging_run_dir / "models"
-    return {
-        "run_id": run_id,
-        "run_dir": run_dir,
-        "staging_run_dir": staging_run_dir,
-        "plots_dir": plots_dir,
-        "staging_plots_dir": staging_plots_dir,
-        "models_dir": models_dir,
-        "staging_models_dir": staging_models_dir,
-        "processed_dataset_path": run_dir / "fusion_dataset_processed.csv",
-        "staging_processed_dataset_path": staging_run_dir / "fusion_dataset_processed.csv",
-        "metrics_path": run_dir / "metrics.csv",
-        "staging_metrics_path": staging_run_dir / "metrics.csv",
-        "prediction_path": run_dir / "test_predictions.csv",
-        "staging_prediction_path": staging_run_dir / "test_predictions.csv",
-        "mismatch_path": run_dir / "physics_mismatch_flags.csv",
-        "staging_mismatch_path": staging_run_dir / "physics_mismatch_flags.csv",
-        "synthetic_dataset_path": run_dir / "synthetic_training_input.csv",
-        "staging_synthetic_dataset_path": staging_run_dir / "synthetic_training_input.csv",
-        "feature_importance_path": run_dir / "feature_importance.csv",
-        "staging_feature_importance_path": staging_run_dir / "feature_importance.csv",
-        "importance_plot_path": plots_dir / "feature_importance.png",
-        "staging_importance_plot_path": staging_plots_dir / "feature_importance.png",
-        "model_path": models_dir / TRAINING_MODEL_FILENAME,
-        "staging_model_path": staging_models_dir / TRAINING_MODEL_FILENAME,
-        "metadata_path": run_dir / TRAINING_METADATA_FILENAME,
-        "staging_metadata_path": staging_run_dir / TRAINING_METADATA_FILENAME,
-    }
-
-
-def _cleanup_staged_training_run(artifact_paths: dict[str, Path | str]) -> None:
-    staging_run_dir = cast(Path, artifact_paths["staging_run_dir"])
-    if staging_run_dir.exists():
-        shutil.rmtree(staging_run_dir, ignore_errors=True)
-    for maybe_empty_dir in (staging_run_dir.parent, cast(Path, artifact_paths["run_dir"]).parent):
-        try:
-            maybe_empty_dir.rmdir()
-        except OSError:
-            continue
-
-
-def _publish_staged_training_run(artifact_paths: dict[str, Path | str]) -> None:
-    staging_run_dir = cast(Path, artifact_paths["staging_run_dir"])
-    run_dir = cast(Path, artifact_paths["run_dir"])
-    run_dir.parent.mkdir(parents=True, exist_ok=True)
-    if run_dir.exists():
-        raise FileExistsError(f"Training run directory already exists: {run_dir}")
-    staging_run_dir.rename(run_dir)
-    try:
-        staging_run_dir.parent.rmdir()
-    except OSError:
-        pass
 
 
 # Upper bound applied to predictions before scoring. log1p target models with an
@@ -188,221 +112,6 @@ def _clip_negative_predictions(predictions: np.ndarray) -> tuple[np.ndarray, int
     clipped_predictions[negative_mask] = 0.0
     clipped_predictions[overflow_mask] = PREDICTION_FINITE_UPPER_BOUND
     return clipped_predictions, clipped_count
-
-
-def _group_holdout_total_score(total_rows: int, *, target_test_rows: int) -> tuple[int, int, int]:
-    return (
-        abs(total_rows - target_test_rows),
-        0 if total_rows >= target_test_rows else 1,
-        -total_rows,
-    )
-
-
-# Work bound on the exact subset-sum search: it fills up to
-# ``len(group_counts) * (max_test_rows + 1)`` reachable-total cells. Above this
-# a large real dataset (many shots and rows) would turn split selection into a
-# Python-object bottleneck, so we fall back to a linear greedy fill instead.
-MAX_GROUP_HOLDOUT_SUBSET_SUM_CELLS = 2_000_000
-
-_GROUP_HOLDOUT_TOO_FEW_ROWS_MESSAGE = (
-    "Grouped holdout could not find a test split with enough rows while keeping groups intact. "
-    "Provide more shots before training."
-)
-
-
-def _greedy_group_holdout_positions(
-    group_counts: list[int],
-    *,
-    target_test_rows: int,
-    max_test_rows: int,
-) -> tuple[int, ...]:
-    """Linear fallback for large group sets: fill whole groups in the caller's
-    (already shuffled) order until reaching ``target_test_rows`` without exceeding
-    ``max_test_rows``. Deterministic for a given shuffle, and never splits a shot.
-    """
-    selected_positions: list[int] = []
-    total_rows = 0
-    for position, group_row_count in enumerate(group_counts):
-        if total_rows >= target_test_rows:
-            break
-        if total_rows + group_row_count <= max_test_rows:
-            selected_positions.append(position)
-            total_rows += group_row_count
-    if total_rows < MIN_TEST_SAMPLES:
-        raise ValueError(_GROUP_HOLDOUT_TOO_FEW_ROWS_MESSAGE)
-    return tuple(selected_positions)
-
-
-def _select_group_holdout_positions(
-    group_counts: list[int],
-    *,
-    target_test_rows: int,
-    max_test_rows: int,
-) -> tuple[int, ...]:
-    """Choose whole groups whose combined row count best hits ``target_test_rows``.
-
-    This is a bounded subset-sum over the group row counts: each group is used at
-    most once (so no shot is split across train/test), and reachable totals are
-    capped at ``max_test_rows`` to protect the minimum training size. Among the
-    totals that also clear ``MIN_TEST_SAMPLES`` we keep the one whose
-    ``_group_holdout_total_score`` is best (closest to the target, preferring a
-    total at or above it). Groups are pre-shuffled by the caller, so the first
-    subset discovered for each total reflects that random order. For very large
-    group sets the exact search is replaced by ``_greedy_group_holdout_positions``.
-    """
-    estimated_cells = len(group_counts) * (max_test_rows + 1)
-    if estimated_cells > MAX_GROUP_HOLDOUT_SUBSET_SUM_CELLS:
-        return _greedy_group_holdout_positions(
-            group_counts,
-            target_test_rows=target_test_rows,
-            max_test_rows=max_test_rows,
-        )
-
-    # Map every reachable test-row total to the group positions that produce it.
-    reachable: dict[int, tuple[int, ...]] = {0: ()}
-    for position, group_row_count in enumerate(group_counts):
-        for total_rows, positions in list(reachable.items()):
-            new_total = total_rows + group_row_count
-            if new_total <= max_test_rows and new_total not in reachable:
-                reachable[new_total] = (*positions, position)
-
-    candidate_totals = [
-        total_rows for total_rows in reachable if MIN_TEST_SAMPLES <= total_rows <= max_test_rows
-    ]
-    if not candidate_totals:
-        raise ValueError(_GROUP_HOLDOUT_TOO_FEW_ROWS_MESSAGE)
-
-    best_total = min(
-        candidate_totals,
-        key=lambda total_rows: _group_holdout_total_score(total_rows, target_test_rows=target_test_rows),
-    )
-    return reachable[best_total]
-
-
-def _select_group_holdout_indices(
-    df: pd.DataFrame,
-    *,
-    target_test_rows: int,
-    random_state: int,
-) -> tuple[np.ndarray, np.ndarray]:
-    group_sizes = df.groupby(GROUP_COLUMN, sort=False).size()
-    group_names = list(group_sizes.index)
-    group_counts = group_sizes.to_numpy(dtype=int)
-
-    rng = np.random.default_rng(random_state)
-    shuffled_order = rng.permutation(len(group_names))
-    shuffled_groups = [group_names[index] for index in shuffled_order]
-    shuffled_counts = [int(group_counts[index]) for index in shuffled_order]
-
-    max_test_rows = len(df) - MIN_TRAIN_SAMPLES
-    selected_positions = _select_group_holdout_positions(
-        shuffled_counts,
-        target_test_rows=target_test_rows,
-        max_test_rows=max_test_rows,
-    )
-    selected_groups = {shuffled_groups[position] for position in selected_positions}
-    test_mask = df[GROUP_COLUMN].isin(selected_groups).to_numpy(dtype=bool)
-    test_idx = np.flatnonzero(test_mask)
-    train_idx = np.flatnonzero(~test_mask)
-    return train_idx, test_idx
-
-
-def select_split_indices(df: pd.DataFrame, random_state: int = RANDOM_STATE) -> tuple[np.ndarray, np.ndarray, str]:
-    sample_count = len(df)
-    if sample_count < MIN_TOTAL_SAMPLES:
-        raise ValueError(
-            f"Need at least {MIN_TOTAL_SAMPLES} samples to produce a trustworthy holdout; found {sample_count}."
-        )
-
-    test_size = max(HOLDOUT_TEST_SIZE, MIN_TEST_SAMPLES / sample_count)
-    test_count = int(np.ceil(sample_count * test_size))
-    train_count = sample_count - test_count
-    if train_count < MIN_TRAIN_SAMPLES:
-        raise ValueError(
-            f"Need at least {MIN_TRAIN_SAMPLES} training rows after holdout; got {train_count} from {sample_count} samples."
-        )
-
-    unique_groups = df[GROUP_COLUMN].nunique(dropna=True) if GROUP_COLUMN in df.columns else 0
-    has_repeated_groups = GROUP_COLUMN in df.columns and 0 < unique_groups < len(df)
-    if has_repeated_groups:
-        if unique_groups < MIN_GROUPED_HOLDOUT_GROUPS:
-            raise ValueError(
-                f"Need at least {MIN_GROUPED_HOLDOUT_GROUPS} unique {GROUP_COLUMN} values for grouped holdout; "
-                f"found {unique_groups}."
-            )
-        train_idx, test_idx = _select_group_holdout_indices(
-            df,
-            target_test_rows=test_count,
-            random_state=random_state,
-        )
-        if len(train_idx) < MIN_TRAIN_SAMPLES or len(test_idx) < MIN_TEST_SAMPLES:
-            raise ValueError(
-                "Grouped holdout left too few rows for training or evaluation. Provide more shots before training."
-            )
-        return train_idx, test_idx, "group_row_target_split"
-
-    indices = np.arange(len(df))
-    train_idx, test_idx = train_test_split(indices, test_size=test_size, random_state=random_state)
-    return np.asarray(train_idx), np.asarray(test_idx), "random_split"
-
-
-def build_preprocessor(feature_columns: list[str]) -> ColumnTransformer:
-    return ColumnTransformer(
-        [
-            (
-                "num",
-                Pipeline([("imputer", SimpleImputer(strategy="median"))]),
-                feature_columns,
-            )
-        ]
-    )
-
-
-def build_model_registry(feature_columns: list[str]) -> dict[str, ModelFactory]:
-    return {
-        BASELINE_MODEL_NAME: lambda: TransformedTargetRegressor(
-            regressor=Pipeline([("prep", build_preprocessor(feature_columns)), ("model", DummyRegressor(strategy="median"))]),
-            func=np.log1p,
-            inverse_func=np.expm1,
-        ),
-        "random_forest": lambda: TransformedTargetRegressor(
-            regressor=Pipeline(
-                [
-                    ("prep", build_preprocessor(feature_columns)),
-                    (
-                        "model",
-                        RandomForestRegressor(
-                            n_estimators=400,
-                            max_depth=14,
-                            min_samples_leaf=2,
-                            random_state=RANDOM_STATE,
-                            n_jobs=-1,
-                        ),
-                    ),
-                ]
-            ),
-            func=np.log1p,
-            inverse_func=np.expm1,
-        ),
-        "hist_gradient_boosting": lambda: TransformedTargetRegressor(
-            regressor=Pipeline(
-                [
-                    ("prep", build_preprocessor(feature_columns)),
-                    (
-                        "model",
-                        HistGradientBoostingRegressor(
-                            max_depth=8,
-                            learning_rate=0.05,
-                            max_iter=350,
-                            random_state=RANDOM_STATE,
-                        ),
-                    ),
-                ]
-            ),
-            func=np.log1p,
-            inverse_func=np.expm1,
-        ),
-    }
 
 
 def compute_metrics(y_true: pd.Series, predictions: np.ndarray, *, context: str) -> dict[str, MetricValue]:
@@ -575,64 +284,6 @@ def extract_cross_validated_feature_importance(
     )
 
 
-def save_residual_plots(
-    y_true: pd.Series,
-    predictions: np.ndarray,
-    output_path: Path,
-    model_name: str,
-) -> None:
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    residuals = y_true - predictions
-    sns.set_theme(style="whitegrid")
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-
-    axes[0].scatter(y_true, predictions, alpha=0.7, edgecolor="none")
-    min_axis = min(float(y_true.min()), float(predictions.min()))
-    max_axis = max(float(y_true.max()), float(predictions.max()))
-    axes[0].plot([min_axis, max_axis], [min_axis, max_axis], linestyle="--", color="black")
-    axes[0].set_title(f"Actual vs Predicted ({model_name})")
-    axes[0].set_xlabel("Actual Neutron Yield")
-    axes[0].set_ylabel("Predicted Neutron Yield")
-
-    axes[1].scatter(predictions, residuals, alpha=0.7, edgecolor="none")
-    axes[1].axhline(0.0, linestyle="--", color="black")
-    axes[1].set_title(f"Residuals ({model_name})")
-    axes[1].set_xlabel("Predicted Neutron Yield")
-    axes[1].set_ylabel("Residual")
-
-    fig.tight_layout()
-    fig.savefig(output_path, dpi=160)
-    plt.close(fig)
-
-
-def save_feature_importance_plot(
-    importance_df: pd.DataFrame,
-    output_path: Path,
-    *,
-    model_name: str,
-    importance_method: str,
-) -> None:
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-
-    top_features = importance_df.head(12).iloc[::-1]
-    sns.set_theme(style="whitegrid")
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.barh(top_features["feature"], top_features["importance"], color="#2f6f9f")
-    title_model_name = model_name.replace("_", " ").title()
-    if "permutation_importance" in importance_method:
-        ax.set_title(f"{title_model_name} Permutation Importance")
-    else:
-        ax.set_title(f"{title_model_name} Feature Importance")
-    ax.set_xlabel("Importance")
-    ax.set_ylabel("Feature")
-    fig.tight_layout()
-    fig.savefig(output_path, dpi=160)
-    plt.close(fig)
-
-
 def _resolve_physics_mismatch_flag_summary(predictions: np.ndarray) -> PhysicsMismatchFlagSummary:
     if PHYSICS_MISMATCH_FLAG_MODE not in SUPPORTED_PHYSICS_MISMATCH_FLAG_MODES:
         raise ValueError(
@@ -688,43 +339,6 @@ def flag_physics_mismatches(
     flagged["physics_mismatch_low_lawson_ratio_threshold"] = summary.low_lawson_ratio_threshold
     write_dataframe_csv_atomic(output_path, flagged, index=False)
     return flagged, summary
-
-
-def validate_training_frame(df: pd.DataFrame, candidate_feature_columns: list[str]) -> None:
-    if not candidate_feature_columns:
-        raise ValueError("No model features are available after dataset preparation.")
-    if len(df) < MIN_TOTAL_SAMPLES:
-        raise ValueError(
-            f"Need at least {MIN_TOTAL_SAMPLES} samples to produce a trustworthy holdout; found {len(df)}."
-        )
-    if df[TARGET_COLUMN].nunique(dropna=True) < 2:
-        raise ValueError("Training target must contain at least two distinct values.")
-    if GROUP_COLUMN in df.columns and df[GROUP_COLUMN].nunique(dropna=True) == 1 and len(df) > 1:
-        raise ValueError(f"Need more than one unique {GROUP_COLUMN} value to build a trustworthy holdout.")
-
-
-def build_cv_splits(
-    train_frame: pd.DataFrame,
-    split_strategy: str,
-    random_state: int = RANDOM_STATE,
-) -> tuple[list[tuple[np.ndarray, np.ndarray]], str, int]:
-    if split_strategy == "group_row_target_split":
-        group_count = int(train_frame[GROUP_COLUMN].nunique(dropna=True))
-        fold_count = min(MAX_CV_FOLDS, group_count)
-        if fold_count < MIN_CV_FOLDS:
-            raise ValueError(
-                f"Need at least {MIN_CV_FOLDS} unique {GROUP_COLUMN} values in the training fold for grouped CV; "
-                f"found {group_count}."
-            )
-        splitter = GroupKFold(n_splits=fold_count)
-        splits = list(splitter.split(train_frame, groups=train_frame[GROUP_COLUMN]))
-        return splits, "group_k_fold", fold_count
-
-    fold_count = min(MAX_CV_FOLDS, len(train_frame))
-    if fold_count < MIN_CV_FOLDS:
-        raise ValueError(f"Need at least {MIN_CV_FOLDS} training rows for cross-validation; found {len(train_frame)}.")
-    splitter = KFold(n_splits=fold_count, shuffle=True, random_state=random_state)
-    return list(splitter.split(train_frame)), "k_fold", fold_count
 
 
 def cross_validate_model(
@@ -1132,7 +746,10 @@ def train_models(
 
 __all__ = [
     "HIGH_YIELD_PERCENTILE",
+    "HOLDOUT_TEST_SIZE",
     "LOW_LAWSON_RATIO_THRESHOLD",
+    "MIN_TEST_SAMPLES",
+    "MIN_TRAIN_SAMPLES",
     "MODEL_SELECTION_COLUMNS",
     "MetricSummaryValue",
     "MetricValue",

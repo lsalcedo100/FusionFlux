@@ -9,6 +9,7 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
+import sklearn
 
 import features
 import inference
@@ -142,7 +143,7 @@ def _build_artifact_metadata(
         "runtime_versions": {
             "python": sys.version.split()[0],
             "pandas": pd.__version__,
-            "scikit_learn": train_model.sklearn.__version__,
+            "scikit_learn": sklearn.__version__,
             "joblib": joblib.__version__,
         },
         "saved_model": {

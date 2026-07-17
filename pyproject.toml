@@ -38,10 +38,16 @@ py-modules = [
     "features",
     "fusionflux_cli",
     "inference",
+    "inference_artifacts",
+    "inference_selection",
     "lawson",
     "storage",
     "train_model",
     "training",
+    "training_artifacts",
+    "training_registry",
+    "training_reports",
+    "training_split",
     "validation",
 ]
 
@@ -78,9 +84,15 @@ source = [
     "features",
     "fusionflux_cli",
     "inference",
+    "inference_artifacts",
+    "inference_selection",
     "lawson",
     "storage",
     "training",
+    "training_artifacts",
+    "training_registry",
+    "training_reports",
+    "training_split",
     "validation",
 ]
 
