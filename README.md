@@ -10,26 +10,37 @@ Together they let you compare data-driven predictions against simple physics-bas
 
 ## Results
 
-Full writeup with tables, limitations and reproduction steps: **[results/RESULTS.md](results/RESULTS.md)**. Regenerate everything with `python3 analysis_scaling_law.py`.
+Full writeup with tables, limitations and reproduction steps: **[results/RESULTS.md](results/RESULTS.md)**. Regenerate with `python3 analysis_scaling_law.py` and `python3 analysis_extrapolation.py`.
 
 Measured on the real ITPA H-mode confinement database (HDB5 STD5): 6228 quasi-stationary time slices from 4471 discharges across 18 tokamaks. No synthetic data is used in any reported result.
 
+### The headline: a learned model beats the published scaling law, and that result does not survive contact with a new machine
+
+![Interpolation against extrapolation](results/extrapolation.png)
+
+Under cross-validation grouped by discharge, a random forest cuts RMSLE 41% below the analytic IPB98(y,2) law. But grouped CV holds out *shots*, so every machine in the held-out fold is also in the training fold. Hold out an entire tokamak instead, train on the other 12 and predict the 13th, and **the ranking of the three blind models reverses exactly**:
+
+| model | CV, by discharge | leave-one-tokamak-out | ratio | CV rank | LOMO rank |
+|---|---|---|---|---|---|
+| random forest | 0.128 | 0.465 | **3.6x worse** | 1 | 5 |
+| histogram gradient boosting | 0.130 | 0.359 | 2.8x worse | 2 | 4 |
+| ridge, log-quadratic (control) | 0.158 | 0.300 | 1.9x worse | 3 | 3 |
+| ridge, log-linear | 0.181 | 0.214 | 1.2x worse | 4 | 2 |
+| IPB98(y,2), analytic (fitted on this database, not blind) | 0.199 | 0.188 | unchanged | 5 | 1 |
+
+Both columns use the same nine features and the same models; only the split changes. The best model in this repository by cross-validation is the worst of the three on a machine it has not seen, and its 41% margin turns out to measure how much of JET is predictable from the rest of JET.
+
+**The failure has a mechanism, and it is measurable.** The random forest's per-machine error correlates with how far that machine sits outside the training data at rho = **+0.85**; the log-linear power law's does not, at rho = **-0.06**. And when JET is held out, 48% of its rows lie above the highest confinement time in the remaining 12 machines: a tree ensemble averages training targets, so **no tree in the forest can output those values at all**, whatever the features say. That bound is asserted directly in `tests/test_extrapolation.py`.
+
+**And it is the constraint that matters, not just the ability to extrapolate.** The obvious objection is that ridge only wins because it is the one model in the zoo that is not bounded by its training range. The `ridge_log_quadratic` control tests exactly that: it carries curvature and every pairwise log interaction, so it is much more flexible than plain ridge, but being a polynomial it still extrapolates without bound. It lands in between (0.300, 1.9x), and every column of the table above turns out to be monotone in flexibility. Unbounded extrapolation buys something real, but most of the advantage comes from the constrained power-law form. This is why the field still uses power laws it knows fit worse.
+
+### The linear algebra underneath
+
 ![Singular value spectrum and disagreement decomposition](results/singular_value_spectrum.png)
-
-**The learned model beats the published scaling law.** Under cross-validation grouped by discharge, scored against the analytic IPB98(y,2) law rather than against the mean:
-
-| model | CV RMSLE | CV R^2 (log) |
-|---|---|---|
-| random forest | 0.118 | 0.981 |
-| histogram gradient boosting | 0.119 | 0.981 |
-| ridge, log-linear | 0.181 | 0.957 |
-| IPB98(y,2), analytic, no training | 0.199 | 0.947 |
-| mean baseline | 0.869 | 0.000 |
 
 **The model's own feature matrix is rank deficient by two, and this audit found it.** Standardized, the ten log features have rank 8. Two exact dependencies, each confirmed by projection onto the null space at a residual of order 1e-16: minor radius is derived as `a = eps * R`, and the IPB98 prior is a fixed log-linear combination of the other eight features. That second one means a published physics scaling, added as a feature, contributes exactly nothing to a log-linear model, however much it looks like added knowledge. Nothing crashed because `scipy.linalg.lstsq` inverts through the SVD pseudoinverse and silently returns the minimum-norm member of a two-parameter family.
 
 **Refitting IPB98(y,2) from the database disagrees with the published exponents almost entirely where the data is blind.** Solving three ways from scratch (Cholesky on the normal equations, QR, SVD, agreeing to 8e-13) gives Ip 1.08 against 0.93 and R 1.58 against 1.97, while P and Bt come back essentially exactly. Decomposing that difference along the singular directions of the design matrix: **77% of it lies in the single weakest direction, which carries 0.3% of the matrix's variance**, and the three strongest directions carry 82% of the variance while accounting for 0.75% of the disagreement. That weak direction is plasma current traded against machine size, which is structurally hard to resolve because tokamaks are not designed to vary the two independently.
-
 
 ## Quickstart
 
@@ -94,6 +105,8 @@ FusionFlux/
 ├── inference_artifacts.py     # artifact schema, metadata parsing, run-manifest writers
 ├── inference_selection.py     # artifact discovery, default selection, loading
 ├── lawson.py                  # standalone Lawson criterion utility
+├── analysis_extrapolation.py  # Result 4: leave-one-tokamak-out study and figure
+├── analysis_scaling_law.py    # Results 1 to 3: rank audit, IPB98 refit, conditioning
 ├── scaling_law.py             # from-scratch least squares; fits/audits scaling laws
 ├── storage.py                 # atomic file writes and JSON/CSV helpers
 ├── train_model.py             # compatibility facade and CLI entrypoint
@@ -118,6 +131,7 @@ FusionFlux/
 │   ├── test_hdb5.py
 │   ├── test_lawson.py
 │   ├── test_preprocessing.py
+│   ├── test_extrapolation.py
 │   ├── test_scaling_law.py
 │   ├── test_training.py
 │   └── test_inference.py
@@ -335,6 +349,22 @@ Cross-validate the whole model zoo and print a comparison report without saving 
 ```bash
 python3 hdb5.py evaluate --cv-folds 5
 ```
+
+### Extrapolate to an Unseen Machine
+
+`evaluate` holds out discharges, so every tokamak in the held-out fold is also in the training fold. That measures interpolation. To measure the case a scaling law exists for, hold out a whole device:
+
+```bash
+python3 hdb5.py extrapolate                       # train on 12 machines, predict the 13th, rotate
+python3 hdb5.py extrapolate --include-controls    # add ridge_log_quadratic (see Result 4d)
+python3 hdb5.py extrapolate --output-dir results  # also write the per-machine and summary CSVs
+```
+
+Machines with fewer than `--min-rows` (default 30) held-out rows are skipped, since their RMSLE would not mean anything. The analytic IPB98(y,2) row is reported as a reference rather than a blind baseline: its exponents were fitted on this database, held-out machine included.
+
+By default `log_ipb98y2_tau_s` is dropped from the feature set for this command, for the same reason. It is a fixed log-linear combination of the other features whose coefficients saw the held-out machine, so keeping it leaks. `--keep-ipb98-feature` restores it if you want to measure that leak.
+
+`python3 analysis_extrapolation.py` runs both splits on the one shared feature set, adds the distance diagnostics and the figure, and writes everything under `results/`. See [Result 4](results/RESULTS.md#result-4-the-model-that-wins-on-cross-validation-loses-on-a-new-machine).
 
 ### Predict
 

@@ -22,7 +22,7 @@ import argparse
 import contextlib
 import json
 from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 
 import numpy as np
@@ -204,8 +204,13 @@ def build_features(frame: pd.DataFrame) -> pd.DataFrame:
     return featured
 
 
+def prepare_dataset_from_frame(raw: pd.DataFrame) -> pd.DataFrame:
+    """Clean and feature-engineer an already-loaded raw HDB5 frame."""
+    return build_features(map_to_canonical(raw))
+
+
 def prepare_dataset(path: Path | str | None = None) -> pd.DataFrame:
-    return build_features(map_to_canonical(load_hdb5_dataframe(path)))
+    return prepare_dataset_from_frame(load_hdb5_dataframe(path))
 
 
 # --- Metrics ----------------------------------------------------------------
@@ -297,8 +302,25 @@ def clone_pipeline(estimator: Pipeline) -> Pipeline:
     return clone(estimator)
 
 
-def evaluate_models(dataset: pd.DataFrame, *, n_splits: int = N_CV_FOLDS) -> list[ModelScore]:
-    features = dataset[list(MODEL_FEATURE_COLUMNS)]
+def evaluate_models(
+    dataset: pd.DataFrame,
+    *,
+    n_splits: int = N_CV_FOLDS,
+    feature_columns: tuple[str, ...] = MODEL_FEATURE_COLUMNS,
+    include_controls: bool = False,
+) -> list[ModelScore]:
+    """Grouped cross-validation by discharge: interpolation within known machines.
+
+    ``feature_columns`` exists so this can be run on the same blind feature set
+    that :func:`leave_one_tokamak_out` uses. Comparing the two while the feature
+    set also changes would confound the split with the features, and the whole
+    point of that comparison is that only the split changes.
+
+    ``include_controls`` mirrors the same flag on :func:`leave_one_tokamak_out`,
+    so the control models can be scored under both splits rather than only the
+    one they were introduced to probe.
+    """
+    features = dataset[list(feature_columns)]
     tau = dataset[TARGET_COLUMN].to_numpy(dtype=float)
     log_tau = np.log(tau)
     groups = dataset[GROUP_COLUMN].to_numpy()
@@ -312,7 +334,10 @@ def evaluate_models(dataset: pd.DataFrame, *, n_splits: int = N_CV_FOLDS) -> lis
         ModelScore("ipb98y2_analytic", _rmsle(tau, ipb98), _r2_log(tau, ipb98), _mae(tau, ipb98))
     )
 
-    for name, estimator in build_model_zoo().items():
+    zoo = dict(build_model_zoo())
+    if include_controls:
+        zoo.update(build_control_models())
+    for name, estimator in zoo.items():
         oof_log = _grouped_cv_predictions(estimator, features, log_tau, groups, effective_splits)
         oof_tau = np.exp(oof_log)
         scores.append(
@@ -495,6 +520,269 @@ def predict_single_case(
     }
 
 
+# --- Leave-one-tokamak-out extrapolation ------------------------------------
+
+# A machine needs enough held-out rows for its RMSLE to mean anything.
+MIN_HELD_OUT_ROWS = 30
+
+# The IPB98 prior is a fixed log-linear combination of the eight engineering log
+# features (see ``results/RESULTS.md``, Result 1), and its exponents were fitted
+# on this same database, held-out machine included. Keeping it as a feature
+# therefore leaks the held-out machine into every model that uses it, which is
+# exactly what an extrapolation test must exclude. Engineering parameters only.
+BLIND_FEATURE_COLUMNS: tuple[str, ...] = tuple(
+    column for column in MODEL_FEATURE_COLUMNS if column != "log_ipb98y2_tau_s"
+)
+
+
+@dataclass(frozen=True)
+class MachineScore:
+    """One model's error on one entirely held-out machine."""
+
+    model_name: str
+    tokamak: str
+    n_held_out_rows: int
+    rmsle: float
+    r2_log: float
+    mae_s: float
+    # False for ``ipb98y2_analytic``: it was fitted on this database, so it saw
+    # the held-out machine and is a reference point rather than a fair baseline.
+    is_blind: bool
+
+
+@dataclass(frozen=True)
+class ExtrapolationDiagnostic:
+    """How far outside the training data a held-out machine actually sits.
+
+    Separates two explanations for a model failing on an unseen machine: that
+    its functional form is wrong, or that the machine simply lies outside the
+    training range. Tree ensembles average training targets, so their output is
+    bounded by ``[min(y_train), max(y_train))]`` and they cannot reach a machine
+    above that range no matter how good the features are. A log-linear power law
+    has no such bound.
+    """
+
+    tokamak: str
+    n_held_out_rows: int
+    # Distance of the held-out mean log-feature vector from the training mean,
+    # in training-covariance units.
+    feature_mahalanobis: float
+    n_features_outside_train_range: int
+    # Fraction of held-out rows whose true tau lies outside the training target
+    # range. Tree ensembles structurally cannot predict these.
+    target_above_train_max_fraction: float
+    target_below_train_min_fraction: float
+    # log(max y_held_out) - log(max y_train). Positive means the machine reaches
+    # confinement times no tree in the forest can output.
+    log_target_headroom: float
+
+
+def build_control_models() -> dict[str, Pipeline]:
+    """Controls that separate *constrained* from merely *able to extrapolate*.
+
+    Ridge beating the trees on an unseen machine has two candidate explanations
+    that the main zoo cannot tell apart: the power-law form is physically right,
+    or ridge is simply the only model in the zoo that extrapolates at all (a
+    tree ensemble averages training targets, so it is bounded by the training
+    range by construction).
+
+    ``ridge_log_quadratic`` is the discriminating case. It is flexible, with
+    curvature and every pairwise interaction in log space, but it is still a
+    polynomial and so still extrapolates. If flexibility per se were the
+    problem it should degrade like the trees; if the log-linear power-law form
+    is what matters it should degrade like plain ridge.
+    """
+    from sklearn.preprocessing import PolynomialFeatures
+
+    return {
+        "ridge_log_quadratic": Pipeline(
+            [
+                ("expand", PolynomialFeatures(degree=2, include_bias=False)),
+                ("scale", StandardScaler()),
+                ("model", Ridge(alpha=1.0, solver="svd")),
+            ]
+        ),
+    }
+
+
+def eligible_tokamaks(dataset: pd.DataFrame, *, min_rows: int = MIN_HELD_OUT_ROWS) -> list[str]:
+    """Machines with enough rows to hold out, in descending order of size."""
+    counts = dataset[TOKAMAK_LABEL_COLUMN].value_counts()
+    return [str(name) for name, count in counts.items() if int(count) >= min_rows]
+
+
+def _mahalanobis_of_mean(train_features: np.ndarray, held_out_features: np.ndarray) -> float:
+    """Distance between held-out and training feature means, in training units.
+
+    The training covariance is singular by construction: ``log a_m`` is exactly
+    ``log r_m + log inverse_aspect_ratio`` because ``a_m`` is derived that way in
+    cleaning. A plain inverse would blow up, so this uses the pseudo-inverse,
+    which measures the distance within the subspace the data actually spans and
+    ignores the null directions where every row sits at the same value anyway.
+    """
+    difference = held_out_features.mean(axis=0) - train_features.mean(axis=0)
+    covariance = np.cov(train_features, rowvar=False)
+    covariance = np.atleast_2d(covariance)
+    quadratic = float(difference @ np.linalg.pinv(covariance) @ difference)
+    return float(np.sqrt(max(quadratic, 0.0)))
+
+
+def extrapolation_diagnostic(
+    dataset: pd.DataFrame,
+    tokamak: str,
+    *,
+    feature_columns: tuple[str, ...] = BLIND_FEATURE_COLUMNS,
+) -> ExtrapolationDiagnostic:
+    """Measure how far one machine sits outside the rest of the database."""
+    held_mask = (dataset[TOKAMAK_LABEL_COLUMN] == tokamak).to_numpy()
+    if not held_mask.any():
+        raise ValueError(f"No rows for tokamak {tokamak!r}.")
+    if held_mask.all():
+        raise ValueError(f"Tokamak {tokamak!r} is the only machine in the dataset.")
+
+    columns = list(feature_columns)
+    train_features = dataset.loc[~held_mask, columns].to_numpy(dtype=float)
+    held_features = dataset.loc[held_mask, columns].to_numpy(dtype=float)
+
+    train_tau = dataset.loc[~held_mask, TARGET_COLUMN].to_numpy(dtype=float)
+    held_tau = dataset.loc[held_mask, TARGET_COLUMN].to_numpy(dtype=float)
+
+    train_minimum = train_features.min(axis=0)
+    train_maximum = train_features.max(axis=0)
+    held_median = np.median(held_features, axis=0)
+    outside = int(np.sum((held_median < train_minimum) | (held_median > train_maximum)))
+
+    return ExtrapolationDiagnostic(
+        tokamak=tokamak,
+        n_held_out_rows=int(held_mask.sum()),
+        feature_mahalanobis=_mahalanobis_of_mean(train_features, held_features),
+        n_features_outside_train_range=outside,
+        target_above_train_max_fraction=float(np.mean(held_tau > train_tau.max())),
+        target_below_train_min_fraction=float(np.mean(held_tau < train_tau.min())),
+        log_target_headroom=float(np.log(held_tau.max()) - np.log(train_tau.max())),
+    )
+
+
+def leave_one_tokamak_out(
+    dataset: pd.DataFrame,
+    *,
+    feature_columns: tuple[str, ...] = BLIND_FEATURE_COLUMNS,
+    min_rows: int = MIN_HELD_OUT_ROWS,
+    include_ipb98_reference: bool = True,
+    include_controls: bool = False,
+) -> pd.DataFrame:
+    """Score every model on each machine in turn, trained on all the others.
+
+    Grouped CV by discharge measures interpolation inside machines the model has
+    already seen. This measures the case a scaling law actually exists for:
+    predicting a device that was not in the training set at all.
+    """
+    machines = eligible_tokamaks(dataset, min_rows=min_rows)
+    if not machines:
+        raise ValueError(
+            f"No tokamak has at least {min_rows} rows; nothing can be held out."
+        )
+
+    columns = list(feature_columns)
+    features = dataset[columns]
+    tau = dataset[TARGET_COLUMN].to_numpy(dtype=float)
+    log_tau = np.log(tau)
+    labels = dataset[TOKAMAK_LABEL_COLUMN].to_numpy()
+
+    records: list[dict[str, object]] = []
+    for machine in machines:
+        held_mask = labels == machine
+        held_index = np.flatnonzero(held_mask)
+        train_index = np.flatnonzero(~held_mask)
+        held_tau = tau[held_index]
+
+        if include_ipb98_reference:
+            reference = dataset["ipb98y2_tau_s"].to_numpy(dtype=float)[held_index]
+            records.append(
+                asdict(
+                    MachineScore(
+                        model_name="ipb98y2_analytic",
+                        tokamak=machine,
+                        n_held_out_rows=len(held_index),
+                        rmsle=_rmsle(held_tau, reference),
+                        r2_log=_r2_log(held_tau, reference),
+                        mae_s=_mae(held_tau, reference),
+                        is_blind=False,
+                    )
+                )
+            )
+
+        zoo = dict(build_model_zoo())
+        if include_controls:
+            zoo.update(build_control_models())
+        for name, estimator in zoo.items():
+            model = clone_pipeline(estimator)
+            with _suppress_benign_matmul_warnings():
+                model.fit(features.iloc[train_index], log_tau[train_index])
+                predicted = np.exp(model.predict(features.iloc[held_index]))
+            records.append(
+                asdict(
+                    MachineScore(
+                        model_name=name,
+                        tokamak=machine,
+                        n_held_out_rows=len(held_index),
+                        rmsle=_rmsle(held_tau, predicted),
+                        r2_log=_r2_log(held_tau, predicted),
+                        mae_s=_mae(held_tau, predicted),
+                        is_blind=True,
+                    )
+                )
+            )
+
+    return pd.DataFrame(records)
+
+
+def summarize_leave_one_tokamak_out(per_machine: pd.DataFrame) -> pd.DataFrame:
+    """Mean and median RMSLE per model across held-out machines.
+
+    Every machine counts once regardless of size. That is deliberate (the claim
+    is about machines, not rows) but it means the summary is dominated by the
+    many small devices; ``per_machine`` is where the story actually is.
+    """
+    summary = (
+        per_machine.groupby(["model_name", "is_blind"], as_index=False)
+        .agg(
+            mean_rmsle=("rmsle", "mean"),
+            median_rmsle=("rmsle", "median"),
+            worst_rmsle=("rmsle", "max"),
+            n_machines=("tokamak", "nunique"),
+        )
+        .sort_values("mean_rmsle")
+        .reset_index(drop=True)
+    )
+    return summary
+
+
+def extrapolation_report(
+    dataset: pd.DataFrame,
+    *,
+    feature_columns: tuple[str, ...] = BLIND_FEATURE_COLUMNS,
+    min_rows: int = MIN_HELD_OUT_ROWS,
+    include_controls: bool = False,
+) -> pd.DataFrame:
+    """Per-machine RMSLE joined to how far outside the training data it sits."""
+    per_machine = leave_one_tokamak_out(
+        dataset,
+        feature_columns=feature_columns,
+        min_rows=min_rows,
+        include_controls=include_controls,
+    )
+    diagnostics = pd.DataFrame(
+        [
+            asdict(extrapolation_diagnostic(dataset, machine, feature_columns=feature_columns))
+            for machine in eligible_tokamaks(dataset, min_rows=min_rows)
+        ]
+    )
+    return per_machine.merge(
+        diagnostics.drop(columns=["n_held_out_rows"]), on="tokamak", how="left"
+    )
+
+
 # --- CLI --------------------------------------------------------------------
 
 
@@ -552,6 +840,41 @@ def build_parser() -> argparse.ArgumentParser:
     evaluate.add_argument("--dataset-path", type=str, default=None)
     evaluate.add_argument("--cv-folds", type=int, default=N_CV_FOLDS)
 
+    extrapolate = subparsers.add_parser(
+        "extrapolate",
+        help="Leave-one-tokamak-out: score every model on machines it never saw.",
+    )
+    extrapolate.add_argument("--dataset-path", type=str, default=None)
+    extrapolate.add_argument(
+        "--min-rows",
+        type=int,
+        default=MIN_HELD_OUT_ROWS,
+        help="Skip machines with fewer held-out rows than this.",
+    )
+    extrapolate.add_argument(
+        "--keep-ipb98-feature",
+        action="store_true",
+        help=(
+            "Keep log_ipb98y2_tau_s as a model feature. Off by default: its "
+            "exponents were fitted on this database including the held-out "
+            "machine, so it leaks."
+        ),
+    )
+    extrapolate.add_argument(
+        "--include-controls",
+        action="store_true",
+        help=(
+            "Also fit ridge_log_quadratic, a flexible model that still "
+            "extrapolates, to separate functional form from extrapolation."
+        ),
+    )
+    extrapolate.add_argument(
+        "--output-dir",
+        type=str,
+        default=None,
+        help="Write per-machine and summary CSVs here instead of only printing.",
+    )
+
     download = subparsers.add_parser("download", help="Fetch the HDB5 STD5 dataset from OSF.")
     download.add_argument(
         "--overwrite",
@@ -580,6 +903,34 @@ def main(argv: list[str] | None = None) -> None:
             for score in scores
         ]
         print(json.dumps(report, indent=2))
+        return
+    if args.command == "extrapolate":
+        dataset = prepare_dataset(args.dataset_path)
+        feature_columns = (
+            MODEL_FEATURE_COLUMNS if args.keep_ipb98_feature else BLIND_FEATURE_COLUMNS
+        )
+        per_machine = extrapolation_report(
+            dataset,
+            feature_columns=feature_columns,
+            min_rows=args.min_rows,
+            include_controls=args.include_controls,
+        )
+        summary = summarize_leave_one_tokamak_out(per_machine)
+        if args.output_dir is not None:
+            output_dir = Path(args.output_dir).expanduser().resolve()
+            write_dataframe_csv_atomic(output_dir / "extrapolation_per_machine.csv", per_machine)
+            write_dataframe_csv_atomic(output_dir / "extrapolation_summary.csv", summary)
+        print(
+            json.dumps(
+                {
+                    "feature_columns": list(feature_columns),
+                    "ipb98_feature_included": bool(args.keep_ipb98_feature),
+                    "n_machines": int(per_machine["tokamak"].nunique()),
+                    "summary": summary.to_dict(orient="records"),
+                },
+                indent=2,
+            )
+        )
         return
     if args.command == "predict":
         result = predict_single_case(

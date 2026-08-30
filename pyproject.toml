@@ -33,14 +33,18 @@ fusionflux = "fusionflux_cli:main"
 
 [tool.setuptools]
 py-modules = [
+    "analysis_extrapolation",
+    "analysis_scaling_law",
     "artifact_model",
     "config",
     "features",
     "fusionflux_cli",
+    "hdb5",
     "inference",
     "inference_artifacts",
     "inference_selection",
     "lawson",
+    "scaling_law",
     "storage",
     "train_model",
     "training",
@@ -79,14 +83,17 @@ ignore_missing_imports = true
 
 [tool.coverage.run]
 source = [
+    "analysis_extrapolation",
     "artifact_model",
     "config",
     "features",
     "fusionflux_cli",
+    "hdb5",
     "inference",
     "inference_artifacts",
     "inference_selection",
     "lawson",
+    "scaling_law",
     "storage",
     "training",
     "training_artifacts",

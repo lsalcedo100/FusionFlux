@@ -212,3 +212,156 @@ def test_predict_single_case_roundtrips(tmp_path) -> None:
 def test_load_confinement_artifact_missing_raises(tmp_path) -> None:
     with pytest.raises(FileNotFoundError, match="Confinement model not found"):
         hdb5.load_confinement_artifact(tmp_path / "nope.joblib")
+
+
+# --- Leave-one-tokamak-out --------------------------------------------------
+
+
+def _make_fake_hdb5_with_outlier_machine(seed: int = 11) -> pd.DataFrame:
+    """Three ordinary machines plus one deliberately larger than all of them.
+
+    ``BIG`` has a major radius above every other machine's, so through the R^1.97
+    term its confinement time sits above the whole training range. That is the
+    configuration where a tree ensemble is structurally unable to predict, and
+    the diagnostic must say so.
+    """
+    frame = _make_fake_hdb5(n_rows=600, seed=seed)
+    frame["TOK"] = np.where(frame.index % 4 == 0, "BIG", frame["TOK"])
+    big = frame["TOK"] == "BIG"
+    frame.loc[big, "RGEO"] = frame.loc[big, "RGEO"] + 4.0
+    # Recompute TAUTH so the enlarged machine is physically consistent.
+    frame["TAUTH"] = (
+        0.0562
+        * frame["IP"].abs() ** 0.93
+        * frame["BT"].abs() ** 0.15
+        * frame["NEL"] ** 0.41
+        * frame["PLTH"] ** -0.69
+        * frame["RGEO"] ** 1.97
+        * frame["EPS"] ** 0.58
+        * frame["KAPPAA"] ** 0.78
+        * frame["MEFF"] ** 0.19
+    )
+    return frame
+
+
+def test_blind_feature_columns_drop_only_the_ipb98_prior() -> None:
+    assert "log_ipb98y2_tau_s" in hdb5.MODEL_FEATURE_COLUMNS
+    assert "log_ipb98y2_tau_s" not in hdb5.BLIND_FEATURE_COLUMNS
+    assert set(hdb5.BLIND_FEATURE_COLUMNS) == set(hdb5.MODEL_FEATURE_COLUMNS) - {
+        "log_ipb98y2_tau_s"
+    }
+
+
+def test_eligible_tokamaks_respects_min_rows() -> None:
+    dataset = hdb5.map_to_canonical(_make_fake_hdb5(n_rows=300, seed=3))
+    assert hdb5.eligible_tokamaks(dataset, min_rows=1)
+    counts = dataset[hdb5.TOKAMAK_LABEL_COLUMN].value_counts()
+    for name in hdb5.eligible_tokamaks(dataset, min_rows=50):
+        assert counts[name] >= 50
+    assert hdb5.eligible_tokamaks(dataset, min_rows=10_000) == []
+
+
+def test_extrapolation_diagnostic_flags_a_machine_outside_the_target_range() -> None:
+    dataset = hdb5.prepare_dataset_from_frame(_make_fake_hdb5_with_outlier_machine())
+
+    big = hdb5.extrapolation_diagnostic(dataset, "BIG")
+    # Only the rows where the other parameters also line up clear the training
+    # maximum, so this is a meaningful minority rather than most of the machine.
+    assert big.target_above_train_max_fraction > 0.05
+    assert big.log_target_headroom > 0.5
+    assert big.n_features_outside_train_range >= 1
+
+    # An ordinary machine sits inside the range on every axis.
+    others = [t for t in dataset[hdb5.TOKAMAK_LABEL_COLUMN].unique() if t != "BIG"]
+    ordinary = hdb5.extrapolation_diagnostic(dataset, others[0])
+    assert ordinary.target_above_train_max_fraction == 0.0
+    assert ordinary.log_target_headroom < 0.0
+    assert big.feature_mahalanobis > ordinary.feature_mahalanobis
+
+
+def test_extrapolation_diagnostic_rejects_unknown_and_sole_machine() -> None:
+    dataset = hdb5.prepare_dataset_from_frame(_make_fake_hdb5(n_rows=120, seed=5))
+    with pytest.raises(ValueError, match="No rows for tokamak"):
+        hdb5.extrapolation_diagnostic(dataset, "NOT_A_MACHINE")
+    single = dataset.assign(**{hdb5.TOKAMAK_LABEL_COLUMN: "ONLY"})
+    with pytest.raises(ValueError, match="only machine"):
+        hdb5.extrapolation_diagnostic(single, "ONLY")
+
+
+def test_tree_prediction_cannot_exceed_the_training_target_range() -> None:
+    """The structural claim the diagnostic exists to measure.
+
+    A random forest averages training targets, so no held-out prediction can
+    exceed the largest tau it was trained on, however far the real machine is.
+    """
+    dataset = hdb5.prepare_dataset_from_frame(_make_fake_hdb5_with_outlier_machine())
+    held = (dataset[hdb5.TOKAMAK_LABEL_COLUMN] == "BIG").to_numpy()
+    features = dataset[list(hdb5.BLIND_FEATURE_COLUMNS)]
+    log_tau = np.log(dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float))
+
+    forest = hdb5.clone_pipeline(hdb5.build_model_zoo()["random_forest"])
+    forest.fit(features[~held], log_tau[~held])
+    predicted = np.exp(forest.predict(features[held]))
+
+    training_max = np.exp(log_tau[~held].max())
+    actual_max = dataset.loc[held, hdb5.TARGET_COLUMN].max()
+    assert predicted.max() <= training_max + 1e-9
+    assert actual_max > training_max  # the machine really is out of reach
+
+
+def test_leave_one_tokamak_out_holds_each_machine_out_entirely() -> None:
+    dataset = hdb5.prepare_dataset_from_frame(_make_fake_hdb5(n_rows=300, seed=9))
+    scores = hdb5.leave_one_tokamak_out(dataset, min_rows=20)
+
+    machines = hdb5.eligible_tokamaks(dataset, min_rows=20)
+    assert set(scores["tokamak"]) == set(machines)
+
+    expected_models = set(hdb5.build_model_zoo()) | {"ipb98y2_analytic"}
+    for machine in machines:
+        rows = scores[scores.tokamak == machine]
+        assert set(rows["model_name"]) == expected_models
+        # Row count must match the machine's real size, i.e. all of it was held out.
+        held = int((dataset[hdb5.TOKAMAK_LABEL_COLUMN] == machine).sum())
+        assert set(rows["n_held_out_rows"]) == {held}
+
+    # The analytic law is the only entry that is not blind to the held-out machine.
+    assert not scores.loc[scores.model_name == "ipb98y2_analytic", "is_blind"].any()
+    assert scores.loc[scores.model_name != "ipb98y2_analytic", "is_blind"].all()
+
+
+def test_leave_one_tokamak_out_can_drop_the_reference_and_add_controls() -> None:
+    dataset = hdb5.prepare_dataset_from_frame(_make_fake_hdb5(n_rows=240, seed=13))
+    scores = hdb5.leave_one_tokamak_out(
+        dataset, min_rows=20, include_ipb98_reference=False, include_controls=True
+    )
+    assert "ipb98y2_analytic" not in set(scores["model_name"])
+    assert set(hdb5.build_control_models()) <= set(scores["model_name"])
+    assert bool(scores["is_blind"].all())
+
+
+def test_leave_one_tokamak_out_requires_an_eligible_machine() -> None:
+    dataset = hdb5.prepare_dataset_from_frame(_make_fake_hdb5(n_rows=120, seed=17))
+    with pytest.raises(ValueError, match="nothing can be held out"):
+        hdb5.leave_one_tokamak_out(dataset, min_rows=10_000)
+
+
+def test_constrained_form_beats_trees_on_held_out_machines() -> None:
+    """The headline claim, on data where the true law is an exact power law."""
+    dataset = hdb5.prepare_dataset_from_frame(_make_fake_hdb5_with_outlier_machine())
+    summary = hdb5.summarize_leave_one_tokamak_out(
+        hdb5.leave_one_tokamak_out(dataset, min_rows=20)
+    )
+    by_model = summary.set_index("model_name")["mean_rmsle"]
+    assert by_model["ridge_loglinear"] < by_model["random_forest"]
+    assert by_model["ridge_loglinear"] < by_model["mean_baseline"]
+
+
+def test_extrapolation_report_joins_scores_to_diagnostics() -> None:
+    dataset = hdb5.prepare_dataset_from_frame(_make_fake_hdb5_with_outlier_machine())
+    report = hdb5.extrapolation_report(dataset, min_rows=20)
+    for column in ("rmsle", "feature_mahalanobis", "target_above_train_max_fraction"):
+        assert column in report.columns
+        assert report[column].notna().all()
+    # One diagnostic per machine, repeated across that machine's model rows.
+    per_machine = report.groupby("tokamak")["feature_mahalanobis"].nunique()
+    assert (per_machine == 1).all()

@@ -1,7 +1,8 @@
 # Confinement scaling as a linear algebra problem
 
-Three results on the ITPA global H-mode confinement database (HDB5, standard
-analysis set STD5), regenerated end to end by `python3 analysis_scaling_law.py`.
+Four results on the ITPA global H-mode confinement database (HDB5, standard
+analysis set STD5). Results 1 to 3 are regenerated end to end by `python3
+analysis_scaling_law.py`, Result 4 by `python3 analysis_extrapolation.py`.
 
 **Data.** 6228 quasi-stationary time slices from 4471 discharges across 18
 tokamaks (JET, ASDEX Upgrade, DIII-D, JT-60U, C-Mod, NSTX, MAST, START and
@@ -20,8 +21,10 @@ so in log space it is exactly a linear model,
     log tau_E = log C + a1 log Ip + a2 log Bt + ... + a8 log M
 
 and fitting a scaling law is ordinary least squares on a log design matrix.
-Every question about the physics becomes a question about that matrix. All three
-results below are properties of the matrix rather than of any particular model.
+Every question about the physics becomes a question about that matrix. Results 1
+to 3 are properties of that matrix rather than of any particular model. Result 4
+is what those properties cost you when you try to predict a machine that is not
+in it.
 
 The published baseline is IPB98(y,2):
 
@@ -151,6 +154,12 @@ cross-validation by discharge (`python3 hdb5.py evaluate`):
 41% lower RMSLE than the published scaling law, against a real physics baseline
 rather than against the mean.
 
+**Read that table with Result 4 in hand.** Grouped CV holds out *discharges*,
+and every machine in the held-out fold also appears in the training fold. It
+therefore measures interpolation within machines the model has already seen. On
+the split that a scaling law actually exists for, holding out a whole device,
+this ranking reverses top to bottom and the 41% becomes a 2.2x loss.
+
 ---
 
 ## Result 3: the disagreement lives where the data is blind
@@ -210,6 +219,163 @@ exactly which.
 
 ---
 
+---
+
+## Result 4: the model that wins on cross-validation loses on a new machine
+
+Results 1 to 3 are about a matrix built from 18 existing tokamaks. A confinement
+scaling law is not for those machines. It is for the next one, and every number
+above is quoted under grouped cross-validation by *discharge*, which holds out
+some shots from JET and then trains on the rest of JET. Every machine in the
+held-out fold also sits in the training fold. That measures interpolation.
+
+So hold out an entire device. Train on 12 tokamaks, predict the 13th, rotate.
+Regenerate with `python3 analysis_extrapolation.py`, or `python3 hdb5.py
+extrapolate` for the table alone.
+
+![interpolation against extrapolation](extrapolation.png)
+
+**Both columns below use the same nine features and the same models.** The only
+thing that changes is what the split holds out. That matters more than it might
+look: the model's default feature set includes the analytic IPB98 prior, whose
+exponents were fitted on this database *including whichever machine is held
+out*, so leaving it in would leak the answer into every fold. Dropping it only
+in the extrapolation arm would then confound the feature set with the split, so
+it is dropped from both (`hdb5.BLIND_FEATURE_COLUMNS`).
+
+| model | CV, by discharge | leave-one-tokamak-out | ratio | CV rank | LOMO rank |
+|---|---|---|---|---|---|
+| random forest | 0.128 | 0.465 | **3.6x worse** | 1 | 5 |
+| histogram gradient boosting | 0.130 | 0.359 | 2.8x worse | 2 | 4 |
+| ridge, log-quadratic (control) | 0.158 | 0.300 | 1.9x worse | 3 | 3 |
+| ridge, log-linear | 0.181 | 0.214 | 1.2x worse | 4 | 2 |
+| IPB98(y,2), analytic* | 0.199 | 0.188 | 1.0x, unchanged | 5 | 1 |
+| mean baseline | 0.869 | 0.994 | 1.1x worse | 6 | 6 |
+
+\* not a blind baseline: IPB98's exponents were fitted on this database, held-out
+machine included. It is a reference point for what a power law achieves here,
+not a competitor that never saw the data. The ranking claim below is about the
+three models that actually fit something and are genuinely blind; the
+log-quadratic row is a control introduced in Result 4d and is likewise excluded
+from it.
+
+**Among those three, the order under one split is the exact reverse of the order
+under the other** (rho = -1.00; with three contenders the reversal itself is the
+statistic worth quoting, not the correlation). The random forest is the best
+model in the repository by cross-validation and the worst of the three on a
+machine it has not seen. Its 41% margin over the published scaling law in Result
+2 is not a margin over the published scaling law. It is a measurement of how
+much of JET is predictable from the rest of JET.
+
+### Result 4b: the trees fail as a function of distance, and the power law does not
+
+Per machine, ordered by how far it sits outside the training data (Mahalanobis
+distance of its mean log-feature vector from the training mean, in training
+covariance units, via the pseudo-inverse because that covariance is singular by
+Result 1):
+
+| held out | rows | distance | IPB98 | ridge | hist GB | random forest |
+|---|---|---|---|---|---|---|
+| D3D | 388 | 1.1 | 0.252 | 0.251 | 0.246 | 0.406 |
+| AUG | 1377 | 1.2 | 0.197 | 0.216 | 0.281 | 0.279 |
+| AUGW | 767 | 1.6 | 0.218 | 0.207 | 0.212 | 0.219 |
+| JETILW | 866 | 1.7 | 0.257 | 0.216 | 0.244 | 0.318 |
+| JET | 1762 | 2.2 | 0.148 | 0.198 | 0.487 | 0.478 |
+| JT60U | 100 | 2.5 | 0.275 | 0.285 | 0.307 | 0.291 |
+| PDX | 97 | 4.0 | 0.227 | 0.233 | 0.323 | 0.407 |
+| ASDEX | 431 | 5.2 | 0.131 | 0.194 | 0.207 | 0.507 |
+| MAST | 39 | 5.4 | 0.136 | 0.154 | 0.317 | 0.581 |
+| JFT2M | 69 | 5.4 | 0.095 | 0.094 | 0.234 | 0.450 |
+| CMOD | 45 | 6.9 | 0.119 | 0.173 | 0.569 | 0.521 |
+| NSTX | 185 | 7.8 | 0.222 | 0.289 | 0.686 | 0.857 |
+| PBXM | 59 | 10.2 | 0.172 | 0.274 | 0.559 | 0.727 |
+
+Rank correlation between a model's per-machine error and that distance:
+
+| model | rho |
+|---|---|
+| random forest | **+0.85** |
+| histogram gradient boosting | +0.54 |
+| ridge, log-quadratic (control) | +0.25 |
+| ridge, log-linear | **-0.06** |
+| IPB98(y,2), analytic | -0.49 |
+
+The random forest's errors are explained by extrapolation distance. The power
+law's are not: at rho = -0.06 its error is uncorrelated with how far the machine
+sits from anything it was trained on. On the four most distant machines (MAST,
+CMOD, NSTX, PBXM, all of them small or spherical) the forest is 2.6x to 3.8x the
+power law's error; on the four nearest it is within 1.6x.
+
+Both columns of the previous table and this one are monotone in model
+flexibility, which is the subject of Result 4d.
+
+### Result 4c: one of the two failure modes is a hard bound, not a shortfall
+
+JET is the visible outlier in the right panel: close to the training
+distribution, badly predicted by the trees. That is a second, separable failure
+mode.
+
+A tree ensemble predicts by averaging training targets, so **every prediction it
+can possibly make lies inside `[min(y_train), max(y_train)]`**, whatever the
+features say. When JET is held out, 48% of its rows have confinement times above
+the maximum in the remaining 12 machines, and its best shot is **3.7x above
+anything any tree in the forest is able to output**. JET is the largest device in
+the database, so the rest of the database does not contain its performance
+envelope. The forest scores 0.478 there against the power law's 0.198.
+
+This is not a shortfall that more data or better features would close. It is the
+functional form. `tests/test_extrapolation.py` asserts the bound directly, by
+fitting a forest with a machine held out and checking no prediction exceeds the
+training maximum while the held-out truth does.
+
+### Result 4d: it is not enough to be able to extrapolate; the form has to be constrained
+
+Ridge beating the trees on an unseen machine has two candidate explanations, and
+the model zoo above cannot tell them apart:
+
+1. the log-linear power-law form is close to physically right, or
+2. ridge is simply the only model in the zoo that extrapolates *at all*, since a
+   tree ensemble is bounded by its training range by Result 4c.
+
+`ridge_log_quadratic` (`hdb5.build_control_models`) is the discriminating case.
+It is a degree-2 polynomial in the log features, so it carries curvature and
+every pairwise interaction and is far more flexible than plain ridge, but it is
+still a polynomial and so it still extrapolates without bound. If mere
+extrapolation ability were what mattered, it should behave like ridge. If
+flexibility is what costs you, it should behave like the trees.
+
+It behaves like neither, and lands in between:
+
+| model | flexibility | can extrapolate | LOMO mean | degradation | rho(distance) |
+|---|---|---|---|---|---|
+| ridge, log-linear | log-linear | yes | 0.214 | 1.18x | -0.06 |
+| ridge, log-quadratic | + curvature, interactions | yes | 0.300 | 1.89x | +0.25 |
+| hist gradient boosting | nonparametric | no | 0.359 | 2.77x | +0.54 |
+| random forest | nonparametric | no | 0.465 | 3.64x | +0.85 |
+
+Every column is monotone in flexibility, and the answer to the question is
+therefore "both, and flexibility is the larger term". Being able to extrapolate
+buys the log-quadratic model something real: it is better than either tree
+ensemble on average, and it never hits the hard ceiling of Result 4c. But it
+still gives up most of plain ridge's advantage, so the constraint is doing the
+work rather than the mere absence of a bound.
+
+The worst case is the sharper version of the point. On C-Mod the log-quadratic
+control scores **1.083**, worse than any other model tested including the mean
+baseline's C-Mod score, while plain ridge scores 0.173 on the same machine. A
+polynomial extrapolates without bound in *every* direction, including the
+weakly-determined one from Result 3, so on a compact high-field machine far from
+the training set its curvature terms are free to diverge. The tree ensembles
+cannot fail that way, because the bound that makes them useless on JET also
+caps how wrong they can be on C-Mod. Unbounded extrapolation is not a virtue on
+its own; it is only useful along a form the physics constrains.
+
+All three failure modes point the same way, and it is the same way Result 3
+points. A power law is not used in this field because it fits better; Result 2
+shows it fits worse. It is used because it is the functional form that survives
+leaving the data behind, and ITER is 6.2 m of major radius outside every row in
+this table.
+
 ## Limitations
 
 - **The refit population is not IPB98's population.** No ITPA standard-set
@@ -223,6 +389,19 @@ exactly which.
 - **In-sample RMSLE favors the refit by construction.** The 0.181 against 0.199
   comparison fits and evaluates on the same rows. The grouped-CV table is the
   one to trust.
+- **13 of 18 machines are scored, not all 18.** START, TCV, COMPASS, TDEV and
+  TFTR have fewer than 30 rows each, too few for a held-out RMSLE to mean
+  anything, so they are excluded from Result 4 and remain in every training
+  fold. They are also the machines most unlike the rest, so the extrapolation
+  gap reported here is if anything the optimistic one.
+- **The control is one model, not a family.** Result 4d rests on a single
+  log-quadratic ridge. It is the right discriminating case, but "flexibility
+  costs extrapolation" would be better supported by a sweep over polynomial
+  degree and ridge penalty than by one point, and the C-Mod blowup in
+  particular is one machine's behaviour rather than a demonstrated law.
+- **Leave-one-tokamak-out understates what ITER faces.** Holding out JET still
+  leaves 12 tokamaks spanning much of its parameter range. No held-out machine
+  here is outside the database the way a next-step device would be.
 - **The rank deficiency was shipped.** It is present in the model that produced
   the results in `data/processed/`, and it was found by this audit rather than
   before the fact. Its practical effect there is limited, because the selected
@@ -239,9 +418,10 @@ exactly which.
 ## Reproducing
 
 ```
-python3 hdb5.py download          # fetch HDB5 STD5 from OSF
-python3 analysis_scaling_law.py   # regenerate everything above
-python3 -m pytest tests/test_scaling_law.py tests/test_hdb5.py
+python3 hdb5.py download           # fetch HDB5 STD5 from OSF
+python3 analysis_scaling_law.py    # regenerate Results 1 to 3
+python3 analysis_extrapolation.py  # regenerate Result 4
+python3 -m pytest tests/test_scaling_law.py tests/test_hdb5.py tests/test_extrapolation.py
 ```
 
 ## Sources
