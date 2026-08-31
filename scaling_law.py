@@ -450,7 +450,7 @@ def fit_scaling_law(
         residuals = target - design @ beta
         residual_std_log = float(np.sqrt(float(residuals @ residuals) / dof_for(target, design)))
     return ScalingLawFit(
-        exponents={column: float(value) for column, value in zip(feature_columns, beta[1:])},
+        exponents={column: float(value) for column, value in zip(feature_columns, beta[1:], strict=True)},
         coefficient=float(np.exp(beta[0])),
         column_names=names,
         coefficients=beta,

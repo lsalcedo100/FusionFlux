@@ -260,6 +260,7 @@ def _find_conflicting_rows(left: pd.Series, right: pd.Series) -> list[object]:
         right,
         left_numeric,
         right_numeric,
+        strict=True,
     ):
         if _is_missing_tabular_value(left_value) or _is_missing_tabular_value(right_value):
             continue
@@ -440,7 +441,7 @@ def _temperature_value_to_kev_unchecked(value: object, unit: object) -> float:
 def _temperature_series_with_units(temperature: pd.Series, units: pd.Series) -> tuple[pd.Series, list[object]]:
     converted_values: list[float] = []
     invalid_rows: list[object] = []
-    for index, value, unit in zip(temperature.index, temperature, units):
+    for index, value, unit in zip(temperature.index, temperature, units, strict=True):
         value_missing = _is_missing_tabular_value(value)
         unit_missing = _is_missing_tabular_value(unit)
         if value_missing and unit_missing:
@@ -464,7 +465,7 @@ def _convert_temperature_series(
 ) -> tuple[pd.Series, list[object]]:
     converted_values: list[float] = []
     invalid_rows: list[object] = []
-    for index, value in zip(temperature.index, temperature):
+    for index, value in zip(temperature.index, temperature, strict=True):
         if _is_missing_tabular_value(value):
             converted_values.append(np.nan)
             continue

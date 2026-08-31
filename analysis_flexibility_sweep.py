@@ -293,7 +293,7 @@ def _penalty_statuses(frame: pd.DataFrame, baseline_degree: int) -> list[Penalty
             baseline_ratio=float(value / best),
             is_usable=bool(value / best <= BASELINE_TOLERANCE),
         )
-        for alpha, value in zip(rows["alpha"].to_numpy(dtype=float), worst)
+        for alpha, value in zip(rows["alpha"].to_numpy(dtype=float), worst, strict=True)
     ]
 
 
@@ -634,7 +634,7 @@ def plot_flexibility_sweep(sweep: FlexibilitySweep) -> Path | None:
     shades = plt.get_cmap("viridis")(np.linspace(0.08, 0.88, len(alphas)))
 
     usable = set(sweep.usable_alphas)
-    for color, alpha in zip(shades, alphas):
+    for color, alpha in zip(shades, alphas, strict=True):
         rows = frame[frame["alpha"] == alpha].sort_values("degree")
         is_reference = alpha == REFERENCE_ALPHA
         # Penalties that have already broken degree 1 are drawn, because hiding
@@ -720,7 +720,7 @@ def plot_flexibility_sweep(sweep: FlexibilitySweep) -> Path | None:
     )
     axes[1].legend(frameon=False, fontsize=8.5, loc="upper right", labelcolor=muted)
 
-    for color, alpha in zip(shades, alphas):
+    for color, alpha in zip(shades, alphas, strict=True):
         rows = frame[frame["alpha"] == alpha].sort_values("degree")
         is_reference = alpha == REFERENCE_ALPHA
         axes[2].plot(

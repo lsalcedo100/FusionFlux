@@ -344,7 +344,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
         )
         # Direct labels: with three bars per group a legend alone would make the
         # reader count positions to recover a number that is the whole point.
-        for position, value in zip(positions + offset, values):
+        for position, value in zip(positions + offset, values, strict=True):
             axes[0].annotate(
                 f"{value * 100:.0f}",
                 xy=(position, value),

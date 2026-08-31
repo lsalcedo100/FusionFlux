@@ -171,7 +171,7 @@ def _rmsle_by_model(frame: pd.DataFrame, scope: str = "__pooled__") -> dict[str,
     subset = frame[frame["scope"] == scope]
     names = subset["model_name"].to_numpy()
     values = subset["rmsle"].to_numpy(dtype=float)
-    return {str(name): float(value) for name, value in zip(names, values)}
+    return {str(name): float(value) for name, value in zip(names, values, strict=True)}
 
 
 def build_sweep(
@@ -204,7 +204,8 @@ def build_sweep(
             pooled["rmsle"].to_numpy(dtype=float),
             pooled["r2_log"].to_numpy(dtype=float),
             pooled["is_blind"].to_numpy(dtype=bool),
-        )
+            strict=True,
+                                                            )
     ]
     rows.sort(key=lambda score: (score.n_train_machines, score.model_name))
     return rows, splits

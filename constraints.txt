@@ -1,13 +1,15 @@
 # Tested environment for reproducible training and artifact loading.
+# This is the environment every number under results/ was generated in, and
+# the one the lowest-supported-Python CI job installs against.
 joblib==1.5.3
 jupyter==1.1.1
-matplotlib==3.9.4
-mypy==1.19.1
-numpy==2.0.2
+matplotlib==3.10.9
+mypy==2.3.0
+numpy==2.2.6
 pandas==2.3.3
 pypdf==6.16.2
-pytest==8.4.2
+pytest==9.1.1
 pytest-cov==7.1.0
-ruff==0.15.21
-scikit-learn==1.6.1
+ruff==0.15.22
+scikit-learn==1.7.2
 seaborn==0.13.2

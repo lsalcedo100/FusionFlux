@@ -72,7 +72,7 @@ def compare_json(baseline: Any, candidate: Any, where: str, out: list[str]) -> N
         if len(baseline) != len(candidate):
             out.append(f"{where}: length {len(baseline)} -> {len(candidate)}")
             return
-        for i, (b, c) in enumerate(zip(baseline, candidate)):
+        for i, (b, c) in enumerate(zip(baseline, candidate, strict=True)):
             compare_json(b, c, f"{where}[{i}]", out)
         return
 
@@ -112,13 +112,13 @@ def compare_csv(baseline: Path, candidate: Path, out: list[str]) -> None:
     for column in left.columns:
         lc, rc = left[column], right[column]
         if pd.api.types.is_numeric_dtype(lc) and pd.api.types.is_numeric_dtype(rc):
-            for i, (a, b) in enumerate(zip(lc, rc)):
+            for i, (a, b) in enumerate(zip(lc, rc, strict=True)):
                 if pd.isna(a) and pd.isna(b):
                     continue
                 if pd.isna(a) or pd.isna(b) or not _close(float(a), float(b)):
                     out.append(f"{name}[{i}].{column}: {a!r} -> {b!r}")
         else:
-            for i, (a, b) in enumerate(zip(lc, rc)):
+            for i, (a, b) in enumerate(zip(lc, rc, strict=True)):
                 # An all-missing column reads back as object dtype, and NaN is
                 # never equal to itself, so missing has to be screened here too.
                 if pd.isna(a) and pd.isna(b):

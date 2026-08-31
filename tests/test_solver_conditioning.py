@@ -158,7 +158,7 @@ def test_slope_fit_excludes_the_saturated_and_noise_floor_regimes(
             continue
         errors = {
             condition: value
-            for condition, value in zip(curve.condition_numbers, curve.median_errors)
+            for condition, value in zip(curve.condition_numbers, curve.median_errors, strict=True)
             if value is not None and low <= condition <= high
         }
         assert errors

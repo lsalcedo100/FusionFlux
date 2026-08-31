@@ -7,7 +7,7 @@ name = "fusionflux"
 version = "0.1.0"
 description = "Train and run FusionFlux: a physics-aware ML pipeline for predicting D-T fusion neutron yield."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [{ name = "Liam" }]
 dependencies = [
@@ -54,7 +54,7 @@ py-modules = [
 
 [tool.ruff]
 line-length = 120
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B"]
@@ -71,10 +71,11 @@ filterwarnings = [
 
 [tool.mypy]
 # No python_version: each CI job checks at its own interpreter version. Pinning
-# it to 3.9 broke both directions once mypy 2.0 dropped 3.9 as a target. The
-# setting was rejected outright, and the stale target then failed to parse the
-# PEP 695 `type` statements in current numpy stubs. The 3.9 job still verifies
-# 3.9 semantics, because it installs the mypy pinned in constraints.txt.
+# it to the lowest supported target broke both directions once mypy 2.0 dropped
+# 3.9, the version pinned here at the time: the setting was rejected outright,
+# and the stale target then failed to parse the PEP 695 `type` statements in
+# current numpy stubs. The lowest-version job still verifies the semantics of
+# `requires-python`, because it installs the mypy pinned in constraints.txt.
 ignore_missing_imports = true
 warn_unused_ignores = true
 # A wheel build copies every top-level module into build/lib, which mypy then

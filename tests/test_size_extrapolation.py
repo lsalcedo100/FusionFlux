@@ -348,7 +348,7 @@ def test_the_power_law_beats_both_tree_ensembles_at_the_iter_matched_cut() -> No
         str(name): float(value)
         for name, value in zip(
             scores["model_name"].to_numpy(), scores["rmsle"].to_numpy(dtype=float)
-        )
+        , strict=True)
     }
 
     assert rmsle["ridge_loglinear"] < rmsle["random_forest"]

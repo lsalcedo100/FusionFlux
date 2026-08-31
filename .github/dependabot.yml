@@ -11,8 +11,9 @@ updates:
           - "*"
 
   # Surface upstream numpy/pandas/scikit-learn/tooling releases as PRs so the
-  # deliberately-unpinned newer-Python CI jobs (and the pinned 3.9 constraints)
-  # can be bumped intentionally instead of breaking silently.
+  # deliberately-unpinned newer-Python CI jobs (and the constraints the
+  # lowest-version job pins) can be bumped intentionally rather than break
+  # silently.
   - package-ecosystem: pip
     directory: "/"
     schedule:

@@ -336,6 +336,7 @@ def analyze_hybrid(
         zip(
             pooled_size["model_name"].astype(str),
             pooled_size["rmsle"].astype(float),
+            strict=True,
         )
     )
 
@@ -359,7 +360,8 @@ def analyze_hybrid(
         lomo["mean_rmsle"].astype(float),
         lomo["median_rmsle"].astype(float),
         lomo["worst_rmsle"].astype(float),
-    ):
+        strict=True,
+                                                                 ):
         if name not in cv_by_model or name not in size_by_model:
             continue
         correction, shrinkage = _parse_hybrid_name(name)
