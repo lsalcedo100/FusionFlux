@@ -53,6 +53,7 @@ page:
 reproduce:
 	@rm -rf .reproduce_baseline && mkdir -p .reproduce_baseline
 	@cp results/*.json results/*.csv .reproduce_baseline/
+	@git rev-parse HEAD > .reproduce_baseline/.head 2>/dev/null || echo no-git > .reproduce_baseline/.head
 	@$(MAKE) results
 	python3 tools/compare_results.py .reproduce_baseline results
 	python -m pytest -q tests/test_reported_numbers.py
@@ -60,6 +61,21 @@ reproduce:
 	@# put the committed bytes back, so a check does not leave the tree dirty
 	@# with rewrites that differ only in the float64 tails. On failure the
 	@# regenerated files stay in place to be inspected.
-	@cp .reproduce_baseline/* results/
-	@rm -rf .reproduce_baseline
-	@echo "results/ reproduces from the raw data and the prose matches it"
+	@#
+	@# Restoring is only safe if results/ has not moved underneath the run. The
+	@# analyses take about fifteen minutes, which is long enough for a commit to
+	@# land in the middle; blindly copying the snapshot back would then revert it
+	@# in the working tree, silently and after a passing check. So the snapshot
+	@# is only trusted while HEAD is where it was when the snapshot was taken.
+	@# The glob skips .head, since a leading dot is not matched by `*`.
+	@if [ "$$(git rev-parse HEAD 2>/dev/null || echo no-git)" = "$$(cat .reproduce_baseline/.head)" ]; then \
+	  cp .reproduce_baseline/* results/; \
+	  rm -rf .reproduce_baseline; \
+	  echo "results/ reproduces from the raw data and the prose matches it"; \
+	else \
+	  rm -rf .reproduce_baseline; \
+	  echo "results/ reproduces from the raw data and the prose matches it."; \
+	  echo "NOTE: HEAD moved during this run, so the regenerated files were left in"; \
+	  echo "place rather than restored over whatever landed. Run 'git checkout --"; \
+	  echo "results/' if you want the committed bytes back."; \
+	fi
