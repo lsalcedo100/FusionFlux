@@ -1,0 +1,95 @@
+name: Reproduce
+
+# Regenerate every reported number from the raw HDB5 data and fail if a
+# committed artifact under results/ moved.
+#
+# This is what makes the figures in the README, RESULTS.md and the paper
+# enforceable rather than aspirational. tests/test_reported_numbers.py already
+# runs in the ordinary suite and ties the prose to results/; this job closes the
+# remaining gap by checking that results/ itself still follows from the data.
+#
+# It is not on the pull-request path: it downloads a third-party dataset from
+# OSF and runs six analyses, so it runs on a schedule, on demand, and whenever
+# an analysis script or its output changes on main.
+on:
+  schedule:
+    # Mondays, 06:00 UTC.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "analysis_*.py"
+      - "hdb5.py"
+      - "scaling_law.py"
+      - "results/**"
+      - "site/build_page.py"
+      - ".github/workflows/reproduce.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reproduce-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # Cache the OSF download between runs. The key is the pinned SHA-256, so
+      # a change to the pin misses the cache and refetches rather than silently
+      # analysing the old bytes.
+      - name: Cache the HDB5 dataset
+        uses: actions/cache@v4
+        with:
+          path: data/raw/hdb5_std5.csv
+          key: hdb5-${{ hashFiles('hdb5.py') }}
+
+      - name: Fetch and verify the dataset
+        run: |
+          python3 hdb5.py download
+          python3 hdb5.py verify
+
+      # Keep the committed artifacts to compare against, since the analyses
+      # overwrite results/ in place.
+      - name: Snapshot the committed results
+        run: |
+          mkdir -p .reproduce_baseline
+          cp results/*.json results/*.csv .reproduce_baseline/
+
+      - name: Regenerate results/ and rebuild the page
+        run: make results
+
+      - name: Fail if any reported number moved
+        # Numeric, not a git diff: float64 tails jitter between runs because
+        # threaded BLAS reductions do not fix summation order. The comparator
+        # uses a 1e-6 relative tolerance, well inside the precision anything is
+        # reported at. Figures are not compared at all, since matplotlib output
+        # is not byte-reproducible across versions.
+        run: python3 tools/compare_results.py .reproduce_baseline results
+
+      - name: Check the prose against the regenerated artifacts
+        run: python -m pytest -q tests/test_reported_numbers.py
+
+      # A failure above leaves the regenerated files on the runner; publish them
+      # so the diff can be inspected without reproducing the run locally.
+      - name: Upload the regenerated results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: regenerated-results
+          path: results/

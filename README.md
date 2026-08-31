@@ -3,6 +3,7 @@
 [![CI](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml/badge.svg)](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml)
 [![Pages](https://github.com/lsalcedo100/FusionFlux/actions/workflows/pages.yml/badge.svg)](https://lsalcedo100.github.io/FusionFlux/)
 [![Python 3.9 - 3.12](https://img.shields.io/badge/python-3.9%20--%203.12-blue.svg)](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml)
+[![Reproduce](https://github.com/lsalcedo100/FusionFlux/actions/workflows/reproduce.yml/badge.svg)](https://github.com/lsalcedo100/FusionFlux/actions/workflows/reproduce.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
 [![data: ITPA HDB5 STD5](https://img.shields.io/badge/data-ITPA%20HDB5%20STD5-8a3ffc.svg)](https://osf.io/drwcq)
 
@@ -39,7 +40,7 @@ Measured on the real ITPA H-mode confinement database (HDB5 STD5): 6228 quasi-st
 
 ![Interpolation against extrapolation](results/extrapolation.png)
 
-Under cross-validation grouped by discharge, a random forest cuts RMSLE 41% below the analytic IPB98(y,2) law. But grouped CV holds out *shots*, so every machine in the held-out fold is also in the training fold. Hold out an entire tokamak instead, train on the other 12 and predict the 13th, and **the ranking of the three blind models reverses exactly**:
+Under cross-validation grouped by discharge, a random forest cuts RMSLE 41% below the analytic IPB98(y,2) law (0.118 against 0.199, on the full ten-feature set; the table below drops the IPB98 prior as a feature and so reads 0.128, a 36% margin, for the same model). But grouped CV holds out *shots*, so every machine in the held-out fold is also in the training fold. Hold out an entire tokamak instead, train on the other 12 and predict the 13th, and **the ranking of the three blind models reverses exactly**:
 
 | model | CV, by discharge | leave-one-tokamak-out | 95% interval | ratio |
 |---|---|---|---|---|
@@ -490,7 +491,11 @@ The tests that back the reported results come first: `tests/test_hdb5.py` exerci
 
 The neutron-yield pipeline is covered by `tests/test_preprocessing.py`, `tests/test_training.py`, and `tests/test_inference.py`, with `tests/test_lawson.py` for the physics utility, shared fixtures in `tests/conftest.py`, and shared stubs/builders in `tests/helpers.py`. Between them they cover Lawson calculations, temperature conversions, preprocessing and validation rules, grouped-shot aggregation, training split behavior, training artifact cleanup, preprocessing-contract compatibility checks, negative prediction clipping, and single/batch inference edge cases.
 
-CI runs the same gate on Python 3.9–3.12 with coverage reporting (`pytest -q --cov --cov-report=term-missing`; the measured module list lives under `[tool.coverage.run]` in `pyproject.toml`). The 3.9 job installs against `constraints.txt` to reproduce the tested training and artifact-loading environment, while the newer-Python jobs resolve current releases so the `>=3.9` support claim is actually exercised. Runs use pip caching and cancel superseded runs for the same ref, and Dependabot opens weekly grouped update PRs for the GitHub Actions and pip dependencies.
+`tests/test_reported_numbers.py` closes the loop between the analyses and the prose. Every headline figure in this README, `results/RESULTS.md` and the site template is typed by hand, so each one is bound there to the artifact field it came from: the test renders the artifact value, asserts it equals the literal, and asserts that literal is still present in the documents meant to carry it. It fails in both directions, so rerunning an analysis that moves a number fails just as loudly as editing a number in prose. It reads only committed files under `results/`, so it needs neither the dataset nor a training run and runs in the ordinary suite.
+
+That leaves one gap: whether `results/` itself still follows from the raw data. The `reproduce` workflow answers it, on a weekly schedule, on demand, and whenever an analysis or its output changes on `main`. It fetches and verifies the dataset, runs `make results`, and fails if any committed CSV or JSON moved, uploading the regenerated directory so the diff can be read without rerunning it locally. Figures are excluded from that diff because matplotlib output is not byte-reproducible across versions; the numbers behind them are. Run the same check locally with `make reproduce`.
+
+CI runs the same gate on Python 3.9–3.12 with coverage reporting (`pytest -q --cov --cov-report=term-missing`; the measured module list lives under `[tool.coverage.run]` in `pyproject.toml`, and `fail_under` holds the line at 75%, just below the 75.7% the suite currently measures). Coverage is lowest in the `analysis_*.py` report and `main()` paths, which need the real dataset and are exercised by `reproduce` rather than by the suite, so that percentage is a floor on the dataset-free tests rather than a statement about the analyses. The 3.9 job installs against `constraints.txt` to reproduce the tested training and artifact-loading environment, while the newer-Python jobs resolve current releases so the `>=3.9` support claim is actually exercised. Runs use pip caching and cancel superseded runs for the same ref, and Dependabot opens weekly grouped update PRs for the GitHub Actions and pip dependencies.
 
 Two suites skip rather than fail on a fresh clone: `test_committed_artifact_manifest_supports_relocation` needs a locally trained artifact under `data/processed/` (gitignored), and the parts of `tests/test_dataset_integrity.py` that fingerprint the real STD5 file need it downloaded. The checks that matter most in that file do not, since they synthesise a mismatched file and assert on the refusal.
 

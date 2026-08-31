@@ -32,7 +32,7 @@ dev = [
 fusionflux = "neutron_yield.fusionflux_cli:main"
 
 [tool.setuptools]
-packages = ["neutron_yield"]
+packages = ["neutron_yield", "tools"]
 py-modules = [
     "analysis_conformal",
     "analysis_extrapolation",
@@ -95,7 +95,17 @@ source = [
     "train_model",
     "validation",
     "neutron_yield",
+    "tools",
 ]
 
 [tool.coverage.report]
 show_missing = true
+# The suite measured 75.7% when this floor was set, so the floor sits just
+# below it. It is a ratchet against regression, not a target: raise it when
+# coverage rises, never lower it to make a run pass.
+#
+# The shortfall is concentrated in the analysis_*.py report and main() paths,
+# which need the real HDB5 dataset and so are exercised by the `reproduce`
+# workflow rather than by this suite. Coverage measured here is therefore a
+# floor on the dataset-free tests, not a statement about the analyses.
+fail_under = 75
