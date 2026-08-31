@@ -29,9 +29,10 @@ dev = [
 ]
 
 [project.scripts]
-fusionflux = "fusionflux_cli:main"
+fusionflux = "neutron_yield.fusionflux_cli:main"
 
 [tool.setuptools]
+packages = ["neutron_yield"]
 py-modules = [
     "analysis_conformal",
     "analysis_extrapolation",
@@ -39,23 +40,12 @@ py-modules = [
     "analysis_hybrid",
     "analysis_size_extrapolation",
     "analysis_scaling_law",
-    "artifact_model",
     "config",
-    "features",
-    "fusionflux_cli",
     "hdb5",
-    "inference",
-    "inference_artifacts",
-    "inference_selection",
     "lawson",
     "scaling_law",
     "storage",
     "train_model",
-    "training",
-    "training_artifacts",
-    "training_registry",
-    "training_reports",
-    "training_split",
     "validation",
 ]
 
@@ -97,24 +87,14 @@ source = [
     "analysis_hybrid",
     "analysis_size_extrapolation",
     "analysis_scaling_law",
-    "artifact_model",
     "config",
-    "features",
-    "fusionflux_cli",
     "hdb5",
-    "inference",
-    "inference_artifacts",
-    "inference_selection",
     "lawson",
     "scaling_law",
     "storage",
-    "training",
-    "training_artifacts",
-    "training_registry",
-    "training_reports",
     "train_model",
-    "training_split",
     "validation",
+    "neutron_yield",
 ]
 
 [tool.coverage.report]

@@ -24,9 +24,10 @@ import pandas as pd
 import sklearn
 
 import config
-from artifact_model import FusionFluxModelArtifact
-from features import DEFAULT_SHOT_PREDICTION_CUTOFF_ROWS
 from storage import write_json_strict
+
+from .artifact_model import FusionFluxModelArtifact
+from .features import DEFAULT_SHOT_PREDICTION_CUTOFF_ROWS
 
 ARTIFACT_SCHEMA_VERSION = 3
 TRAINING_METADATA_FILENAME = "training_metadata.json"

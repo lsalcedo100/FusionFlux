@@ -15,13 +15,14 @@ from typing import cast
 import joblib
 
 import config
-from artifact_model import FusionFluxModelArtifact
-from features import (
+
+from .artifact_model import FusionFluxModelArtifact
+from .features import (
     describe_preprocessing_contract_differences,
     ensure_project_directories,
     preprocessing_contract_matches,
 )
-from inference_artifacts import (
+from .inference_artifacts import (
     ARTIFACT_SCHEMA_VERSION,
     DEFAULT_ARTIFACT_SELECTION_BEST_COMPATIBILITY,
     DEFAULT_ARTIFACT_SELECTION_NEWEST_COMPATIBLE,

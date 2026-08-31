@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-import inference as _inference
-import training as _training
+from neutron_yield import inference as _inference
+from neutron_yield import training as _training
 
 
 def __getattr__(name: str) -> Any:
@@ -19,13 +19,13 @@ def __dir__() -> list[str]:
 
 
 def build_parser():
-    from fusionflux_cli import build_parser as build_cli_parser
+    from neutron_yield.fusionflux_cli import build_parser as build_cli_parser
 
     return build_cli_parser()
 
 
 def main() -> None:
-    from fusionflux_cli import main as cli_main
+    from neutron_yield.fusionflux_cli import main as cli_main
 
     cli_main()
 

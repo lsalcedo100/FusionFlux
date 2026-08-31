@@ -11,11 +11,10 @@ import numpy as np
 import pandas as pd
 import sklearn
 
-import features
-import inference
 import train_model
-from artifact_model import FusionFluxModelArtifact
 from config import ORIGINAL_ROW_INDEX_COLUMN, RAW_CSV_ROW_NUMBER_COLUMN
+from neutron_yield import features, inference
+from neutron_yield.artifact_model import FusionFluxModelArtifact
 
 
 class NegativePredictingModel:

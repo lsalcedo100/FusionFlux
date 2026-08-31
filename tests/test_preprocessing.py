@@ -10,9 +10,9 @@ from helpers import (
     _write_dataset,
 )
 
-import features
 import storage
 import validation
+from neutron_yield import features
 
 
 def test_create_synthetic_dataset_handles_non_multiple_row_counts(

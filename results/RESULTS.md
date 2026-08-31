@@ -1332,7 +1332,7 @@ best cross-validated model in the repository issues a 90% interval that contains
   before the fact. Its practical effect there is limited, because the selected
   models are tree ensembles rather than linear ones, but the ridge model in the
   same comparison was fitting an arbitrary point in a two-dimensional family.
-- **A separate synthetic pipeline uses `log1p`, not `log`.** In `features.py`,
+- **A separate synthetic pipeline uses `log1p`, not `log`.** In `neutron_yield/features.py`,
   `log_triple_product = log1p(n T tau)`, which is *not* `log1p(n) + log1p(T) +
   log1p(tau)`; the additivity residual reaches 4.6%. The engineered features
   there are near-collinear rather than exactly dependent, and the two exact

@@ -14,7 +14,8 @@ from typing import cast
 from uuid import uuid4
 
 import config
-from inference import TRAINING_METADATA_FILENAME, TRAINING_MODEL_FILENAME
+
+from .inference import TRAINING_METADATA_FILENAME, TRAINING_MODEL_FILENAME
 
 TRAINING_RUNS_DIRNAME = "runs"
 

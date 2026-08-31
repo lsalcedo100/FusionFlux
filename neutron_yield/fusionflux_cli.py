@@ -4,15 +4,15 @@ import argparse
 import json
 from pathlib import Path
 
-from features import DEFAULT_SHOT_PREDICTION_CUTOFF_ROWS
-from inference import (
+from .features import DEFAULT_SHOT_PREDICTION_CUTOFF_ROWS
+from .inference import (
     DEFAULT_ARTIFACT_SELECTION_BEST_COMPATIBILITY,
     SUPPORTED_DEFAULT_ARTIFACT_SELECTION_MODES,
     _default_batch_prediction_output_path,
     predict_batch,
     predict_single_case,
 )
-from training import train_models
+from .training import train_models
 
 
 def build_parser() -> argparse.ArgumentParser:

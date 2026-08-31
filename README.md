@@ -19,7 +19,7 @@ What is in the repository:
 - **[Confinement time on real HDB5 data](#confinement-time-on-real-hdb5-data)** (`hdb5.py`) is the pipeline behind every reported result: cleaning, features, the model zoo, the IPB98(y,2) baseline, and the leave-one-machine-out and size-ordered splits.
 - **[Fitting scaling laws from scratch](#fitting-scaling-laws-from-scratch)** (`scaling_law.py`) treats a confinement scaling law as the least-squares problem it is, with the three classical solvers written by hand plus the conditioning, null-space and bootstrap analysis behind Results 1 to 3.
 - **[The Lawson criterion utility](#lawson-criterion-utility)** (`lawson.py`) is a standalone triple-product and ignition-ratio calculation.
-- **[The neutron-yield pipeline](#infrastructure-the-neutron-yield-pipeline)** (`train_model.py` and its modules) is ML *infrastructure*: a versioned preprocessing contract, atomic run publishing, strict artifact compatibility. **It ships with a synthetic demo dataset and supports no scientific claim.** It is documented last, deliberately.
+- **[The neutron-yield pipeline](#infrastructure-the-neutron-yield-pipeline)** (`train_model.py` and the `neutron_yield/` package) is ML *infrastructure*: a versioned preprocessing contract, atomic run publishing, strict artifact compatibility. **It ships with a synthetic demo dataset and supports no scientific claim.** It is documented last, deliberately.
 
 ## Results
 
@@ -400,34 +400,39 @@ FusionFlux/
 ├── docs/
 │   └── neutron-yield-pipeline.md    # operating detail for the synthetic-data infrastructure
 │
-│   # shared plumbing and entrypoints
+│   # shared plumbing, used by both pipelines
 ├── config.py                        # paths, column config, physics constants and tolerances
 ├── storage.py                       # atomic file writes and JSON/CSV helpers
 ├── validation.py                    # physics input validation primitives
-├── fusionflux_cli.py                # argparse CLI behind the `fusionflux` console script
 │
 │   # neutron-yield infrastructure (synthetic demo data, no scientific claim)
-├── train_model.py                   # compatibility facade and CLI entrypoint
-├── features.py                      # alias mapping, validation, feature engineering, contract
-├── artifact_model.py                # saved-model wrapper with preprocessing + clipping guardrails
-├── training.py                      # training orchestration and holdout evaluation
-├── training_artifacts.py            # per-run path layout, staged write, atomic publish
-├── training_registry.py             # preprocessor and candidate model factories
-├── training_reports.py              # residual and feature-importance plots
-├── training_split.py                # random and grouped holdout / CV split selection
-├── inference.py                     # single/batch prediction flow, public inference API
-├── inference_artifacts.py           # artifact schema, metadata parsing, run-manifest writers
-├── inference_selection.py           # artifact discovery, default selection, loading
+├── train_model.py                   # CLI entrypoint and compatibility facade over the package
+├── neutron_yield/                   # the pipeline itself, packaged away from the science
+│   ├── __init__.py                  # states the scope: infrastructure, not a physical claim
+│   ├── fusionflux_cli.py            # argparse CLI behind the `fusionflux` console script
+│   ├── features.py                  # alias mapping, validation, feature engineering, contract
+│   ├── artifact_model.py            # saved-model wrapper with preprocessing + clipping guardrails
+│   ├── training.py                  # training orchestration and holdout evaluation
+│   ├── training_artifacts.py        # per-run path layout, staged write, atomic publish
+│   ├── training_registry.py         # preprocessor and candidate model factories
+│   ├── training_reports.py          # residual and feature-importance plots
+│   ├── training_split.py            # random and grouped holdout / CV split selection
+│   ├── inference.py                 # single/batch prediction flow, public inference API
+│   ├── inference_artifacts.py       # artifact schema, metadata parsing, run-manifest writers
+│   └── inference_selection.py       # artifact discovery, default selection, loading
 │
 ├── Makefile
 ├── pyproject.toml
 ├── requirements.txt
 ├── constraints.txt
 ├── LICENSE
+├── CITATION.cff
+├── .zenodo.json
 ├── .github/
 │   ├── dependabot.yml
 │   └── workflows/
-│       └── ci.yml
+│       ├── ci.yml
+│       └── pages.yml
 ├── tests/
 │   ├── conftest.py
 │   ├── helpers.py
@@ -524,7 +529,7 @@ The limitations that bear on the reported results are stated in full in [results
 - Model quality depends on the dataset, feature coverage, and split behavior; holdout artifacts are for reporting, while the saved production model is refit on all prepared rows.
 - The prediction CLIs expect a trained model and metadata file unless you provide custom `--model-path` and `--metadata-path` values. They validate the saved preprocessing contract against the current runtime code before scoring. Explicit artifact selection requires exact recorded runtime versions, while default artifact selection may accept limited compatible drift with warnings.
 - Batch CSV prediction only streams non-grouped inputs. Grouped time-series inputs are read as a whole file so shot-level aggregation can see every row for a shot.
-- The strict preprocessing contract is intentional. In this repo, silent feature drift is more dangerous than the inconvenience of regenerating artifacts, because the goal is fail-fast behavior around physics results. The contract is an explicit, versioned structural description (columns, feature schema, physics constants and tolerances); it deliberately does not fingerprint function source or bytecode, since that broke on harmless reformatting and forced spurious retrains. Bump `PREPROCESSING_CONTRACT_VERSION` in `features.py` whenever you change preprocessing semantics.
+- The strict preprocessing contract is intentional. In this repo, silent feature drift is more dangerous than the inconvenience of regenerating artifacts, because the goal is fail-fast behavior around physics results. The contract is an explicit, versioned structural description (columns, feature schema, physics constants and tolerances); it deliberately does not fingerprint function source or bytecode, since that broke on harmless reformatting and forced spurious retrains. Bump `PREPROCESSING_CONTRACT_VERSION` in `neutron_yield/features.py` whenever you change preprocessing semantics.
 
 **Both**
 
@@ -545,24 +550,24 @@ Shared and entrypoints:
 - `config.py` owns paths, column configuration, physics constants, and tolerances.
 - `storage.py` owns atomic file writes and the JSON/CSV output helpers.
 - `validation.py` owns the physics input validation primitives used by both pipelines and by `lawson.py`.
-- `fusionflux_cli.py` owns the argparse CLI behind the installed `fusionflux` console script.
 
 Neutron-yield infrastructure, training side:
 
-- `training.py` owns training orchestration, holdout evaluation, metric/metadata assembly, and artifact writing.
-- `training_split.py` owns holdout and cross-validation split selection, including the exact bounded subset-sum search for row-targeted grouped holdouts and its linear greedy fallback for very large group sets.
-- `training_registry.py` owns the preprocessing transformer and the candidate model factories that training cross-validates and selects among.
-- `training_artifacts.py` owns the per-run path layout plus the staged-write and atomic-publish/cleanup logic for a run directory.
-- `training_reports.py` owns the best-effort diagnostic plots; matplotlib and seaborn are imported lazily, and failures here degrade to "reports skipped" instead of discarding a successful run.
+- `neutron_yield/training.py` owns training orchestration, holdout evaluation, metric/metadata assembly, and artifact writing.
+- `neutron_yield/training_split.py` owns holdout and cross-validation split selection, including the exact bounded subset-sum search for row-targeted grouped holdouts and its linear greedy fallback for very large group sets.
+- `neutron_yield/training_registry.py` owns the preprocessing transformer and the candidate model factories that training cross-validates and selects among.
+- `neutron_yield/training_artifacts.py` owns the per-run path layout plus the staged-write and atomic-publish/cleanup logic for a run directory.
+- `neutron_yield/training_reports.py` owns the best-effort diagnostic plots; matplotlib and seaborn are imported lazily, and failures here degrade to "reports skipped" instead of discarding a successful run.
 
 Neutron-yield infrastructure, inference side:
 
-- `inference.py` owns the single-case and batch prediction flow and re-exports the public inference API, so `import inference` stays the one stable entry point.
-- `inference_artifacts.py` owns the versioned artifact schema, the strict metadata parsers/validators, and the run-manifest writers that training persists.
-- `inference_selection.py` owns artifact discovery, compatibility ranking under the configured selection mode, and deserialization of the first loadable candidate.
+- `neutron_yield/inference.py` owns the single-case and batch prediction flow and re-exports the public inference API, so `from neutron_yield import inference` stays the one stable entry point.
+- `neutron_yield/inference_artifacts.py` owns the versioned artifact schema, the strict metadata parsers/validators, and the run-manifest writers that training persists.
+- `neutron_yield/inference_selection.py` owns artifact discovery, compatibility ranking under the configured selection mode, and deserialization of the first loadable candidate.
 
 Neutron-yield infrastructure, both sides:
 
-- `features.py` owns alias mapping, temperature normalization, feature engineering, and the versioned preprocessing contract.
-- `artifact_model.py` owns the `FusionFluxModelArtifact` wrapper that enforces preprocessing compatibility and clips negative predictions.
-- `train_model.py` is kept as a compatibility facade and CLI entrypoint so existing commands and imports continue to work.
+- `neutron_yield/features.py` owns alias mapping, temperature normalization, feature engineering, and the versioned preprocessing contract.
+- `neutron_yield/artifact_model.py` owns the `FusionFluxModelArtifact` wrapper that enforces preprocessing compatibility and clips negative predictions.
+- `neutron_yield/fusionflux_cli.py` owns the argparse CLI behind the installed `fusionflux` console script.
+- `train_model.py` stays at the repository root as the CLI entrypoint and a compatibility facade over the package, so every documented `python3 train_model.py ...` command and every `train_model.<name>` import keeps working across the move.

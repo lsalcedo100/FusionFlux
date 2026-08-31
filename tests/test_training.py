@@ -15,10 +15,9 @@ from sklearn.compose import TransformedTargetRegressor
 from sklearn.dummy import DummyRegressor
 from sklearn.pipeline import Pipeline
 
-import features
 import train_model
-import training
 from config import ORIGINAL_ROW_INDEX_COLUMN, RAW_CSV_ROW_NUMBER_COLUMN
+from neutron_yield import features, training
 
 
 def test_train_models_rejects_tiny_dataset(

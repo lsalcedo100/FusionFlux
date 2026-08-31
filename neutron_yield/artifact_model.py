@@ -48,7 +48,7 @@ class FusionFluxModelArtifact:
         self.__dict__.setdefault("last_prediction_info", _DEFAULT_PREDICTION_INFO)
 
     def validate_runtime_preprocessing(self) -> tuple[str, ...]:
-        from features import (
+        from .features import (
             assess_runtime_preprocessing_contract_compatibility,
             build_preprocessing_contract,
             describe_preprocessing_contract_differences,
