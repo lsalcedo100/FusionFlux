@@ -127,16 +127,14 @@ python3 hdb5.py train --download-if-missing
 python3 hdb5.py extrapolate
 python3 hdb5.py size-extrapolate
 
-# 4. Regenerate every number and figure under results/
-python3 analysis_scaling_law.py
-python3 analysis_extrapolation.py
-python3 analysis_flexibility_sweep.py
-python3 analysis_size_extrapolation.py
-python3 analysis_hybrid.py
-python3 analysis_conformal.py
+# 4. Regenerate every number and figure under results/, then rebuild the page
+make results      # the six analyses in dependency order, then site/build_page.py
 
 # 5. Reproduce the CI quality gate locally
 make check        # == ruff check . && mypy . && pytest -q
+
+# 6. Check that results/ still follows from the raw data and the prose still matches it
+make reproduce    # regenerates, compares numerically, then runs the prose claims
 ```
 
 The synthetic-data neutron-yield pipeline has its own commands, documented under [Infrastructure: the Neutron-Yield Pipeline](#infrastructure-the-neutron-yield-pipeline).
@@ -400,6 +398,8 @@ FusionFlux/
 │   └── build_page.py                # fills it from results/; writes site/index.html
 ├── docs/
 │   └── neutron-yield-pipeline.md    # operating detail for the synthetic-data infrastructure
+├── tools/
+│   └── compare_results.py           # numeric diff of a regenerated results/ against the committed one
 │
 │   # shared plumbing, used by both pipelines
 ├── config.py                        # paths, column config, physics constants and tolerances
@@ -433,7 +433,8 @@ FusionFlux/
 │   ├── dependabot.yml
 │   └── workflows/
 │       ├── ci.yml
-│       └── pages.yml
+│       ├── pages.yml
+│       └── reproduce.yml            # regenerates results/ from the raw data and diffs it
 ├── tests/
 │   ├── conftest.py
 │   ├── helpers.py
@@ -492,6 +493,8 @@ The tests that back the reported results come first: `tests/test_hdb5.py` exerci
 The neutron-yield pipeline is covered by `tests/test_preprocessing.py`, `tests/test_training.py`, and `tests/test_inference.py`, with `tests/test_lawson.py` for the physics utility, shared fixtures in `tests/conftest.py`, and shared stubs/builders in `tests/helpers.py`. Between them they cover Lawson calculations, temperature conversions, preprocessing and validation rules, grouped-shot aggregation, training split behavior, training artifact cleanup, preprocessing-contract compatibility checks, negative prediction clipping, and single/batch inference edge cases.
 
 `tests/test_reported_numbers.py` closes the loop between the analyses and the prose. Every headline figure in this README, `results/RESULTS.md` and the site template is typed by hand, so each one is bound there to the artifact field it came from: the test renders the artifact value, asserts it equals the literal, and asserts that literal is still present in the documents meant to carry it. It fails in both directions, so rerunning an analysis that moves a number fails just as loudly as editing a number in prose. It reads only committed files under `results/`, so it needs neither the dataset nor a training run and runs in the ordinary suite.
+
+`tests/test_compare_results.py` covers the comparator behind that gate, since a comparator that quietly passed everything would leave the workflow green while guarding nothing.
 
 That leaves one gap: whether `results/` itself still follows from the raw data. The `reproduce` workflow answers it, on a weekly schedule, on demand, and whenever an analysis or its output changes on `main`. It fetches and verifies the dataset, runs `make results`, and fails if any committed CSV or JSON moved, uploading the regenerated directory so the diff can be read without rerunning it locally. Figures are excluded from that diff because matplotlib output is not byte-reproducible across versions; the numbers behind them are. Run the same check locally with `make reproduce`.
 
