@@ -1,24 +1,18 @@
 # FusionFlux
 
-`FusionFlux` is a Python machine learning project for fusion plasma performance modeling. It contains two independent pipelines plus a small physics utility:
+**A random forest beats the published 1998 fusion confinement scaling law by 41%. Hold out an entire tokamak instead of a few discharges and the ranking of the three blind models reverses exactly.**
 
-- **Neutron yield** (`train_model.py`): estimates fusion experiment `neutron_yield` from plasma operating conditions such as density, temperature, and confinement time. Ships with a synthetic demo dataset and a strict, versioned artifact contract.
-- **Energy confinement time** (`hdb5.py`): trains on the *real* ITPA Global H-mode Confinement Database (STD5), predicting thermal confinement time `TAUTH` and scoring every model against the analytic IPB98(y,2) scaling law as a physics baseline.
-- **Lawson criterion** (`lawson.py`): a standalone triple-product and ignition-ratio calculation.
-
-Together they let you compare data-driven predictions against simple physics-based checks, on both synthetic and real experimental data.
-
-## Results
-
-Full writeup with tables, limitations and reproduction steps: **[results/RESULTS.md](results/RESULTS.md)**. Regenerate with `python3 analysis_scaling_law.py` and `python3 analysis_extrapolation.py`.
-
-Measured on the real ITPA H-mode confinement database (HDB5 STD5): 6228 quasi-stationary time slices from 4471 discharges across 18 tokamaks. No synthetic data is used in any reported result.
-
-### The headline: a learned model beats the published scaling law, and that result does not survive contact with a new machine
+[![CI](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml/badge.svg)](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml)
+[![Python 3.9 - 3.12](https://img.shields.io/badge/python-3.9%20--%203.12-blue.svg)](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml)
+[![coverage 84%](https://img.shields.io/badge/coverage-84%25-brightgreen.svg)](#testing)
+[![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
+[![data: ITPA HDB5 STD5](https://img.shields.io/badge/data-ITPA%20HDB5%20STD5-8a3ffc.svg)](https://osf.io/drwcq)
 
 ![Interpolation against extrapolation](results/extrapolation.png)
 
-Under cross-validation grouped by discharge, a random forest cuts RMSLE 41% below the analytic IPB98(y,2) law. But grouped CV holds out *shots*, so every machine in the held-out fold is also in the training fold. Hold out an entire tokamak instead, train on the other 12 and predict the 13th, and **the ranking of the three blind models reverses exactly**:
+Measured on the real ITPA Global H-mode Confinement Database (HDB5, standard analysis set STD5): **6228 quasi-stationary time slices from 4471 discharges across 18 tokamaks**. No synthetic data is used in any reported result.
+
+Under cross-validation grouped by discharge, a random forest cuts RMSLE 41% below the analytic IPB98(y,2) law. But grouped CV holds out *shots*, so every machine in the held-out fold is also in the training fold. Hold out an entire tokamak instead, train on the other 12 and predict the 13th, and the ordering of the three blind models inverts end to end, at a rank correlation of **-1.00**.
 
 | model | CV, by discharge | leave-one-tokamak-out | ratio | CV rank | LOMO rank |
 |---|---|---|---|---|---|
@@ -28,7 +22,27 @@ Under cross-validation grouped by discharge, a random forest cuts RMSLE 41% belo
 | ridge, log-linear | 0.181 | 0.214 | 1.2x worse | 4 | 2 |
 | IPB98(y,2), analytic (fitted on this database, not blind) | 0.199 | 0.188 | unchanged | 5 | 1 |
 
-Both columns use the same nine features and the same models; only the split changes. The best model in this repository by cross-validation is the worst of the three on a machine it has not seen, and its 41% margin turns out to measure how much of JET is predictable from the rest of JET.
+Both columns use the same nine features and the same models; only the split changes. **The failure has a measured mechanism:** the random forest's per-machine error tracks how far that machine sits outside the training data at rho = **+0.85**, while the log-linear power law's does not, at rho = **-0.06**.
+
+**Read the results:** [results/RESULTS.md](results/RESULTS.md) has all four results with tables, derivations, limitations and reproduction steps. The short version, with the mechanism and the linear algebra, is in [Results](#results) below.
+
+**Reproduce them:** `python3 hdb5.py download`, then `python3 analysis_scaling_law.py` and `python3 analysis_extrapolation.py`.
+
+## What is in here
+
+Two independent pipelines plus a small physics utility:
+
+- **Energy confinement time** (`hdb5.py`, `scaling_law.py`, `analysis_*.py`): the scientific core, and the source of every result above. Trains on the **real** ITPA HDB5 STD5 database, predicts thermal confinement time `TAUTH`, and scores every model against the analytic IPB98(y,2) scaling law as a physics baseline. `scaling_law.py` implements the three classical least-squares solvers (Cholesky, QR, SVD) by hand, including the triangular substitutions, and uses them to audit the rank and conditioning of the design matrix.
+- **Neutron yield** (`train_model.py` and the `training_*` / `inference_*` modules): an **engineering demonstrator, not a scientific claim**. It ships with a *synthetic* demo dataset, so its predictions are not evidence about real plasmas. What it demonstrates is the production machinery: a versioned preprocessing contract, atomic artifact publishing, strict runtime-compatibility checks, and single/batch inference paths.
+- **Lawson criterion** (`lawson.py`): a standalone triple-product and ignition-ratio calculation.
+
+## Results
+
+Full writeup with tables, limitations and reproduction steps: **[results/RESULTS.md](results/RESULTS.md)**. Regenerate with `python3 analysis_scaling_law.py` and `python3 analysis_extrapolation.py`. The headline table is at the top of this file; this section is what is behind it.
+
+### Why the headline result happens
+
+The best model in this repository by cross-validation is the worst of the three on a machine it has not seen, and its 41% margin turns out to measure how much of JET is predictable from the rest of JET.
 
 **The failure has a mechanism, and it is measurable.** The random forest's per-machine error correlates with how far that machine sits outside the training data at rho = **+0.85**; the log-linear power law's does not, at rho = **-0.06**. And when JET is held out, 48% of its rows lie above the highest confinement time in the remaining 12 machines: a tree ensemble averages training targets, so **no tree in the forest can output those values at all**, whatever the features say. That bound is asserted directly in `tests/test_extrapolation.py`.
 
@@ -107,6 +121,8 @@ FusionFlux/
 ├── lawson.py                  # standalone Lawson criterion utility
 ├── analysis_extrapolation.py  # Result 4: leave-one-tokamak-out study and figure
 ├── analysis_scaling_law.py    # Results 1 to 3: rank audit, IPB98 refit, conditioning
+├── results/                   # RESULTS.md plus the generated figures, CSVs and JSON
+├── site/                      # single-file writeup published to GitHub Pages
 ├── scaling_law.py             # from-scratch least squares; fits/audits scaling laws
 ├── storage.py                 # atomic file writes and JSON/CSV helpers
 ├── train_model.py             # compatibility facade and CLI entrypoint
@@ -121,10 +137,12 @@ FusionFlux/
 ├── requirements.txt
 ├── constraints.txt
 ├── LICENSE
+├── CITATION.cff
 ├── .github/
 │   ├── dependabot.yml
 │   └── workflows/
-│       └── ci.yml
+│       ├── ci.yml            # lint, type-check, test on Python 3.9-3.12
+│       └── pages.yml         # publishes site/ to GitHub Pages
 ├── tests/
 │   ├── conftest.py
 │   ├── helpers.py
