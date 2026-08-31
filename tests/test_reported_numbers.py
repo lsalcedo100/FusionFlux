@@ -42,6 +42,7 @@ RESULTS_MD = "results/RESULTS.md"
 PAGE = "site/page.template.html"
 PAPER = "paper/paper.tex"
 PAPER_PDF = "paper/paper.pdf"
+ZENODO = ".zenodo.json"
 
 
 # --------------------------------------------------------------------------
@@ -79,7 +80,7 @@ def documents() -> dict[str, str]:
     than the way it happens to be wrapped today.
     """
     out = {}
-    for name in (README, RESULTS_MD, PAGE, PAPER):
+    for name in (README, RESULTS_MD, PAGE, PAPER, ZENODO):
         path = ROOT / name
         if not path.exists():
             continue
@@ -136,6 +137,17 @@ class Claim:
     render: Callable[[Union[float, int]], str] = str
     """Turns that value into the literal. Must round the way the prose does."""
     documents: tuple[str, ...] = field(default=(README, RESULTS_MD, PAPER, PAPER_PDF))
+    phrases: Callable[[str], tuple[str, ...]] = lambda literal: (literal,)
+    """Spellings that count as this claim appearing, built from the literal.
+
+    A bare number is not always a safe thing to search for. "41%" occurs three
+    times in the README and only one of them is this quantity, so a claim
+    matching the bare string would keep passing after the number it guards had
+    changed. Where a number is ambiguous in the documents, the claim carries the
+    surrounding words instead, and a document satisfies it by containing any one
+    of the spellings (the documents word it differently: "keep", "retain", and
+    the two orderings).
+    """
 
 
 def _r(digits: int) -> Callable[[Union[float, int]], str]:
@@ -208,7 +220,8 @@ CLAIMS: tuple[Claim, ...] = (
     # a table cell; the shared substring is what both must carry.
     Claim("machines where the forest is worse", "13 of 13",
           lambda a: _paired(a, "random_forest", "ridge_loglinear")["n_machines_a_worse"],
-          lambda v: f"{v} of {v}"),
+          lambda v: f"{v} of {v}",
+          documents=(README, RESULTS_MD, PAPER, PAPER_PDF, ZENODO)),
     Claim("paired gap, forest against power law", "+0.251",
           lambda a: _paired(a, "random_forest", "ridge_loglinear")["mean_difference"],
           lambda v: f"{v:+.3f}"),
@@ -233,22 +246,29 @@ CLAIMS: tuple[Claim, ...] = (
           documents=(RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
     Claim("power law skill at the cut", "93%",
           lambda a: _esc(a, "ridge_loglinear", "skill_against_baseline"), _pct(),
-          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
+          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF),
+          phrases=lambda n: (f"keeps {n}", f"retains {n}")),
     Claim("forest skill at the cut", "41%",
           lambda a: _esc(a, "random_forest", "skill_against_baseline"), _pct(),
-          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
+          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF),
+          phrases=lambda n: (f"keep 31% and {n}", f"keep {n} and 31%", f"retain {n} and 31%",
+                             f"keep 41% and {n}", f"keep {n} and 41%", f"retain 41% and {n}")),
     Claim("gradient booster skill at the cut", "31%",
           lambda a: _esc(a, "hist_gradient_boosting", "skill_against_baseline"), _pct(),
-          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
+          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF),
+          phrases=lambda n: (f"keep 31% and {n}", f"keep {n} and 31%", f"retain {n} and 31%",
+                             f"keep 41% and {n}", f"keep {n} and 41%", f"retain 41% and {n}")),
 
     # -- Result 7: the intervals -------------------------------------------
     Claim("nominal coverage", "90%",
           lambda a: a["conformal"]["nominal_coverage"], _pct(),
-          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
+          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF, ZENODO)),
     Claim("forest coverage on an unseen machine", "35%",
-          lambda a: _cov(a, "random_forest", "lomo_coverage"), _pct()),
+          lambda a: _cov(a, "random_forest", "lomo_coverage"), _pct(),
+          documents=(README, RESULTS_MD, PAPER, PAPER_PDF, ZENODO)),
     Claim("forest coverage across the size cut", "3%",
-          lambda a: _cov(a, "random_forest", "size_cut_coverage"), _pct()),
+          lambda a: _cov(a, "random_forest", "size_cut_coverage"), _pct(),
+          documents=(README, RESULTS_MD, PAPER, PAPER_PDF, ZENODO)),
 
     # -- Result 1: the rank audit ------------------------------------------
     Claim("rank of the standardized feature matrix", "rank 8",
@@ -279,8 +299,9 @@ def test_reported_number_appears_in_its_documents(claim: Claim, documents: dict)
     for name in claim.documents:
         if name not in documents:
             pytest.skip(f"{name} is not present in this checkout")
-        assert claim.literal in documents[name], (
-            f"{claim.label}: {claim.literal!r} is no longer present in {name}. "
+        spellings = claim.phrases(claim.literal)
+        assert any(p in documents[name] for p in spellings), (
+            f"{claim.label}: none of {spellings!r} is present in {name}. "
             f"Either the prose was reworded, in which case update this claim, or "
             f"the number was dropped and the claim is guarding nothing."
         )
