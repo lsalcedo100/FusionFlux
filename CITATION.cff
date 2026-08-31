@@ -1,0 +1,51 @@
+cff-version: 1.2.0
+title: "FusionFlux: confinement scaling as a linear algebra problem"
+message: "If you use this software or its results, please cite it as below."
+type: software
+authors:
+  - given-names: Liam
+    family-names: Salcedo
+    alias: lsalcedo100
+repository-code: "https://github.com/lsalcedo100/FusionFlux"
+abstract: >-
+  A study of energy confinement time scaling on the ITPA Global H-mode
+  Confinement Database (HDB5, standard analysis set STD5). Under
+  cross-validation grouped by discharge a random forest improves on the
+  published IPB98(y,2) scaling law by 41% in RMSLE. Holding out an entire
+  tokamak instead reverses the ranking of the three blind models exactly,
+  and the failure is shown to be a measurable function of extrapolation
+  distance and of the training-range bound inherent to tree ensembles.
+  Includes a rank-deficiency audit of the design matrix, a from-scratch
+  least-squares implementation (Cholesky, QR, SVD), and a refit of the
+  IPB98(y,2) exponents decomposed along the singular directions of the data.
+keywords:
+  - fusion
+  - tokamak
+  - plasma physics
+  - energy confinement time
+  - scaling law
+  - machine learning
+  - extrapolation
+  - out-of-distribution generalization
+license: MIT
+version: 0.1.0
+references:
+  - type: article
+    title: "Chapter 2: Plasma confinement and transport (ITER Physics Basis)"
+    authors:
+      - name: "ITER Physics Expert Groups on Confinement and Transport and Confinement Modelling and Database"
+    journal: "Nuclear Fusion"
+    volume: 39
+    start: 2175
+    year: 1999
+    notes: "Source of the IPB98(y,2) scaling law used as the physics baseline."
+  - type: article
+    title: "First analysis of the updated ITPA global H-mode confinement database"
+    authors:
+      - family-names: Verdoolaege
+        given-names: Geert
+    journal: "Nuclear Fusion"
+    volume: 61
+    start: 076006
+    year: 2021
+    notes: "Source of the HDB5 STD5 dataset, fetched from OSF rather than redistributed."
