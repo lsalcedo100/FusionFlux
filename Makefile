@@ -56,5 +56,10 @@ reproduce:
 	@$(MAKE) results
 	python3 tools/compare_results.py .reproduce_baseline results
 	python -m pytest -q tests/test_reported_numbers.py
+	@# This target verifies; `make results` is the one that updates. On success
+	@# put the committed bytes back, so a check does not leave the tree dirty
+	@# with rewrites that differ only in the float64 tails. On failure the
+	@# regenerated files stay in place to be inspected.
+	@cp .reproduce_baseline/* results/
 	@rm -rf .reproduce_baseline
 	@echo "results/ reproduces from the raw data and the prose matches it"

@@ -109,8 +109,8 @@
       "is_blind": true,
       "cv_rmsle": 0.1277352778940419,
       "lomo_mean_rmsle": 0.46489304181310953,
-      "lomo_median_rmsle": 0.4502539255431943,
-      "lomo_worst_rmsle": 0.8573763614997418,
+      "lomo_median_rmsle": 0.4502539255431945,
+      "lomo_worst_rmsle": 0.857376361499742,
       "worst_machine": "NSTX",
       "degradation_factor": 3.6395038980440817,
       "cv_rank": 1,
@@ -151,7 +151,7 @@
       "fraction_above_train_max": 0.48127128263337116,
       "log_headroom": 1.3108840862714626,
       "headroom_ratio": 3.7094517383242507,
-      "tree_rmsle": 0.4779851207032848,
+      "tree_rmsle": 0.47798512070328486,
       "power_law_rmsle": 0.1979097980970751
     }
   ],
@@ -176,9 +176,9 @@
     },
     {
       "model_name": "random_forest",
-      "mean_rmsle": 0.4648930418131095,
-      "ci_low": 0.3761590649969642,
-      "ci_high": 0.5597626358316888
+      "mean_rmsle": 0.46489304181310953,
+      "ci_low": 0.3761590649969643,
+      "ci_high": 0.559762635831689
     },
     {
       "model_name": "ridge_log_cubic",
@@ -203,9 +203,9 @@
     {
       "model_a": "random_forest",
       "model_b": "ridge_loglinear",
-      "mean_difference": 0.2508170441439682,
+      "mean_difference": 0.25081704414396827,
       "ci_low": 0.15682732681279973,
-      "ci_high": 0.34179631486689394,
+      "ci_high": 0.3417963148668939,
       "excludes_zero": true,
       "n_machines_a_worse": 13,
       "n_machines": 13
@@ -233,9 +233,9 @@
     {
       "model_a": "random_forest",
       "model_b": "ridge_log_quadratic",
-      "mean_difference": 0.1651874496335979,
-      "ci_low": 0.013450338415535744,
-      "ci_high": 0.30227647859566825,
+      "mean_difference": 0.16518744963359794,
+      "ci_low": 0.013450338415535704,
+      "ci_high": 0.30227647859566836,
       "excludes_zero": true,
       "n_machines_a_worse": 12,
       "n_machines": 13

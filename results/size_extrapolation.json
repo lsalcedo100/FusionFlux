@@ -206,7 +206,7 @@
       "n_train_rows": 114,
       "n_test_rows": 6114,
       "rmsle": 1.1723220346912544,
-      "r2_log": -0.9128133157988572,
+      "r2_log": -0.9128133157988567,
       "is_blind": true,
       "well_powered": false
     },
@@ -261,7 +261,7 @@
       "n_train_rows": 299,
       "n_test_rows": 5929,
       "rmsle": 1.553796235402906,
-      "r2_log": -2.523002893632641,
+      "r2_log": -2.5230028936326407,
       "is_blind": true,
       "well_powered": false
     },
@@ -316,7 +316,7 @@
       "n_train_rows": 310,
       "n_test_rows": 5918,
       "rmsle": 1.6831923772509036,
-      "r2_log": -3.153879826061342,
+      "r2_log": -3.1538798260613428,
       "is_blind": true,
       "well_powered": false
     },
@@ -865,8 +865,8 @@
       "size_ratio": 1.1294592332437212,
       "n_train_rows": 6128,
       "n_test_rows": 100,
-      "rmsle": 0.2912031876601156,
-      "r2_log": 0.2506101484711375,
+      "rmsle": 0.29120318766011555,
+      "r2_log": 0.2506101484711377,
       "is_blind": true,
       "well_powered": true
     },
@@ -991,7 +991,7 @@
       "ipb98y2_analytic": 0.19440636965136043,
       "mean_baseline": 1.4096742801420261,
       "ridge_loglinear": 0.2558780043270611,
-      "random_forest": 0.9363804711363984,
+      "random_forest": 0.9363804711363986,
       "hist_gradient_boosting": 1.0470888451864215
     }
   },

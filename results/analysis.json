@@ -58,17 +58,17 @@
     "solvers": [
       {
         "name": "cholesky",
-        "seconds_per_solve": 0.00012163750000000473,
+        "seconds_per_solve": 7.373124999999758e-05,
         "max_deviation_from_svd": 7.586986594532164e-13
       },
       {
         "name": "qr",
-        "seconds_per_solve": 0.00059903335,
+        "seconds_per_solve": 0.00034904789999999907,
         "max_deviation_from_svd": 2.192690473634684e-15
       },
       {
         "name": "svd",
-        "seconds_per_solve": 0.0006660124999999905,
+        "seconds_per_solve": 0.0003852874999999978,
         "max_deviation_from_svd": 0.0
       }
     ],
