@@ -215,9 +215,17 @@ def test_clip_converts_non_finite_predictions_rather_than_propagating_them() -> 
 
 
 @pytest.fixture(scope="module")
-def sweep() -> afs.FlexibilitySweep:
+def sweep(tmp_path_factory: pytest.TempPathFactory) -> afs.FlexibilitySweep:
+    # The frame is synthetic, so it is written out and the sweep is pointed at
+    # that file. Passing no ``dataset_path`` would leave the sweep with no
+    # provenance at all, and the fingerprint this module asserts on is supposed
+    # to identify the bytes the numbers actually came from.
+    dataset = _synthetic_dataset()
+    dataset_path = tmp_path_factory.mktemp("flexibility") / "synthetic.csv"
+    dataset.to_csv(dataset_path, index=False)
     return afs.sweep_flexibility(
-        _synthetic_dataset(),
+        dataset,
+        dataset_path=dataset_path,
         degrees=(1, 2, 3),
         alphas=(1e-2, 1.0, 1e2, 1e6),
         min_rows=20,

@@ -344,7 +344,9 @@ class BestPenalty:
 class FlexibilitySweep:
     feature_columns: list[str]
     n_rows: int
-    provenance: dict[str, object]
+    # ``None`` when the caller passed a frame it built itself rather than a
+    # ``dataset_path``; see ``analysis_extrapolation.ExtrapolationAnalysis``.
+    provenance: dict[str, object] | None
     degrees: list[int]
     alphas: list[float]
     machines: list[str]
@@ -581,7 +583,7 @@ def sweep_flexibility(
     return FlexibilitySweep(
         feature_columns=list(feature_columns),
         n_rows=int(len(dataset)),
-        provenance=hdb5.dataset_provenance(dataset_path),
+        provenance=hdb5.dataset_provenance(dataset_path) if dataset_path is not None else None,
         degrees=[int(degree) for degree in degrees],
         alphas=[float(alpha) for alpha in alphas],
         machines=machines,
@@ -765,7 +767,7 @@ def plot_flexibility_sweep(sweep: FlexibilitySweep) -> Path | None:
 
 def main() -> None:
     dataset = hdb5.prepare_dataset()
-    sweep = sweep_flexibility(dataset)
+    sweep = sweep_flexibility(dataset, dataset_path=hdb5.default_hdb5_path())
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     write_dataframe_csv_atomic(RESULTS_DIR / "flexibility_sweep.csv", sweep.to_frame())

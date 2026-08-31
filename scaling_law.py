@@ -492,8 +492,8 @@ def bootstrap_exponents(
     draws: list[np.ndarray] = []
     for _ in range(n_resamples):
         picks = rng.integers(0, n_units, size=n_units)
-        rows = np.concatenate([index_pool[p] for p in picks])
-        sample = frame.iloc[rows]
+        row_positions = np.concatenate([index_pool[p] for p in picks])
+        sample = frame.iloc[row_positions]
         design, _ = build_log_design_matrix(sample, feature_columns, intercept=True)
         target = np.log(sample[target_column].to_numpy(dtype=float))
         draws.append(solve_lstsq_svd(design, target))

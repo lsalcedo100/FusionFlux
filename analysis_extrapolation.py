@@ -346,7 +346,12 @@ class ExtrapolationAnalysis:
     # when the analysis runs rather than when it is serialized: fingerprinting
     # at write time would re-read whatever happens to be on disk by then and
     # would ignore an explicit ``dataset_path`` entirely.
-    provenance: dict[str, object]
+    #
+    # ``None`` when the caller passed a frame it built itself rather than a
+    # ``dataset_path``. There is no file to identify in that case, and
+    # naming the default one would stamp these numbers with the provenance
+    # of bytes they never read.
+    provenance: dict[str, object] | None
     n_machines_held_out: int
     machines_held_out: list[str]
     n_machines_excluded: int
@@ -487,7 +492,7 @@ def analyze_extrapolation(
     return ExtrapolationAnalysis(
         feature_columns=list(feature_columns),
         n_rows=int(len(dataset)),
-        provenance=hdb5.dataset_provenance(dataset_path),
+        provenance=hdb5.dataset_provenance(dataset_path) if dataset_path is not None else None,
         n_machines_held_out=len(machines),
         machines_held_out=machines,
         n_machines_excluded=int(all_machines) - len(machines),
@@ -768,7 +773,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
 
 def main() -> None:
     dataset = hdb5.prepare_dataset()
-    analysis = analyze_extrapolation(dataset)
+    analysis = analyze_extrapolation(dataset, dataset_path=hdb5.default_hdb5_path())
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     write_dataframe_csv_atomic(

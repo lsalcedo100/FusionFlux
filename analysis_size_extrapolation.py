@@ -128,7 +128,9 @@ class EscalationRow:
 class SizeExtrapolationAnalysis:
     feature_columns: list[str]
     n_rows: int
-    provenance: dict[str, Any]
+    # ``None`` when the caller passed a frame it built itself rather than a
+    # ``dataset_path``; see ``analysis_extrapolation.ExtrapolationAnalysis``.
+    provenance: dict[str, Any] | None
     # Ratio of ITER's major radius to the largest in the database.
     iter_size_ratio: float
     iter_matched_split: dict[str, Any]
@@ -335,7 +337,7 @@ def analyze_size_extrapolation(
     return SizeExtrapolationAnalysis(
         feature_columns=list(feature_columns),
         n_rows=int(len(dataset)),
-        provenance=hdb5.dataset_provenance(dataset_path),
+        provenance=hdb5.dataset_provenance(dataset_path) if dataset_path is not None else None,
         iter_size_ratio=iter_ratio,
         iter_matched_split=matched.to_json(),
         iter_match_log_error=float(abs(np.log(matched.size_ratio) - np.log(iter_ratio))),
@@ -537,7 +539,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
 
 def main() -> None:
     dataset = hdb5.prepare_dataset()
-    analysis = analyze_size_extrapolation(dataset)
+    analysis = analyze_size_extrapolation(dataset, dataset_path=hdb5.default_hdb5_path())
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     write_dataframe_csv_atomic(

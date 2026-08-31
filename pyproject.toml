@@ -70,7 +70,11 @@ filterwarnings = [
 ]
 
 [tool.mypy]
-python_version = "3.9"
+# No python_version: each CI job checks at its own interpreter version. Pinning
+# it to 3.9 broke both directions once mypy 2.0 dropped 3.9 as a target. The
+# setting was rejected outright, and the stale target then failed to parse the
+# PEP 695 `type` statements in current numpy stubs. The 3.9 job still verifies
+# 3.9 semantics, because it installs the mypy pinned in constraints.txt.
 ignore_missing_imports = true
 warn_unused_ignores = true
 # A wheel build copies every top-level module into build/lib, which mypy then
