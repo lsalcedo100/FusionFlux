@@ -120,7 +120,8 @@ def solve_lstsq_cholesky(design: np.ndarray, target: np.ndarray) -> np.ndarray:
     loses all significant digits in double precision. Raises on a singular or
     indefinite ``X^T X``, which is the honest failure mode.
     """
-    gram = design.T @ design
+    with _clean_fp_state():
+        gram = design.T @ design
     try:
         lower = np.linalg.cholesky(gram)
     except np.linalg.LinAlgError as error:  # pragma: no cover - message path
@@ -167,6 +168,26 @@ def solve_lstsq_svd(design: np.ndarray, target: np.ndarray, *, rcond: float | No
         return vt.T @ (s_inv * (u.T @ target))
 
 
+def ridge_from_svd(
+    u: np.ndarray, s: np.ndarray, vt: np.ndarray, target: np.ndarray, alpha: float
+) -> np.ndarray:
+    """The ridge solution for one ``alpha``, given a factorization already computed.
+
+    Split out from :func:`solve_lstsq_ridge` because alpha enters *only* through
+    the per-direction filter: the SVD does not depend on it. A sweep over a
+    penalty grid can therefore factor once and evaluate the whole grid for the
+    cost of a few matrix-vector products, which is what
+    ``analysis_flexibility_sweep`` relies on to make a 4-by-9 grid affordable at
+    degree 4. Keeping one implementation of the filter means the sweep and the
+    single-fit path cannot drift apart.
+    """
+    if alpha < 0:
+        raise ValueError("alpha must be non-negative.")
+    filtered = s / (s**2 + alpha)
+    with _clean_fp_state():
+        return vt.T @ (filtered * (u.T @ target))
+
+
 def solve_lstsq_ridge(design: np.ndarray, target: np.ndarray, alpha: float) -> np.ndarray:
     """Ridge regression expressed through the SVD, to make shrinkage visible.
 
@@ -177,12 +198,8 @@ def solve_lstsq_ridge(design: np.ndarray, target: np.ndarray, alpha: float) -> n
     determines. Regularization is not a knob that makes numbers behave, it is a
     decision about which combinations of exponents you are declining to resolve.
     """
-    if alpha < 0:
-        raise ValueError("alpha must be non-negative.")
     u, s, vt = np.linalg.svd(design, full_matrices=False)
-    filtered = s / (s**2 + alpha)
-    with _clean_fp_state():
-        return vt.T @ (filtered * (u.T @ target))
+    return ridge_from_svd(u, s, vt, target, alpha)
 
 
 def ridge_shrinkage_factors(singular_values: np.ndarray, alpha: float) -> np.ndarray:
@@ -386,7 +403,8 @@ class ScalingLawFit:
 
     def predict(self, frame: pd.DataFrame, feature_columns: tuple[str, ...]) -> np.ndarray:
         design, _ = build_log_design_matrix(frame, feature_columns, intercept=True)
-        return np.exp(design @ self.coefficients)
+        with _clean_fp_state():
+            return np.exp(design @ self.coefficients)
 
     def compare_to_published(self, published: dict[str, float] = IPB98Y2_EXPONENTS) -> pd.DataFrame:
         rows = [

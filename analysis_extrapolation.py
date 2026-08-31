@@ -23,14 +23,18 @@ The narrative built on these numbers is in ``results/RESULTS.md``.
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
 import hdb5
+from storage import write_dataframe_csv_atomic, write_json_strict
+
+if TYPE_CHECKING:  # imported for typing only; the factory imports it lazily
+    from sklearn.pipeline import Pipeline
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
@@ -52,7 +56,53 @@ CONTENDER_MODELS = ("ridge_loglinear", "random_forest", "hist_gradient_boosting"
 # ridge is merely the only model in the zoo that can extrapolate at all. It is
 # flexible (curvature and every pairwise log interaction) but still polynomial,
 # so it extrapolates. See Result 4d.
+# Kept in step with the two factories that supply them, one rung each. They are
+# separate constants because they come from different places: hdb5 owns the
+# control the ``extrapolate`` CLI can run, this module owns the extra rung that
+# is too slow to belong in a default run. ``test_extrapolation`` asserts both
+# match their factory, so a new rung cannot be added in one place only.
 CONTROL_MODELS = ("ridge_log_quadratic",)
+LADDER_MODELS = ("ridge_log_cubic",)
+
+# Reporting order for Result 4d, least to most flexible. Degree 1 is plain
+# ridge, already in the zoo; degrees 2 and 3 are the controls; the tree
+# ensembles are the nonparametric end of the same axis.
+FLEXIBILITY_LADDER = (
+    ("ridge_loglinear", "log-linear (degree 1)"),
+    ("ridge_log_quadratic", "log-quadratic (degree 2)"),
+    ("ridge_log_cubic", "log-cubic (degree 3)"),
+    ("hist_gradient_boosting", "gradient-boosted trees"),
+    ("random_forest", "random forest"),
+)
+
+# Machine-level bootstrap. The sampling unit is the tokamak, not the row: the
+# claim is about how a model behaves on an unseen *machine*, and there are only
+# 13 of those, so resampling rows would return intervals that are far too narrow.
+N_BOOTSTRAP_RESAMPLES = 2000
+BOOTSTRAP_SEED = 20240617
+
+
+def build_flexibility_ladder() -> dict[str, "Pipeline"]:
+    """The rung of the ladder above ``hdb5.build_control_models``.
+
+    ``hdb5`` supplies degree 2. Degree 3 is added here because it is specific to
+    this analysis rather than something the ``extrapolate`` CLI should carry: on
+    nine log features it expands to 219 terms, which is enough to make the point
+    about flexibility and slow enough that it does not belong in a default run.
+    """
+    from sklearn.linear_model import Ridge
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import PolynomialFeatures, StandardScaler
+
+    return {
+        "ridge_log_cubic": Pipeline(
+            [
+                ("expand", PolynomialFeatures(degree=3, include_bias=False)),
+                ("scale", StandardScaler()),
+                ("model", Ridge(alpha=1.0, solver="svd")),
+            ]
+        ),
+    }
 
 # A tree ensemble predicts by averaging training targets, so its output is
 # bounded by the training target range no matter what its features say. Whether
@@ -99,6 +149,124 @@ def _midranks(values: np.ndarray) -> np.ndarray:
                 ranks[order[start:stop]] = ranks[order[start:stop]].mean()
             start = stop
     return ranks
+
+
+@dataclass(frozen=True)
+class MachineBootstrap:
+    """A percentile interval for one model's mean RMSLE over held-out machines."""
+
+    model_name: str
+    mean_rmsle: float
+    ci_low: float
+    ci_high: float
+
+    def to_json(self) -> dict[str, object]:
+        return {
+            "model_name": self.model_name,
+            "mean_rmsle": self.mean_rmsle,
+            "ci_low": self.ci_low,
+            "ci_high": self.ci_high,
+        }
+
+
+@dataclass(frozen=True)
+class PairedDifference:
+    """A percentile interval for the gap between two models, paired by machine.
+
+    Paired matters. The machines differ enormously in how hard they are, so the
+    two marginal intervals overlap heavily even where one model beats the other
+    on every single machine. Resampling the *difference* on a common machine
+    draw removes that shared difficulty and is the honest test of the gap.
+    """
+
+    model_a: str
+    model_b: str
+    mean_difference: float
+    ci_low: float
+    ci_high: float
+    excludes_zero: bool
+    n_machines_a_worse: int
+    n_machines: int
+
+    def to_json(self) -> dict[str, object]:
+        return {
+            "model_a": self.model_a,
+            "model_b": self.model_b,
+            "mean_difference": self.mean_difference,
+            "ci_low": self.ci_low,
+            "ci_high": self.ci_high,
+            "excludes_zero": self.excludes_zero,
+            "n_machines_a_worse": self.n_machines_a_worse,
+            "n_machines": self.n_machines,
+        }
+
+
+def _machine_by_model(per_machine: pd.DataFrame) -> pd.DataFrame:
+    """RMSLE as a machines-by-models table, the unit the bootstrap resamples."""
+    return per_machine.pivot_table(index="tokamak", columns="model_name", values="rmsle")
+
+
+def _resample_indices(n_machines: int, n_resamples: int, seed: int) -> np.ndarray:
+    rng = np.random.default_rng(seed)
+    return rng.integers(0, n_machines, size=(n_resamples, n_machines))
+
+
+def bootstrap_over_machines(
+    per_machine: pd.DataFrame,
+    *,
+    n_resamples: int = N_BOOTSTRAP_RESAMPLES,
+    seed: int = BOOTSTRAP_SEED,
+    alpha: float = 0.05,
+) -> list[MachineBootstrap]:
+    """Percentile intervals for each model's mean RMSLE across held-out machines.
+
+    Every model is resampled on the *same* machine draws, so the intervals are
+    directly comparable and :func:`bootstrap_paired_difference` can reuse them.
+    """
+    table = _machine_by_model(per_machine)
+    values = table.to_numpy(dtype=float)
+    draws = _resample_indices(len(table), n_resamples, seed)
+    means = values[draws].mean(axis=1)
+    low, high = np.percentile(means, [100 * alpha / 2, 100 * (1 - alpha / 2)], axis=0)
+    return [
+        MachineBootstrap(
+            model_name=str(name),
+            mean_rmsle=float(values[:, index].mean()),
+            ci_low=float(low[index]),
+            ci_high=float(high[index]),
+        )
+        for index, name in enumerate(table.columns)
+    ]
+
+
+def bootstrap_paired_difference(
+    per_machine: pd.DataFrame,
+    model_a: str,
+    model_b: str,
+    *,
+    n_resamples: int = N_BOOTSTRAP_RESAMPLES,
+    seed: int = BOOTSTRAP_SEED,
+    alpha: float = 0.05,
+) -> PairedDifference:
+    """Interval for ``mean(RMSLE_a - RMSLE_b)`` over machines, paired by machine."""
+    table = _machine_by_model(per_machine)
+    for model in (model_a, model_b):
+        if model not in table.columns:
+            raise ValueError(f"{model!r} was not scored; cannot difference it.")
+    difference = (table[model_a] - table[model_b]).to_numpy(dtype=float)
+    draws = _resample_indices(len(table), n_resamples, seed)
+    means = difference[draws].mean(axis=1)
+    low, high = (float(v) for v in np.percentile(means, [100 * alpha / 2, 100 * (1 - alpha / 2)]))
+    return PairedDifference(
+        model_a=model_a,
+        model_b=model_b,
+        mean_difference=float(difference.mean()),
+        ci_low=low,
+        ci_high=high,
+        excludes_zero=bool(low > 0.0 or high < 0.0),
+        n_machines_a_worse=int(np.sum(difference > 0.0)),
+        n_machines=int(difference.size),
+    )
 
 
 @dataclass(frozen=True)
@@ -174,11 +342,18 @@ class TruncationFinding:
 class ExtrapolationAnalysis:
     feature_columns: list[str]
     n_rows: int
+    # Content identity of the dataset file these numbers came from, captured
+    # when the analysis runs rather than when it is serialized: fingerprinting
+    # at write time would re-read whatever happens to be on disk by then and
+    # would ignore an explicit ``dataset_path`` entirely.
+    provenance: dict[str, object]
     n_machines_held_out: int
     machines_held_out: list[str]
     n_machines_excluded: int
     transfers: list[ModelTransfer]
     truncation: list[TruncationFinding]
+    bootstrap: list[MachineBootstrap]
+    paired_differences: list[PairedDifference]
     per_machine: pd.DataFrame = field(repr=False)
     # Spearman rho between the CV ranking and the LOMO ranking over
     # CONTENDER_MODELS. -1.0 is an exact inversion.
@@ -190,6 +365,9 @@ class ExtrapolationAnalysis:
 
     def to_json(self) -> dict[str, object]:
         return {
+            # The dataset fingerprint leads: every number below it is a
+            # statement about these exact bytes and nothing else.
+            "dataset": self.provenance,
             "feature_columns": self.feature_columns,
             "n_rows": self.n_rows,
             "n_machines_held_out": self.n_machines_held_out,
@@ -199,18 +377,25 @@ class ExtrapolationAnalysis:
             "ranking_exactly_reversed": self.ranking_exactly_reversed,
             "n_contenders": self.n_contenders,
             "contender_models": list(CONTENDER_MODELS),
+            "control_models": list(CONTROL_MODELS),
+            "ladder_models": list(LADDER_MODELS),
             "transfers": [transfer.to_json() for transfer in self.transfers],
             "truncation": [finding.to_json() for finding in self.truncation],
+            "bootstrap": [interval.to_json() for interval in self.bootstrap],
+            "paired_differences": [gap.to_json() for gap in self.paired_differences],
+            "flexibility_ladder": [name for name, _ in FLEXIBILITY_LADDER],
         }
 
 
 def analyze_extrapolation(
     dataset: pd.DataFrame,
     *,
+    dataset_path: Path | str | None = None,
     feature_columns: tuple[str, ...] = hdb5.BLIND_FEATURE_COLUMNS,
     min_rows: int = hdb5.MIN_HELD_OUT_ROWS,
     n_splits: int = hdb5.N_CV_FOLDS,
     include_controls: bool = True,
+    include_ladder: bool = True,
 ) -> ExtrapolationAnalysis:
     """Score every model both ways and measure what separates the two rankings.
 
@@ -221,17 +406,20 @@ def analyze_extrapolation(
     the feature set with the split. Holding it fixed means the single difference
     between the two numbers below is what the split holds out.
     """
+    extra_models = build_flexibility_ladder() if include_ladder else None
     report = hdb5.extrapolation_report(
         dataset,
         feature_columns=feature_columns,
         min_rows=min_rows,
         include_controls=include_controls,
+        extra_models=extra_models,
     )
     cv_scores = hdb5.evaluate_models(
         dataset,
         n_splits=n_splits,
         feature_columns=feature_columns,
         include_controls=include_controls,
+        extra_models=extra_models,
     )
     cv_by_name = {score.model_name: score.cv_rmsle for score in cv_scores}
 
@@ -282,14 +470,31 @@ def analyze_extrapolation(
         t.model_name for t in reversed(by_lomo)
     ]
 
+    scored = set(report["model_name"])
+    # The gaps the narrative actually claims, each paired by machine.
+    candidate_gaps = (
+        ("random_forest", "ridge_loglinear"),
+        ("hist_gradient_boosting", "ridge_loglinear"),
+        ("ridge_log_quadratic", "ridge_loglinear"),
+        ("random_forest", "ridge_log_quadratic"),
+    )
+    paired_differences = [
+        bootstrap_paired_difference(report, a, b)
+        for a, b in candidate_gaps
+        if a in scored and b in scored
+    ]
+
     return ExtrapolationAnalysis(
         feature_columns=list(feature_columns),
         n_rows=int(len(dataset)),
+        provenance=hdb5.dataset_provenance(dataset_path),
         n_machines_held_out=len(machines),
         machines_held_out=machines,
         n_machines_excluded=int(all_machines) - len(machines),
         transfers=transfers,
         truncation=_truncation_findings(report),
+        bootstrap=bootstrap_over_machines(report),
+        paired_differences=paired_differences,
         per_machine=report,
         ranking_spearman=ranking_spearman,
         ranking_exactly_reversed=ranking_exactly_reversed,
@@ -322,12 +527,13 @@ def _truncation_findings(report: pd.DataFrame) -> list[TruncationFinding]:
 
 
 def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
-    """Two panels: the ranking inversion, and why it happens.
+    """Three panels: the claim, the mechanism, and what the constraint buys.
 
-    Left is the claim: each model's score under both splits, on one axis, so the
-    lines crossing *is* the result. Right is the mechanism: per-machine error
-    against how far that machine sits outside the training data, which rises for
-    the trees and stays flat for the power law.
+    Left is Result 4a: each model under both splits on one axis, so the lines
+    crossing *is* the result. Middle is Result 4b: per-machine error against
+    distance from the training data, rising for the trees and flat for the power
+    law. Right is Result 4d: median against worst case along the flexibility
+    ladder, which is where the constrained form actually earns its keep.
     """
     try:
         import matplotlib
@@ -347,7 +553,9 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     }
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    figure, axes = plt.subplots(1, 2, figsize=(13.0, 5.0), gridspec_kw={"width_ratios": [1.0, 1.3]})
+    figure, axes = plt.subplots(
+        1, 3, figsize=(18.5, 5.2), gridspec_kw={"width_ratios": [1.0, 1.25, 1.05]}
+    )
     for axis in axes:
         axis.grid(alpha=0.25, linewidth=0.6)
         axis.set_axisbelow(True)
@@ -358,11 +566,9 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             axis.spines[side].set_linewidth(0.8)
         axis.tick_params(colors=muted, labelsize=9)
 
-    # --- Left: the ranking inversion -------------------------------------
+    # --- Left: the ranking inversion, with machine-level intervals ---------
+    intervals = {interval.model_name: interval for interval in analysis.bootstrap}
     plotted = [t for t in analysis.transfers if t.model_name in style]
-    # The two tree models score within 0.002 of each other under CV, so their
-    # left-hand labels would print on top of one another. Nudge any label that
-    # collides with the one below it.
     span = max(t.cv_rmsle for t in plotted) - min(t.cv_rmsle for t in plotted)
     cv_offsets: dict[str, float] = {}
     previous = -np.inf
@@ -382,10 +588,20 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             markersize=7,
             label=label,
         )
+        interval = intervals.get(transfer.model_name)
+        if interval is not None:
+            axes[0].plot(
+                [1, 1],
+                [interval.ci_low, interval.ci_high],
+                "-",
+                color=color,
+                linewidth=1.2,
+                alpha=0.55,
+            )
         axes[0].annotate(
             f"{transfer.lomo_mean_rmsle:.3f}",
             xy=(1, transfer.lomo_mean_rmsle),
-            xytext=(8, -3),
+            xytext=(10, -3),
             textcoords="offset points",
             fontsize=9,
             color=color,
@@ -398,7 +614,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             fontsize=9,
             color=color,
         )
-    axes[0].set_xlim(-0.42, 1.42)
+    axes[0].set_xlim(-0.42, 1.55)
     axes[0].set_xticks([0, 1])
     axes[0].set_xticklabels(
         ["grouped CV by discharge\n(interpolation)", "leave-one-tokamak-out\n(extrapolation)"],
@@ -412,8 +628,17 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
         color=ink,
     )
     axes[0].legend(frameon=False, fontsize=9, loc="upper left", labelcolor=muted)
+    axes[0].annotate(
+        "bars: 95% interval over the 13 machines",
+        xy=(0.98, 0.02),
+        xycoords="axes fraction",
+        ha="right",
+        va="bottom",
+        fontsize=8,
+        color=muted,
+    )
 
-    # --- Right: error against distance from the training distribution -----
+    # --- Middle: error against distance from the training distribution -----
     per_machine = analysis.per_machine
     for model_name in ("random_forest", "ridge_loglinear"):
         rows = per_machine[per_machine["model_name"] == model_name].sort_values(
@@ -431,10 +656,6 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             markersize=8,
             label=f"{label}   (rho = {rho:+.2f})",
         )
-    # JET is the visible outlier: close to the training distribution yet badly
-    # predicted by the trees. That is the second failure mode rather than a
-    # counterexample to the first, so mark it as such instead of leaving it to
-    # look like scatter.
     truncated = {finding.tokamak for finding in analysis.truncation}
     forest_rows = per_machine[per_machine["model_name"] == "random_forest"]
     for _, row in forest_rows.iterrows():
@@ -458,6 +679,14 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             color=ink if machine in truncated else muted,
             fontweight="bold" if machine in truncated else "normal",
         )
+    lowest = float(per_machine["rmsle"].min())
+    highest = float(
+        per_machine[per_machine["model_name"].isin(("random_forest", "ridge_loglinear"))][
+            "rmsle"
+        ].max()
+    )
+    # Open a band under the data for the caption rather than printing over points.
+    axes[1].set_ylim(lowest - 0.28 * (highest - lowest), highest + 0.06 * (highest - lowest))
     if truncated:
         axes[1].annotate(
             "circled: the other failure mode, where the machine's\n"
@@ -484,6 +713,52 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     )
     axes[1].legend(frameon=False, fontsize=9, loc="upper left", labelcolor=muted)
 
+    # --- Right: median against worst case along the flexibility ladder -----
+    by_name = {transfer.model_name: transfer for transfer in analysis.transfers}
+    rungs = [(name, label) for name, label in FLEXIBILITY_LADDER if name in by_name]
+    positions = np.arange(len(rungs))
+    medians = [by_name[name].lomo_median_rmsle for name, _ in rungs]
+    worst = [by_name[name].lomo_worst_rmsle for name, _ in rungs]
+    bounded = ["forest" in label or "trees" in label for _, label in rungs]
+
+    # A tree ensemble is not "degree 4", so the two families are drawn as separate
+    # runs. Joining them would assert a continuum that does not exist, and the
+    # step between them is the panel's point rather than part of a trend.
+    split = bounded.index(True) if True in bounded else len(rungs)
+    for series, color, label in (
+        (medians, blue, "median over the 13 machines"),
+        (worst, orange, "worst single machine"),
+    ):
+        axes[2].plot(positions[:split], series[:split], "o-", color=color, linewidth=2.0,
+                     markersize=8, label=label)
+        axes[2].plot(positions[split:], series[split:], "o-", color=color, linewidth=2.0,
+                     markersize=8)
+    if 0 < split < len(rungs):
+        axes[2].axvline(split - 0.5, color=muted, linestyle=":", linewidth=1.0)
+        axes[2].annotate("polynomial\n(unbounded)", xy=(split - 0.62, 0.02),
+                         xycoords=("data", "axes fraction"), ha="right", va="bottom",
+                         fontsize=8, color=muted)
+        axes[2].annotate("trees\n(bounded)", xy=(split - 0.38, 0.02),
+                         xycoords=("data", "axes fraction"), ha="left", va="bottom",
+                         fontsize=8, color=muted)
+    for index, is_bounded in enumerate(bounded):
+        if is_bounded:
+            axes[2].plot(positions[index], worst[index], "o", markersize=15,
+                         markerfacecolor="none", markeredgecolor=ink, markeredgewidth=1.4)
+    axes[2].set_yscale("log")
+    # Headroom above the worst point so the two family labels sit in clear space.
+    axes[2].set_ylim(min(medians) * 0.6, max(worst) * 3.0)
+    axes[2].set_xticks(positions)
+    axes[2].set_xticklabels([label for _, label in rungs], rotation=28, ha="right",
+                            fontsize=9, color=ink)
+    axes[2].set_ylabel("RMSLE (log scale)", fontsize=9, color=muted)
+    axes[2].set_title(
+        "Flexibility costs the tail, not the median.\nCircled: bounded by Result 4c.",
+        fontsize=11,
+        color=ink,
+    )
+    axes[2].legend(frameon=False, fontsize=9, loc="upper left", labelcolor=muted)
+
     figure.tight_layout()
     path = RESULTS_DIR / "extrapolation.png"
     figure.savefig(path, dpi=180, facecolor="#fcfcfb")
@@ -496,10 +771,15 @@ def main() -> None:
     analysis = analyze_extrapolation(dataset)
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    analysis.per_machine.to_csv(RESULTS_DIR / "extrapolation_per_machine.csv", index=False)
+    write_dataframe_csv_atomic(
+        RESULTS_DIR / "extrapolation_per_machine.csv", analysis.per_machine
+    )
     summary = pd.DataFrame([transfer.to_json() for transfer in analysis.transfers])
-    summary.to_csv(RESULTS_DIR / "extrapolation_summary.csv", index=False)
-    (RESULTS_DIR / "extrapolation.json").write_text(json.dumps(analysis.to_json(), indent=2))
+    intervals = {interval.model_name: interval for interval in analysis.bootstrap}
+    summary["lomo_ci_low"] = summary["model_name"].map(lambda n: intervals[n].ci_low)
+    summary["lomo_ci_high"] = summary["model_name"].map(lambda n: intervals[n].ci_high)
+    write_dataframe_csv_atomic(RESULTS_DIR / "extrapolation_summary.csv", summary)
+    write_json_strict(RESULTS_DIR / "extrapolation.json", analysis.to_json())
     figure_path = plot_extrapolation(analysis)
 
     print("--- Result 4: interpolation against extrapolation ---")
@@ -518,11 +798,45 @@ def main() -> None:
             f"{transfer.cv_rank:>9}{transfer.lomo_rank:>11}{transfer.distance_spearman:>11.2f}"
         )
     print("  * fitted on this database, held-out machine included; not a blind baseline")
-    controls = [t for t in analysis.transfers if t.model_name in CONTROL_MODELS]
+    non_contenders = set(CONTROL_MODELS) | set(LADDER_MODELS)
+    controls = [t for t in analysis.transfers if t.model_name in non_contenders]
     if controls:
         print("  control models are scored above but excluded from the ranking claim:")
         for transfer in controls:
             print(f"    {transfer.model_name} (flexible, but still extrapolates)")
+    intervals = {interval.model_name: interval for interval in analysis.bootstrap}
+    print("\n--- mean LOMO RMSLE, 95% percentile interval over the 13 machines ---")
+    for transfer in analysis.transfers:
+        interval = intervals[transfer.model_name]
+        print(
+            f"  {transfer.model_name:<24}{interval.mean_rmsle:>7.3f}"
+            f"   [{interval.ci_low:.3f}, {interval.ci_high:.3f}]"
+        )
+    print("  (13 machines is a small sample; these intervals are wide on purpose)")
+
+    if analysis.paired_differences:
+        print("\n--- gaps, paired by machine (the marginal intervals above overlap) ---")
+        for gap in analysis.paired_differences:
+            flag = "excludes 0" if gap.excludes_zero else "includes 0"
+            print(
+                f"  {gap.model_a} - {gap.model_b}: {gap.mean_difference:+.3f} "
+                f"[{gap.ci_low:+.3f}, {gap.ci_high:+.3f}]  {flag}; "
+                f"worse on {gap.n_machines_a_worse}/{gap.n_machines} machines"
+            )
+
+    ladder = [(name, label) for name, label in FLEXIBILITY_LADDER if name in intervals]
+    if len(ladder) > 2:
+        print("\n--- Result 4d: degradation against model flexibility ---")
+        by_name = {transfer.model_name: transfer for transfer in analysis.transfers}
+        print(f"  {'form':<28}{'LOMO':>7}{'ratio':>8}{'rho(dist)':>11}{'worst':>8}")
+        for name, label in ladder:
+            transfer = by_name[name]
+            print(
+                f"  {label:<28}{transfer.lomo_mean_rmsle:>7.3f}"
+                f"{transfer.degradation_factor:>8.2f}{transfer.distance_spearman:>11.2f}"
+                f"{transfer.lomo_worst_rmsle:>8.3f}"
+            )
+
     verdict = "exactly reversed" if analysis.ranking_exactly_reversed else "not exactly reversed"
     print(
         f"\nordering over the {analysis.n_contenders} contender models is {verdict} "

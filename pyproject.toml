@@ -33,7 +33,11 @@ fusionflux = "fusionflux_cli:main"
 
 [tool.setuptools]
 py-modules = [
+    "analysis_conformal",
     "analysis_extrapolation",
+    "analysis_flexibility_sweep",
+    "analysis_hybrid",
+    "analysis_size_extrapolation",
     "analysis_scaling_law",
     "artifact_model",
     "config",
@@ -76,6 +80,10 @@ filterwarnings = [
 python_version = "3.9"
 ignore_missing_imports = true
 warn_unused_ignores = true
+# A wheel build copies every top-level module into build/lib, which mypy then
+# sees as a second definition of each one and refuses to check anything at all.
+# Building the distribution should not break `make check`.
+exclude = ["^build/"]
 
 [[tool.mypy.overrides]]
 module = ["joblib.*", "sklearn.*", "seaborn.*", "matplotlib.*"]
@@ -83,7 +91,12 @@ ignore_missing_imports = true
 
 [tool.coverage.run]
 source = [
+    "analysis_conformal",
     "analysis_extrapolation",
+    "analysis_flexibility_sweep",
+    "analysis_hybrid",
+    "analysis_size_extrapolation",
+    "analysis_scaling_law",
     "artifact_model",
     "config",
     "features",
@@ -99,6 +112,7 @@ source = [
     "training_artifacts",
     "training_registry",
     "training_reports",
+    "train_model",
     "training_split",
     "validation",
 ]

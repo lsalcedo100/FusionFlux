@@ -16,11 +16,10 @@ The narrative built on these numbers is in ``results/RESULTS.md``.
 
 from __future__ import annotations
 
-import json
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable
 
 import numpy as np
 import pandas as pd
@@ -40,6 +39,8 @@ from scaling_law import (
     solve_lstsq_qr,
     solve_lstsq_svd,
 )
+from scaling_law import _clean_fp_state as clean_fp_state
+from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
@@ -165,6 +166,239 @@ class SolverTiming:
     max_deviation_from_svd: float
 
 
+# --- Result 2b: what the bootstrap is allowed to resample ---------------------
+#
+# The exponent intervals are only as honest as their resampling unit, and the
+# unit is a modelling choice rather than a detail. This database is not a sample
+# of independent measurements: 6228 rows come from 18 machine labels that are 16
+# physical devices, and JET and ASDEX Upgrade together supply 77% of the rows.
+# Three nested units are defensible, each answering a different question:
+#
+#   discharge  slices move with their shot. Answers "another shot on these
+#              machines", which is the interpolation question.
+#   machine    whole ``TOK`` labels move together. Answers "another tokamak",
+#              but counts JET and JET-with-the-ITER-like-wall as two draws.
+#   device     wall variants fold back onto one device (``hdb5.with_device_column``).
+#              Answers "another tokamak" without counting JET twice.
+#
+# Row-level resampling is not offered at all: a discharge contributes several
+# quasi-stationary slices that are near-copies, so treating rows as independent
+# returns intervals several times too narrow, and there is no question it
+# correctly answers.
+#
+# A scaling law exists to make claims about tokamaks in general, so the device
+# interval is the one that matches the claim, and it is necessarily the widest:
+# resampling devices can drop JET entirely, and 16 units resampled with
+# replacement is a far smaller effective sample than 4471 discharges. All three
+# are reported. Publishing only the narrowest would be quoting the uncertainty
+# of a question nobody asked.
+MACHINE_BOOTSTRAP_RESAMPLES = 1000
+
+# Ordered coarsest-last; the first entry is the baseline every widening factor
+# is measured against.
+BOOTSTRAP_LEVELS: tuple[tuple[str, str], ...] = (
+    ("discharge", hdb5.GROUP_COLUMN),
+    ("machine", hdb5.TOKAMAK_LABEL_COLUMN),
+    ("device", hdb5.DEVICE_COLUMN),
+)
+BASELINE_LEVEL = BOOTSTRAP_LEVELS[0][0]
+
+
+@dataclass(frozen=True)
+class BootstrapLevel:
+    """One resampling unit's exponent intervals."""
+
+    name: str
+    group_column: str
+    n_units: int
+    intervals: pd.DataFrame = field(repr=False)
+
+
+@dataclass(frozen=True)
+class ResolutionWidth:
+    """One exponent's interval under each resampling unit."""
+
+    variable: str
+    fitted: float
+    published_ipb98y2: float
+    # level name -> (low, high). Kept as a mapping rather than one field per
+    # level so adding a unit does not mean touching this class.
+    bounds: dict[str, tuple[float, float]]
+    # level name -> width / baseline width. The baseline entry is 1.0.
+    widening_factors: dict[str, float]
+    published_inside: dict[str, bool]
+
+    def width(self, level: str) -> float:
+        low, high = self.bounds[level]
+        return high - low
+
+    def to_json(self) -> dict[str, object]:
+        payload: dict[str, object] = {
+            "variable": self.variable,
+            "fitted": self.fitted,
+            "published_ipb98y2": self.published_ipb98y2,
+        }
+        for level, (low, high) in self.bounds.items():
+            payload[f"{level}_ci_low"] = low
+            payload[f"{level}_ci_high"] = high
+            payload[f"{level}_width"] = high - low
+            payload[f"{level}_widening_factor"] = self.widening_factors[level]
+            payload[f"published_inside_{level}_ci"] = self.published_inside[level]
+        return payload
+
+
+@dataclass(frozen=True)
+class BootstrapResolutionComparison:
+    """The same fit resampled at every unit, lined up exponent by exponent."""
+
+    levels: list[BootstrapLevel]
+    n_resamples: int
+    # Share of rows contributed by the two largest devices, the reason the
+    # resolutions differ as much as they do.
+    largest_two_devices: list[str]
+    largest_two_row_share: float
+    widths: list[ResolutionWidth]
+
+    @property
+    def level_names(self) -> list[str]:
+        return [level.name for level in self.levels]
+
+    def units(self, level: str) -> int:
+        return next(entry.n_units for entry in self.levels if entry.name == level)
+
+    def median_widening(self, level: str) -> float:
+        return float(np.median([width.widening_factors[level] for width in self.widths]))
+
+    def max_widening(self, level: str) -> ResolutionWidth:
+        return max(self.widths, key=lambda width: width.widening_factors[level])
+
+    @property
+    def comparable_widths(self) -> list[ResolutionWidth]:
+        """Exponents that can be compared against a published value at all.
+
+        The intercept is excluded: the ITER Physics Basis quotes a multiplying
+        coefficient rather than a log-intercept, so ``published_ipb98y2`` is NaN
+        for that row and every containment test on it is false by default.
+        Counting it would report "7 of 9" for something that is 7 of 8, which
+        understates the agreement by a whole exponent.
+        """
+        return [width for width in self.widths if np.isfinite(width.published_ipb98y2)]
+
+    def n_published_inside(self, level: str) -> int:
+        return int(sum(width.published_inside[level] for width in self.comparable_widths))
+
+    def to_frame(self) -> pd.DataFrame:
+        return pd.DataFrame([width.to_json() for width in self.widths])
+
+    # ``Any`` rather than ``object``: this is the whole serialized payload, so
+    # its values are nested lists and dicts that callers index into. Declaring
+    # ``object`` makes ``payload["widths"]`` unusable without a cast at every
+    # call site, which is noise rather than safety.
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "n_resamples": self.n_resamples,
+            "baseline_level": BASELINE_LEVEL,
+            "levels": [
+                {
+                    "name": level.name,
+                    "group_column": level.group_column,
+                    "n_units": level.n_units,
+                    "median_widening_factor": self.median_widening(level.name),
+                    "max_widening_variable": self.max_widening(level.name).variable,
+                    "max_widening_factor": self.max_widening(level.name).widening_factors[
+                        level.name
+                    ],
+                    "n_published_inside_ci": self.n_published_inside(level.name),
+                    "n_comparable_exponents": len(self.comparable_widths),
+                }
+                for level in self.levels
+            ],
+            "largest_two_devices": self.largest_two_devices,
+            "largest_two_row_share": self.largest_two_row_share,
+            "n_exponents": len(self.widths),
+            "widths": [width.to_json() for width in self.widths],
+        }
+
+
+def bootstrap_every_resolution(
+    dataset: pd.DataFrame,
+    *,
+    n_resamples: int = 1000,
+    n_coarse_resamples: int = MACHINE_BOOTSTRAP_RESAMPLES,
+) -> list[BootstrapLevel]:
+    """Run the identical percentile bootstrap once per resampling unit.
+
+    Same estimator, same percentile method, same feature set. The only thing
+    that changes between levels is what the bootstrap is allowed to treat as
+    exchangeable, which is precisely the assumption under test.
+    """
+    framed = hdb5.with_device_column(dataset)
+    levels: list[BootstrapLevel] = []
+    for name, group_column in BOOTSTRAP_LEVELS:
+        levels.append(
+            BootstrapLevel(
+                name=name,
+                group_column=group_column,
+                n_units=int(framed[group_column].nunique()),
+                intervals=bootstrap_exponents(
+                    framed,
+                    hdb5.TARGET_COLUMN,
+                    IPB98_FEATURE_COLUMNS,
+                    group_column=group_column,
+                    n_resamples=n_resamples if name == BASELINE_LEVEL else n_coarse_resamples,
+                ),
+            )
+        )
+    return levels
+
+
+def compare_bootstrap_units(
+    dataset: pd.DataFrame, levels: list[BootstrapLevel]
+) -> BootstrapResolutionComparison:
+    """Line the resamplings up per exponent and measure how much wider each is."""
+    indexed = {level.name: level.intervals.set_index("variable") for level in levels}
+    baseline = indexed[BASELINE_LEVEL]
+
+    widths: list[ResolutionWidth] = []
+    for variable in baseline.index:
+        published = float(baseline.loc[variable, "published_ipb98y2"])
+        bounds: dict[str, tuple[float, float]] = {}
+        inside: dict[str, bool] = {}
+        for name, table in indexed.items():
+            low = float(table.loc[variable, "ci_low"])
+            high = float(table.loc[variable, "ci_high"])
+            bounds[name] = (low, high)
+            inside[name] = bool(low <= published <= high)
+        baseline_width = bounds[BASELINE_LEVEL][1] - bounds[BASELINE_LEVEL][0]
+        widths.append(
+            ResolutionWidth(
+                variable=str(variable),
+                fitted=float(baseline.loc[variable, "fitted"]),
+                published_ipb98y2=published,
+                bounds=bounds,
+                # A zero-width baseline would be a degenerate fit, not a division
+                # worth reporting; guard rather than emit an inf.
+                widening_factors={
+                    name: float((high - low) / baseline_width)
+                    if baseline_width > 0
+                    else float("nan")
+                    for name, (low, high) in bounds.items()
+                },
+                published_inside=inside,
+            )
+        )
+
+    counts = hdb5.with_device_column(dataset)[hdb5.DEVICE_COLUMN].value_counts()
+    top_two = counts.head(2)
+    return BootstrapResolutionComparison(
+        levels=levels,
+        n_resamples=MACHINE_BOOTSTRAP_RESAMPLES,
+        largest_two_devices=[str(name) for name in top_two.index],
+        largest_two_row_share=float(top_two.sum() / len(dataset)),
+        widths=widths,
+    )
+
+
 @dataclass(frozen=True)
 class Refit:
     design_shape: tuple[int, int]
@@ -174,7 +408,11 @@ class Refit:
     condition_number: float
     rmsle_refit: float
     rmsle_published: float
+    # Discharge-level intervals: the resampling unit is one shot, so time slices
+    # from the same shot travel together. This is the headline table, and it is
+    # the *narrowest* of the three; ``resolution`` carries the coarser units.
     intervals: pd.DataFrame = field(repr=False)
+    resolution: "BootstrapResolutionComparison | None" = None
 
     def to_json(self) -> dict[str, object]:
         return {
@@ -194,10 +432,16 @@ class Refit:
             "condition_number": self.condition_number,
             "in_sample_rmsle_refit": self.rmsle_refit,
             "in_sample_rmsle_published_ipb98y2": self.rmsle_published,
+            "bootstrap_resolution": self.resolution.to_json() if self.resolution else None,
         }
 
 
-def refit_ipb98(dataset: pd.DataFrame, *, n_resamples: int = 1000) -> Refit:
+def refit_ipb98(
+    dataset: pd.DataFrame,
+    *,
+    n_resamples: int = 1000,
+    n_machine_resamples: int = MACHINE_BOOTSTRAP_RESAMPLES,
+) -> Refit:
     design, _ = build_log_design_matrix(dataset, IPB98_FEATURE_COLUMNS)
     target = np.log(dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float))
 
@@ -226,12 +470,12 @@ def refit_ipb98(dataset: pd.DataFrame, *, n_resamples: int = 1000) -> Refit:
     ]
 
     fit = fit_scaling_law(dataset, hdb5.TARGET_COLUMN, IPB98_FEATURE_COLUMNS)
-    intervals = bootstrap_exponents(
-        dataset,
-        hdb5.TARGET_COLUMN,
-        IPB98_FEATURE_COLUMNS,
-        group_column=hdb5.GROUP_COLUMN,
-        n_resamples=n_resamples,
+    levels = bootstrap_every_resolution(
+        dataset, n_resamples=n_resamples, n_coarse_resamples=n_machine_resamples
+    )
+    resolution = compare_bootstrap_units(dataset, levels)
+    intervals = next(
+        level.intervals for level in levels if level.name == BASELINE_LEVEL
     )
 
     actual = dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float)
@@ -248,7 +492,361 @@ def refit_ipb98(dataset: pd.DataFrame, *, n_resamples: int = 1000) -> Refit:
         rmsle_refit=rmsle(fit.predict(dataset, IPB98_FEATURE_COLUMNS)),
         rmsle_published=rmsle(dataset["ipb98y2_tau_s"].to_numpy(dtype=float)),
         intervals=intervals,
+        resolution=resolution,
     )
+
+
+# --- Result 2c: the price of the normal equations, measured ------------------
+#
+# The three solvers agree to ~1e-12 on the HDB5 design matrix (Result 2), whose
+# condition number is about 500. That agreement is not evidence they are
+# interchangeable; it is evidence that this particular matrix is easy. The
+# textbook statement is that forming ``X^T X`` squares the condition number, so
+# Cholesky's forward error grows like ``kappa^2 * eps`` where QR and SVD grow
+# like ``kappa * eps``. Asserting that in a comment is cheap. This measures it.
+#
+# The experiment needs matrices of *known* conditioning, which real data cannot
+# supply, so they are constructed: draw random orthonormal ``U`` and ``V``, place
+# singular values geometrically between 1 and 1/kappa, and set ``X = U S V^T``.
+# The right-hand side is ``y = X b_true`` exactly, with no noise and no residual,
+# so the system is consistent and every solver has the *same* exact answer to
+# find. Whatever separates them is arithmetic, not statistics.
+#
+# What this buys beyond the textbook: the three solvers under test are the ones
+# in ``scaling_law.py``, written here rather than called from a library. If the
+# measured slopes come out at 2, 1 and 1, that is simultaneously a check that
+# the implementations are correct and a demonstration of why the choice matters.
+CONDITION_NUMBERS = tuple(10.0**exponent for exponent in range(1, 13))
+CONDITION_SWEEP_ROWS = 200
+CONDITION_SWEEP_COLUMNS = 12
+CONDITION_SWEEP_TRIALS = 12
+CONDITION_SWEEP_SEED = 20240617
+
+# Fit the slope only where the error is genuinely conditioning-limited. Below
+# the floor it is rounding noise in ``b_true`` itself; above the ceiling the
+# solution has lost every significant digit and the curve flattens at O(1),
+# which would bias any slope fitted through it downward.
+SLOPE_FIT_ERROR_FLOOR = 1e-15
+SLOPE_FIT_ERROR_CEILING = 1e-3
+
+
+def synthetic_design(
+    condition_number: float,
+    *,
+    n_rows: int = CONDITION_SWEEP_ROWS,
+    n_columns: int = CONDITION_SWEEP_COLUMNS,
+    seed: int = 0,
+) -> np.ndarray:
+    """A random matrix with an exactly prescribed condition number.
+
+    Built from its own SVD: orthonormal factors from QR of Gaussian matrices,
+    singular values geometrically spaced from 1 down to ``1 / condition_number``.
+    Geometric rather than linear spacing so the small directions are populated;
+    linear spacing puts almost every singular value near the top and the matrix
+    behaves better than its nominal conditioning suggests.
+    """
+    if condition_number < 1.0:
+        raise ValueError("condition_number must be at least 1.")
+    rng = np.random.default_rng(seed)
+    left, _ = np.linalg.qr(rng.standard_normal((n_rows, n_columns)))
+    right, _ = np.linalg.qr(rng.standard_normal((n_columns, n_columns)))
+    singular_values = np.geomspace(1.0, 1.0 / condition_number, n_columns)
+    with clean_fp_state():
+        return (left * singular_values) @ right.T
+
+
+@dataclass(frozen=True)
+class SolverErrorCurve:
+    """One solver's forward error as a function of condition number."""
+
+    solver: str
+    condition_numbers: list[float]
+    # Median relative forward error over the trials at each condition number.
+    # ``None`` where every trial at that kappa was refused by the solver.
+    median_errors: list[float | None]
+    # Trials at each condition number the solver refused outright, as Cholesky
+    # does once ``X^T X`` stops being numerically positive definite. A refusal is
+    # a better outcome than a confident wrong answer and is counted, not hidden.
+    n_failures: list[int]
+    # Slope of log10(error) against log10(kappa) over the conditioning-limited
+    # band. The theoretical values are 2 for the normal equations, 1 otherwise.
+    fitted_slope: float
+    expected_slope: float
+    n_slope_points: int
+    slope_fit_range: tuple[float, float]
+
+    def to_json(self) -> dict[str, object]:
+        return {
+            "solver": self.solver,
+            "condition_numbers": self.condition_numbers,
+            "median_errors": self.median_errors,
+            "n_failures": self.n_failures,
+            "fitted_slope": self.fitted_slope,
+            "expected_slope": self.expected_slope,
+            "n_slope_points": self.n_slope_points,
+            "slope_fit_range": list(self.slope_fit_range),
+        }
+
+
+@dataclass(frozen=True)
+class ConditionSweep:
+    """The full kappa sweep: one error curve per solver, plus the raw trials."""
+
+    n_rows: int
+    n_columns: int
+    n_trials: int
+    curves: list[SolverErrorCurve]
+    # kappa at which each solver first loses every significant digit
+    # (median relative error >= 1). None if it never does over the sweep.
+    breakdown_condition: dict[str, float | None]
+    trials: pd.DataFrame = field(repr=False)
+
+    def to_json(self) -> dict[str, object]:
+        return {
+            "n_rows": self.n_rows,
+            "n_columns": self.n_columns,
+            "n_trials": self.n_trials,
+            "machine_epsilon": float(np.finfo(float).eps),
+            "slope_fit_error_floor": SLOPE_FIT_ERROR_FLOOR,
+            "slope_fit_error_ceiling": SLOPE_FIT_ERROR_CEILING,
+            "curves": [curve.to_json() for curve in self.curves],
+            "breakdown_condition_number": self.breakdown_condition,
+        }
+
+
+def _fit_log_log_slope(
+    condition_numbers: np.ndarray, errors: np.ndarray
+) -> tuple[float, int, tuple[float, float]]:
+    """Least-squares slope of log10(error) on log10(kappa), conditioning band only."""
+    usable = (
+        np.isfinite(errors)
+        & (errors > SLOPE_FIT_ERROR_FLOOR)
+        & (errors < SLOPE_FIT_ERROR_CEILING)
+    )
+    if usable.sum() < 3:
+        return float("nan"), int(usable.sum()), (float("nan"), float("nan"))
+    x = np.log10(condition_numbers[usable])
+    y = np.log10(errors[usable])
+    # Two-column design, fitted with the module's own SVD solver rather than
+    # polyfit: this file should not need a black box to fit a straight line.
+    design = np.column_stack([np.ones_like(x), x])
+    intercept, slope = solve_lstsq_svd(design, y)
+    return (
+        float(slope),
+        int(usable.sum()),
+        (float(condition_numbers[usable].min()), float(condition_numbers[usable].max())),
+    )
+
+
+def condition_number_sweep(
+    *,
+    condition_numbers: tuple[float, ...] = CONDITION_NUMBERS,
+    n_rows: int = CONDITION_SWEEP_ROWS,
+    n_columns: int = CONDITION_SWEEP_COLUMNS,
+    n_trials: int = CONDITION_SWEEP_TRIALS,
+    seed: int = CONDITION_SWEEP_SEED,
+) -> ConditionSweep:
+    """Measure forward error against condition number for all three solvers."""
+    solvers: dict[str, tuple[Solver, float]] = {
+        # (solver, slope the theory predicts)
+        "cholesky": (solve_lstsq_cholesky, 2.0),
+        "qr": (solve_lstsq_qr, 1.0),
+        "svd": (solve_lstsq_svd, 1.0),
+    }
+
+    records: list[dict[str, object]] = []
+    for condition_number in condition_numbers:
+        for trial in range(n_trials):
+            # Distinct seed per (kappa, trial) so no two cells share a matrix,
+            # and reproducible without threading an rng through every call.
+            trial_seed = seed + trial + 1000 * int(round(np.log10(condition_number)))
+            design = synthetic_design(
+                condition_number, n_rows=n_rows, n_columns=n_columns, seed=trial_seed
+            )
+            rng = np.random.default_rng(trial_seed)
+            true_beta = rng.standard_normal(n_columns)
+            true_beta /= np.linalg.norm(true_beta)
+            # Consistent by construction: the exact least-squares solution is
+            # true_beta with zero residual, so forward error is pure arithmetic.
+            with clean_fp_state():
+                target = design @ true_beta
+
+            for name, (solver, _) in solvers.items():
+                try:
+                    estimate = solver(design, target)
+                except np.linalg.LinAlgError:
+                    error: float | None = None
+                else:
+                    error = float(
+                        np.linalg.norm(estimate - true_beta) / np.linalg.norm(true_beta)
+                    )
+                records.append(
+                    {
+                        "solver": name,
+                        "condition_number": float(condition_number),
+                        "trial": trial,
+                        "relative_forward_error": error,
+                        "failed": error is None,
+                    }
+                )
+
+    trials = pd.DataFrame(records)
+    kappa = np.asarray(condition_numbers, dtype=float)
+
+    curves: list[SolverErrorCurve] = []
+    breakdown: dict[str, float | None] = {}
+    for name, (_, expected_slope) in solvers.items():
+        rows = trials[trials["solver"] == name]
+        grouped = rows.groupby("condition_number")
+        medians = grouped["relative_forward_error"].median().reindex(kappa)
+        failures = grouped["failed"].sum().reindex(kappa).fillna(0)
+        errors = medians.to_numpy(dtype=float)
+        slope, n_points, fit_range = _fit_log_log_slope(kappa, errors)
+        curves.append(
+            SolverErrorCurve(
+                solver=name,
+                condition_numbers=[float(value) for value in kappa],
+                median_errors=[
+                    None if not np.isfinite(value) else float(value) for value in errors
+                ],
+                n_failures=[int(value) for value in failures.to_numpy()],
+                fitted_slope=slope,
+                expected_slope=expected_slope,
+                n_slope_points=n_points,
+                slope_fit_range=fit_range,
+            )
+        )
+        # "Lost every digit" means the relative error has reached order 1: the
+        # answer is no longer an approximation of the truth in any useful sense.
+        lost = kappa[(~np.isfinite(errors)) | (errors >= 1.0)]
+        breakdown[name] = float(lost.min()) if lost.size else None
+
+    return ConditionSweep(
+        n_rows=n_rows,
+        n_columns=n_columns,
+        n_trials=n_trials,
+        curves=curves,
+        breakdown_condition=breakdown,
+        trials=trials,
+    )
+
+
+def plot_condition_sweep(
+    sweep: ConditionSweep, *, reference_condition_number: float | None = None
+) -> Path | None:
+    """One panel: forward error against condition number, with slope references.
+
+    The reference lines are the whole point of the panel. Cholesky tracking the
+    ``kappa^2`` guide while QR and SVD track the ``kappa`` guide is the squared
+    condition number made visible, and the vertical marker is where the normal
+    equations stop returning an answer at all.
+
+    ``reference_condition_number`` marks where the real HDB5 design matrix sits
+    on this axis. It belongs on the plot because it is the honest caveat: the
+    three solvers agreeing to 1e-12 in Result 2 is a fact about a matrix that
+    lands at the far left of this sweep, not evidence that the choice is free.
+    """
+    try:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:  # pragma: no cover - plotting is optional
+        return None
+
+    ink, muted = "#0b0b0b", "#52514e"
+    colors = {"cholesky": "#eb6834", "qr": "#2a78d6", "svd": "#1a9c6d"}
+    markers = {"cholesky": "o", "qr": "s", "svd": "^"}
+
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    figure, axis = plt.subplots(figsize=(7.6, 5.4))
+    figure.patch.set_facecolor("#fcfcfb")
+    axis.set_facecolor("#fcfcfb")
+    for spine in ("top", "right"):
+        axis.spines[spine].set_visible(False)
+
+    epsilon = float(np.finfo(float).eps)
+    guide_kappa = np.array([1e1, 1e12])
+    # Anchored at eps so the guides read as "eps * kappa" and "eps * kappa^2"
+    # rather than as free-floating fits to the measured points.
+    axis.plot(guide_kappa, epsilon * guide_kappa**2, "--", color=muted, linewidth=1.0, zorder=1)
+    axis.plot(guide_kappa, epsilon * guide_kappa, ":", color=muted, linewidth=1.0, zorder=1)
+    axis.annotate(r"$\epsilon\,\kappa^{2}$", xy=(2e5, epsilon * (2e5) ** 2), xytext=(-2, 6),
+                  textcoords="offset points", fontsize=9, color=muted)
+    axis.annotate(r"$\epsilon\,\kappa$", xy=(3e10, epsilon * 3e10), xytext=(-4, 6),
+                  textcoords="offset points", fontsize=9, color=muted)
+
+    for curve in sweep.curves:
+        kappa = np.asarray(curve.condition_numbers, dtype=float)
+        errors = np.array(
+            [np.nan if value is None else value for value in curve.median_errors], dtype=float
+        )
+        drawn = np.isfinite(errors)
+        axis.plot(
+            kappa[drawn],
+            errors[drawn],
+            marker=markers[curve.solver],
+            color=colors[curve.solver],
+            linewidth=1.8,
+            markersize=5.5,
+            label=f"{curve.solver}  (slope {curve.fitted_slope:.2f}, theory {curve.expected_slope:.0f})",
+            zorder=3,
+        )
+        breakdown = sweep.breakdown_condition.get(curve.solver)
+        if breakdown is not None:
+            axis.axvline(breakdown, color=colors[curve.solver], linewidth=1.0, alpha=0.35, zorder=0)
+            # Along the line rather than beside it: the lower right of this axis
+            # is where the legend has to go.
+            axis.annotate(
+                f"{curve.solver} returns no answer beyond here",
+                xy=(breakdown, 1e-4),
+                xytext=(-6, 0),
+                textcoords="offset points",
+                fontsize=8.5,
+                color=colors[curve.solver],
+                rotation=90,
+                ha="right",
+                va="center",
+            )
+
+    if reference_condition_number is not None:
+        axis.axvline(reference_condition_number, color=ink, linewidth=1.0, alpha=0.4, zorder=0)
+        axis.annotate(
+            f"HDB5's own design matrix\n"
+            rf"($\kappa$ = {reference_condition_number:.1f}); all three"
+            "\nsolvers agree here",
+            xy=(reference_condition_number, 1e-3),
+            xytext=(7, 0),
+            textcoords="offset points",
+            fontsize=8.5,
+            color=ink,
+            va="center",
+        )
+
+    axis.axhline(1.0, color=ink, linewidth=0.9, alpha=0.5)
+    axis.annotate("no significant digits left", xy=(1.2e1, 1.0), xytext=(0, 5),
+                  textcoords="offset points", fontsize=8.5, color=ink)
+
+    axis.set_xscale("log")
+    axis.set_yscale("log")
+    axis.set_xlim(3, 3e12)
+    axis.set_ylim(1e-16, 20)
+    axis.set_xlabel(r"condition number of the design matrix, $\kappa(X)$", fontsize=9.5, color=muted)
+    axis.set_ylabel("relative forward error in the coefficients", fontsize=9.5, color=muted)
+    axis.set_title(
+        "The normal equations work at the square of the condition number.\n"
+        f"{sweep.n_trials} synthetic {sweep.n_rows}x{sweep.n_columns} matrices per point, "
+        "consistent systems, median error.",
+        fontsize=11,
+        color=ink,
+    )
+    axis.legend(frameon=False, fontsize=9, loc="lower right", labelcolor=muted)
+
+    figure.tight_layout()
+    path = RESULTS_DIR / "solver_conditioning.png"
+    figure.savefig(path, dpi=180, facecolor="#fcfcfb")
+    plt.close(figure)
+    return path
 
 
 # --- Result 3: what the data can determine -----------------------------------
@@ -471,21 +1069,32 @@ def main() -> None:
     audit = audit_model_feature_matrix(dataset)
     refit = refit_ipb98(dataset)
     spectrum = conditioning_analysis(dataset)
+    sweep = condition_number_sweep()
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    refit.intervals.to_csv(RESULTS_DIR / "ipb98_refit_exponents.csv", index=False)
-    spectrum.shrinkage.to_csv(RESULTS_DIR / "ridge_shrinkage.csv", index=False)
-    (RESULTS_DIR / "analysis.json").write_text(
-        json.dumps(
-            {
-                "rank_audit": audit.to_json(),
-                "refit": refit.to_json(),
-                "conditioning": spectrum.to_json(),
-            },
-            indent=2,
+    write_dataframe_csv_atomic(RESULTS_DIR / "ipb98_refit_exponents.csv", refit.intervals)
+    write_dataframe_csv_atomic(RESULTS_DIR / "ridge_shrinkage.csv", spectrum.shrinkage)
+    if refit.resolution is not None:
+        write_dataframe_csv_atomic(
+            RESULTS_DIR / "bootstrap_resolution.csv", refit.resolution.to_frame()
         )
+    write_dataframe_csv_atomic(RESULTS_DIR / "solver_conditioning.csv", sweep.trials)
+    write_json_strict(
+        RESULTS_DIR / "analysis.json",
+        {
+            # The dataset fingerprint leads: every number below it is a
+            # statement about these exact bytes and nothing else.
+            "dataset": hdb5.dataset_provenance(),
+            "rank_audit": audit.to_json(),
+            "refit": refit.to_json(),
+            "conditioning": spectrum.to_json(),
+            "solver_conditioning": sweep.to_json(),
+        },
     )
     figure_path = plot_spectrum(spectrum, audit)
+    conditioning_figure = plot_condition_sweep(
+        sweep, reference_condition_number=refit.condition_number
+    )
 
     print("\n--- Result 1: rank audit of the model feature matrix ---")
     print(f"rank {audit.rank} of {audit.n_columns} (deficiency {audit.rank_deficiency})")
@@ -510,6 +1119,57 @@ def main() -> None:
     )
     print(f"  in-sample RMSLE: refit {refit.rmsle_refit:.4f}, published IPB98(y,2) {refit.rmsle_published:.4f}")
 
+    resolution = refit.resolution
+    if resolution is not None:
+        print("\n--- Result 2b: the same intervals, resampling coarser units ---")
+        units = ", ".join(
+            f"{resolution.units(name)} {name}s" for name in resolution.level_names
+        )
+        print(
+            f"{units}; "
+            f"{' and '.join(resolution.largest_two_devices)} alone are "
+            f"{resolution.largest_two_row_share * 100:.0f}% of the rows"
+        )
+        header = f"  {'exponent':<20}" + "".join(
+            f"{name + ' 95%':>24}" for name in resolution.level_names
+        )
+        print(header)
+        for width in resolution.widths:
+            cells = "".join(
+                f"{f'[{width.bounds[name][0]:+.3f}, {width.bounds[name][1]:+.3f}]':>24}"
+                for name in resolution.level_names
+            )
+            print(f"  {width.variable:<20}{cells}")
+        for name in resolution.level_names:
+            if name == BASELINE_LEVEL:
+                continue
+            worst = resolution.max_widening(name)
+            print(
+                f"  vs {BASELINE_LEVEL}: {name} intervals are "
+                f"{resolution.median_widening(name):.1f}x wider at the median, "
+                f"{worst.widening_factors[name]:.1f}x on {worst.variable}"
+            )
+        n_comparable = len(resolution.comparable_widths)
+        inside = ", ".join(
+            f"{resolution.n_published_inside(name)}/{n_comparable} by {name}"
+            for name in resolution.level_names
+        )
+        print(f"  published IPB98 exponent inside the interval: {inside}")
+
+    print("\n--- Result 2c: forward error against condition number ---")
+    print(
+        f"{sweep.n_trials} synthetic {sweep.n_rows}x{sweep.n_columns} consistent systems per "
+        f"condition number, kappa from 1e1 to 1e12"
+    )
+    print(f"  {'solver':<10}{'fitted slope':>14}{'theory':>8}{'points':>8}{'breaks down at':>18}")
+    for curve in sweep.curves:
+        breakdown = sweep.breakdown_condition.get(curve.solver)
+        breakdown_text = f"{breakdown:.0e}" if breakdown is not None else "not in sweep"
+        print(
+            f"  {curve.solver:<10}{curve.fitted_slope:>14.2f}{curve.expected_slope:>8.0f}"
+            f"{curve.n_slope_points:>8}{breakdown_text:>18}"
+        )
+
     print("\n--- Result 3: what the data determines ---")
     print(f"condition number {spectrum.condition_number:.1f}")
     print("  direction  sigma    share of design variance    share of disagreement")
@@ -521,8 +1181,9 @@ def main() -> None:
         )
     weakest = spectrum.directions[-1]
     print(f"  weakest direction: {', '.join(weakest.dominant_variables)}")
-    if figure_path:
-        print(f"\nfigure: {figure_path}")
+    for path in (figure_path, conditioning_figure):
+        if path:
+            print(f"\nfigure: {path}")
 
 
 if __name__ == "__main__":

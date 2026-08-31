@@ -1,13 +1,16 @@
-"""Tests for the leave-one-tokamak-out extrapolation study (Result 4).
+"""Tests for ``analysis_extrapolation``: the Result 4 study built on top of hdb5.
 
-Two things here are worth more than the usual shape assertions:
+Scope split: ``tests/test_hdb5.py`` owns the extrapolation primitives in
+``hdb5.py`` (the diagnostic, the hold-out loop, the report join). This file owns
+the analysis layer, plus the two behavioural claims that need a dataset with a
+controllable per-machine offset:
 
-* ``test_held_out_machine_is_never_in_its_own_training_set`` is a behavioural
-  leakage test. A shape check cannot tell a correct hold-out from a broken one.
-* ``test_forest_predictions_are_bounded_by_the_training_target_range`` pins the
-  structural claim Result 4c rests on. If a future scikit-learn made tree
-  ensembles able to extrapolate, that narrative would be wrong, and this test is
-  what would say so.
+* ``test_held_out_machine_is_never_in_its_own_training_set`` is a leakage test.
+  A shape check cannot tell a correct hold-out from a broken one; this pins the
+  held-out error to the size of an offset nothing in the features explains.
+* ``test_control_model_extrapolates_where_a_tree_ensemble_cannot`` pins the
+  premise of Result 4d. The control only discriminates if it is genuinely
+  unbounded, so a gap between it and plain ridge cannot be blamed on Result 4c.
 """
 
 from __future__ import annotations
@@ -113,14 +116,7 @@ def test_spearman_is_nan_for_a_constant_vector_and_rejects_length_mismatch() -> 
         ax.spearman(np.arange(3.0), np.arange(4.0))
 
 
-# --- the leak guard ---------------------------------------------------------
-
-
-def test_blind_feature_set_excludes_the_ipb98_prior() -> None:
-    """The prior's exponents were fitted on this database, held-out machine included."""
-    assert "log_ipb98y2_tau_s" in hdb5.MODEL_FEATURE_COLUMNS
-    assert "log_ipb98y2_tau_s" not in hdb5.BLIND_FEATURE_COLUMNS
-    assert set(hdb5.BLIND_FEATURE_COLUMNS) < set(hdb5.MODEL_FEATURE_COLUMNS)
+# --- the shared feature set -------------------------------------------------
 
 
 def test_evaluate_models_honours_the_requested_feature_columns() -> None:
@@ -153,87 +149,17 @@ def test_held_out_machine_is_never_in_its_own_training_set() -> None:
     assert forest.idxmax() == "NSTX"
 
 
-def test_forest_predictions_are_bounded_by_the_training_target_range() -> None:
-    """The structural claim behind Result 4c, asserted directly.
-
-    A tree ensemble predicts an average of training targets, so it cannot emit a
-    value above ``max(y_train)`` however far the features point. This is why a
-    machine whose confinement times run above the training range is unreachable
-    rather than merely hard.
-    """
-    dataset = _make_multi_machine_dataset(offsets={"JET": 8.0})
-    columns = list(hdb5.BLIND_FEATURE_COLUMNS)
-    held = dataset[hdb5.TOKAMAK_LABEL_COLUMN] == "JET"
-    log_tau = np.log(dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float))
-
-    with hdb5._suppress_benign_matmul_warnings():
-        forest = hdb5.clone_pipeline(hdb5.build_model_zoo()["random_forest"])
-        forest.fit(dataset.loc[~held, columns], log_tau[~held.to_numpy()])
-        predicted = forest.predict(dataset.loc[held, columns])
-
-    train_max = log_tau[~held.to_numpy()].max()
-    assert predicted.max() <= train_max + 1e-9
-    # The held-out machine genuinely reaches above that ceiling, so the bound bites.
-    assert log_tau[held.to_numpy()].max() > train_max
-
-    # A log-linear power law carries no such bound.
-    with hdb5._suppress_benign_matmul_warnings():
-        ridge = hdb5.clone_pipeline(hdb5.build_model_zoo()["ridge_loglinear"])
-        ridge.fit(dataset.loc[~held, columns], log_tau[~held.to_numpy()])
-        assert np.isfinite(ridge.predict(dataset.loc[held, columns])).all()
-
-
-# --- diagnostics ------------------------------------------------------------
-
-
-def test_diagnostic_distance_grows_when_a_machine_sits_off_the_distribution() -> None:
-    dataset = _make_multi_machine_dataset()
-    similar = hdb5.extrapolation_diagnostic(dataset, "AUG")
-
-    shifted = dataset.copy()
-    outlier = shifted[hdb5.TOKAMAK_LABEL_COLUMN] == "NSTX"
-    shifted.loc[outlier, "log_r_m"] = shifted.loc[outlier, "log_r_m"] + 4.0
-    assert hdb5.extrapolation_diagnostic(shifted, "NSTX").feature_mahalanobis > (
-        similar.feature_mahalanobis
-    )
-
-
-def test_diagnostic_reports_target_headroom_only_when_the_machine_runs_high() -> None:
-    high = hdb5.extrapolation_diagnostic(
-        _make_multi_machine_dataset(offsets={"JET": 8.0}), "JET"
-    )
-    assert high.log_target_headroom > 0.0
-    assert high.target_above_train_max_fraction > 0.0
-
-    low = hdb5.extrapolation_diagnostic(_make_multi_machine_dataset(), "D3D")
-    assert low.log_target_headroom < 0.0
-    assert low.target_above_train_max_fraction == 0.0
-
-
-def test_diagnostic_rejects_an_absent_or_solitary_machine() -> None:
-    dataset = _make_multi_machine_dataset(machines=("JET", "AUG"))
-    with pytest.raises(ValueError, match="No rows"):
-        hdb5.extrapolation_diagnostic(dataset, "NOT_A_TOKAMAK")
-    only_jet = dataset[dataset[hdb5.TOKAMAK_LABEL_COLUMN] == "JET"]
-    with pytest.raises(ValueError, match="only machine"):
-        hdb5.extrapolation_diagnostic(only_jet, "JET")
-
-
-def test_eligible_tokamaks_filters_by_row_count_and_orders_by_size() -> None:
-    dataset = _make_multi_machine_dataset(n_per_machine=40, machines=("JET", "AUG"))
+def test_eligible_tokamaks_orders_machines_by_descending_size() -> None:
+    """The documented ordering. ``tests/test_hdb5.py`` covers the row-count filter."""
+    dataset = _make_multi_machine_dataset(n_per_machine=40, machines=("JET", "AUG", "D3D"))
     trimmed = pd.concat(
         [
             dataset[dataset[hdb5.TOKAMAK_LABEL_COLUMN] == "JET"],
-            dataset[dataset[hdb5.TOKAMAK_LABEL_COLUMN] == "AUG"].head(5),
+            dataset[dataset[hdb5.TOKAMAK_LABEL_COLUMN] == "AUG"].head(20),
+            dataset[dataset[hdb5.TOKAMAK_LABEL_COLUMN] == "D3D"].head(10),
         ]
     )
-    assert hdb5.eligible_tokamaks(trimmed, min_rows=30) == ["JET"]
-    assert hdb5.eligible_tokamaks(trimmed, min_rows=1) == ["JET", "AUG"]
-    with pytest.raises(ValueError, match="nothing can be held out"):
-        hdb5.leave_one_tokamak_out(trimmed, min_rows=10_000)
-
-
-# --- the analysis end to end ------------------------------------------------
+    assert hdb5.eligible_tokamaks(trimmed, min_rows=1) == ["JET", "AUG", "D3D"]
 
 
 def test_analysis_scores_both_splits_on_one_shared_feature_set() -> None:
@@ -361,13 +287,22 @@ def test_controls_are_scored_under_both_splits_or_neither() -> None:
         assert np.isfinite(transfer.cv_rmsle)
         assert np.isfinite(transfer.lomo_mean_rmsle)
 
-    without = ax.analyze_extrapolation(dataset, min_rows=30, n_splits=3, include_controls=False)
+    without = ax.analyze_extrapolation(
+        dataset, min_rows=30, n_splits=3, include_controls=False, include_ladder=False
+    )
     assert not set(ax.CONTROL_MODELS) & {t.model_name for t in without.transfers}
 
 
+def test_control_and_ladder_constants_match_their_factories() -> None:
+    """A new rung added to one factory but not its constant would go unreported."""
+    assert set(ax.CONTROL_MODELS) == set(hdb5.build_control_models())
+    assert set(ax.LADDER_MODELS) == set(ax.build_flexibility_ladder())
+    assert not set(ax.CONTROL_MODELS) & set(ax.LADDER_MODELS)
+
+
 def test_controls_are_excluded_from_the_ranking_claim() -> None:
-    """The reversal claim is about the three contenders, not about the control."""
-    assert not set(ax.CONTROL_MODELS) & set(ax.CONTENDER_MODELS)
+    """The reversal claim is about the three contenders, not about the controls."""
+    assert not (set(ax.CONTROL_MODELS) | set(ax.LADDER_MODELS)) & set(ax.CONTENDER_MODELS)
     dataset = _make_multi_machine_dataset()
     analysis = ax.analyze_extrapolation(dataset, min_rows=30, n_splits=3, include_controls=True)
     assert analysis.n_contenders == len(ax.CONTENDER_MODELS)
@@ -384,3 +319,107 @@ def test_evaluate_models_control_flag_only_adds_the_control() -> None:
     )
     added = {s.model_name for s in extended} - {s.model_name for s in base}
     assert added == set(ax.CONTROL_MODELS)
+
+
+# --- the machine-level bootstrap --------------------------------------------
+
+
+def _fake_per_machine(values: dict[str, list[float]], machines: list[str]) -> pd.DataFrame:
+    """A minimal per-machine report, so bootstrap maths is tested on known input."""
+    rows = [
+        {"tokamak": machine, "model_name": model, "rmsle": series[index]}
+        for model, series in values.items()
+        for index, machine in enumerate(machines)
+    ]
+    return pd.DataFrame(rows)
+
+
+def test_bootstrap_interval_brackets_the_mean_and_is_deterministic() -> None:
+    machines = [f"M{i}" for i in range(8)]
+    report = _fake_per_machine({"a": [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]}, machines)
+    first = ax.bootstrap_over_machines(report, n_resamples=500)
+    second = ax.bootstrap_over_machines(report, n_resamples=500)
+    assert [i.to_json() for i in first] == [i.to_json() for i in second]
+
+    interval = first[0]
+    assert interval.mean_rmsle == pytest.approx(0.45)
+    assert interval.ci_low < interval.mean_rmsle < interval.ci_high
+
+
+def test_bootstrap_interval_collapses_when_every_machine_agrees() -> None:
+    """No spread between machines means nothing for the resampling to vary."""
+    machines = [f"M{i}" for i in range(6)]
+    report = _fake_per_machine({"a": [0.3] * 6}, machines)
+    interval = ax.bootstrap_over_machines(report, n_resamples=300)[0]
+    assert interval.ci_low == pytest.approx(0.3)
+    assert interval.ci_high == pytest.approx(0.3)
+
+
+def test_paired_difference_detects_a_gap_the_marginals_would_hide() -> None:
+    """The reason the paired statistic exists, on data built to make the point.
+
+    Model ``b`` is worse than ``a`` on every machine by a constant, but the
+    machines differ so much in difficulty that each model's own spread dwarfs
+    the gap. Marginal intervals overlap heavily; the paired one must not.
+    """
+    machines = [f"M{i}" for i in range(10)]
+    difficulty = [0.1, 0.3, 0.5, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8, 3.2]
+    report = _fake_per_machine(
+        {"a": difficulty, "b": [value + 0.15 for value in difficulty]}, machines
+    )
+    marginals = {i.model_name: i for i in ax.bootstrap_over_machines(report, n_resamples=1000)}
+    assert marginals["a"].ci_high > marginals["b"].ci_low  # the intervals overlap
+
+    gap = ax.bootstrap_paired_difference(report, "b", "a", n_resamples=1000)
+    assert gap.mean_difference == pytest.approx(0.15)
+    assert gap.excludes_zero
+    assert gap.n_machines_a_worse == gap.n_machines == 10
+
+
+def test_paired_difference_is_antisymmetric_and_rejects_unscored_models() -> None:
+    machines = [f"M{i}" for i in range(6)]
+    report = _fake_per_machine(
+        {"a": [0.2, 0.3, 0.4, 0.5, 0.6, 0.7], "b": [0.3, 0.3, 0.5, 0.4, 0.8, 0.6]}, machines
+    )
+    forward = ax.bootstrap_paired_difference(report, "a", "b", n_resamples=400)
+    backward = ax.bootstrap_paired_difference(report, "b", "a", n_resamples=400)
+    assert forward.mean_difference == pytest.approx(-backward.mean_difference)
+    assert forward.n_machines_a_worse + backward.n_machines_a_worse <= forward.n_machines
+
+    with pytest.raises(ValueError, match="was not scored"):
+        ax.bootstrap_paired_difference(report, "a", "absent", n_resamples=100)
+
+
+# --- the flexibility ladder ---------------------------------------------------
+
+
+def test_flexibility_ladder_is_ordered_and_fully_scored() -> None:
+    dataset = _make_multi_machine_dataset()
+    analysis = ax.analyze_extrapolation(dataset, min_rows=30, n_splits=3, include_ladder=True)
+    scored = {transfer.model_name for transfer in analysis.transfers}
+    ladder = [name for name, _ in ax.FLEXIBILITY_LADDER]
+    assert set(ladder) <= scored
+    # Degree 1 is plain ridge and the trees are the far end; the ladder must
+    # start at the constrained form or the Result 4d comparison is meaningless.
+    assert ladder[0] == "ridge_loglinear"
+    assert ladder[-1] == "random_forest"
+
+
+def test_ladder_can_be_switched_off() -> None:
+    dataset = _make_multi_machine_dataset()
+    analysis = ax.analyze_extrapolation(dataset, min_rows=30, n_splits=3, include_ladder=False)
+    assert "ridge_log_cubic" not in {t.model_name for t in analysis.transfers}
+
+
+def test_extra_models_may_not_silently_replace_a_zoo_entry() -> None:
+    """A name collision would overwrite a model in one split and not the other."""
+    from sklearn.dummy import DummyRegressor
+    from sklearn.pipeline import Pipeline
+
+    clash = {"random_forest": Pipeline([("model", DummyRegressor())])}
+    with pytest.raises(ValueError, match="silently replace"):
+        hdb5._assemble_zoo(extra_models=clash)
+
+    combined = hdb5._assemble_zoo(include_controls=True, extra_models=ax.build_flexibility_ladder())
+    assert "ridge_log_cubic" in combined
+    assert set(hdb5.build_model_zoo()) <= set(combined)
