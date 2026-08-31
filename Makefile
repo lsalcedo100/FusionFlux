@@ -1,5 +1,5 @@
 # Developer shortcuts. Run `make check` to reproduce the CI quality gate locally.
-.PHONY: install check lint type test train results reproduce page
+.PHONY: install check lint type test train results reproduce page arxiv
 
 # Install the package plus dev tooling against the pinned, tested environment.
 install:
@@ -79,3 +79,24 @@ reproduce:
 	  echo "place rather than restored over whatever landed. Run 'git checkout --"; \
 	  echo "results/' if you want the committed bytes back."; \
 	fi
+
+# Assemble the flat, self-contained source tarball arXiv wants.
+#
+# arXiv unpacks a submission into one directory and builds there, so a source
+# tree that reaches figures through `../results/` builds locally and fails on
+# upload. paper.tex names its figures bare and finds them through
+# \graphicspath; this target supplies the flat half of that path.
+#
+# The tarball carries only the two figures the paper actually includes, so a
+# figure added to the paper without being added here fails the build on arXiv
+# rather than silently shipping without it. `tools/check_paper_submission.py`
+# guards that: it is the same check the test suite runs.
+arxiv: paper/paper.tex
+	@python3 tools/check_paper_submission.py
+	@rm -rf build/arxiv && mkdir -p build/arxiv
+	@cp paper/paper.tex build/arxiv/
+	@cp results/extrapolation.png results/size_extrapolation.png build/arxiv/
+	@cd build/arxiv && tar czf ../arxiv-submission.tar.gz paper.tex *.png
+	@echo "wrote build/arxiv-submission.tar.gz"
+	@echo "Build it exactly as arXiv will, from the flat directory:"
+	@echo "    cd build/arxiv && pdflatex paper.tex && pdflatex paper.tex"

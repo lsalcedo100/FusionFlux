@@ -2,8 +2,14 @@
 %
 % Build:  tectonic paper/paper.tex        (or: pdflatex paper/paper.tex, twice)
 %
-% NOTE: set the author line and affiliation below before submitting or minting
-% a DOI. The name here was taken from the repository's git configuration.
+% Submission notes:
+%   * \date is deliberately a fixed date, not \today. A DOI record and an arXiv
+%     posting are permanent, and a paper whose date is "whenever this happened
+%     to compile" disagrees with itself between the archived PDF and any later
+%     rebuild. Bump it when the content changes, not when the file is touched.
+%   * Figures resolve through \graphicspath, so this source builds both in the
+%     repository (../results/) and from the flat directory arXiv unpacks into.
+%     Assemble that flat submission with `make arxiv`.
 \documentclass[10pt,a4paper]{article}
 
 \usepackage[margin=2.4cm]{geometry}
@@ -12,6 +18,8 @@
 \usepackage{amsmath}
 \usepackage{booktabs}
 \usepackage{graphicx}
+% Repository layout first, then the flat layout `make arxiv` produces.
+\graphicspath{{../results/}{./}}
 \usepackage{caption}
 \usepackage{microtype}
 \usepackage[hidelinks]{hyperref}
@@ -25,7 +33,7 @@
 \title{\vspace{-1.4cm}\textbf{Confinement scaling as a linear algebra problem:\\
 the model that wins on cross-validation loses on a new machine}}
 \author{Liam Salcedo\thanks{\texttt{liamsalcedo100@gmail.com}. Independent work.}}
-\date{\today}
+\date{31 August 2026}
 
 \begin{document}
 \maketitle
@@ -201,7 +209,7 @@ of 13.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{../results/extrapolation.png}
+\includegraphics[width=\textwidth]{extrapolation.png}
 \caption{\textbf{Interpolation against extrapolation.} Left: each model under
 both splits; the lines crossing is the result. Middle: per-machine error
 against Mahalanobis distance from the training data, rising for the trees and
@@ -397,7 +405,7 @@ prediction; it is an assumption being false, measured.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{../results/size_extrapolation.png}
+\includegraphics[width=\textwidth]{size_extrapolation.png}
 \caption{\textbf{Size-ordered extrapolation.} Left: the escalation across three
 splits. Middle: the per-machine breakdown at the ITER-matched cut. Right: the
 sweep across every cut, with underpowered cuts marked and excluded from claims.}
