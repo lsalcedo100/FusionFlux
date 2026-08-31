@@ -23,6 +23,9 @@ dependencies = [
 dev = [
     "jupyter",
     "mypy",
+    # Reads the committed paper PDF back so tests/test_reported_numbers.py can
+    # check it did not go stale against paper.tex.
+    "pypdf",
     "pytest",
     "pytest-cov",
     "ruff",

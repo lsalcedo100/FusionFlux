@@ -41,6 +41,7 @@ README = "README.md"
 RESULTS_MD = "results/RESULTS.md"
 PAGE = "site/page.template.html"
 PAPER = "paper/paper.tex"
+PAPER_PDF = "paper/paper.pdf"
 
 
 # --------------------------------------------------------------------------
@@ -80,9 +81,44 @@ def documents() -> dict[str, str]:
     out = {}
     for name in (README, RESULTS_MD, PAGE, PAPER):
         path = ROOT / name
-        if path.exists():
-            out[name] = re.sub(r"\s+", " ", path.read_text())
+        if not path.exists():
+            continue
+        text = re.sub(r"\s+", " ", path.read_text())
+        if name == PAPER:
+            # LaTeX starts a comment at a bare %, so every percentage in the
+            # paper is written \%. Unescape it so one claim can cover the paper
+            # and the prose documents without carrying two spellings.
+            text = text.replace(r"\%", "%")
+        out[name] = text
+
+    pdf = _extract_pdf_text(ROOT / PAPER_PDF)
+    if pdf is not None:
+        out[PAPER_PDF] = pdf
     return out
+
+
+def _extract_pdf_text(path: Path) -> Union[str, None]:
+    """Text of the committed paper PDF, or None if it cannot be read.
+
+    The PDF is the artifact people actually download, and it is committed rather
+    than built on demand, so it can go stale the moment paper.tex is corrected
+    and not rebuilt. Reading it back is the only check that catches that.
+
+    Returns None rather than raising when pypdf is missing, so a checkout
+    without the dev extra skips this document instead of failing on it.
+    """
+    if not path.exists():
+        return None
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        return None
+
+    text = " ".join(page.extract_text() or "" for page in PdfReader(str(path)).pages)
+    # The typeset minus is U+2212, not the ASCII hyphen the sources are written
+    # with, so a claim like "-0.06" would never match without folding it.
+    text = text.replace("\u2212", "-")
+    return re.sub(r"\s+", " ", text)
 
 
 Reader = Callable[[dict], Union[float, int]]
@@ -99,7 +135,7 @@ class Claim:
     """Pulls the value out of the artifacts."""
     render: Callable[[Union[float, int]], str] = str
     """Turns that value into the literal. Must round the way the prose does."""
-    documents: tuple[str, ...] = field(default=(README, RESULTS_MD))
+    documents: tuple[str, ...] = field(default=(README, RESULTS_MD, PAPER, PAPER_PDF))
 
 
 def _r(digits: int) -> Callable[[Union[float, int]], str]:
@@ -132,7 +168,7 @@ def _paired(a: dict, model_a: str, model_b: str) -> dict:
 CLAIMS: tuple[Claim, ...] = (
     # -- dataset scale -----------------------------------------------------
     Claim("rows in the database", "6228", lambda a: a["extrapolation"]["n_rows"],
-          documents=(README, RESULTS_MD, PAGE)),
+          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
     Claim("machines scored under leave-one-out", "13",
           lambda a: a["extrapolation"]["n_machines_held_out"]),
 
@@ -150,7 +186,7 @@ CLAIMS: tuple[Claim, ...] = (
     # only the three contenders and the baseline.
     Claim("log-quadratic control, leave-one-machine-out", "0.300",
           lambda a: _sm(a, "ridge_log_quadratic", "lomo_mean_rmsle"), _r(3),
-          documents=(RESULTS_MD,)),
+          documents=(RESULTS_MD, PAPER, PAPER_PDF)),
     Claim("power law, CV", "0.181", lambda a: _sm(a, "ridge_loglinear", "cv_rmsle"), _r(3)),
     Claim("power law, leave-one-machine-out", "0.214",
           lambda a: _sm(a, "ridge_loglinear", "lomo_mean_rmsle"), _r(3)),
@@ -162,7 +198,7 @@ CLAIMS: tuple[Claim, ...] = (
     # -- Result 4b: error against distance --------------------------------
     Claim("forest error against distance", "+0.85",
           lambda a: _sm(a, "random_forest", "distance_spearman"),
-          lambda v: f"{v:+.2f}", documents=(README, RESULTS_MD)),
+          lambda v: f"{v:+.2f}", documents=(README, RESULTS_MD, PAPER, PAPER_PDF)),
     Claim("power law error against distance", "-0.06",
           lambda a: _sm(a, "ridge_loglinear", "distance_spearman"),
           lambda v: f"{v:+.2f}".replace("+", "-") if v < 0 else f"{v:+.2f}"),
@@ -186,29 +222,29 @@ CLAIMS: tuple[Claim, ...] = (
     # -- Result 5: the ITER-matched size cut -------------------------------
     Claim("size ratio of the matched cut", "1.823",
           lambda a: a["size"]["iter_matched_split"]["size_ratio"], _r(3),
-          documents=(RESULTS_MD, PAGE)),
+          documents=(RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
     Claim("size ratio ITER asks for", "1.824",
-          lambda a: a["size"]["iter_size_ratio"], _r(3), documents=(RESULTS_MD, PAGE)),
+          lambda a: a["size"]["iter_size_ratio"], _r(3), documents=(RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
     Claim("largest training machine", "1.865",
           lambda a: a["size"]["iter_matched_split"]["train_r_max_m"], _r(3),
-          documents=(RESULTS_MD, PAGE)),
+          documents=(RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
     Claim("largest held-out machine", "3.40",
           lambda a: a["size"]["iter_matched_split"]["test_r_max_m"], _r(2),
-          documents=(RESULTS_MD, PAGE)),
+          documents=(RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
     Claim("power law skill at the cut", "93%",
           lambda a: _esc(a, "ridge_loglinear", "skill_against_baseline"), _pct(),
-          documents=(README, RESULTS_MD, PAGE)),
+          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
     Claim("forest skill at the cut", "41%",
           lambda a: _esc(a, "random_forest", "skill_against_baseline"), _pct(),
-          documents=(README, RESULTS_MD, PAGE)),
+          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
     Claim("gradient booster skill at the cut", "31%",
           lambda a: _esc(a, "hist_gradient_boosting", "skill_against_baseline"), _pct(),
-          documents=(README, RESULTS_MD, PAGE)),
+          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
 
     # -- Result 7: the intervals -------------------------------------------
     Claim("nominal coverage", "90%",
           lambda a: a["conformal"]["nominal_coverage"], _pct(),
-          documents=(README, RESULTS_MD, PAGE)),
+          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
     Claim("forest coverage on an unseen machine", "35%",
           lambda a: _cov(a, "random_forest", "lomo_coverage"), _pct()),
     Claim("forest coverage across the size cut", "3%",
