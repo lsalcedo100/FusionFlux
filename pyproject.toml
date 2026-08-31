@@ -107,12 +107,20 @@ source = [
 
 [tool.coverage.report]
 show_missing = true
-# The suite measured 75.7% when this floor was set, so the floor sits just
-# below it. It is a ratchet against regression, not a target: raise it when
-# coverage rises, never lower it to make a run pass.
+# Measured, not guessed. The suite covers 75.57% with the HDB5 dataset present
+# (1172 of 4798 statements missed) and 75.53% without it, which is the state CI
+# is in: 13 tests skip there for want of the dataset or a trained artifact, and
+# between them they account for 2 statements. Both figures reproduce exactly
+# across clean runs, and no measured module branches on sys.version_info, so
+# the four CI interpreters have nothing to disagree about.
 #
-# The shortfall is concentrated in the analysis_*.py report and main() paths,
-# which need the real HDB5 dataset and so are exercised by the `reproduce`
-# workflow rather than by this suite. Coverage measured here is therefore a
-# floor on the dataset-free tests, not a statement about the analyses.
+# The floor is therefore set just under the CI figure rather than well under
+# it. Its job is to catch a test file or module falling out of the suite, and
+# the tighter it sits the smaller the regression it catches. The headroom that
+# would buy stability is not needed: the only time this metric moved by more
+# than a point, the cause was another process editing the working tree
+# mid-run, which is not a condition CI is ever in.
+#
+# A ratchet, not a target. Raise it when coverage genuinely rises. Never lower
+# it to make a run pass -- if it trips, find out what stopped running.
 fail_under = 75
