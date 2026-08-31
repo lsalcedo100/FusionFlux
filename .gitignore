@@ -38,3 +38,4 @@ data/processed/
 # Third-party scientific data: fetched on demand, never redistributed.
 # ITPA HDB5 STD5, https://osf.io/drwcq  (python3 hdb5.py download)
 data/raw/hdb5_std5.csv
+site/index.html

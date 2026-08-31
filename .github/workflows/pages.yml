@@ -1,13 +1,18 @@
 name: Pages
 
-# Publish the writeup in site/ to GitHub Pages. The page is a single
-# self-contained HTML file with its figures embedded, so there is no build
-# step: the directory is uploaded as-is.
+# Publish the single-page summary to GitHub Pages.
+#
+# site/index.html is generated, not committed: build_page.py reads every number
+# on the page out of results/ so a hand-copied figure cannot drift away from the
+# analysis that produced it. So this job builds the page rather than uploading
+# it, which also means a results/ change that would alter the page but was never
+# rebuilt locally fails here instead of going live stale.
 on:
   push:
     branches: [main]
     paths:
       - "site/**"
+      - "results/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -31,13 +36,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        # The builder only reads the generated CSV/JSON artifacts under
+        # results/, so pandas is enough; no need for the full dev extra.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pandas
+
+      - name: Build site/index.html from results/
+        run: python3 site/build_page.py
+
+      # Stage just the page. site/ also holds the builder and its template,
+      # which are source, not something to serve.
+      - name: Stage the page
+        run: |
+          mkdir -p _site
+          cp site/index.html _site/index.html
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload site/
+      - name: Upload the staged page
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: _site
 
       - name: Deploy
         id: deployment

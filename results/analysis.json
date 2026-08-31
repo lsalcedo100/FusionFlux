@@ -1,4 +1,13 @@
 {
+  "dataset": {
+    "path": "/Users/liamsalcedo/Documents/GitHub/FusionFlux/data/raw/hdb5_std5.csv",
+    "sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b",
+    "n_bytes": 879645,
+    "n_rows": 6228,
+    "n_columns": 15,
+    "matches_pin": true,
+    "pinned_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b"
+  },
   "rank_audit": {
     "columns": [
       "log_ip_ma",
@@ -49,17 +58,17 @@
     "solvers": [
       {
         "name": "cholesky",
-        "seconds_per_solve": 7.128960000000185e-05,
+        "seconds_per_solve": 0.00012163750000000473,
         "max_deviation_from_svd": 7.586986594532164e-13
       },
       {
         "name": "qr",
-        "seconds_per_solve": 0.0003506708000000025,
+        "seconds_per_solve": 0.00059903335,
         "max_deviation_from_svd": 2.192690473634684e-15
       },
       {
         "name": "svd",
-        "seconds_per_solve": 0.0003838916499999956,
+        "seconds_per_solve": 0.0006660124999999905,
         "max_deviation_from_svd": 0.0
       }
     ],
@@ -69,7 +78,231 @@
     "residual_std_log": 0.18094676153591807,
     "condition_number": 10.717899227354378,
     "in_sample_rmsle_refit": 0.18081597238869854,
-    "in_sample_rmsle_published_ipb98y2": 0.19934284163621757
+    "in_sample_rmsle_published_ipb98y2": 0.19934284163621757,
+    "bootstrap_resolution": {
+      "n_resamples": 1000,
+      "baseline_level": "discharge",
+      "levels": [
+        {
+          "name": "discharge",
+          "group_column": "group_id",
+          "n_units": 4471,
+          "median_widening_factor": 1.0,
+          "max_widening_variable": "log_coefficient",
+          "max_widening_factor": 1.0,
+          "n_published_inside_ci": 2,
+          "n_comparable_exponents": 8
+        },
+        {
+          "name": "machine",
+          "group_column": "tokamak",
+          "n_units": 18,
+          "median_widening_factor": 6.087421785510267,
+          "max_widening_variable": "log_coefficient",
+          "max_widening_factor": 7.3100863569861305,
+          "n_published_inside_ci": 7,
+          "n_comparable_exponents": 8
+        },
+        {
+          "name": "device",
+          "group_column": "device",
+          "n_units": 16,
+          "median_widening_factor": 6.269460933634692,
+          "max_widening_variable": "ip_ma",
+          "max_widening_factor": 7.398425200243838,
+          "n_published_inside_ci": 7,
+          "n_comparable_exponents": 8
+        }
+      ],
+      "largest_two_devices": [
+        "JET",
+        "AUG"
+      ],
+      "largest_two_row_share": 0.7662170841361593,
+      "n_exponents": 9,
+      "widths": [
+        {
+          "variable": "log_coefficient",
+          "fitted": -2.9038356312016065,
+          "published_ipb98y2": null,
+          "discharge_ci_low": -2.9680782521136826,
+          "discharge_ci_high": -2.838842368824785,
+          "discharge_width": 0.12923588328889757,
+          "discharge_widening_factor": 1.0,
+          "published_inside_discharge_ci": false,
+          "machine_ci_low": -3.3158733658800785,
+          "machine_ci_high": -2.3711478986168566,
+          "machine_width": 0.9447254672632219,
+          "machine_widening_factor": 7.3100863569861305,
+          "published_inside_machine_ci": false,
+          "device_ci_low": -3.3432736236551457,
+          "device_ci_high": -2.4519856842956393,
+          "device_width": 0.8912879393595063,
+          "device_widening_factor": 6.896598039780453,
+          "published_inside_device_ci": false
+        },
+        {
+          "variable": "ip_ma",
+          "fitted": 1.0804315034258738,
+          "published_ipb98y2": 0.93,
+          "discharge_ci_low": 1.0344360965869874,
+          "discharge_ci_high": 1.1297752182329877,
+          "discharge_width": 0.09533912164600022,
+          "discharge_widening_factor": 1.0,
+          "published_inside_discharge_ci": false,
+          "machine_ci_low": 0.7123880968000778,
+          "machine_ci_high": 1.318804436056082,
+          "machine_width": 0.6064163392560042,
+          "machine_widening_factor": 6.360624356365101,
+          "published_inside_machine_ci": true,
+          "device_ci_low": 0.684425626679763,
+          "device_ci_high": 1.389784986834644,
+          "device_width": 0.7053593601548809,
+          "device_widening_factor": 7.398425200243838,
+          "published_inside_device_ci": true
+        },
+        {
+          "variable": "bt_t",
+          "fitted": 0.12016001694501567,
+          "published_ipb98y2": 0.15,
+          "discharge_ci_low": 0.07947496774754126,
+          "discharge_ci_high": 0.16307088715011295,
+          "discharge_width": 0.08359591940257169,
+          "discharge_widening_factor": 1.0,
+          "published_inside_discharge_ci": true,
+          "machine_ci_low": -0.12456399257977332,
+          "machine_ci_high": 0.384319628371202,
+          "machine_width": 0.5088836209509753,
+          "machine_widening_factor": 6.087421785510267,
+          "published_inside_machine_ci": true,
+          "device_ci_low": -0.13279602375846145,
+          "device_ci_high": 0.44885939574549566,
+          "device_width": 0.5816554195039572,
+          "device_widening_factor": 6.957940335614797,
+          "published_inside_device_ci": true
+        },
+        {
+          "variable": "ne_line_1e19_m3",
+          "fitted": 0.2166326537331674,
+          "published_ipb98y2": 0.41,
+          "discharge_ci_low": 0.1902909083197698,
+          "discharge_ci_high": 0.24217692837181654,
+          "discharge_width": 0.05188602005204673,
+          "discharge_widening_factor": 1.0,
+          "published_inside_discharge_ci": false,
+          "machine_ci_low": 0.06425155109324497,
+          "machine_ci_high": 0.37731172760855847,
+          "machine_width": 0.3130601765153135,
+          "machine_widening_factor": 6.0336132199248205,
+          "published_inside_machine_ci": false,
+          "device_ci_low": 0.0815528935635853,
+          "device_ci_high": 0.40685026928167856,
+          "device_width": 0.32529737571809325,
+          "device_widening_factor": 6.269460933634692,
+          "published_inside_device_ci": false
+        },
+        {
+          "variable": "p_loss_mw",
+          "fitted": -0.688387425406081,
+          "published_ipb98y2": -0.69,
+          "discharge_ci_low": -0.7068586241439225,
+          "discharge_ci_high": -0.6718628773357297,
+          "discharge_width": 0.03499574680819284,
+          "discharge_widening_factor": 1.0,
+          "published_inside_discharge_ci": true,
+          "machine_ci_low": -0.7368091637881312,
+          "machine_ci_high": -0.587106788972345,
+          "machine_width": 0.1497023748157862,
+          "machine_widening_factor": 4.277730537836084,
+          "published_inside_machine_ci": true,
+          "device_ci_low": -0.7532777422404405,
+          "device_ci_high": -0.5472688058363958,
+          "device_width": 0.20600893640404472,
+          "device_widening_factor": 5.886684960122527,
+          "published_inside_device_ci": true
+        },
+        {
+          "variable": "r_m",
+          "fitted": 1.5791341035779596,
+          "published_ipb98y2": 1.97,
+          "discharge_ci_low": 1.5017218968263901,
+          "discharge_ci_high": 1.646965183625598,
+          "discharge_width": 0.14524328679920795,
+          "discharge_widening_factor": 1.0,
+          "published_inside_discharge_ci": false,
+          "machine_ci_low": 1.131034265967284,
+          "machine_ci_high": 2.0350064891060793,
+          "machine_width": 0.9039722231387952,
+          "machine_widening_factor": 6.223848572006599,
+          "published_inside_machine_ci": true,
+          "device_ci_low": 1.1803955479018038,
+          "device_ci_high": 2.131617048656512,
+          "device_width": 0.9512215007547082,
+          "device_widening_factor": 6.5491598387588645,
+          "published_inside_device_ci": true
+        },
+        {
+          "variable": "inverse_aspect_ratio",
+          "fitted": 0.16673071620488358,
+          "published_ipb98y2": 0.58,
+          "discharge_ci_low": 0.05994286308238048,
+          "discharge_ci_high": 0.264001704327089,
+          "discharge_width": 0.20405884124470855,
+          "discharge_widening_factor": 1.0,
+          "published_inside_discharge_ci": false,
+          "machine_ci_low": -0.33088814715273906,
+          "machine_ci_high": 0.7944551957549507,
+          "machine_width": 1.1253433429076898,
+          "machine_widening_factor": 5.514798261341548,
+          "published_inside_machine_ci": true,
+          "device_ci_low": -0.3130381174645504,
+          "device_ci_high": 0.9481616890767095,
+          "device_width": 1.26119980654126,
+          "device_widening_factor": 6.180569285056469,
+          "published_inside_device_ci": true
+        },
+        {
+          "variable": "kappa",
+          "fitted": 0.8975166175406656,
+          "published_ipb98y2": 0.78,
+          "discharge_ci_low": 0.833089806251068,
+          "discharge_ci_high": 0.9655121177422709,
+          "discharge_width": 0.13242231149120287,
+          "discharge_widening_factor": 1.0,
+          "published_inside_discharge_ci": false,
+          "machine_ci_low": 0.43736222998138274,
+          "machine_ci_high": 1.3224977577935422,
+          "machine_width": 0.8851355278121594,
+          "machine_widening_factor": 6.684187263042611,
+          "published_inside_machine_ci": true,
+          "device_ci_low": 0.5202989825511826,
+          "device_ci_high": 1.2975561807766063,
+          "device_width": 0.7772571982254237,
+          "device_widening_factor": 5.869533536099457,
+          "published_inside_device_ci": true
+        },
+        {
+          "variable": "m_eff_amu",
+          "fitted": 0.25641042610379533,
+          "published_ipb98y2": 0.19,
+          "discharge_ci_low": 0.22130148212546022,
+          "discharge_ci_high": 0.29001402998271364,
+          "discharge_width": 0.06871254785725342,
+          "discharge_widening_factor": 1.0,
+          "published_inside_discharge_ci": false,
+          "machine_ci_low": 0.03418520066647237,
+          "machine_ci_high": 0.3555520187943734,
+          "machine_width": 0.3213668181279011,
+          "machine_widening_factor": 4.676974266701959,
+          "published_inside_machine_ci": true,
+          "device_ci_low": 0.04003982269891422,
+          "device_ci_high": 0.36372920925396396,
+          "device_width": 0.32368938655504975,
+          "device_widening_factor": 4.710775493691441,
+          "published_inside_device_ci": true
+        }
+      ]
+    }
   },
   "conditioning": {
     "condition_number": 10.717899227354371,
@@ -181,5 +414,176 @@
         ]
       }
     ]
+  },
+  "solver_conditioning": {
+    "n_rows": 200,
+    "n_columns": 12,
+    "n_trials": 12,
+    "machine_epsilon": 2.220446049250313e-16,
+    "slope_fit_error_floor": 1e-15,
+    "slope_fit_error_ceiling": 0.001,
+    "curves": [
+      {
+        "solver": "cholesky",
+        "condition_numbers": [
+          10.0,
+          100.0,
+          1000.0,
+          10000.0,
+          100000.0,
+          1000000.0,
+          10000000.0,
+          100000000.0,
+          1000000000.0,
+          10000000000.0,
+          100000000000.0,
+          1000000000000.0
+        ],
+        "median_errors": [
+          6.1201308963411726e-15,
+          2.6384552144911757e-13,
+          2.954579784624529e-11,
+          1.8867436141038827e-09,
+          1.8506724957850474e-07,
+          2.246456213656538e-05,
+          0.002012565162557054,
+          0.14279112494441226,
+          1.0418774917957156,
+          null,
+          null,
+          null
+        ],
+        "n_failures": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          8,
+          12,
+          12,
+          12
+        ],
+        "fitted_slope": 1.9190526552616718,
+        "expected_slope": 2.0,
+        "n_slope_points": 6,
+        "slope_fit_range": [
+          10.0,
+          1000000.0
+        ]
+      },
+      {
+        "solver": "qr",
+        "condition_numbers": [
+          10.0,
+          100.0,
+          1000.0,
+          10000.0,
+          100000.0,
+          1000000.0,
+          10000000.0,
+          100000000.0,
+          1000000000.0,
+          10000000000.0,
+          100000000000.0,
+          1000000000000.0
+        ],
+        "median_errors": [
+          5.496376412343532e-16,
+          1.0285696393289978e-15,
+          5.115677659915848e-15,
+          5.381763985267664e-14,
+          4.882713565963394e-13,
+          2.500788628338857e-12,
+          4.063403048082236e-11,
+          5.571326335630255e-10,
+          4.1510170232847015e-09,
+          1.2352287107180104e-08,
+          5.11735636586908e-07,
+          3.0366332324899723e-06
+        ],
+        "n_failures": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "fitted_slope": 0.9603699953745958,
+        "expected_slope": 1.0,
+        "n_slope_points": 11,
+        "slope_fit_range": [
+          100.0,
+          1000000000000.0
+        ]
+      },
+      {
+        "solver": "svd",
+        "condition_numbers": [
+          10.0,
+          100.0,
+          1000.0,
+          10000.0,
+          100000.0,
+          1000000.0,
+          10000000.0,
+          100000000.0,
+          1000000000.0,
+          10000000000.0,
+          100000000000.0,
+          1000000000000.0
+        ],
+        "median_errors": [
+          1.3331047871761569e-15,
+          2.086743861033173e-15,
+          8.56431113273608e-15,
+          4.2346848042129404e-14,
+          5.037521502459178e-13,
+          4.0341251067566e-12,
+          5.006472331771786e-11,
+          2.401734207919027e-10,
+          3.758314816131802e-09,
+          9.94056778763584e-09,
+          3.8709373717802135e-07,
+          3.4493690374510685e-06
+        ],
+        "n_failures": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "fitted_slope": 0.8890886372916839,
+        "expected_slope": 1.0,
+        "n_slope_points": 12,
+        "slope_fit_range": [
+          10.0,
+          1000000000000.0
+        ]
+      }
+    ],
+    "breakdown_condition_number": {
+      "cholesky": 1000000000.0,
+      "qr": null,
+      "svd": null
+    }
   }
 }

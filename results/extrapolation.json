@@ -1,4 +1,13 @@
 {
+  "dataset": {
+    "path": "/Users/liamsalcedo/Documents/GitHub/FusionFlux/data/raw/hdb5_std5.csv",
+    "sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b",
+    "n_bytes": 879645,
+    "n_rows": 6228,
+    "n_columns": 15,
+    "matches_pin": true,
+    "pinned_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b"
+  },
   "feature_columns": [
     "log_ip_ma",
     "log_bt_t",
@@ -36,6 +45,12 @@
     "random_forest",
     "hist_gradient_boosting"
   ],
+  "control_models": [
+    "ridge_log_quadratic"
+  ],
+  "ladder_models": [
+    "ridge_log_cubic"
+  ],
   "transfers": [
     {
       "model_name": "ipb98y2_analytic",
@@ -46,7 +61,7 @@
       "lomo_worst_rmsle": 0.2748479842757165,
       "worst_machine": "JT60U",
       "degradation_factor": 0.9453235946905704,
-      "cv_rank": 5,
+      "cv_rank": 6,
       "lomo_rank": 1,
       "distance_spearman": -0.489010989010989
     },
@@ -59,7 +74,7 @@
       "lomo_worst_rmsle": 0.28907712742060465,
       "worst_machine": "NSTX",
       "degradation_factor": 1.1812107710130373,
-      "cv_rank": 4,
+      "cv_rank": 5,
       "lomo_rank": 2,
       "distance_spearman": -0.06043956043956044
     },
@@ -72,7 +87,7 @@
       "lomo_worst_rmsle": 1.083009024429157,
       "worst_machine": "CMOD",
       "degradation_factor": 1.8918279098187851,
-      "cv_rank": 3,
+      "cv_rank": 4,
       "lomo_rank": 3,
       "distance_spearman": 0.25274725274725274
     },
@@ -93,14 +108,27 @@
       "model_name": "random_forest",
       "is_blind": true,
       "cv_rmsle": 0.1277352778940419,
-      "lomo_mean_rmsle": 0.4648930418131095,
-      "lomo_median_rmsle": 0.4502539255431946,
-      "lomo_worst_rmsle": 0.857376361499742,
+      "lomo_mean_rmsle": 0.46489304181310953,
+      "lomo_median_rmsle": 0.4502539255431943,
+      "lomo_worst_rmsle": 0.8573763614997418,
       "worst_machine": "NSTX",
-      "degradation_factor": 3.6395038980440813,
+      "degradation_factor": 3.6395038980440817,
       "cv_rank": 1,
       "lomo_rank": 5,
       "distance_spearman": 0.8461538461538461
+    },
+    {
+      "model_name": "ridge_log_cubic",
+      "is_blind": true,
+      "cv_rmsle": 0.14793519944791098,
+      "lomo_mean_rmsle": 0.8490918952560845,
+      "lomo_median_rmsle": 0.29480888855707793,
+      "lomo_worst_rmsle": 4.6007078185392905,
+      "worst_machine": "CMOD",
+      "degradation_factor": 5.739620444795194,
+      "cv_rank": 3,
+      "lomo_rank": 6,
+      "distance_spearman": 0.5659340659340659
     },
     {
       "model_name": "mean_baseline",
@@ -111,8 +139,8 @@
       "lomo_worst_rmsle": 1.628585559883982,
       "worst_machine": "JFT2M",
       "degradation_factor": 1.1439117637253366,
-      "cv_rank": 6,
-      "lomo_rank": 6,
+      "cv_rank": 7,
+      "lomo_rank": 7,
       "distance_spearman": 0.5604395604395604
     }
   ],
@@ -123,8 +151,101 @@
       "fraction_above_train_max": 0.48127128263337116,
       "log_headroom": 1.3108840862714626,
       "headroom_ratio": 3.7094517383242507,
-      "tree_rmsle": 0.47798512070328486,
+      "tree_rmsle": 0.4779851207032848,
       "power_law_rmsle": 0.1979097980970751
     }
+  ],
+  "bootstrap": [
+    {
+      "model_name": "hist_gradient_boosting",
+      "mean_rmsle": 0.35929191010201667,
+      "ci_low": 0.27948686136603,
+      "ci_high": 0.4423062273222134
+    },
+    {
+      "model_name": "ipb98y2_analytic",
+      "mean_rmsle": 0.18844349163138224,
+      "ci_low": 0.15817222844810375,
+      "ci_high": 0.21867235716374506
+    },
+    {
+      "model_name": "mean_baseline",
+      "mean_rmsle": 0.9935763663195161,
+      "ci_low": 0.7802983505989265,
+      "ci_high": 1.217741061844043
+    },
+    {
+      "model_name": "random_forest",
+      "mean_rmsle": 0.4648930418131095,
+      "ci_low": 0.3761590649969642,
+      "ci_high": 0.5597626358316888
+    },
+    {
+      "model_name": "ridge_log_cubic",
+      "mean_rmsle": 0.8490918952560845,
+      "ci_low": 0.2994729459794022,
+      "ci_high": 1.5930023159396733
+    },
+    {
+      "model_name": "ridge_log_quadratic",
+      "mean_rmsle": 0.29970559217951165,
+      "ci_low": 0.20555649499833678,
+      "ci_high": 0.443348694809218
+    },
+    {
+      "model_name": "ridge_loglinear",
+      "mean_rmsle": 0.21407599766914132,
+      "ci_low": 0.18332364122310568,
+      "ci_high": 0.24144764681157355
+    }
+  ],
+  "paired_differences": [
+    {
+      "model_a": "random_forest",
+      "model_b": "ridge_loglinear",
+      "mean_difference": 0.2508170441439682,
+      "ci_low": 0.15682732681279973,
+      "ci_high": 0.34179631486689394,
+      "excludes_zero": true,
+      "n_machines_a_worse": 13,
+      "n_machines": 13
+    },
+    {
+      "model_a": "hist_gradient_boosting",
+      "model_b": "ridge_loglinear",
+      "mean_difference": 0.1452159124328753,
+      "ci_low": 0.07023807776621875,
+      "ci_high": 0.2230676173382286,
+      "excludes_zero": true,
+      "n_machines_a_worse": 12,
+      "n_machines": 13
+    },
+    {
+      "model_a": "ridge_log_quadratic",
+      "model_b": "ridge_loglinear",
+      "mean_difference": 0.0856295945103703,
+      "ci_low": -0.012773083840501883,
+      "ci_high": 0.23659415188584063,
+      "excludes_zero": false,
+      "n_machines_a_worse": 5,
+      "n_machines": 13
+    },
+    {
+      "model_a": "random_forest",
+      "model_b": "ridge_log_quadratic",
+      "mean_difference": 0.1651874496335979,
+      "ci_low": 0.013450338415535744,
+      "ci_high": 0.30227647859566825,
+      "excludes_zero": true,
+      "n_machines_a_worse": 12,
+      "n_machines": 13
+    }
+  ],
+  "flexibility_ladder": [
+    "ridge_loglinear",
+    "ridge_log_quadratic",
+    "ridge_log_cubic",
+    "hist_gradient_boosting",
+    "random_forest"
   ]
 }

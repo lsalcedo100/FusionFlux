@@ -1,0 +1,616 @@
+<title>Confinement Scaling Reversal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+
+<style>
+/* ---- tokens: complete light palette on bare :root ---------------------- */
+:root{
+  --ground:#f6f7f9;
+  --surface:#ffffff;
+  --surface-sunk:#eef1f5;
+  --ink:#101620;
+  --ink-soft:#39424f;
+  --muted:#5c6672;
+  --line:#dfe4ea;
+  --line-strong:#c4ccd6;
+  --in:#2a78d6;          /* in-distribution / interpolation */
+  --out:#eb6834;         /* out-of-distribution / extrapolation */
+  --in-wash:rgba(42,120,214,.10);
+  --out-wash:rgba(235,104,52,.10);
+  --shadow:0 1px 2px rgba(16,22,32,.05),0 8px 24px -12px rgba(16,22,32,.18);
+
+  --f-display:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-body:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+
+  --measure:68ch;
+  --frame:1100px;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#0e1218;
+    --surface:#161c25;
+    --surface-sunk:#111720;
+    --ink:#e4e9f0;
+    --ink-soft:#c2cad6;
+    --muted:#93a0b0;
+    --line:#252d38;
+    --line-strong:#36414f;
+    --in:#4f93e8;
+    --out:#d96a38;
+    --in-wash:rgba(79,147,232,.14);
+    --out-wash:rgba(217,106,56,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#0e1218;
+  --surface:#161c25;
+  --surface-sunk:#111720;
+  --ink:#e4e9f0;
+  --ink-soft:#c2cad6;
+  --muted:#93a0b0;
+  --line:#252d38;
+  --line-strong:#36414f;
+  --in:#4f93e8;
+  --out:#d96a38;
+  --in-wash:rgba(79,147,232,.14);
+  --out-wash:rgba(217,106,56,.14);
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--f-body);
+  font-size:16.5px;
+  line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--frame);margin:0 auto;padding:0 28px}
+.col{max-width:var(--measure)}
+p{margin:0 0 1.05em}
+a{color:var(--in);text-underline-offset:2px;text-decoration-thickness:1px}
+a:hover{color:var(--ink)}
+:focus-visible{outline:2px solid var(--in);outline-offset:3px;border-radius:2px}
+h1,h2,h3{font-family:var(--f-display);font-weight:500;text-wrap:balance;margin:0}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---- masthead ---------------------------------------------------------- */
+header.top{border-bottom:1px solid var(--line);background:var(--surface)}
+.top .wrap{padding-top:52px;padding-bottom:44px}
+.eyebrow{
+  font-family:var(--f-mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 22px;display:flex;flex-wrap:wrap;gap:6px 18px;
+}
+h1{font-size:clamp(38px,6vw,62px);line-height:1.02;letter-spacing:-.02em;margin-bottom:20px}
+.lede{font-size:20px;line-height:1.5;color:var(--ink-soft);max-width:60ch;margin:0}
+.lede strong{font-weight:600;color:var(--ink);box-shadow:inset 0 -.5em 0 var(--out-wash)}
+
+/* ---- generic section --------------------------------------------------- */
+section{padding:62px 0;border-bottom:1px solid var(--line)}
+.kicker{
+  font-family:var(--f-mono);font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--out);margin:0 0 14px;
+}
+h2{font-size:clamp(26px,3.4vw,34px);line-height:1.15;letter-spacing:-.015em;margin-bottom:18px}
+h3{font-size:19px;margin:34px 0 10px;letter-spacing:-.005em}
+.sub{color:var(--muted);font-size:15px;max-width:62ch}
+
+/* ---- the escalation spine (real sequence: shot -> machine -> size) ------ */
+.spine{display:grid;gap:0;margin:28px 0 0;border-top:1px solid var(--line)}
+.step{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:baseline;
+  padding:16px 0;border-bottom:1px solid var(--line)}
+.step-n{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.08em}
+.step-t{font-size:15.5px}
+.step-t b{font-weight:600}
+.step-v{font-family:var(--f-mono);font-size:14px;color:var(--muted);white-space:nowrap}
+
+/* ---- interactive panel ------------------------------------------------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:4px;
+  box-shadow:var(--shadow);overflow:hidden}
+.panel-hd{padding:20px 24px;border-bottom:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:12px 24px;align-items:baseline;justify-content:space-between}
+.panel-hd h3{margin:0;font-size:17px}
+.panel-hd .hint{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);
+  letter-spacing:.08em;text-transform:uppercase}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:18px 24px;border-bottom:1px solid var(--line);
+  background:var(--surface-sunk)}
+.chip{
+  font-family:var(--f-mono);font-size:12.5px;padding:5px 10px;border-radius:3px;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-soft);
+  cursor:pointer;transition:background .15s,color .15s,border-color .15s;
+}
+.chip:hover{border-color:var(--out);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--out);border-color:var(--out);color:#fff;font-weight:500}
+.chip .d{opacity:.62;margin-left:6px}
+.chip[aria-pressed="true"] .d{opacity:.85}
+
+.readout{display:flex;flex-wrap:wrap;gap:0;border-bottom:1px solid var(--line)}
+.stat{flex:1 1 150px;padding:16px 24px;border-right:1px solid var(--line)}
+.stat:last-child{border-right:0}
+.stat dt{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 5px}
+.stat dd{margin:0;font-size:21px;font-family:var(--f-mono);font-weight:500;letter-spacing:-.01em}
+
+.races{display:grid;grid-template-columns:1fr 1fr;gap:0}
+@media(max-width:720px){.races{grid-template-columns:1fr}}
+.race{padding:22px 24px 26px}
+.race+.race{border-left:1px solid var(--line)}
+@media(max-width:720px){.race+.race{border-left:0;border-top:1px solid var(--line)}}
+.race h4{margin:0 0 4px;font-family:var(--f-body);font-size:13px;font-weight:600;letter-spacing:.01em}
+.race .note{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin:0 0 18px;
+  letter-spacing:.05em;text-transform:uppercase}
+.track{position:relative}
+.row{position:absolute;left:0;right:0;height:52px;transition:transform .55s cubic-bezier(.4,0,.2,1)}
+.row-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:5px}
+.row-name{font-size:13.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-val{font-family:var(--f-mono);font-size:13.5px;font-weight:500;transition:color .3s}
+.bar{height:9px;border-radius:2px;background:var(--surface-sunk);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:2px;transition:width .55s cubic-bezier(.4,0,.2,1),background .3s}
+.win .row-name{color:var(--ink);font-weight:600}
+.ref{font-family:var(--f-mono);font-size:8.5px;letter-spacing:.06em;color:var(--muted);
+  margin-left:4px;vertical-align:super}
+.verdict{padding:18px 24px;border-top:1px solid var(--line);background:var(--surface-sunk);
+  font-size:14.5px;color:var(--ink-soft)}
+.footnote{padding:0 24px 18px;margin:0;background:var(--surface-sunk);
+  font-size:12.5px;color:var(--muted);max-width:80ch}
+.verdict b{color:var(--ink);font-weight:600}
+
+/* ---- table ------------------------------------------------------------- */
+.tablewrap{overflow-x:auto;margin:26px 0 0;border:1px solid var(--line);border-radius:4px;
+  background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:620px}
+th,td{padding:11px 16px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);font-weight:500;background:var(--surface-sunk)}
+tbody tr:last-child td{border-bottom:0}
+/* Greek in a header must not be uppercased: capital rho is visually a Latin P. */
+thead th.lc{text-transform:none;letter-spacing:.04em;font-size:12px}
+td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.rank{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;
+  border-radius:3px;font-family:var(--f-mono);font-size:12px;font-weight:500}
+.rank.a{background:var(--in-wash);color:var(--in)}
+.rank.b{background:var(--out-wash);color:var(--out)}
+.flip{color:var(--muted);font-family:var(--f-mono);font-size:13px}
+
+/* ---- figure plate ------------------------------------------------------ */
+figure{margin:30px 0 0}
+.plate{background:#fff;border:1px solid var(--line);border-radius:4px;padding:10px;
+  overflow-x:auto;box-shadow:var(--shadow)}
+.plate img{display:block;width:100%;min-width:640px;height:auto}
+figcaption{font-size:13.5px;color:var(--muted);margin-top:11px;max-width:74ch}
+figcaption b{color:var(--ink-soft);font-weight:600}
+
+/* ---- result cards ------------------------------------------------------ */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:26px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:22px 22px 24px}
+.card .tag{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 12px}
+.card h3{margin:0 0 10px;font-size:18px}
+.card p{font-size:14.5px;color:var(--ink-soft);margin:0}
+.big{font-family:var(--f-mono);font-size:34px;font-weight:500;letter-spacing:-.02em;
+  display:block;margin:0 0 6px;line-height:1}
+.big.good{color:var(--in)}
+.big.bad{color:var(--out)}
+
+/* ---- footer ------------------------------------------------------------ */
+footer{padding:52px 0 72px;color:var(--muted);font-size:14px}
+footer .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:26px}
+footer h4{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-soft);margin:0 0 9px;font-weight:500}
+code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-sunk);
+  padding:1.5px 5px;border-radius:3px;border:1px solid var(--line)}
+.pin{font-family:var(--f-mono);font-size:12px;word-break:break-all}
+
+@media(prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms !important;animation-duration:.01ms !important}
+}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <p class="eyebrow">
+      <span>ITPA HDB5 &middot; STD5</span><span>6228 shots</span><span>18 tokamaks</span>
+      <span>no synthetic data</span>
+    </p>
+    <h1>Confinement Scaling Reversal</h1>
+    <p class="lede">
+      On the real ITPA database, a random forest beats the published 1998 scaling law by 41%.
+      Hold out an entire tokamak instead of a few shots and <strong>the ranking inverts completely</strong>:
+      the best cross-validated model becomes the worst of the three, on every machine tested.
+    </p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="col">
+      <p class="kicker">What is being measured</p>
+      <h2>A scaling law is not for the machines you have</h2>
+      <p>
+        Energy confinement time <span class="num">&tau;<sub>E</sub></span> sets how big a tokamak has to be
+        to reach ignition, and the field predicts it with a power law fitted across existing devices.
+        The reference is <b>IPB98(y,2)</b>, published in the 1999 ITER Physics Basis and used to size ITER
+        itself. It is a product of eight engineering parameters raised to fitted exponents, so in log space
+        it is exactly a linear model, and fitting one is ordinary least squares on a log design matrix.
+      </p>
+      <p>
+        The obvious modern move is to replace it with something more flexible. Trained and scored on the
+        ITPA H-mode database under grouped cross-validation, that works: a random forest reaches
+        <span class="num">0.128</span> RMSLE against the published law's <span class="num">0.199</span>,
+        a 41% improvement measured against real physics rather than against a mean predictor.
+      </p>
+      <p>
+        But cross-validation here holds out <em>discharges</em>. Every machine in the held-out fold also sits
+        in the training fold, so it measures how much of JET is predictable from the rest of JET. That is
+        interpolation. A scaling law exists to answer a different question, and the honest test is to
+        escalate what gets held out:
+      </p>
+      <div class="spine">
+        <div class="step"><span class="step-n">01</span>
+          <span class="step-t"><b>Hold out a discharge.</b> Grouped CV by shot. Same machines on both sides.</span>
+          <span class="step-v">interpolation</span></div>
+        <div class="step"><span class="step-n">02</span>
+          <span class="step-t"><b>Hold out a machine.</b> Train on 12 tokamaks, predict the 13th, rotate.</span>
+          <span class="step-v">transfer</span></div>
+        <div class="step"><span class="step-n">03</span>
+          <span class="step-t"><b>Hold out a size range.</b> Train below a major-radius cut, predict above it.</span>
+          <span class="step-v">extrapolation</span></div>
+      </div>
+      <p class="sub" style="margin-top:18px">
+        Both arms use the same nine engineering features and the same models. Only the split changes.
+        The IPB98 prior is dropped as a feature throughout, because its exponents were fitted on this
+        database including whichever machine is held out.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <p class="kicker">Step 02 &middot; interactive</p>
+    <h2>Hold out a tokamak</h2>
+    <p class="sub" style="margin-bottom:26px">
+      Pick a machine. The left column is fixed: it is how the models rank under cross-validation, where
+      every machine is in the training set. The right column is how they rank on that machine when it is
+      removed from training entirely. Machines are ordered by how far they sit outside the training
+      distribution.
+    </p>
+
+    <div class="panel">
+      <div class="panel-hd">
+        <h3>Leave one tokamak out</h3>
+        <span class="hint">13 machines &middot; ordered by distance</span>
+      </div>
+
+      <div class="chips" id="chips" role="group" aria-label="Choose which tokamak to hold out"></div>
+
+      <dl class="readout">
+        <div class="stat"><dt>Held out</dt><dd id="s-name">&mdash;</dd></div>
+        <div class="stat"><dt>Rows</dt><dd id="s-rows" class="num">&mdash;</dd></div>
+        <div class="stat"><dt>Distance from training</dt><dd id="s-dist" class="num">&mdash;</dd></div>
+        <div class="stat"><dt>Rows above training max</dt><dd id="s-above" class="num">&mdash;</dd></div>
+      </dl>
+
+      <div class="races">
+        <div class="race">
+          <h4>Ranked by cross-validation</h4>
+          <p class="note">held-out shot &middot; identical every time</p>
+          <div class="track" id="track-cv"></div>
+        </div>
+        <div class="race">
+          <h4>Ranked on the held-out machine</h4>
+          <p class="note">held-out machine &middot; rearranges</p>
+          <div class="track" id="track-lomo"></div>
+        </div>
+      </div>
+
+      <p class="verdict" id="verdict"></p>
+      <p class="footnote">
+        <sup class="ref">ref</sup> IPB98(y,2) is ranked for reference but never marked as the leader: its
+        exponents were fitted on this database with the held-out machine included, so it is not blind.
+        The accent marks the leading model that is.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="col">
+      <p class="kicker">The result</p>
+      <h2>The order under one split is the reverse of the order under the other</h2>
+      <p>
+        Averaged over all 13 machines, the ranking of the three models that actually fit something is
+        exactly inverted between the two splits. The random forest is worse than the log-linear power law
+        on <b>13 of 13 machines</b>, and the 95% interval on that paired gap is
+        <span class="num">[+0.157, +0.342]</span>, nowhere near zero.
+      </p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th>Model</th><th>CV, by shot</th><th>Leave one machine out</th>
+          <th>Degradation</th><th>CV rank</th><th>Machine rank</th><th class="lc">&rho;(distance)</th>
+        </tr></thead>
+        <tbody id="tbl"></tbody>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:14px">
+      &rho;(distance) is the rank correlation between a model's error on a machine and how far that machine
+      sits outside the training data. The forest's errors are explained by extrapolation distance
+      (&rho; = +0.85). The power law's are not (&rho; = &minus;0.06): its error is uncorrelated with how far
+      away the machine is, which is the property that matters when the next machine is the furthest of all.
+      IPB98 is listed for reference and is not blind, since its exponents were fitted on this database.
+    </p>
+
+    <figure>
+      <div class="plate"><img src="__FIG1__" alt="Three panels: model scores under both splits crossing over; per-machine error against Mahalanobis distance; median against worst case along a flexibility ladder."></div>
+      <figcaption>
+        <b>Interpolation against extrapolation.</b> Left, each model under both splits: the lines crossing
+        is the result. Middle, per-machine error against distance from the training data, rising for the
+        trees and flat for the power law. Right, the flexibility ladder, where what grows with flexibility
+        is the tail of the error distribution rather than its centre.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="col">
+      <p class="kicker">Step 03 &middot; the ITER direction</p>
+      <h2>The jump ITER asks for, measured inside the database</h2>
+      <p>
+        Holding out JET still leaves twelve machines spanning much of its range, so it extrapolates in
+        identity while interpolating in size. ITER's major radius is <span class="num">6.2 m</span> against
+        <span class="num">3.40 m</span> for the largest row here, a factor of 1.82 beyond anything measured.
+        That factor turns out to be available inside the database: train on the 14 smallest machines up to
+        DIII&#8209;D at <span class="num">1.865 m</span> and predict the 4 largest up to JT&#8209;60U at
+        <span class="num">3.40 m</span>, and the jump demanded is <span class="num">1.823</span> against
+        ITER's <span class="num">1.824</span>.
+      </p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Model</th><th>Held-out shot</th><th>Held-out machine</th>
+          <th>Machine larger than any in training</th><th>Skill</th></tr></thead>
+        <tbody id="tbl2"></tbody>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:14px">
+      Skill places each model between predicting a single constant (0.00) and the analytic power law (1.00).
+      The power law keeps 93% of that distance. The trees keep 41% and 31%: asked the question a scaling law
+      exists to answer, <b>they land closer to a constant than to the law they beat by 41% under
+      cross-validation</b>.
+    </p>
+
+    <figure>
+      <div class="plate"><img src="__FIG2__" alt="Size-ordered extrapolation: escalation across three splits, per-machine breakdown, and the sweep across every size cut."></div>
+      <figcaption>
+        <b>Size-ordered extrapolation.</b> The cut is chosen as the one whose size ratio is closest to
+        ITER's, so it is a property of the data rather than a hand-picked split: add a larger machine and
+        the matched rung moves on its own.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="col">
+      <p class="kicker">What fixes it, and what does not</p>
+      <h2>A bounded correction, and an interval that collapses</h2>
+      <p>
+        The diagnosis is specific enough to build against. A tree ensemble predicts by averaging training
+        targets, so every prediction it can make lies inside the training range: it structurally cannot
+        reach a machine whose confinement times run above everything it has seen. A power law has no such
+        bound. So keep the power law and let a heavily damped tree correction work on its
+        <em>log residuals</em>, where the bounded quantity is centred on zero instead of growing with
+        machine size.
+      </p>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <p class="tag">Result 6 &middot; the hybrid</p>
+        <span class="big good" id="c-hyb">&mdash;</span>
+        <h3>Best blind model at the ITER cut</h3>
+        <p>
+          Power law plus a bounded correction: <b>26% below plain ridge</b> and 4.6&times; below the random
+          forest, better on all three held-out machines and by the widest margin on the most distant. The
+          base law is biased by &minus;0.218 in log units out there; the correction supplies 46% of it and
+          never leaves its training range.
+        </p>
+      </div>
+      <div class="card">
+        <p class="tag">Result 7 &middot; the interval</p>
+        <span class="big bad" id="c-cov">&mdash;</span>
+        <h3>Coverage of a 90% interval</h3>
+        <p>
+          Split-conformal intervals hit nominal 90% under cross-validation for every model, then cover
+          <b>3% of the rows</b> across the ITER-matched cut for the random forest and none at all for the
+          gradient booster. Widths move by under 1.5% between the two: the intervals do not get vague out
+          of distribution, they stay the same size and miss.
+        </p>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:22px;max-width:74ch">
+      The honest limit on the hybrid: scored at every rung of the size sweep rather than only the matched
+      one, it wins at 5 of 8 well-powered cuts, not all, and no rule over those eight points separates the
+      wins from the losses. What survives is narrow, and it is stated narrowly.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <h4>Data</h4>
+        <p>ITPA Global H-mode Confinement Database, standard analysis set STD5 v5.2.3, fetched from OSF
+        rather than redistributed. Pinned by content hash and verified on load.</p>
+        <p class="pin">sha256 67601c2d&hellip;b9ac5b &middot; 879645 bytes</p>
+      </div>
+      <div>
+        <h4>Reproduce</h4>
+        <p><code>python3 hdb5.py download</code><br>
+           <code>python3 analysis_extrapolation.py</code><br>
+           <code>python3 analysis_size_extrapolation.py</code><br>
+           <code>python3 analysis_hybrid.py</code><br>
+           <code>python3 analysis_conformal.py</code></p>
+      </div>
+      <div>
+        <h4>Full writeup</h4>
+        <p>Every claim, table, mechanism and limitation, including the rank-deficiency audit and the
+        from-scratch least-squares solvers, is in <code>results/RESULTS.md</code>.</p>
+      </div>
+      <div>
+        <h4>Sources</h4>
+        <p>ITER Physics Basis, <i>Nucl. Fusion</i> <b>39</b> 2175 (1999).<br>
+           G. Verdoolaege et al., <i>Nucl. Fusion</i> <b>61</b> 076006 (2021).</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const D = __DATA__;
+const ROW_H = 52;
+
+/* Bars are scaled to a fixed ceiling rather than to each machine's own worst
+   model, so the lengths mean the same thing as the selection changes. */
+const CEIL = 0.9;
+const pct = v => Math.max(2, Math.min(100, (v / CEIL) * 100));
+
+function tracks(id, entries, hue){
+  const el = document.getElementById(id);
+  el.style.height = (entries.length * ROW_H) + 'px';
+  el.innerHTML = entries.map(e => `
+    <div class="row" data-k="${e.k}">
+      <div class="row-top">
+        <span class="row-name">${D.labels[e.k]}${e.k === 'ipb98y2_analytic' ? '<sup class="ref">ref</sup>' : ''}</span>
+        <span class="row-val">${e.v.toFixed(3)}</span>
+      </div>
+      <div class="bar"><i></i></div>
+    </div>`).join('');
+  paint(id, entries, hue);
+}
+
+function paint(id, entries, hue){
+  const el = document.getElementById(id);
+  const sorted = [...entries].sort((a,b) => a.v - b.v);
+  // The analytic law is ranked alongside the others but never highlighted as
+  // the winner: its exponents were fitted on this database including the
+  // held-out machine, so colouring it as the best model would read as a result
+  // it has not earned. The leading *blind* model gets the accent instead.
+  const leader = sorted.find(e => e.k !== 'ipb98y2_analytic');
+  sorted.forEach((e, rank) => {
+    const row = el.querySelector(`[data-k="${e.k}"]`);
+    const lead = e.k === leader.k;
+    row.style.transform = `translateY(${rank * ROW_H}px)`;
+    row.classList.toggle('win', lead);
+    row.querySelector('.row-val').textContent = e.v.toFixed(3);
+    row.querySelector('.row-val').style.color = lead ? hue : 'var(--ink-soft)';
+    const bar = row.querySelector('.bar i');
+    bar.style.width = pct(e.v) + '%';
+    bar.style.background = lead ? hue : 'var(--line-strong)';
+  });
+}
+
+const cvEntries = D.models.map(k => ({k, v: D.cv[k]}));
+tracks('track-cv', cvEntries, 'var(--in)');
+tracks('track-lomo', D.models.map(k => ({k, v: D.lomoMean[k]})), 'var(--out)');
+
+/* ---- chips ------------------------------------------------------------- */
+const chips = document.getElementById('chips');
+chips.innerHTML = D.machines.map((m, i) => `
+  <button class="chip" type="button" data-i="${i}" aria-pressed="false">
+    ${m.name}<span class="d">${m.dist.toFixed(1)}</span>
+  </button>`).join('');
+
+const fmtPct = v => (v * 100).toFixed(0) + '%';
+
+function select(i){
+  const m = D.machines[i];
+  chips.querySelectorAll('.chip').forEach(c =>
+    c.setAttribute('aria-pressed', String(+c.dataset.i === i)));
+
+  document.getElementById('s-name').textContent = m.name;
+  document.getElementById('s-rows').textContent = m.rows;
+  document.getElementById('s-dist').textContent = m.dist.toFixed(1);
+  document.getElementById('s-above').textContent = fmtPct(m.above);
+
+  const entries = D.models.map(k => ({k, v: m.rmsle[k]}));
+  paint('track-lomo', entries, 'var(--out)');
+
+  const blind = entries.filter(e => e.k !== 'ipb98y2_analytic').sort((a,b) => a.v - b.v);
+  const best = blind[0], worst = blind[blind.length - 1];
+  const forest = m.rmsle['random_forest'], ridge = m.rmsle['ridge_loglinear'];
+  const ratio = (forest / ridge);
+
+  let line;
+  if (worst.k === 'random_forest' && best.k === 'ridge_loglinear'){
+    line = `On <b>${m.name}</b> the power law wins and the random forest is last, at
+      <b>${ratio.toFixed(1)}&times;</b> its error. `;
+  } else if (best.k === 'ridge_loglinear'){
+    line = `On <b>${m.name}</b> the power law still wins; the forest is ${ratio.toFixed(1)}&times; its error. `;
+  } else {
+    line = `On <b>${m.name}</b> the best blind model is ${D.labels[best.k]}, though the forest is still
+      ${ratio.toFixed(1)}&times; the power law's error. `;
+  }
+  line += m.above > 0.05
+    ? `<b>${fmtPct(m.above)}</b> of its rows sit above the highest confinement time in training, which no
+       tree in the forest can output at all.`
+    : `Its rows sit inside the training range, so the trees fail here on features rather than on the
+       ceiling.`;
+  document.getElementById('verdict').innerHTML = line;
+}
+
+chips.addEventListener('click', e => {
+  const b = e.target.closest('.chip');
+  if (b) select(+b.dataset.i);
+});
+
+/* ---- tables ------------------------------------------------------------ */
+const order = ['random_forest','hist_gradient_boosting','ridge_loglinear','ipb98y2_analytic'];
+document.getElementById('tbl').innerHTML = order.map(k => {
+  const deg = D.lomoMean[k] / D.cv[k];
+  const star = k === 'ipb98y2_analytic' ? ' *' : '';
+  return `<tr>
+    <td>${D.labels[k]}${star}</td>
+    <td class="n">${D.cv[k].toFixed(3)}</td>
+    <td class="n">${D.lomoMean[k].toFixed(3)}</td>
+    <td class="n flip">${deg.toFixed(1)}&times;</td>
+    <td class="n"><span class="rank a">${D.cvRank[k]}</span></td>
+    <td class="n"><span class="rank b">${D.lomoRank[k]}</span></td>
+    <td class="n">${D.rho[k] >= 0 ? '+' : '&minus;'}${Math.abs(D.rho[k]).toFixed(2)}</td>
+  </tr>`;
+}).join('');
+
+const esc = ['ipb98y2_analytic','ridge_loglinear','random_forest','hist_gradient_boosting'];
+const base = D.sizeCut['mean_baseline'], ref = D.sizeCut['ipb98y2_analytic'];
+document.getElementById('tbl2').innerHTML = esc.map(k => {
+  const skill = (base - D.sizeCut[k]) / (base - ref);
+  const star = k === 'ipb98y2_analytic' ? ' *' : '';
+  return `<tr>
+    <td>${D.labels[k]}${star}</td>
+    <td class="n">${D.cv[k].toFixed(3)}</td>
+    <td class="n">${D.lomoMean[k].toFixed(3)}</td>
+    <td class="n"><b>${D.sizeCut[k].toFixed(3)}</b></td>
+    <td class="n flip">${skill.toFixed(2)}</td>
+  </tr>`;
+}).join('') + `<tr>
+    <td>mean baseline</td><td class="n">0.869</td><td class="n">0.994</td>
+    <td class="n"><b>${base.toFixed(3)}</b></td><td class="n flip">0.00</td></tr>`;
+
+document.getElementById('c-hyb').textContent = D.hybrid.size.toFixed(3);
+document.getElementById('c-cov').textContent = fmtPct(D.coverage['random_forest'].size);
+
+/* JET is the default: largest device in the database, closest analogue to the
+   case a next-step machine presents. */
+select(D.machines.findIndex(m => m.name === 'JET'));
+</script>

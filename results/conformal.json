@@ -1,0 +1,97 @@
+{
+  "n_rows": 6228,
+  "n_machines": 18,
+  "nominal_coverage": 0.9,
+  "calibration_fraction": 0.25,
+  "feature_columns": [
+    "log_ip_ma",
+    "log_bt_t",
+    "log_ne_line_1e19_m3",
+    "log_p_loss_mw",
+    "log_r_m",
+    "log_kappa",
+    "log_inverse_aspect_ratio",
+    "log_m_eff_amu",
+    "log_a_m"
+  ],
+  "size_cut_size_ratio": 1.8230563002680964,
+  "collapse": [
+    {
+      "model_name": "ipb98y2_analytic",
+      "is_blind": false,
+      "nominal_coverage": 0.9,
+      "cv_coverage": 0.8978805394990366,
+      "lomo_coverage": 0.8916734033953112,
+      "size_cut_coverage": 0.8831501831501831,
+      "coverage_shortfall": 0.006207136103725364,
+      "cv_interval_factor": 1.3872268039858018,
+      "lomo_interval_factor": 1.3982757225698461,
+      "size_cut_interval_factor": 1.3767225984697504,
+      "distance_spearman": 0.5469696739087315
+    },
+    {
+      "model_name": "ridge_loglinear",
+      "is_blind": true,
+      "nominal_coverage": 0.9,
+      "cv_coverage": 0.9010918432883751,
+      "lomo_coverage": 0.8302344381568311,
+      "size_cut_coverage": 0.7047619047619048,
+      "coverage_shortfall": 0.07085740513154404,
+      "cv_interval_factor": 1.3357852371650043,
+      "lomo_interval_factor": 1.327710827444374,
+      "size_cut_interval_factor": 1.3717631084928388,
+      "distance_spearman": 0.27472527472527475
+    },
+    {
+      "model_name": "hybrid_gbm_s1",
+      "is_blind": true,
+      "nominal_coverage": 0.9,
+      "cv_coverage": 0.8975594091201028,
+      "lomo_coverage": 0.6428455941794664,
+      "size_cut_coverage": 0.764102564102564,
+      "coverage_shortfall": 0.2547138149406364,
+      "cv_interval_factor": 1.2780338825933533,
+      "lomo_interval_factor": 1.259056027605799,
+      "size_cut_interval_factor": 1.2949104371022295,
+      "distance_spearman": 0.02197802197802198
+    },
+    {
+      "model_name": "hist_gradient_boosting",
+      "is_blind": true,
+      "nominal_coverage": 0.9,
+      "cv_coverage": 0.9059087989723827,
+      "lomo_coverage": 0.4460792239288601,
+      "size_cut_coverage": 0.0029304029304029304,
+      "coverage_shortfall": 0.4598295750435226,
+      "cv_interval_factor": 1.238637366197177,
+      "lomo_interval_factor": 1.2325114968450124,
+      "size_cut_interval_factor": 1.2478603852531214,
+      "distance_spearman": -0.5384615384615384
+    },
+    {
+      "model_name": "random_forest",
+      "is_blind": true,
+      "nominal_coverage": 0.9,
+      "cv_coverage": 0.9073538856775851,
+      "lomo_coverage": 0.3542441390460792,
+      "size_cut_coverage": 0.02673992673992674,
+      "coverage_shortfall": 0.5531097466315059,
+      "cv_interval_factor": 1.240685724416296,
+      "lomo_interval_factor": 1.230722947690569,
+      "size_cut_interval_factor": 1.2592460250656576,
+      "distance_spearman": -0.7692307692307693
+    }
+  ],
+  "worst_machine_coverage": 0.022222222222222223,
+  "worst_machine": "CMOD",
+  "worst_machine_model": "hybrid_gbm_s1",
+  "provenance": {
+    "path": "/Users/liamsalcedo/Documents/GitHub/FusionFlux/data/raw/hdb5_std5.csv",
+    "sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b",
+    "n_bytes": 879645,
+    "n_rows": 6228,
+    "n_columns": 15,
+    "matches_pin": true,
+    "pinned_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b"
+  }
+}
