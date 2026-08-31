@@ -1,5 +1,13 @@
 # FusionFlux
 
+[![CI](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml/badge.svg)](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml)
+[![Pages](https://github.com/lsalcedo100/FusionFlux/actions/workflows/pages.yml/badge.svg)](https://lsalcedo100.github.io/FusionFlux/)
+[![Python 3.9 - 3.12](https://img.shields.io/badge/python-3.9%20--%203.12-blue.svg)](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
+[![data: ITPA HDB5 STD5](https://img.shields.io/badge/data-ITPA%20HDB5%20STD5-8a3ffc.svg)](https://osf.io/drwcq)
+
+**[Read the interactive summary](https://lsalcedo100.github.io/FusionFlux/)** · [six-page paper](paper/paper.pdf) · [full writeup](results/RESULTS.md)
+
 `FusionFlux` asks how well machine learning predicts tokamak energy confinement time on **real experimental data**, and what happens to that answer when the model is asked about a machine nobody has built yet.
 
 The data is the ITPA Global H-mode Confinement Database, standard analysis set STD5: 6228 quasi-stationary time slices from 4471 discharges across 18 tokamaks. Every model is scored against the analytic IPB98(y,2) scaling law, the published physics baseline, rather than against a mean predictor, and under splits that hold out a whole discharge, then a whole machine, then a whole size range.
@@ -19,7 +27,7 @@ What is in the repository:
 
 | | |
 |---|---|
-| **Interactive summary** | One page: the reversal, the ITER-direction result, and a panel where you pick the held-out machine and watch the ranking rearrange. Built by `python3 site/build_page.py`. |
+| **[Interactive summary](https://lsalcedo100.github.io/FusionFlux/)** | One page: the reversal, the ITER-direction result, and a panel where you pick the held-out machine and watch the ranking rearrange. Published from `main` on every change to `results/`; rebuild locally with `python3 site/build_page.py`. |
 | **[Six-page paper](paper/paper.pdf)** (`paper/paper.tex`) | Abstract, method, all seven results, limitations. Build with `tectonic paper/paper.tex`. |
 | **[results/RESULTS.md](results/RESULTS.md)** | The full writeup: every claim, table, mechanism and limitation, with nothing left out. |
 
