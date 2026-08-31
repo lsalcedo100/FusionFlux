@@ -39,3 +39,6 @@ data/processed/
 # ITPA HDB5 STD5, https://osf.io/drwcq  (python3 hdb5.py download)
 data/raw/hdb5_std5.csv
 site/index.html
+
+# Baseline copy made by `make reproduce`.
+.reproduce_baseline/
