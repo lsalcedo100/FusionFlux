@@ -132,6 +132,41 @@ python3 analysis_conformal.py                  # adds the per-machine collapse, 
 
 Coverage is reported next to interval width throughout, because coverage alone is trivial to win: an interval wide enough to be useless covers everything. See [Result 7](../results/RESULTS.md#result-7-the-intervals-are-not-merely-wrong-they-are-confident).
 
+### Constrain the fit with dimensional analysis
+
+The Connor-Taylor hierarchy, derived in code from the definitions of rho*, beta and nu*, fitted through the KKT solver already in `scaling_law.py`, and scored under all three splits alongside the prior-shrinkage family it is measured against:
+
+```bash
+python3 analysis_dimensional.py   # Results 8 and 9: the constraint hierarchy, then the prior
+```
+
+Prints the distance from each constraint surface for the published law and the free refit, what each rung costs in sample, the three splits, the whole size sweep, and the targeting-against-isotropic control. The collisionless rung is the best blind model at the ITER-matched cut; cross-validation cannot select it, which is reported rather than glossed. See [Result 8](../results/RESULTS.md#result-8-one-line-of-physics-beats-every-model-built-so-far).
+
+### Repair the intervals, and find where the repair stops
+
+```bash
+python3 analysis_conformal_shift.py   # Result 10: three calibration schemes, two shifted arms
+```
+
+Calibrating on held-out *machines* rather than held-out discharges restores near-nominal coverage on an unseen machine and does not restore it across the size cut, which is what the exchangeability diagnosis predicts. Slow: it costs one extra fit per training machine per fold. See [Result 10](../results/RESULTS.md#result-10-repairing-the-interval-collapse-and-finding-the-limit-of-the-repair).
+
+### Replicate on rows the standard set does not contain
+
+```bash
+python3 -c "import replication; replication.download_db523()"   # the full DB5.2.3 revision, pinned
+python3 analysis_replication.py                                 # Result 11: both disjoint arms
+```
+
+Fetches the full database revision from the same OSF project, verifies its own SHA-256, and runs Result 4's protocol on the 5358 H-mode rows STD5 does not contain and on 3860 ohmic and L-mode rows scored against ITER89-P. See [Result 11](../results/RESULTS.md#result-11-the-reversal-reproduces-on-rows-this-database-never-contained).
+
+### Write down a prediction before the answer exists
+
+```bash
+python3 analysis_forecast.py      # Result 12: SPARC, JT-60SA and ITER, with intervals and a digest
+```
+
+Writes `results/forecast.json` with each model's prediction for three real machines, the date, the dataset digest, and a content digest over the forecast rows so a later edit leaves a mark. The parameter sets are checked against the IPB98(y,2) figure each design paper quotes. See [Result 12](../results/RESULTS.md#result-12-a-locked-prediction-for-three-machines-that-have-no-data).
+
 ### Predict
 
 ```bash

@@ -23,18 +23,31 @@ train:
 	python train_model.py train --allow-synthetic
 
 # Regenerate every reported number, figure and CSV under results/, then rebuild
-# the page from them. Needs the HDB5 dataset; `hdb5.py download` is a no-op if
-# it is already present and verifies its SHA-256 either way.
+# the page from them. Needs both datasets; the two download steps are no-ops if
+# the files are already present and verify their SHA-256 either way. DB5.2.3 is
+# the full database revision Result 11 replicates on, and it is 11 MB against
+# STD5's 0.9 MB, so the first run of this target is noticeably slower.
 #
-# Order matters: the later analyses read the earlier ones' artifacts.
+# Order matters: the later analyses read the earlier ones' artifacts. Results 8
+# to 12 come last because they reference the size cut and the hybrid that
+# Results 5 and 6 establish.
+#
+# Results 10 and 12 calibrate by holding out each training machine in turn,
+# which costs one extra fit per machine per fold. That makes them the slow ones,
+# a few minutes each rather than seconds.
 results:
 	python3 hdb5.py download
+	python3 -c "import replication; replication.download_db523()"
 	python3 analysis_scaling_law.py
 	python3 analysis_extrapolation.py
 	python3 analysis_flexibility_sweep.py
 	python3 analysis_size_extrapolation.py
 	python3 analysis_hybrid.py
 	python3 analysis_conformal.py
+	python3 analysis_dimensional.py
+	python3 analysis_conformal_shift.py
+	python3 analysis_replication.py
+	python3 analysis_forecast.py
 	python3 site/build_page.py
 
 # Rebuild only the page, for when results/ is current but the template changed.
@@ -87,7 +100,7 @@ reproduce:
 # upload. paper.tex names its figures bare and finds them through
 # \graphicspath; this target supplies the flat half of that path.
 #
-# The tarball carries only the two figures the paper actually includes, so a
+# The tarball carries only the figures the paper actually includes, so a
 # figure added to the paper without being added here fails the build on arXiv
 # rather than silently shipping without it. `tools/check_paper_submission.py`
 # guards that: it is the same check the test suite runs.
@@ -95,7 +108,7 @@ arxiv: paper/paper.tex
 	@python3 tools/check_paper_submission.py
 	@rm -rf build/arxiv && mkdir -p build/arxiv
 	@cp paper/paper.tex build/arxiv/
-	@cp results/extrapolation.png results/size_extrapolation.png build/arxiv/
+	@cp results/extrapolation.png results/size_extrapolation.png results/dimensional.png results/conformal_shift.png build/arxiv/
 	@cd build/arxiv && tar czf ../arxiv-submission.tar.gz paper.tex *.png
 	@echo "wrote build/arxiv-submission.tar.gz"
 	@echo "Build it exactly as arXiv will, from the flat directory:"

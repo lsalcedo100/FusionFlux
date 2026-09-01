@@ -38,6 +38,9 @@ data/processed/
 # Third-party scientific data: fetched on demand, never redistributed.
 # ITPA HDB5 STD5, https://osf.io/drwcq  (python3 hdb5.py download)
 data/raw/hdb5_std5.csv
+# The full DB5.2.3 revision Result 11 replicates on, from the same OSF project
+# (python3 -c "import replication; replication.download_db523()")
+data/raw/hdb5_db523.csv
 site/index.html
 
 # Baseline copy made by `make reproduce`.

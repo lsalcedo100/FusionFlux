@@ -22,6 +22,11 @@ on:
       - "analysis_*.py"
       - "hdb5.py"
       - "scaling_law.py"
+      - "dimensional.py"
+      - "spectral.py"
+      - "conformal_shift.py"
+      - "replication.py"
+      - "forecast.py"
       - "results/**"
       - "site/build_page.py"
       - ".github/workflows/reproduce.yml"
@@ -53,16 +58,21 @@ jobs:
       # Cache the OSF download between runs. The key is the pinned SHA-256, so
       # a change to the pin misses the cache and refetches rather than silently
       # analysing the old bytes.
-      - name: Cache the HDB5 dataset
+      - name: Cache the HDB5 datasets
         uses: actions/cache@v4
         with:
-          path: data/raw/hdb5_std5.csv
-          key: hdb5-${{ hashFiles('hdb5.py') }}
+          path: |
+            data/raw/hdb5_std5.csv
+            data/raw/hdb5_db523.csv
+          key: hdb5-${{ hashFiles('hdb5.py', 'replication.py') }}
 
-      - name: Fetch and verify the dataset
+      - name: Fetch and verify the datasets
+        # Both are pinned by SHA-256 and verified on the staged download, so a
+        # revision upstream fails here rather than quietly changing a result.
         run: |
           python3 hdb5.py download
           python3 hdb5.py verify
+          python3 -c "import replication; replication.download_db523()"
 
       # Keep the committed artifacts to compare against, since the analyses
       # overwrite results/ in place.

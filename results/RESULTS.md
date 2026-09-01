@@ -1,11 +1,14 @@
 # Confinement scaling as a linear algebra problem
 
-Seven results on the ITPA global H-mode confinement database (HDB5, standard
+Twelve results on the ITPA global H-mode confinement database (HDB5, standard
 analysis set STD5). Results 1 to 3 are regenerated end to end by `python3
 analysis_scaling_law.py`, Result 4 by `python3 analysis_extrapolation.py`,
 Result 4e by `python3 analysis_flexibility_sweep.py`, Result 5 by `python3
-analysis_size_extrapolation.py`, Result 6 by `python3 analysis_hybrid.py` and
-Result 7 by `python3 analysis_conformal.py`.
+analysis_size_extrapolation.py`, Result 6 by `python3 analysis_hybrid.py`,
+Result 7 by `python3 analysis_conformal.py`, Results 8 and 9 by `python3
+analysis_dimensional.py`, Result 10 by `python3 analysis_conformal_shift.py`,
+Result 11 by `python3 analysis_replication.py` and Result 12 by `python3
+analysis_forecast.py`.
 
 Results 1 to 5 are a negative result: the models that win cross-validation lose
 on a machine they have not seen, three separate ways. Result 6 builds the model
@@ -13,13 +16,30 @@ that diagnosis implies and finds it wins in the one direction ITER sits in.
 Result 7 asks what any of them can say about their own uncertainty out there,
 and the answer is the sharpest number in the document.
 
-Three of the sections below exist because an earlier draft's own limitations
+Results 8 to 12 answer the four objections that leaves standing. Result 8 puts
+physics into the fit as a *constraint* rather than as a feature or a penalty,
+which turns out to beat every model built here at the ITER-matched cut, for
+free and with no hyperparameter. Result 9 tries the same physics as a prior
+aimed at the weak direction of Result 3 and finds it worth much less, which is
+the comparison that makes Result 8 mean something. Result 10 repairs Result 7's
+interval collapse, and confirms the diagnosis by failing to repair it exactly
+where the diagnosis says it cannot. Result 11 reproduces the whole reversal on
+5358 rows STD5 does not contain and again on a different confinement regime
+against a different published law. Result 12 writes down what each model
+predicts for SPARC, JT-60SA and ITER, before the answers exist.
+
+Six of the sections below exist because an earlier draft's own limitations
 section said its conclusions were under-determined, and it was cheaper to run
 the missing experiment than to keep the caveat. Result 2b reports the exponent
 intervals at the resampling unit the claim is actually about, and they are 6.3x
 wider than the ones first published here. Result 2c measures a numerical claim
 that was previously only asserted. Result 4e turns a three-point trend into a
-36-cell grid. Two of the three make this document's own headline weaker.
+36-cell grid. Results 9, 10 and 11 each close a gap the Limitations section
+named in as many words: a penalty aimed at the weak direction of Result 3 that
+had never been tried, an interval collapse reported without a repair, and every
+claim in the document resting on a single standard set. Four of the six make
+this document's own headline weaker, and Result 9 reports a mostly negative
+answer to a question it was built to answer positively.
 
 **Data.** 6228 quasi-stationary time slices from 4471 discharges across 18
 tokamaks (JET, ASDEX Upgrade, DIII-D, JT-60U, C-Mod, NSTX, MAST, START and
@@ -1216,6 +1236,586 @@ than to the power law. The closing number here is sharper. At that same cut the
 best cross-validated model in the repository issues a 90% interval that contains
 **3% of the truth**, at a width that says it is confident.
 
+## Result 8: one line of physics beats every model built so far
+
+Results 4 to 7 share an omission. Every model in them learns its functional form
+from the data and is held back, if at all, by a penalty chosen by
+cross-validation. None of them is told any physics. That is a strange gap,
+because the field has known since Connor and Taylor (1977) that a confinement
+scaling law is not free. If the plasma obeys some set of equations, those
+equations are invariant under a family of scale transformations, and that
+invariance forces the dimensionless confinement time to depend only on
+dimensionless parameters:
+
+    Omega_i tau_E = F(rho*, beta, nu*, q, eps, kappa, M)
+
+Requiring the engineering power law to be expressible that way imposes **linear
+equality constraints on the exponents**, one per independent transformation the
+physics admits. Which is to say: a physics assumption is a matrix `C` and a
+vector `d`, the fit is `min ||Xb - y||^2` subject to `Cb = d`, and
+`scaling_law.solve_constrained_lstsq` has been sitting in this repository
+solving exactly that since Result 1. Nothing new is needed to run the
+experiment; the physics enters as data.
+
+`dimensional.py` derives the hierarchy in code rather than quoting exponent
+vectors from a paper, for the same reason nothing else here is hand-copied: a
+transcription error in a constraint row produces a clean-looking fit obeying the
+wrong physics, and nothing downstream would notice. Holding a dimensionless
+group fixed is one linear condition on the four scale freedoms `(l, b, t, m)`;
+the admissible transformations are the null space of the conditions stacked
+together, and each one is a constraint row. More physics assumed means fewer
+groups that must be held fixed, means a larger family, means more constraints:
+
+| model | groups held fixed | constraints | what it assumes |
+|---|---|---|---|
+| free | none | 0 | nothing |
+| kadomtsev | rho*, beta, nu* | 1 | a dimensionless description exists at all |
+| collisionless | rho*, beta | 2 | and tau_E does not depend on collisionality |
+| electrostatic | rho* | 3 | and it does not depend on beta either |
+
+### Result 8a: the derivation checks out against a law published in 1999
+
+The distance from a set of exponents to a constraint surface is
+`||Cb - d||`, and because the constraint rows are an orthonormal basis it is a
+genuine Euclidean distance in exponent space rather than a quantity whose size
+depends on how the rows were scaled.
+
+| surface | IPB98(y,2), published | free refit (Result 2) |
+|---|---|---|
+| kadomtsev | **0.00096** | 0.0031 |
+| collisionless | **0.0045** | 0.064 |
+| electrostatic | 0.501 | 0.817 |
+
+IPB98(y,2)'s exponents are published to two decimal places, so a residual of
+0.001 is *inside the rounding of the law's own coefficients*. A scaling written
+down in 1999 landing on a surface derived here from the definitions of rho*,
+beta and nu* is not something a mistaken derivation does by accident, and it is
+the check that licenses everything below. The third surface is genuinely
+violated by both, so the hierarchy discriminates rather than being satisfied by
+everything.
+
+The interesting column is the second one. **The free refit satisfies the
+Kadomtsev constraint on its own**, at 0.0031, without being told to: the data
+already respects dimensional consistency. It does not satisfy the collisionless
+one, at 0.064, where the published law sits at 0.0045. So the two constraints
+are doing entirely different jobs, and the rest of Result 8 is what those jobs
+turn out to be worth.
+
+### Result 8b: what the constraints cost, which is almost nothing
+
+| model | in-sample RMSLE | grouped CV |
+|---|---|---|
+| power law, unconstrained | 0.1808 | 0.181 |
+| power law, Kadomtsev | **0.1808** | 0.181 |
+| power law, collisionless | 0.1818 | 0.182 |
+| power law, electrostatic | 0.2245 | 0.225 |
+
+The Kadomtsev constraint is **free**. It removes a degree of freedom and costs
+nothing at four decimal places, because Result 8a already showed the data lands
+on that surface unaided. The collisionless constraint costs 0.001. The
+electrostatic one costs 0.044, which is a real amount, and it is the rung where
+the physics assumption is doing violence to the data rather than describing it.
+
+### Result 8c: at the ITER-matched cut, the constrained law is the best blind model here
+
+| model | CV | leave-one-machine-out | **ITER-matched cut** | skill |
+|---|---|---|---|---|
+| **power law, collisionless** | 0.182 | 0.206 | **0.183** | **1.01** |
+| IPB98(y,2), analytic (not blind) | 0.199 | 0.188 | 0.194 | 1.00 |
+| hybrid, Result 6 | 0.151 | 0.246 | 0.206 | 0.99 |
+| power law, electrostatic | 0.225 | 0.241 | 0.238 | 0.97 |
+| power law, Kadomtsev | 0.181 | 0.211 | 0.254 | 0.95 |
+| ridge, log-linear | 0.181 | 0.214 | 0.278 | 0.93 |
+| power law, unconstrained | 0.181 | 0.214 | 0.279 | 0.93 |
+| random forest | 0.128 | 0.465 | 0.938 | 0.41 |
+| hist gradient boosting | 0.130 | 0.359 | 1.072 | 0.31 |
+
+**0.183 is the best score any blind model in this repository achieves at the
+ITER-matched cut.** It beats Result 6's hybrid, which held that position at
+0.206, and it beats the analytic IPB98(y,2) at 0.194, a law that was fitted with
+the held-out machines included and is therefore not blind. Its skill score
+passes 1.00, which is the first time anything here has.
+
+It costs one line of physics, has no hyperparameter, and there is nothing to
+tune: the difference from `ridge_loglinear` in the same table is entirely the
+constraint, because both are log-linear least squares on the same nine features.
+
+The pooled number is dominated by JET and JET-ILW, so the per-machine breakdown
+is the check that matters:
+
+| model | JET | JET-ILW | JT-60U |
+|---|---|---|---|
+| power law, collisionless | **0.149** | **0.224** | 0.303 |
+| IPB98(y,2), analytic (not blind) | 0.148 | 0.257 | 0.275 |
+| hybrid, Result 6 | 0.162 | 0.266 | **0.281** |
+| ridge, log-linear | 0.223 | 0.346 | 0.440 |
+
+Read honestly: the constrained law beats every *blind* model on two of the three
+machines and loses JT-60U to the hybrid. Against the non-blind analytic law it
+wins one, ties one and loses one. The pooled win is real, and it is a win on
+rows more than a win on machines, which three machines cannot settle.
+
+Paired over the 13 machines of Result 4, the constraint is worth
+**-0.009 [-0.018, -0.001]** against plain ridge and **-0.041 [-0.091, -0.004]**
+against the hybrid, and it is worse on 5 of 13 in both comparisons. So on
+leave-one-machine-out the constraint buys very little. Almost all of what it buys
+is in the size direction, which is the direction ITER is in.
+
+### Result 8d: the whole size sweep, where the two constraints separate
+
+Result 6e's lesson applies: a model that wins at one rung of a sweep and loses
+at the others has shown a coincidence, not a mechanism. Scored at every cut,
+with the eight well-powered ones (1000+ training rows) marked:
+
+| train machines | size ratio | powered | unconstrained | Kadomtsev | collisionless | IPB98 (not blind) |
+|---|---|---|---|---|---|---|
+| 3 | 5.02 | no | 6.004 | 5.020 | 5.082 | 0.200 |
+| 6 | 3.68 | no | 0.971 | 0.274 | 0.331 | 0.199 |
+| 9 | 2.43 | no | 0.269 | 0.259 | 0.277 | 0.199 |
+| 10 | 2.03 | **yes** | 0.240 | 0.215 | 0.220 | 0.196 |
+| 11 | 2.03 | **yes** | 0.230 | 0.206 | 0.214 | 0.196 |
+| 12 | 2.01 | **yes** | 0.256 | 0.251 | 0.198 | 0.195 |
+| 13 | 2.00 | **yes** | 0.246 | 0.236 | 0.189 | 0.202 |
+| 14 | **1.82** | **yes** | 0.279 | 0.254 | **0.183** | 0.194 |
+| 15 | 1.38 | **yes** | 0.280 | 0.254 | 0.184 | 0.194 |
+| 16 | 1.14 | **yes** | 0.189 | 0.177 | 0.175 | 0.157 |
+| 17 | 1.13 | **yes** | 0.285 | 0.284 | 0.268 | 0.275 |
+
+Two things, and they are different findings about different constraints.
+
+**The Kadomtsev constraint beats the unconstrained fit at 15 of 15 cuts, and
+costs nothing in sample.** That is as close to a free lunch as anything in this
+document. The mechanism is visible in the underpowered rungs: at six training
+machines the unconstrained fit scores 0.971 and the constrained one 0.274. A
+constraint the data already satisfies still buys robustness, because it stops
+the fit wandering along that direction when the training set is small or shifted.
+Satisfying a constraint on average is not the same as being unable to violate it.
+
+**The collisionless constraint beats the unconstrained fit at 8 of 8 well-powered
+cuts**, and beats the non-blind analytic law at 4 of those 8, including the three
+largest extrapolations. Below the well-powered line it is *worse* than Kadomtsev
+at every rung. It is the stronger assumption and it pays off only where there is
+enough data to be worth constraining, which is a coherent story and not one that
+was arranged in advance.
+
+### What Result 8 does not show
+
+Cross-validation cannot select this model. Under grouped CV the collisionless
+rung scores 0.1822 against 0.1812 for the unconstrained fit, so a practitioner
+tuning on CV would reject it, exactly as Result 6b found for the hybrid's
+shrinkage. The difference is that the rung here is not a hyperparameter: you
+choose "collisionless" because you believe the plasma is collisionless, which is
+an a priori physics judgement about the machine you are extrapolating to, and
+ITER is expected to be *more* collisionless than the devices in this database,
+not less. That is a defensible non-data-driven selection, and it is also an
+untested assumption about ITER rather than a result.
+
+The electrostatic rung is a genuine failure of the "more physics is better"
+reading: it is the strongest assumption, it costs the most in sample, and it
+lands at 0.238 rather than beating 0.183. There is an optimum in the middle of
+the hierarchy and nothing here predicts where it is in advance.
+
+## Result 9: the same physics as a prior is worth much less than as a constraint
+
+Result 8 injects IPB98's *physics*. It never tells the fit what the exponents
+are, only which directions in exponent space are forbidden. The obvious
+alternative is to hand over the answer itself, and Result 3 says exactly where
+to hand it over: **77% of the published-versus-refit disagreement lies in the
+single weakest singular direction, which carries 0.3% of the matrix's variance.**
+The disagreement is concentrated precisely where the data has no opinion.
+
+`results/RESULTS.md` listed the absence of this experiment as a limitation in as
+many words, so it is worth being explicit that this section closes that gap: the
+flexibility sweep of Result 4e varies polynomial degree "under an isotropic L2
+penalty throughout", and a penalty "aimed at the weak direction from Result 3"
+was named there as untested.
+
+There is a nice wrinkle first. Result 1 found that the IPB98 prediction, added
+to the feature matrix as a tenth feature, is an *exact* log-linear combination
+of the other eight, so for a log-linear model it contributes literally nothing.
+A published physics law, handed to the model as data, is not information. The
+same law used as a **shrinkage target** is a different object: it does not
+enlarge the space of functions the model can express, it decides which member of
+that space the fit lands on where the data is indifferent. Same information,
+injected the other way round, and this time not a no-op.
+
+`spectral.py` minimises `||Xb - y||^2 + alpha ||W V^T (b - b_prior)||^2` with `V`
+the right singular vectors and three weightings: `isotropic` (`W = I`, the
+control), `spectral` (`W = diag(s_1/s_i)`, the literal targeting) and
+`truncated` (take the data's answer in the `k` best-determined directions and
+the prior's in the rest). The exponents are shrunk; the multiplying coefficient
+is always refitted, which makes the far endpoint "IPB98's exponents renormalised
+to this database" rather than something undefined.
+
+### Result 9a: targeting works, at every matched penalty strength
+
+RMSLE at the ITER-matched cut:
+
+| alpha | isotropic | spectral | gain from targeting |
+|---|---|---|---|
+| 1 | 0.279 | 0.265 | +0.013 |
+| 10 | 0.277 | 0.257 | +0.019 |
+| 100 | 0.264 | 0.255 | +0.010 |
+| 1000 | 0.240 | **0.215** | **+0.025** |
+| 10000 | 0.199 | 0.190 | +0.009 |
+| 100000 | 0.187 | 0.186 | +0.001 |
+
+Aiming the penalty at the ill-determined directions beats spreading it evenly at
+**every** shared penalty strength. That is the control comparison working: both
+arms carry the identical prior, so the gap is attributable to the targeting and
+nothing else. Result 3's diagnosis is actionable.
+
+### Result 9b: and it is worth less than just taking the prior
+
+| k (directions taken from the data) | CV | leave-one-machine-out | ITER-matched cut |
+|---|---|---|---|
+| 8 (the unconstrained fit) | 0.181 | 0.214 | 0.279 |
+| 7 (drop only the weakest) | 0.184 | 0.204 | 0.247 |
+| 6 | 0.185 | 0.199 | 0.296 |
+| 5 | 0.188 | 0.215 | 0.269 |
+| 4 | 0.189 | 0.211 | 0.270 |
+| 3 | 0.190 | 0.201 | 0.272 |
+| 2 | 0.190 | 0.190 | 0.190 |
+| 1 | 0.190 | 0.188 | **0.184** |
+| 0 (the prior, renormalised) | 0.192 | 0.191 | 0.186 |
+
+Result 3 made a sharp prediction here and it is only half right. Dropping the
+single weakest direction does help, and by a real amount: 0.279 to 0.247 at the
+ITER cut, and 0.214 to 0.204 on a held-out machine. But the sweep is **not
+monotone in k** (k=6 is worse than both its neighbours at 0.296), so "drop the
+weak directions" is not a reliable recipe, and the good scores only arrive at
+k=2, k=1 and k=0, which is to say when the data's contribution has been thrown
+away almost entirely.
+
+The honest summary of Result 9 is therefore mostly negative, and the comparison
+with Result 8 is the point:
+
+- The best this whole family reaches at the ITER cut is **0.184**, and it gets
+  there by discarding the data and keeping IPB98's exponents with a refitted
+  coefficient. A small real finding on its own: renormalising the published
+  coefficient to this database improves on the analytic law's 0.194.
+- Result 8's collisionless constraint reaches **0.183** while *keeping* the
+  data's fit, with no prior, no alpha and no rank to choose.
+
+**A constraint is much weaker information than a prior: it names a surface
+rather than a point. It is also worth more.** Telling the model which directions
+are forbidden lets it use the data everywhere else; telling it the answer means
+the answer is the best it can do.
+
+## Result 10: repairing the interval collapse, and finding the limit of the repair
+
+Result 7 ends on a diagnosis and stops. Nominal 90% intervals cover 90% under
+grouped cross-validation, 35% on a machine the model has never seen, and 3%
+across the ITER-matched size cut, at essentially unchanged width. The reading
+offered there is that this is not a defect in conformal prediction but an
+assumption being false, measured: split conformal guarantees coverage under
+*exchangeability* of the calibration and test scores, and those arms break
+exchangeability deliberately.
+
+A diagnosis of that shape makes a prediction, and the prediction is unusually
+easy to falsify. If the failure really is exchangeability, then calibrating on
+the right unit should repair it, and should repair it **exactly as far as that
+unit reaches, and no further**:
+
+> On leave-one-machine-out, calibrating on held-out *machines* rather than
+> held-out discharges should largely restore coverage. Calibration machines and
+> the test machine are all just machines from this database.
+>
+> On the ITER-matched cut it should not, however carefully it is done, because
+> every calibration machine is smaller than every test machine and no
+> recalibration makes those two exchangeable. Only scaling the interval by
+> extrapolation distance can help there, and only as far as the calibration set
+> can see the relationship.
+
+Both halves land. That is worth more than a repair that worked everywhere, which
+would have suggested the original diagnosis was wrong about the cause.
+
+`conformal_shift.py` implements two schemes against Result 7's as a baseline.
+`machine_cv` builds the calibration set by holding out each *training* machine
+in turn and pooling the absolute log residuals, so the calibration scores are
+drawn from "error when predicting a device the model has never seen", which is
+the quantity the test rows are also drawn from. `machine_cv_distance` adds a
+nonconformity score of `|residual| / sigma(d)` with `sigma` fitted on those same
+residuals, so the interval widens with extrapolation distance. The `split` arm
+is delegated to `hdb5._conformal_arm` rather than reimplemented, so the baseline
+is byte-for-byte Result 7's procedure.
+
+### Result 10a: on an unseen machine, the repair is essentially complete
+
+Nominal 90%. `x` is the multiplicative half-width: the interval runs from
+prediction / x to prediction * x.
+
+| model | split (Result 7) | machine-CV | machine-CV + distance |
+|---|---|---|---|
+| IPB98(y,2), analytic (not blind) | 89% x1.40 | 89% x1.40 | 89% x1.41 |
+| ridge, log-linear | 83% x1.33 | **91%** x1.42 | 92% x1.43 |
+| power law, collisionless | 85% x1.33 | **91%** x1.40 | 92% x1.42 |
+| random forest | **35%** x1.23 | **88%** x2.03 | 88% x1.71 |
+| hist gradient boosting | **45%** x1.23 | **90%** x1.83 | 89% x1.71 |
+
+Every model returns to within two points of nominal, the tree ensembles
+included: **the random forest goes from 35% to 88%**. Changing nothing about the
+model and nothing about the conformal construction, only the unit the
+calibration residuals are drawn from, recovers a guarantee that had failed by 55
+points.
+
+The width column is where the honesty is. The random forest's interval widens
+from x1.23 to x2.03, which is the repair telling the truth: a model that is
+genuinely much worse on an unseen machine *needs* a much wider interval, and
+Result 7's complaint was precisely that it was not getting one. Nothing here
+makes the random forest a good model. It makes its interval an honest one.
+
+### Result 10b: across the size cut, it is not, and that is the point
+
+| model | split (Result 7) | machine-CV | machine-CV + distance |
+|---|---|---|---|
+| IPB98(y,2), analytic (not blind) | 88% x1.38 | 89% x1.38 | 87% x1.36 |
+| **power law, collisionless** | **91%** x1.36 | **95%** x1.43 | **92%** x1.38 |
+| ridge, log-linear | 70% x1.37 | 77% x1.43 | 82% x1.46 |
+| random forest | **3%** x1.26 | 29% x1.91 | **40%** x2.12 |
+| hist gradient boosting | **0%** x1.25 | 4% x1.63 | **13%** x1.79 |
+
+Nothing recovers nominal. The random forest moves from 3% to 40% and the
+gradient booster from 0% to 13%, which is a large relative improvement and still
+a failed interval. Recalibrating on training machines cannot help here, because
+the property that breaks is not "the test machine is unfamiliar" but "the test
+machines are systematically larger than every machine available to calibrate on",
+and no amount of resampling the small machines produces a sample exchangeable
+with the large ones. This is the predicted limit, and it holds.
+
+Distance scaling is the only thing that moves the needle at this cut, and it
+moves it by less than the size of the failure. **The honest summary is that
+there is no calibration scheme in this document that makes a tree ensemble's
+interval usable at the ITER-matched cut.** The model has to change, not the
+interval around it.
+
+Which is where Result 8 reappears. **The collisionless-constrained power law is
+the only blind model in either table whose intervals hold at the ITER-matched
+cut**, and it holds them at 91% under plain split conformal, before any of this
+machinery is applied. It has the best point error at that cut (Result 8c) and
+the only approximately valid interval, and it gets both from the same one line
+of dimensional analysis. That was not designed; Result 8 was built for the point
+error and the coverage was found afterwards.
+
+### Result 10c: the interval-growth rate recovers Result 4b from a different quantity
+
+The distance scaling fits `sigma(d) = exp(c0 + c1 d)` to the calibration
+residuals rather than assuming a shape, so `c1` is a measurement: it is how fast
+each model's error actually grows with extrapolation distance, as seen by a
+calibration set drawn from held-out machines. A rank correlation between width
+and distance would report only this number's sign, because the half-width is a
+monotone function of the distance by construction, so the slope is what is
+reported.
+
+| model | split (Result 7) | machine-CV | machine-CV + distance |
+|---|---|---|---|
+| power law, collisionless | +0.000 | +0.000 | **-0.055** |
+| IPB98(y,2), analytic (not blind) | +0.000 | +0.000 | **-0.031** |
+| ridge, log-linear | +0.000 | +0.000 | +0.030 |
+| hist gradient boosting | +0.000 | +0.000 | **+0.127** |
+| random forest | +0.000 | +0.000 | **+0.190** |
+
+The exact zeros in the first two columns are the property Result 7 objected to,
+stated as a number: under both of those schemes every row of a given model gets
+the identical half-width, so the interval carries no information about how far
+out of distribution the row sits.
+
+The third column splits the models exactly where Result 4b split them. There,
+per-machine error tracked Mahalanobis distance at rho = **+0.85** for the random
+forest and rho = **-0.06** for the log-linear law. Here, measured on a different
+quantity by a different method, the random forest's interval is told to grow at
+**+0.190** per unit distance and the histogram booster's at +0.127, while the
+analytic law sits at -0.031 and the collisionless-constrained law at -0.055.
+
+**The two physics-shaped models have slightly negative slopes**, which is the
+calibration set saying their error does not grow with distance at all, so their
+intervals should not either. That is not something the method was told; it is
+what the residuals said. Result 4b's finding arrives twice, from per-machine
+error ranks and from fitted interval growth, and the second route also explains
+why distance scaling helps the trees at the size cut and does nothing for the
+power laws: there is nothing there for it to correct.
+
+### What Result 10 does not show
+
+The machine-CV scheme is not free. It costs one extra model fit per training
+machine per fold, which is what makes Results 10 and 12 the slow scripts in this
+repository. For thirteen machines that is a 13x fit cost for the calibration
+alone.
+
+It also has no finite-sample guarantee here. The CV+ and jackknife+ family it
+resembles is proved under exchangeability of the *groups*, and thirteen tokamaks
+drawn from the set of tokamaks that happen to have been built are not obviously
+an exchangeable sample of anything. The near-nominal coverage in Result 10a is
+an empirical finding on this database, not a theorem being confirmed.
+
+Coverage is reported here without an interval of its own, for the same reason
+Result 7c gives: these are proportions over as few as 39 rows on the small
+machines, so the per-machine numbers carry binomial uncertainty of ten points or
+more. The pooled contrasts, 35% against 88% and 3% against 40%, are far larger
+than that noise. The one-point differences between the two machine-level schemes
+in Result 10a are not, and nothing here rests on them.
+
+Finally, the slopes in Result 10c are small in absolute terms. At +0.190 the
+random forest's interval grows by a factor of 1.21 per unit of Mahalanobis
+distance, so across the size cut's test range it spans a factor of about 2.6.
+That is a real grading, and it is also why distance scaling moves the random
+forest only from 29% to 40% rather than to nominal: the correction is pointing
+the right way and is far too small to close a gap of that size. It is a fitted
+correction with the failure modes of one, and the numbers it fits are estimated
+from thirteen machines.
+
+## Result 11: the reversal reproduces on rows this database never contained
+
+Everything above rests on one file, and the first limitation this document lists
+says so. STD5 is 6228 quasi-stationary ELMy H-mode slices selected by the ITPA's
+standard-set criteria, and a reader is entitled to ask whether the reversal is a
+property of that selection rather than of the problem.
+
+The answer is upstream of the file already in use. The same OSF project publishes
+the full database revision, `DB5.2.3.csv`: 14153 rows and 192 columns against
+STD5's 6228 and 15, pinned here by SHA-256 exactly as STD5 is. Matching the two
+on `(tokamak, shot, time)` shows STD5 is an ELMy-H-mode quality selection out of
+it and leaves two populations this repository has never analysed.
+
+| arm | rows | discharges | machines scored | R range | shared with STD5 | baseline |
+|---|---|---|---|---|---|---|
+| `disjoint_h` | 5358 | 3199 | 12 | 0.29 to 3.46 m | **0** | IPB98(y,2) |
+| `non_h` | 3860 | 1197 | 5 | 0.56 to 3.02 m | **0** | ITER89-P |
+
+`disjoint_h` is H-mode rows STD5 does not contain, either plain `H` phase or
+rows that failed one of the standard set's other quality criteria. Same regime,
+same devices, disjoint rows. `non_h` is ohmic, L-mode and radiative-improved
+rows, a genuinely different confinement regime on a machine set that includes
+TEXTOR, a limiter tokamak contributing 1435 rows and absent from the H-mode
+analysis entirely.
+
+The non-H arm is scored against **ITER89-P** (Yushmanov et al., Nucl. Fusion 30
+1999, 1990) rather than IPB98(y,2), because an H-mode law is the wrong baseline
+for L-mode plasmas: every model would beat it for reasons that have nothing to
+do with this argument. Swapping the baseline is what makes the arm a test of the
+*structure* rather than of IPB98 specifically.
+
+### The structure reproduces in both arms
+
+**`disjoint_h`**, 12 machines:
+
+| model | CV | leave-one-machine-out | ratio | CV rank | LOMO rank |
+|---|---|---|---|---|---|
+| hist gradient boosting | 0.147 | 0.484 | 3.30x | **1** | 4 |
+| random forest | 0.148 | 0.541 | 3.65x | 2 | 5 |
+| ridge, log-linear | 0.215 | 0.339 | 1.58x | 3 | 3 |
+| power law, collisionless | 0.215 | 0.323 | 1.50x | 4 | 2 |
+| IPB98(y,2) (not blind) | 0.251 | 0.279 | 1.11x | 5 | **1** |
+
+**`non_h`**, 5 machines:
+
+| model | CV | leave-one-machine-out | ratio | CV rank | LOMO rank |
+|---|---|---|---|---|---|
+| random forest | 0.126 | 0.870 | 6.92x | **1** | 5 |
+| hist gradient boosting | 0.126 | 0.851 | 6.75x | 2 | 4 |
+| ridge, log-linear | 0.235 | 0.412 | 1.75x | 3 | 3 |
+| power law, collisionless | 0.236 | 0.343 | 1.45x | 4 | **1** |
+| ITER89-P (not blind) | 0.387 | 0.382 | 0.99x | 5 | 2 |
+
+The CV column is **exactly reversed** against the leave-one-machine-out column
+in both arms. On the disjoint H-mode rows the best cross-validated model beats
+the published law by **42%**, within a point of the 41% headline this document
+opens with, computed on rows that headline never saw. On the L-mode rows it beats
+ITER89-P by **67%** and then loses to it on 5 of 5 machines.
+
+Counting machine-model pairs where a tree ensemble is worse than the published
+law under leave-one-machine-out: **19 of 24** on `disjoint_h`, **10 of 10** on
+`non_h`. The degradation ratio separates the families in the same order as
+Result 4, and more extremely: 6.9x on the L-mode arm against 3.6x here.
+
+Two secondary observations worth recording. Result 8's collisionless constraint
+improves on plain ridge in both arms without being refitted or retuned (0.323
+against 0.339, and 0.343 against 0.412), and on the L-mode arm it is the best
+model on an unseen machine outright, ahead of the published L-mode law. And
+IPB98(y,2) scores 0.455 on the non-H rows against ITER89-P's 0.387, which
+confirms the baseline swap was the right call rather than a convenience.
+
+### What Result 11 does not show
+
+The `non_h` arm scores five machines. That is too few for its numbers to carry a
+claim alone and every one of them is reported with that attached; it is here
+because it changes the regime and the baseline law, which the other arm does not.
+
+Neither arm is an independent *database*. Both come from the same ITPA
+collection, the same devices and largely the same experimental campaigns as
+STD5, so this rules out the standard set's selection criteria and the ELMy
+H-mode regime as explanations. It does not rule out something common to the
+ITPA's measurement conventions across all of it. A genuinely independent
+confinement database, a stellarator set or an L-mode set assembled by different
+people, remains untested.
+
+The two arms also differ from STD5 in quality, not only in membership.
+`disjoint_h` is in part the rows the standard set *rejected*, so its absolute
+errors are worse than STD5's throughout (IPB98 scores 0.251 here against 0.199
+there). That is expected and it does not affect the ranking comparison, which is
+within-arm.
+
+## Result 12: a locked prediction for three machines that have no data
+
+Every result above is retrospective. It holds out a machine built decades ago,
+predicts it, and scores against a number already in the file. That is the only
+way to measure a method and it leaves the central claim untested in the one
+direction that matters, because a next-step device is not a held-out row.
+
+`results/forecast.json` records what each model says about three real machines,
+with intervals, before the answers exist. It carries the date, the SHA-256 of
+the dataset the models were fitted on, and a digest over the forecast rows, so a
+later edit leaves a mark rather than passing silently.
+
+| | SPARC | JT-60SA | ITER |
+|---|---|---|---|
+| major radius | 1.85 m | 2.96 m | 6.2 m |
+| status | commissioning | **operating** | under construction |
+| distance from training data | 6.9 | 3.8 | 4.7 |
+| IPB98(y,2), analytic (not blind) | 0.765 s | 0.479 s | **3.591 s** |
+| power law, collisionless | 0.724 s | 0.428 s | 2.837 s |
+| ridge, log-linear | 0.720 s | 0.444 s | 2.858 s |
+| random forest | **0.136 s** | 0.449 s | **0.435 s** |
+| hist gradient boosting | 0.305 s | 0.418 s | 0.444 s |
+
+The parameter sets are published design values and each reproduces the
+confinement time its source quotes: SPARC to 0.6% and ITER to 2.9%. That is the
+check that the inputs describe the machines they claim to, and it pins the whole
+input vector at once, since no single parameter can be badly wrong while the
+product still lands on the published figure.
+
+**The table is the thesis of this document in one place.** On JT-60SA, which
+sits *inside* the database's size range, all five models agree to within 15%.
+On ITER, 1.82x beyond it, they disagree by a factor of **8.3**: the analytic law
+says 3.591 s and the random forest says 0.435 s.
+
+That gap is not a tuning failure and cannot be closed. Result 4c is arithmetic:
+a tree ensemble predicts by averaging training targets, so its output cannot
+exceed the largest one, which here is **1.321 s**. The random forest that beats
+the published law by 41% under cross-validation is incapable of returning ITER's
+predicted confinement time whatever it is asked, and its nominal 90% interval at
+ITER runs from 0.19 s to 0.98 s, which does not contain the physics answer or
+anything close to it. Result 7's finding, that the intervals are confidently
+wrong rather than usefully vague, applied to a specific machine.
+
+One thing the table shows that nothing above anticipated: **SPARC is further
+from the training data than ITER is**, at 6.9 against 4.7, despite being smaller
+than JT-60U. Its 12.2 T field is far outside a database whose maximum is around
+4 T, so it is a field and density extrapolation rather than a size one. The
+Mahalanobis distance is not a proxy for size, and Result 5's size axis is not the
+only direction a next-step device leaves the data in.
+
+### What Result 12 does not show
+
+It is a forecast, so it shows nothing yet. The intervals use Result 10's
+machine-level calibration with distance scaling, which is the best-calibrated
+scheme measured here out of distribution and still carries no guarantee at these
+distances. The forecast is conditional on the published operating points, which
+will not be exactly what the machines run at; `p_loss_mw` in particular is a
+derived, scenario-dependent quantity. JT-60SA is operating now and is the first
+of the three likely to be checkable, and it is also the one where the models
+agree, so it tests whether any of them is right rather than which.
+
 ## Limitations
 
 - **The refit population is not IPB98's population.** No ITPA standard-set
@@ -1332,6 +1932,61 @@ best cross-validated model in the repository issues a 90% interval that contains
   before the fact. Its practical effect there is limited, because the selected
   models are tree ensembles rather than linear ones, but the ridge model in the
   same comparison was fitting an arbitrary point in a two-dimensional family.
+- **Result 8's rung cannot be chosen by cross-validation.** Under grouped CV
+  the collisionless constraint scores 0.1822 against 0.1812 unconstrained, so
+  any procedure selecting on CV rejects the model that wins at the ITER cut.
+  Choosing it requires an a priori physics judgement that the target device is
+  collisionless. ITER is expected to be more collisionless than the machines
+  here, which is the argument for it, but that expectation is an assumption
+  about ITER rather than a result of this analysis. This is the same failure
+  Result 6b reports for the hybrid's shrinkage and it is not fixed here.
+- **Result 8's headline rests on three machines.** The ITER-matched cut holds
+  out JET, JET-ILW and JT-60U, and 1762 of the 2730 rows are JET. The
+  constrained law beats every blind model on two of the three and loses JT-60U
+  to the hybrid; against the non-blind analytic law it wins one, ties one and
+  loses one. The pooled 0.183 is a win on rows more than a win on machines, and
+  three machines cannot settle which.
+- **Result 8 constrains exponents, not physics.** The Connor-Taylor hierarchy is
+  a statement about which scaling laws are dimensionally expressible, not a
+  claim that the plasma obeys any particular transport model. A fit satisfying
+  the collisionless constraint has not been shown to be collisionless; it has
+  been shown to be consistent with a scaling that would be. And the electrostatic
+  rung is a direct counterexample to reading the hierarchy as "more physics is
+  better": it assumes the most, costs the most in sample, and scores worse.
+- **Result 8's constraints are largely orthogonal to Result 3's weak direction.**
+  Projected onto the singular directions of the standardized design matrix, only
+  0.5% of the Kadomtsev constraint normal and 4.2% of the collisionless one lie
+  in the weakest direction. So the constraint is not fixing the ill-conditioning
+  Result 3 identified, and the tempting unification of the two results is not
+  supported. They are separate mechanisms that happen to point the same way.
+- **Result 9 is mostly a negative result and is reported as one.** Targeted
+  shrinkage beats isotropic shrinkage at every matched penalty, which is real,
+  but nothing in the family beats simply taking the published exponents with a
+  refitted coefficient. The truncation sweep is not monotone in rank, so "drop
+  the weak directions" is not a usable recipe even though dropping the single
+  weakest one helps.
+- **Result 11's arms are not an independent database.** Both come from the same
+  ITPA collection, the same devices and largely the same campaigns as STD5. The
+  replication rules out the standard set's selection criteria and the ELMy
+  H-mode regime as explanations of the reversal; it cannot rule out something
+  common to the ITPA's measurement conventions across all of it. A confinement
+  database assembled by different people remains untested.
+- **Result 11's regime arm scores five machines.** `non_h` is the arm that
+  changes the confinement regime and the baseline law, and it is also the one
+  too small for its numbers to carry a claim alone. It is reported as a
+  directional check throughout and no conclusion rests on it by itself.
+- **Result 11's disjoint arm is partly the rows STD5 rejected.** Its absolute
+  errors are worse than STD5's throughout (IPB98 scores 0.251 against 0.199),
+  because quality criteria were applied there and not here. That does not affect
+  the within-arm ranking comparison, which is the claim, but the two arms' RMSLE
+  values are not comparable to the rest of this document's.
+- **Result 12 is a forecast, so it currently shows nothing.** Its intervals use
+  Result 10's best out-of-distribution scheme, which Result 10 also shows is
+  well short of nominal at the ITER-matched cut. It is conditional on published
+  design operating points that the machines will not match exactly, and
+  `p_loss_mw` in particular is a derived, scenario-dependent quantity. The
+  falsifiable content is the ordering and the factor-of-8 disagreement at ITER,
+  not the individual numbers.
 - **A separate synthetic pipeline uses `log1p`, not `log`.** In `neutron_yield/features.py`,
   `log_triple_product = log1p(n T tau)`, which is *not* `log1p(n) + log1p(T) +
   log1p(tau)`; the additivity residual reaches 4.6%. The engineered features

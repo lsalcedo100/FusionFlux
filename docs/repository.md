@@ -22,6 +22,15 @@ FusionFlux/
 ├── analysis_size_extrapolation.py   # Result 5: size-ordered cut at the ITER-matched jump
 ├── analysis_hybrid.py               # Result 6: power law plus a damped residual correction
 ├── analysis_conformal.py            # Result 7: split-conformal coverage under each split
+├── dimensional.py                   # Connor-Taylor constraints, derived from the group definitions
+├── spectral.py                      # prior-shrinkage family aimed at Result 3's weak direction
+├── conformal_shift.py               # machine-level and distance-scaled interval calibration
+├── replication.py                   # DB5.2.3 revision, pinned; the two STD5-disjoint arms
+├── forecast.py                      # device design points and the locked prediction record
+├── analysis_dimensional.py          # Results 8 and 9: physics as a constraint, then as a prior
+├── analysis_conformal_shift.py      # Result 10: repairing the interval collapse, and its limit
+├── analysis_replication.py          # Result 11: the reversal on rows STD5 does not contain
+├── analysis_forecast.py             # Result 12: SPARC, JT-60SA and ITER, written down in advance
 ├── lawson.py                        # standalone Lawson criterion utility
 ├── results/
 │   ├── RESULTS.md                   # the writeup: every claim, table and limitation
@@ -30,6 +39,10 @@ FusionFlux/
 │   ├── size_extrapolation.png       # Result 5 figure, plus its .json/.csv companions
 │   ├── hybrid.png                   # Result 6 figure, plus its .json/.csv companions
 │   ├── conformal.png                # Result 7 figure, plus its .json/.csv companions
+│   ├── dimensional.png              # Results 8 and 9 figure, plus its .json/.csv companions
+│   ├── conformal_shift.png          # Result 10 figure, plus its .json/.csv companions
+│   ├── replication_scores.csv       # Result 11: both arms under both splits
+│   ├── forecast.json                # Result 12: the locked record, with its content digest
 │   ├── singular_value_spectrum.png  # Results 1 to 3 figure
 │   ├── solver_conditioning.png      # Result 2c: forward error against condition number
 │   ├── analysis.json                # rank audit, refit exponents, conditioning, solver sweep
@@ -37,7 +50,7 @@ FusionFlux/
 │   └── ipb98_refit_exponents.csv    # refit against published, with bootstrap intervals
 │
 ├── paper/
-│   ├── paper.tex                    # six-page writeup; build with `tectonic paper/paper.tex`
+│   ├── paper.tex                    # nine-page writeup; build with `tectonic paper/paper.tex`
 │   └── README.md                    # how to build it, and the Zenodo DOI flow
 ├── site/
 │   ├── page.template.html           # the one-page interactive summary
@@ -140,6 +153,11 @@ Real-data confinement study:
 
 - `hdb5.py` owns the entire real-data confinement-time pipeline (download, cleaning, features, model zoo, training, prediction, and its own CLI). It shares only `config.py` and `storage.py` with the neutron-yield pipeline.
 - `scaling_law.py` owns the from-scratch linear algebra: the three classical least-squares solvers, design-matrix conditioning analysis, scaling-law fitting, and bootstrap confidence intervals. It deliberately does not call scikit-learn.
+- `dimensional.py` owns the Connor-Taylor constraint hierarchy. It derives each rung's constraint matrix from the definitions of rho*, beta and nu* rather than hard-coding exponent vectors, and exposes the constrained fit as a scikit-learn estimator so it drops into the same zoo and the same three splits as everything else. It borrows `scaling_law.solve_constrained_lstsq` rather than adding a solver.
+- `spectral.py` owns the prior-shrinkage family: shrinking a scaling law toward IPB98(y,2)'s published exponents along the singular directions the data cannot resolve. It is the control Result 8 is measured against, not a competing recommendation.
+- `conformal_shift.py` owns the two repaired interval schemes of Result 10, machine-level calibration and distance-scaled nonconformity. It delegates the `split` baseline to `hdb5._conformal_arm` rather than reimplementing it, so the comparison is against Result 7's exact procedure.
+- `replication.py` owns the full DB5.2.3 revision: its own SHA-256 pin, the unit conversions to STD5's units, the row match that establishes disjointness, and the ITER89-P L-mode baseline the non-H arm needs. It reuses `hdb5.map_to_canonical` for cleaning, because a replication that cleaned its data differently would not be replicating anything.
+- `forecast.py` owns the three device design points, the tree-ensemble bound check, and the locked prediction record with its content digest.
 - `lawson.py` owns the standalone triple-product and ignition-ratio calculation, and is the one physics utility both pipelines can borrow from.
 
 Shared and entrypoints:

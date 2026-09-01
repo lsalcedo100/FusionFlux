@@ -1,0 +1,222 @@
+{
+  "generated_on": "2026-08-31",
+  "dataset_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b",
+  "n_training_rows": 6228,
+  "train_tau_max_s": 1.32117030251898,
+  "nominal_coverage": 0.9,
+  "content_digest_sha256": "960d537ee3df8780afd2054e51d01a268f8803aca64a830dba37fd1ff5319192",
+  "devices": [
+    {
+      "name": "SPARC",
+      "status": "under construction / commissioning",
+      "source": "Creely et al., J. Plasma Phys. 86 865860502 (2020), V2 primary reference discharge",
+      "r_m": 1.85,
+      "published_ipb98_tau_s": 0.77,
+      "ip_ma": 8.7,
+      "bt_t": 12.2,
+      "ne_line_1e19_m3": 31.0,
+      "p_loss_mw": 29.0,
+      "inverse_aspect_ratio": 0.30810810810810807,
+      "kappa": 1.75,
+      "m_eff_amu": 2.5,
+      "a_m": 0.57
+    },
+    {
+      "name": "JT-60SA",
+      "status": "operating",
+      "source": "JT-60SA Research Plan, full-current inductive scenario",
+      "r_m": 2.96,
+      "published_ipb98_tau_s": null,
+      "ip_ma": 5.5,
+      "bt_t": 2.25,
+      "ne_line_1e19_m3": 6.3,
+      "p_loss_mw": 37.0,
+      "inverse_aspect_ratio": 0.39864864864864863,
+      "kappa": 1.75,
+      "m_eff_amu": 2.0,
+      "a_m": 1.18
+    },
+    {
+      "name": "ITER",
+      "status": "under construction",
+      "source": "ITER Physics Basis, Nucl. Fusion 39 2175 (1999), Q=10 inductive baseline",
+      "r_m": 6.2,
+      "published_ipb98_tau_s": 3.7,
+      "ip_ma": 15.0,
+      "bt_t": 5.3,
+      "ne_line_1e19_m3": 10.0,
+      "p_loss_mw": 87.0,
+      "inverse_aspect_ratio": 0.3225806451612903,
+      "kappa": 1.7,
+      "m_eff_amu": 2.5,
+      "a_m": 2.0
+    }
+  ],
+  "forecasts": [
+    {
+      "device": "SPARC",
+      "model_name": "ipb98y2_analytic",
+      "is_blind": false,
+      "tau_predicted_s": 0.7652463545869812,
+      "tau_interval_low_s": 0.5842944909877671,
+      "tau_interval_high_s": 1.002237728133781,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 6.935988633954958,
+      "bounded_by_training_range": false
+    },
+    {
+      "device": "JT-60SA",
+      "model_name": "ipb98y2_analytic",
+      "is_blind": false,
+      "tau_predicted_s": 0.4789871360871287,
+      "tau_interval_low_s": 0.3494709799580138,
+      "tau_interval_high_s": 0.6565027990722251,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 3.8296039628098195,
+      "bounded_by_training_range": false
+    },
+    {
+      "device": "ITER",
+      "model_name": "ipb98y2_analytic",
+      "is_blind": false,
+      "tau_predicted_s": 3.5913264891644117,
+      "tau_interval_low_s": 2.656653457096183,
+      "tau_interval_high_s": 4.854839428651543,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 4.72243534426133,
+      "bounded_by_training_range": false
+    },
+    {
+      "device": "SPARC",
+      "model_name": "ridge_loglinear",
+      "is_blind": true,
+      "tau_predicted_s": 0.7197645484246911,
+      "tau_interval_low_s": 0.5311069946677996,
+      "tau_interval_high_s": 0.9754362310612,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 6.935988633954958,
+      "bounded_by_training_range": false
+    },
+    {
+      "device": "JT-60SA",
+      "model_name": "ridge_loglinear",
+      "is_blind": true,
+      "tau_predicted_s": 0.44412243484059016,
+      "tau_interval_low_s": 0.31885625517305827,
+      "tau_interval_high_s": 0.6186008081343121,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 3.8296039628098195,
+      "bounded_by_training_range": false
+    },
+    {
+      "device": "ITER",
+      "model_name": "ridge_loglinear",
+      "is_blind": true,
+      "tau_predicted_s": 2.857823627643222,
+      "tau_interval_low_s": 2.068490528418553,
+      "tau_interval_high_s": 3.9483651360782375,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 4.72243534426133,
+      "bounded_by_training_range": false
+    },
+    {
+      "device": "SPARC",
+      "model_name": "random_forest",
+      "is_blind": true,
+      "tau_predicted_s": 0.1363245933281848,
+      "tau_interval_low_s": 0.03480253709295171,
+      "tau_interval_high_s": 0.5339954008657236,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 6.935988633954958,
+      "bounded_by_training_range": true
+    },
+    {
+      "device": "JT-60SA",
+      "model_name": "random_forest",
+      "is_blind": true,
+      "tau_predicted_s": 0.44874326579279017,
+      "tau_interval_low_s": 0.23217006508989627,
+      "tau_interval_high_s": 0.8673405786245872,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 3.8296039628098195,
+      "bounded_by_training_range": true
+    },
+    {
+      "device": "ITER",
+      "model_name": "random_forest",
+      "is_blind": true,
+      "tau_predicted_s": 0.4348585271009909,
+      "tau_interval_low_s": 0.19297449064484534,
+      "tau_interval_high_s": 0.9799323110559247,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 4.72243534426133,
+      "bounded_by_training_range": true
+    },
+    {
+      "device": "SPARC",
+      "model_name": "hist_gradient_boosting",
+      "is_blind": true,
+      "tau_predicted_s": 0.30519641778904755,
+      "tau_interval_low_s": 0.13579800879694937,
+      "tau_interval_high_s": 0.6859073579682659,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 6.935988633954958,
+      "bounded_by_training_range": true
+    },
+    {
+      "device": "JT-60SA",
+      "model_name": "hist_gradient_boosting",
+      "is_blind": true,
+      "tau_predicted_s": 0.4181628347887222,
+      "tau_interval_low_s": 0.23566121956111258,
+      "tau_interval_high_s": 0.7419980119096121,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 3.8296039628098195,
+      "bounded_by_training_range": true
+    },
+    {
+      "device": "ITER",
+      "model_name": "hist_gradient_boosting",
+      "is_blind": true,
+      "tau_predicted_s": 0.44443175181830086,
+      "tau_interval_low_s": 0.23592887036225954,
+      "tau_interval_high_s": 0.8371997107475663,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 4.72243534426133,
+      "bounded_by_training_range": true
+    },
+    {
+      "device": "SPARC",
+      "model_name": "powerlaw_collisionless",
+      "is_blind": true,
+      "tau_predicted_s": 0.7235916477061137,
+      "tau_interval_low_s": 0.5481151788419809,
+      "tau_interval_high_s": 0.9552460738931584,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 6.935988633954958,
+      "bounded_by_training_range": false
+    },
+    {
+      "device": "JT-60SA",
+      "model_name": "powerlaw_collisionless",
+      "is_blind": true,
+      "tau_predicted_s": 0.4281749272503007,
+      "tau_interval_low_s": 0.31256050737690894,
+      "tau_interval_high_s": 0.5865544878474448,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 3.8296039628098195,
+      "bounded_by_training_range": false
+    },
+    {
+      "device": "ITER",
+      "model_name": "powerlaw_collisionless",
+      "is_blind": true,
+      "tau_predicted_s": 2.836654192791861,
+      "tau_interval_low_s": 2.0938435524801684,
+      "tau_interval_high_s": 3.8429838752529513,
+      "nominal_coverage": 0.9,
+      "feature_mahalanobis": 4.72243534426133,
+      "bounded_by_training_range": false
+    }
+  ]
+}

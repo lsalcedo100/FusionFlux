@@ -1,0 +1,192 @@
+{
+  "n_rows": 6228,
+  "n_machines_scored": 13,
+  "iter_matched_size_ratio": 1.8230563002680964,
+  "iter_matched_train_machines": 14,
+  "constraint_distances": [
+    {
+      "exponent_source": "ipb98y2_published",
+      "constraint_model": "kadomtsev",
+      "n_constraints": 1,
+      "residual_norm": 0.000957826285221286,
+      "max_abs_violation": 0.000957826285221286
+    },
+    {
+      "exponent_source": "ipb98y2_published",
+      "constraint_model": "collisionless",
+      "n_constraints": 2,
+      "residual_norm": 0.004548588261473445,
+      "max_abs_violation": 0.004544920854791468
+    },
+    {
+      "exponent_source": "ipb98y2_published",
+      "constraint_model": "electrostatic",
+      "n_constraints": 3,
+      "residual_norm": 0.5013980454688666,
+      "max_abs_violation": 0.37399999999999956
+    },
+    {
+      "exponent_source": "free_refit",
+      "constraint_model": "kadomtsev",
+      "n_constraints": 1,
+      "residual_norm": 0.003121951205014184,
+      "max_abs_violation": 0.003121951205014184
+    },
+    {
+      "exponent_source": "free_refit",
+      "constraint_model": "collisionless",
+      "n_constraints": 2,
+      "residual_norm": 0.06441102623613554,
+      "max_abs_violation": 0.06307754516382164
+    },
+    {
+      "exponent_source": "free_refit",
+      "constraint_model": "electrostatic",
+      "n_constraints": 3,
+      "residual_norm": 0.8166906341923642,
+      "max_abs_violation": 0.6208957923963215
+    }
+  ],
+  "in_sample_rmsle": {
+    "powerlaw_free": 0.18081597238869854,
+    "powerlaw_kadomtsev": 0.18082002597151267,
+    "powerlaw_collisionless": 0.18180677135314732,
+    "powerlaw_electrostatic": 0.22453928841327167
+  },
+  "split_scores": [
+    {
+      "model_name": "powerlaw_collisionless",
+      "is_blind": true,
+      "cv_rmsle": 0.1821659189976954,
+      "lomo_mean_rmsle": 0.20557300361029174,
+      "lomo_median_rmsle": 0.20837592370210276,
+      "lomo_worst_rmsle": 0.2791814830913803,
+      "size_cut_rmsle": 0.18328117409529868,
+      "size_cut_skill": 1.0087952908408926
+    },
+    {
+      "model_name": "ipb98y2_analytic",
+      "is_blind": false,
+      "cv_rmsle": 0.19934284163621757,
+      "lomo_mean_rmsle": 0.1884434916313823,
+      "lomo_median_rmsle": 0.1973676563878414,
+      "lomo_worst_rmsle": 0.2748479842757165,
+      "size_cut_rmsle": 0.19440636965136043,
+      "size_cut_skill": 1.0
+    },
+    {
+      "model_name": "hybrid_gbm_s1",
+      "is_blind": true,
+      "cv_rmsle": 0.1507974207511996,
+      "lomo_mean_rmsle": 0.24606287712040656,
+      "lomo_median_rmsle": 0.2332703333213184,
+      "lomo_worst_rmsle": 0.40145787944550493,
+      "size_cut_rmsle": 0.20573501653465057,
+      "size_cut_skill": 0.9910438658205863
+    },
+    {
+      "model_name": "powerlaw_electrostatic",
+      "is_blind": true,
+      "cv_rmsle": 0.22471838551427267,
+      "lomo_mean_rmsle": 0.24108291547107566,
+      "lomo_median_rmsle": 0.2563006778988376,
+      "lomo_worst_rmsle": 0.36699301108626453,
+      "size_cut_rmsle": 0.23745494042614076,
+      "size_cut_skill": 0.965966917314758
+    },
+    {
+      "model_name": "powerlaw_kadomtsev",
+      "is_blind": true,
+      "cv_rmsle": 0.1812212105621833,
+      "lomo_mean_rmsle": 0.2104977109715702,
+      "lomo_median_rmsle": 0.2114861219653455,
+      "lomo_worst_rmsle": 0.2892702834915873,
+      "size_cut_rmsle": 0.2538666245120225,
+      "size_cut_skill": 0.9529922658583594
+    },
+    {
+      "model_name": "ridge_loglinear",
+      "is_blind": true,
+      "cv_rmsle": 0.18123437655884575,
+      "lomo_mean_rmsle": 0.21407599766914132,
+      "lomo_median_rmsle": 0.21552600328195384,
+      "lomo_worst_rmsle": 0.28907712742060465,
+      "size_cut_rmsle": 0.27782310857361403,
+      "size_cut_skill": 0.9340528913740972
+    },
+    {
+      "model_name": "powerlaw_free",
+      "is_blind": true,
+      "cv_rmsle": 0.1812340909221804,
+      "lomo_mean_rmsle": 0.2140645545338596,
+      "lomo_median_rmsle": 0.21563146324105797,
+      "lomo_worst_rmsle": 0.2890486616024862,
+      "size_cut_rmsle": 0.27898983803772165,
+      "size_cut_skill": 0.9331305053434199
+    },
+    {
+      "model_name": "random_forest",
+      "is_blind": true,
+      "cv_rmsle": 0.1277352778940419,
+      "lomo_mean_rmsle": 0.46489304181310953,
+      "lomo_median_rmsle": 0.4502539255431945,
+      "lomo_worst_rmsle": 0.857376361499742,
+      "size_cut_rmsle": 0.9377674151597658,
+      "size_cut_skill": 0.4123180521106484
+    },
+    {
+      "model_name": "hist_gradient_boosting",
+      "is_blind": true,
+      "cv_rmsle": 0.12963313235633495,
+      "lomo_mean_rmsle": 0.3592919101020166,
+      "lomo_median_rmsle": 0.30701737969020504,
+      "lomo_worst_rmsle": 0.6857023422989421,
+      "size_cut_rmsle": 1.0717519585509527,
+      "size_cut_skill": 0.30639334981024013
+    },
+    {
+      "model_name": "mean_baseline",
+      "is_blind": true,
+      "cv_rmsle": 0.8685778027876655,
+      "lomo_mean_rmsle": 0.9935763663195161,
+      "lomo_median_rmsle": 1.0079964906077226,
+      "lomo_worst_rmsle": 1.628585559883982,
+      "size_cut_rmsle": 1.459310027451591,
+      "size_cut_skill": 0.0
+    }
+  ],
+  "best_blind_at_size_cut": "powerlaw_collisionless",
+  "best_blind_size_cut_rmsle": 0.18328117409529868,
+  "collisionless_vs_ridge": {
+    "model_a": "powerlaw_collisionless",
+    "model_b": "ridge_loglinear",
+    "mean_difference": -0.008502994058849479,
+    "ci_low": -0.018078745389802465,
+    "ci_high": -0.0011366897889860995,
+    "excludes_zero": true,
+    "n_machines_a_worse": 5,
+    "n_machines": 13
+  },
+  "collisionless_vs_hybrid": {
+    "model_a": "powerlaw_collisionless",
+    "model_b": "hybrid_gbm_s1",
+    "mean_difference": -0.04048987351011476,
+    "ci_low": -0.0910813732186418,
+    "ci_high": -0.003686223722543483,
+    "excludes_zero": true,
+    "n_machines_a_worse": 5,
+    "n_machines": 13
+  },
+  "targeting_gain_at_matched_alpha": {
+    "alpha_0.001": 2.5192378650229497e-05,
+    "alpha_0.01": 0.00024999431710592823,
+    "alpha_0.1": 0.002321268927857667,
+    "alpha_1": 0.013283848599493109,
+    "alpha_10": 0.01924332448704813,
+    "alpha_100": 0.009732675906504784,
+    "alpha_1000": 0.024815493864661586,
+    "alpha_10000": 0.008972534234860968,
+    "alpha_100000": 0.001014605177063782
+  },
+  "min_well_powered_train_rows": 1000
+}
