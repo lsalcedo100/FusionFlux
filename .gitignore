@@ -45,3 +45,7 @@ site/index.html
 
 # Baseline copy made by `make reproduce`.
 .reproduce_baseline/
+
+# Local Claude Code configuration and skills. Personal tooling rather than
+# part of the study, and this repository is public.
+.claude/

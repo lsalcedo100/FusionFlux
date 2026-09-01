@@ -32,6 +32,10 @@ train:
 # to 12 come last because they reference the size cut and the hybrid that
 # Results 5 and 6 establish.
 #
+# analysis_summary_figure.py is last and reads only the artifacts the others
+# wrote, never the raw database, so it is the one step that runs without a
+# download.
+#
 # Results 10 and 12 calibrate by holding out each training machine in turn,
 # which costs one extra fit per machine per fold. That makes them the slow ones,
 # a few minutes each rather than seconds.
@@ -48,6 +52,7 @@ results:
 	python3 analysis_conformal_shift.py
 	python3 analysis_replication.py
 	python3 analysis_forecast.py
+	python3 analysis_summary_figure.py
 	python3 site/build_page.py
 
 # Rebuild only the page, for when results/ is current but the template changed.

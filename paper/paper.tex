@@ -639,6 +639,18 @@ returning ITER's predicted confinement time whatever it is asked, and its
 nominal 90\% interval at ITER runs from \SI{0.19}{\second} to
 \SI{0.98}{\second}, containing neither the physics answer nor anything near it.
 
+The JT-60SA column is the one that becomes checkable first, and it is worth
+being precise about when. As of September 2026 it is not checkable: the first
+JT-60SA campaign ran L-mode divertor plasmas, and its published power balance
+reports confinement following L-mode scaling, whereas the row above is an H-mode
+prediction scored against IPB98(y,2). H-mode operation is planned for the second
+campaign, beginning in the second half of 2026. The prediction fails if a
+stationary JT-60SA H-mode near this design point reports a thermal confinement
+time outside \SIrange{0.349}{0.657}{\second}. All five models place their
+intervals across roughly that range, so such a measurement would fail all of
+them together and one inside separates none of them: this row tests whether any
+model is right, not which, and that is why the ITER column carries the argument.
+
 One feature of this table was not anticipated by anything above: \textbf{SPARC
 sits further from the training data than ITER does}, at a Mahalanobis distance
 of 6.9 against 4.7, despite being the smaller machine. Its \SI{12.2}{\tesla}
@@ -666,8 +678,9 @@ replication of Sec.~\ref{sec:replication} is disjoint in rows but not independen
 both arms come from the same ITPA collection and the same devices, and its
 five-machine arm is too small to carry a claim alone. The locked forecast of
 Sec.~\ref{sec:forecast} is a record, not a validation; only JT-60SA can be checked against
-measurement in the near term, and it is the one device of the three that sits
-inside the database's size range.
+measurement in the near term, that check requires the H-mode campaign beginning
+in late 2026 rather than the completed L-mode one, and it is the one device of
+the three that sits inside the database's size range.
 
 \section{Conclusion}
 

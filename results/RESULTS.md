@@ -1816,6 +1816,23 @@ derived, scenario-dependent quantity. JT-60SA is operating now and is the first
 of the three likely to be checkable, and it is also the one where the models
 agree, so it tests whether any of them is right rather than which.
 
+**When it becomes checkable, and what would falsify it.** As of September 2026
+it is not checkable yet, and the reason is specific rather than a matter of
+waiting for a paper. JT-60SA's first campaign (OP-1, from the October 2023 first
+plasma) ran L-mode divertor plasmas, and the published power-balance analysis
+reports the energy confinement time following *L-mode* scaling. The row above is
+an H-mode prediction scored against IPB98(y,2), so OP-1 does not test it at all.
+H-mode operation is planned for OP-2, which begins in the second half of 2026.
+
+That makes the check concrete. The prediction is falsified if a stationary
+JT-60SA H-mode at or near the design point of `results/forecast.json` reports a
+thermal energy confinement time outside 0.349 s to 0.657 s, the nominal 90%
+interval recorded for IPB98(y,2). All five models place their intervals across
+roughly the same range there, so a single measurement outside it fails all of
+them together and a measurement inside separates none of them. That is the
+honest shape of this particular test, and it is why the ITER row rather than
+this one carries the argument.
+
 ## Limitations
 
 - **The refit population is not IPB98's population.** No ITPA standard-set

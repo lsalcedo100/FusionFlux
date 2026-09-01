@@ -29,6 +29,10 @@ Then you ask whether that is a fact about this one database, and it is not: the 
 
 ## Results
 
+![The argument in one figure](results/summary.png)
+
+*Left: every model's score under grouped cross-validation joined to its score on a machine it has never seen. The lines cross. Right: what the five models predict for ITER, against the ceiling a tree ensemble cannot predict above.*
+
 ### The headline: a learned model beats the published scaling law, and that result does not survive contact with a new machine
 
 ![Interpolation against extrapolation](results/extrapolation.png)
@@ -206,8 +210,12 @@ The real-data confinement study is the whole of the argument above:
 - `conformal_shift.py` is the machine-level and distance-scaled interval calibration of Result 10.
 - `replication.py` assembles the two STD5-disjoint populations of Result 11 from the full DB5.2.3 revision, pinned by its own SHA-256.
 - `forecast.py` holds the three device design points and writes the locked prediction record.
-- `analysis_*.py` are the ten scripts that regenerate every number and figure under `results/`.
+- `analysis_*.py` are the eleven scripts that regenerate every number and figure under `results/`.
 - `lawson.py` is a standalone triple-product and ignition-ratio calculation.
+
+One module is deliberately not about tokamaks:
+
+- `scaling_audit.py` packages the method rather than the result, for anyone with a different dataset. It provides `audit_groups` (leave-one-group-out scored *alongside* the extrapolation distance and the training-range bound that explain the score), `OrderedGroupSplit` (a scikit-learn splitter that trains on one end of an ordering and predicts the far end), and `ConstrainedLinearRegression` (equality-constrained least squares, so a dimensional-analysis constraint is a constructor argument). It imports nothing else in this repository, and `tests/test_scaling_audit.py` exercises it on a synthetic allometric problem with no plasma physics in it, where **the same reversal appears**: the flexible model wins within groups and loses on an unseen one, for the same structural reason.
 
 ## Infrastructure: the Neutron-Yield Pipeline
 
@@ -225,6 +233,7 @@ It is here as engineering rather than as a result: a complete training and infer
 | [docs/repository.md](docs/repository.md) | File-by-file layout, module ownership, and repository-level caveats. |
 | [docs/neutron-yield-pipeline.md](docs/neutron-yield-pipeline.md) | Operating detail for the synthetic-data infrastructure above. |
 | [paper/README.md](paper/README.md) | How to build the paper, and the Zenodo DOI flow. |
+| [docs/releasing.md](docs/releasing.md) | The ordered checklist for the DOI, the arXiv preprint, and who to send it to. |
 
 ## Sources
 
