@@ -1,0 +1,94 @@
+{
+  "source": "Figshare 3549807, Supplement 1 (mammalian BMR and FMR)",
+  "dataset_sha256": "ab22d9ae8f35e96d7fbf5d8e53053d647f0594d74f8917888169993ce668571e",
+  "published_law": "Kleiber (1932): BMR proportional to mass^(3/4)",
+  "n_rows": 541,
+  "n_species": 541,
+  "n_orders_scored": 11,
+  "orders_scored": [
+    "Lypothyphla",
+    "Chiroptera",
+    "Dasyuromorpha",
+    "Afrosoricida",
+    "Rodentia",
+    "Didelphimorphia",
+    "Primates",
+    "Diprodontia",
+    "Lagomorpha",
+    "Xenarthra",
+    "Carnivora"
+  ],
+  "order_mass_ratio": 342.26618705035975,
+  "free_refit_exponent": 0.6865767732812014,
+  "kleiber_exponent": 0.75,
+  "scores": {
+    "kleiber": {
+      "cv_rmsle": 0.39616468296222185,
+      "loo_mean_rmsle": 0.44033628279153786,
+      "loo_median_rmsle": 0.3743012139641406,
+      "loo_worst_rmsle": 0.7692114358907532,
+      "degradation_factor": 1.1114980757472726,
+      "distance_spearman": 0.39090909090909093,
+      "mass_cut_rmsle": 0.3743012139641406,
+      "mass_cut_skill": 1.0
+    },
+    "ols_loglinear": {
+      "cv_rmsle": 0.37350120953532173,
+      "loo_mean_rmsle": 0.4324634771615704,
+      "loo_median_rmsle": 0.4209868350845651,
+      "loo_worst_rmsle": 0.617696139394899,
+      "degradation_factor": 1.1578636591287201,
+      "distance_spearman": 0.44545454545454555,
+      "mass_cut_rmsle": 0.4964120692718466,
+      "mass_cut_skill": 0.9556296178777751
+    },
+    "random_forest": {
+      "cv_rmsle": 0.43655762688652644,
+      "loo_mean_rmsle": 0.5169743279855599,
+      "loo_median_rmsle": 0.5191866339595249,
+      "loo_worst_rmsle": 0.7134844449526241,
+      "degradation_factor": 1.1842063822651665,
+      "distance_spearman": 0.6363636363636364,
+      "mass_cut_rmsle": 0.7103584953846869,
+      "mass_cut_skill": 0.8778897260688936
+    },
+    "hist_gradient_boosting": {
+      "cv_rmsle": 0.41806915626527613,
+      "loo_mean_rmsle": 0.4869389498172025,
+      "loo_median_rmsle": 0.47375487954828555,
+      "loo_worst_rmsle": 0.8890821933141091,
+      "degradation_factor": 1.1647330173006751,
+      "distance_spearman": 0.6454545454545455,
+      "mass_cut_rmsle": 0.8890821933141091,
+      "mass_cut_skill": 0.8129484171947341
+    },
+    "mean_baseline": {
+      "cv_rmsle": 1.5404245505161054,
+      "loo_mean_rmsle": 1.7281794878987626,
+      "loo_median_rmsle": 1.6712177068208904,
+      "loo_worst_rmsle": 3.126381531220222,
+      "degradation_factor": 1.1218851889368757,
+      "distance_spearman": 0.7272727272727273,
+      "mass_cut_rmsle": 3.126381531220222,
+      "mass_cut_skill": 0.0
+    }
+  },
+  "best_cv_model": "ols_loglinear",
+  "best_loo_model": "ols_loglinear",
+  "ranking_reversed": false,
+  "trees_win_cv": false,
+  "sweep_wins": {
+    "kleiber_beats_free_power_law": 4,
+    "kleiber_beats_random_forest": 8,
+    "power_laws_beat_trees": 8,
+    "n_cuts": 8
+  },
+  "n_orders_forest_loses_to_kleiber": 9,
+  "n_orders": 11,
+  "widest_cut": {
+    "n_train_orders": 10,
+    "mass_ratio": 68.55187319884726,
+    "held_out_orders": "Carnivora",
+    "n_test_rows": 50
+  }
+}

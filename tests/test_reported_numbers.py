@@ -73,6 +73,7 @@ def artifacts() -> dict[str, object]:
         "shift": pd.read_csv(RESULTS / "conformal_shift_summary.csv"),
         "replication": _json("replication.json"),
         "forecast": _json("forecast.json"),
+        "allometry": _json("allometry.json"),
     }
 
 
@@ -203,6 +204,41 @@ def _arm(a: dict, name: str) -> dict:
     raise AssertionError(f"no replication arm named {name}")
 
 
+def _device_inputs(a: dict, device: str) -> dict:
+    for row in a["forecast"]["devices"]:
+        if row["name"] == device:
+            return row
+    raise AssertionError(f"no device named {device} in the forecast")
+
+
+def _cast_distance(a: dict, device: str) -> float:
+    for row in a["forecast"]["forecasts"]:
+        if row["device"] == device:
+            return float(row["feature_mahalanobis"])
+    raise AssertionError(f"no forecast rows for {device}")
+
+
+def _served(a: dict, device: str, model: str) -> float:
+    """What the shipped predictor returns for one device, from the committed card.
+
+    Reads ``results/predictor.json`` and the device's inputs out of
+    ``results/forecast.json``, so this stays a statement about committed
+    artifacts. It binds the README's worked example, which is CLI output typed
+    by hand and would otherwise be the one block in the repository free to drift.
+    """
+    import predictor
+
+    inputs = _device_inputs(a, device)
+    result = predictor.predict(
+        **{name: float(inputs[name]) for name in predictor.REQUIRED_INPUTS},
+        card=predictor.load_card(),
+    )
+    for row in result.predictions:
+        if row.model_name == model:
+            return row.tau_s
+    raise AssertionError(f"predictor did not report {model}")
+
+
 def _cast(a: dict, device: str, model: str) -> float:
     for row in a["forecast"]["forecasts"]:
         if row["device"] == device and row["model_name"] == model:
@@ -227,6 +263,10 @@ def _spread(a: dict, device: str) -> float:
     return max(taus) / min(taus)
 
 
+def _allo(a: dict, model: str, field: str) -> float:
+    return float(a["allometry"]["scores"][model][field])
+
+
 def _paired(a: dict, model_a: str, model_b: str) -> dict:
     for row in a["extrapolation"]["paired_differences"]:
         if row["model_a"] == model_a and row["model_b"] == model_b:
@@ -239,6 +279,11 @@ def _paired(a: dict, model_a: str, model_b: str) -> dict:
 # out of ``results/`` and substitutes them, so the template holds placeholders
 # rather than literals and there is nothing there to go stale.
 LATE_RESULTS = (README, RESULTS_MD, PAPER, PAPER_PDF)
+
+# Result 13's numbers. The paper carries a condensed version of it, so these are
+# bound to the same four documents; where the paper words something differently
+# the claim carries both spellings rather than being dropped.
+ALLOMETRY = (README, RESULTS_MD, PAPER, PAPER_PDF)
 
 CLAIMS: tuple[Claim, ...] = (
     # -- dataset scale -----------------------------------------------------
@@ -391,6 +436,12 @@ CLAIMS: tuple[Claim, ...] = (
     Claim("collisionless power law on ITER", "2.837",
           lambda a: _cast(a, "ITER", "powerlaw_collisionless"), _r(3),
           documents=LATE_RESULTS),
+
+    # -- the shipped predictor, whose worked example is in the README ------
+    Claim("ITER extrapolation distance", "4.72",
+          lambda a: _cast_distance(a, "ITER"), _r(2), documents=(README,)),
+    Claim("unconstrained power law on ITER, as served", "2.860",
+          lambda a: _served(a, "ITER", "powerlaw_free"), _r(3), documents=(README,)),
     Claim("model disagreement at ITER", "8.3",
           lambda a: _spread(a, "ITER"), _r(1),
           documents=LATE_RESULTS,
@@ -401,6 +452,36 @@ CLAIMS: tuple[Claim, ...] = (
           lambda a: _spread(a, "JT-60SA") - 1.0, _pct(0),
           documents=LATE_RESULTS,
           phrases=lambda lit: (f"agree to within {lit}",)),
+
+    # -- Result 13: the replication on Kleiber's law -----------------------
+    Claim("allometry species records", "541",
+          lambda a: a["allometry"]["n_rows"], documents=ALLOMETRY),
+    Claim("allometry orders scored", "11",
+          lambda a: a["allometry"]["n_orders_scored"], documents=ALLOMETRY,
+          # A bare "11" appears all over these documents; anchor it.
+          phrases=lambda lit: (f"{lit} orders",)),
+    Claim("allometry order mass span", "342x",
+          lambda a: a["allometry"]["order_mass_ratio"], lambda v: f"{v:.0f}x",
+          documents=ALLOMETRY),
+    Claim("free refit of Kleiber's exponent", "0.687",
+          lambda a: a["allometry"]["free_refit_exponent"], _r(3),
+          documents=ALLOMETRY),
+    Claim("Kleiber at the widest mass cut", "0.374",
+          lambda a: _allo(a, "kleiber", "mass_cut_rmsle"), _r(3),
+          documents=ALLOMETRY),
+    Claim("free power law at the widest mass cut", "0.496",
+          lambda a: _allo(a, "ols_loglinear", "mass_cut_rmsle"), _r(3),
+          documents=ALLOMETRY),
+    Claim("orders where the forest loses to Kleiber", "9 of 11",
+          lambda a: a["allometry"]["n_orders_forest_loses_to_kleiber"],
+          lambda v: f"{v} of 11", documents=ALLOMETRY),
+    Claim("mass cuts where the power laws beat the trees", "all 8",
+          lambda a: a["allometry"]["sweep_wins"]["power_laws_beat_trees"],
+          lambda v: f"all {v}", documents=ALLOMETRY,
+          phrases=lambda lit: (f"{lit} mass cuts",)),
+    Claim("mass cuts where Kleiber beats the free fit", "4 of 8",
+          lambda a: a["allometry"]["sweep_wins"]["kleiber_beats_free_power_law"],
+          lambda v: f"{v} of 8", documents=ALLOMETRY),
 )
 
 

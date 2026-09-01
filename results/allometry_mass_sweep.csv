@@ -1,0 +1,41 @@
+model_name,n_train_orders,n_train_rows,n_test_rows,held_out_orders,mass_ratio,rmsle,fraction_above_train_max,prediction_bounded
+kleiber,3,135,406,"Afrosoricida, Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Rodentia, Xenarthra",6.721951219512196,0.38238579135949846,0.11330049261083744,False
+ols_loglinear,3,135,406,"Afrosoricida, Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Rodentia, Xenarthra",6.721951219512196,0.39980098901734723,0.11330049261083744,False
+random_forest,3,135,406,"Afrosoricida, Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Rodentia, Xenarthra",6.721951219512196,0.6300390590169241,0.11330049261083744,True
+hist_gradient_boosting,3,135,406,"Afrosoricida, Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Rodentia, Xenarthra",6.721951219512196,1.022586124728737,0.11330049261083744,True
+mean_baseline,3,135,406,"Afrosoricida, Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Rodentia, Xenarthra",6.721951219512196,2.06024892257794,0.11330049261083744,True
+kleiber,4,146,395,"Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Rodentia, Xenarthra",6.332574031890661,0.3699457139670407,0.11645569620253164,False
+ols_loglinear,4,146,395,"Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Rodentia, Xenarthra",6.332574031890661,0.4239409960932425,0.11645569620253164,False
+random_forest,4,146,395,"Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Rodentia, Xenarthra",6.332574031890661,0.6433189344955884,0.11645569620253164,True
+hist_gradient_boosting,4,146,395,"Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Rodentia, Xenarthra",6.332574031890661,1.021573997910084,0.11645569620253164,True
+mean_baseline,4,146,395,"Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Rodentia, Xenarthra",6.332574031890661,2.0719306074301165,0.11645569620253164,True
+kleiber,5,412,129,"Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Xenarthra",41.61013116236997,0.4432018129938051,0.06201550387596899,False
+ols_loglinear,5,412,129,"Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Xenarthra",41.61013116236997,0.4337291320470682,0.06201550387596899,False
+random_forest,5,412,129,"Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Xenarthra",41.61013116236997,0.5089347550882726,0.06201550387596899,True
+hist_gradient_boosting,5,412,129,"Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Xenarthra",41.61013116236997,0.8933415838503959,0.06201550387596899,True
+mean_baseline,5,412,129,"Carnivora, Didelphimorphia, Diprodontia, Lagomorpha, Primates, Xenarthra",41.61013116236997,2.730846465087413,0.06201550387596899,True
+kleiber,6,423,118,"Carnivora, Diprodontia, Lagomorpha, Primates, Xenarthra",46.62587412587413,0.4529474768634125,0.06779661016949153,False
+ols_loglinear,6,423,118,"Carnivora, Diprodontia, Lagomorpha, Primates, Xenarthra",46.62587412587413,0.4479710860217687,0.06779661016949153,False
+random_forest,6,423,118,"Carnivora, Diprodontia, Lagomorpha, Primates, Xenarthra",46.62587412587413,0.5230722059160979,0.06779661016949153,True
+hist_gradient_boosting,6,423,118,"Carnivora, Diprodontia, Lagomorpha, Primates, Xenarthra",46.62587412587413,0.9146943262768694,0.06779661016949153,True
+mean_baseline,6,423,118,"Carnivora, Diprodontia, Lagomorpha, Primates, Xenarthra",46.62587412587413,2.8005639095627295,0.06779661016949153,True
+kleiber,7,442,99,"Carnivora, Diprodontia, Lagomorpha, Xenarthra",49.06731549067315,0.4613347078550163,0.08080808080808081,False
+ols_loglinear,7,442,99,"Carnivora, Diprodontia, Lagomorpha, Xenarthra",49.06731549067315,0.4452349297380296,0.08080808080808081,False
+random_forest,7,442,99,"Carnivora, Diprodontia, Lagomorpha, Xenarthra",49.06731549067315,0.5485549756648783,0.08080808080808081,True
+hist_gradient_boosting,7,442,99,"Carnivora, Diprodontia, Lagomorpha, Xenarthra",49.06731549067315,0.8549175356669444,0.08080808080808081,True
+mean_baseline,7,442,99,"Carnivora, Diprodontia, Lagomorpha, Xenarthra",49.06731549067315,2.863870705325921,0.08080808080808081,True
+kleiber,8,466,75,"Carnivora, Lagomorpha, Xenarthra",56.05293888672636,0.48509991826260435,0.10666666666666667,False
+ols_loglinear,8,466,75,"Carnivora, Lagomorpha, Xenarthra",56.05293888672636,0.49093344284626306,0.10666666666666667,False
+random_forest,8,466,75,"Carnivora, Lagomorpha, Xenarthra",56.05293888672636,0.5942392121338305,0.10666666666666667,True
+hist_gradient_boosting,8,466,75,"Carnivora, Lagomorpha, Xenarthra",56.05293888672636,0.8634839773029204,0.10666666666666667,True
+mean_baseline,8,466,75,"Carnivora, Lagomorpha, Xenarthra",56.05293888672636,2.9512149247341215,0.10666666666666667,True
+kleiber,9,476,65,"Carnivora, Xenarthra",59.74607916355489,0.4988916731916603,0.12307692307692308,False
+ols_loglinear,9,476,65,"Carnivora, Xenarthra",59.74607916355489,0.4652768201802624,0.12307692307692308,False
+random_forest,9,476,65,"Carnivora, Xenarthra",59.74607916355489,0.600960736397098,0.12307692307692308,True
+hist_gradient_boosting,9,476,65,"Carnivora, Xenarthra",59.74607916355489,0.9026018346053489,0.12307692307692308,True
+mean_baseline,9,476,65,"Carnivora, Xenarthra",59.74607916355489,2.981514847001828,0.12307692307692308,True
+kleiber,10,491,50,Carnivora,68.55187319884726,0.3743012139641406,0.16,False
+ols_loglinear,10,491,50,Carnivora,68.55187319884726,0.4964120692718466,0.16,False
+random_forest,10,491,50,Carnivora,68.55187319884726,0.7103584953846869,0.16,True
+hist_gradient_boosting,10,491,50,Carnivora,68.55187319884726,0.8890821933141091,0.16,True
+mean_baseline,10,491,50,Carnivora,68.55187319884726,3.126381531220222,0.16,True

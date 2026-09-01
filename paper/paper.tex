@@ -658,6 +658,91 @@ field is far outside a database that tops out near \SI{4}{\tesla}. Size is not
 the only direction in which a next-step device leaves the data behind, and an
 extrapolation audit organised around size alone would have missed it.
 
+\section{The same audit on a scaling law from another science}
+\label{sec:allometry}
+
+Every result to this point rests on ITPA data, so the last question is whether
+any of it is about fusion. We answer it by running the same audit on a scaling
+law from a different field.
+
+Mammalian basal metabolic rate against body mass is the same object and the
+older one: Kleiber~\cite{kleiber} found in 1932 that metabolic rate scales as
+mass to the 3/4, and that exponent is still the published baseline a fitted
+model has to beat. The correspondence is exact where it must be. Taxonomic
+\emph{order} is the unit a species belongs to, as a tokamak is the unit a
+discharge belongs to; \emph{body mass} is the axis a next instance lies beyond,
+as machine size is. The data is Supplement 1 of a metabolic-rate compilation
+deposited on Figshare (article 3549807), pinned by SHA-256 as the HDB5 files
+are, giving 541 species records across 11 orders whose median masses span 342x.
+
+Two things make this a test rather than a restatement. The analysis runs through
+the domain-agnostic module released with this work, not a copy of the fusion
+pipeline, so it is the procedure a reader would apply to their own data. And the
+problem has a \emph{single predictor}: no model can win by finding a better
+combination of features, so the only thing separating them is functional form.
+Refitting the exponent freely gives 0.687 against Kleiber's 0.75, so the
+constraint is not free here either.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Kleiber's law under the same three splits. Scores are RMSLE.}
+\label{tab:allometry}
+\begin{tabular}{lrrr}
+\toprule
+Model & CV, by species & leave-one-order-out & widest mass cut \\
+\midrule
+Kleiber, exponent 3/4 & 0.396 & 0.440 & \textbf{0.374} \\
+power law, free exponent & 0.374 & 0.432 & 0.496 \\
+hist grad.\ boosting & 0.418 & 0.487 & 0.889 \\
+random forest & 0.437 & 0.517 & 0.710 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{The extrapolation failure reproduces.} Both tree ensembles are worse
+than both power laws at all 8 mass cuts, and the random forest loses to Kleiber
+on 9 of 11 held-out orders. The mechanism reproduces with it: per-order error
+tracks extrapolation distance at $\rho=+0.64$
+and $+0.65$ for the trees
+against $+0.39$ and
+$+0.45$ for the power laws, a narrower
+contrast than Sec.~\ref{sec:mechanisms}'s but the same sign, and the
+training-range bound binds at every cut.
+
+\paragraph{The ranking reversal does not, and that bounds the claim.} The
+headline of Sec.~\ref{sec:reversal} does not appear here, and the reason is
+worth more than another confirmation. The trees never win the easy split either:
+under cross-validation by species they score
+0.437 and 0.418
+against the free power law's 0.374. With no
+inflated margin there is nothing available to invert. The 41\% gain on HDB5 came
+from a flexible model exploiting structure across ten features; with one
+predictor and a relationship close to a straight line in logs, a tree has far
+less to exploit and does not buy the interpolation win that later reverses.
+\textbf{The reversal requires enough feature dimensionality for the flexible
+model to win interpolation first}, which no single database could have shown.
+
+\paragraph{The constraint result reproduces in direction, not in strength.}
+Kleiber's published exponent costs
++0.023 under
+cross-validation and wins the widest cut, 0.374 against 0.496, where the
+held-out order is 69x heavier than the training
+median: Sec.~\ref{sec:dimensional}'s trade exactly. But it is weaker, winning at
+4 of 8 cuts rather than 8 of 8, decisively at the extremes and narrowly losing in
+the middle. That a constraint helps out of distribution replicates; that it helps
+reliably does not.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{allometry.png}
+\caption{\textbf{Kleiber's law under the same three splits.} Left: no inversion,
+because the trees lose under both splits. Middle: error against extrapolation
+distance. Right: the mass-ordered sweep, with the random forest's
+training-range-bounded cuts circled.}
+\label{fig:allometry}
+\end{figure*}
+
 \section{Limitations}
 
 The refit population is not IPB98's, and the refit exponents should not be read
@@ -680,7 +765,13 @@ five-machine arm is too small to carry a claim alone. The locked forecast of
 Sec.~\ref{sec:forecast} is a record, not a validation; only JT-60SA can be checked against
 measurement in the near term, that check requires the H-mode campaign beginning
 in late 2026 rather than the completed L-mode one, and it is the one device of
-the three that sits inside the database's size range.
+the three that sits inside the database's size range. The replication of
+Sec.~\ref{sec:allometry} has one predictor and eleven groups, and those
+groups are phylogenetically related rather than independent, which the
+comparative-biology literature handles with phylogenetically-controlled
+regression and we do not; it suffices to show the extrapolation failure is
+not fusion-specific and that the reversal needs a condition that dataset
+lacks, not to establish a rate for either.
 
 \section{Conclusion}
 
@@ -723,6 +814,8 @@ confinement database: description and analysis,'' \emph{Nucl.\ Fusion}
 \textbf{61}, 076006 (2021).
 \bibitem{conformal} V. Vovk, A. Gammerman and G. Shafer,
 \emph{Algorithmic Learning in a Random World}, Springer (2005).
+\bibitem{kleiber} M. Kleiber, ``Body size and metabolism,''
+\emph{Hilgardia} \textbf{6}, 315 (1932).
 \bibitem{connor} J.W. Connor and J.B. Taylor, ``Scaling laws for plasma
 confinement,'' \emph{Nucl.\ Fusion} \textbf{17}, 1047 (1977).
 \bibitem{iter89p} P.N. Yushmanov \emph{et al.}, ``Scalings for tokamak energy

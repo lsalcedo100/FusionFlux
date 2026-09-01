@@ -37,6 +37,8 @@ fusionflux = "cli:main"
 [tool.setuptools]
 packages = ["neutron_yield", "tools"]
 py-modules = [
+    "allometry",
+    "analysis_allometry",
     "analysis_conformal",
     "analysis_conformal_shift",
     "analysis_dimensional",
@@ -102,6 +104,8 @@ ignore_missing_imports = true
 
 [tool.coverage.run]
 source = [
+    "allometry",
+    "analysis_allometry",
     "analysis_conformal",
     "analysis_conformal_shift",
     "analysis_dimensional",
@@ -134,9 +138,11 @@ source = [
 
 [tool.coverage.report]
 show_missing = true
-# Measured, not guessed. The suite covers 78.08% with both HDB5 datasets present
-# (1225 of 5588 statements missed) and 76.84% without them, which is the state
-# CI is in: 25 tests skip there for want of a dataset or a trained artifact.
+# Measured, not guessed. The suite covers 79.01% with all three datasets present
+# (1242 of 5917 statements missed) and 77.47% without them, which is the state
+# CI is in: 35 tests skip there for want of a dataset or a trained artifact.
+# "All three" is now HDB5 STD5, the full DB5.2.3 revision, and the mammalian
+# metabolic-rate deposit Result 13 replicates on.
 # Both figures reproduce exactly across clean runs, and no measured module
 # branches on sys.version_info, so the three CI interpreters have nothing to
 # disagree about.
@@ -150,4 +156,4 @@ show_missing = true
 #
 # A ratchet, not a target. Raise it when coverage genuinely rises. Never lower
 # it to make a run pass -- if it trips, find out what stopped running.
-fail_under = 76.5
+fail_under = 77

@@ -159,6 +159,15 @@ python3 analysis_replication.py                                 # Result 11: bot
 
 Fetches the full database revision from the same OSF project, verifies its own SHA-256, and runs Result 4's protocol on the 5358 H-mode rows STD5 does not contain and on 3860 ohmic and L-mode rows scored against ITER89-P. See [Result 11](../results/RESULTS.md#result-11-the-reversal-reproduces-on-rows-this-database-never-contained).
 
+### Run the same audit on a scaling law from another science
+
+```bash
+python3 -c "import allometry; allometry.download_allometry()"   # mammalian BMR, pinned by SHA-256
+python3 analysis_allometry.py                                   # Result 13: Kleiber's law
+```
+
+Fetches Supplement 1 of a metabolic-rate compilation from Figshare, verifies its own SHA-256, and runs the same three splits against Kleiber's published 3/4 exponent, with taxonomic order in place of tokamak and body mass in place of machine size. It is the one analysis here with no plasma physics in it, and it runs through `scaling_audit.py` rather than through `hdb5.py`, so it exercises the reusable module on real external data. See [Result 13](../results/RESULTS.md#result-13-the-same-audit-on-a-scaling-law-from-a-different-science).
+
 ### Write down a prediction before the answer exists
 
 ```bash

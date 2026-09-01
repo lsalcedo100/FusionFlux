@@ -147,6 +147,23 @@ The column ordering inverts in both arms. On the disjoint H-mode rows the best c
 
 So the reversal is not an artifact of the standard set's selection criteria, and not a property of ELMy H-mode or of IPB98(y,2) specifically. It is not an independent database either: both arms come from the same ITPA collection and the same devices, and the five-machine arm is too small to carry a claim alone. See [Result 11](results/RESULTS.md#result-11-the-reversal-reproduces-on-rows-this-database-never-contained).
 
+### And it is not only about tokamaks: the same audit on Kleiber's law
+
+![Kleiber's law under the same three splits](results/allometry.png)
+
+Every result above rests on ITPA data. So the last thing to ask is whether any of it is about *fusion*, and the way to find out is to run the same audit on a scaling law from another science. Mammalian basal metabolic rate against body mass is the same object and the older one: Kleiber (1932) found rate scales as mass to the **3/4**, and that exponent is still the published baseline. Taxonomic order plays the part of tokamak, body mass the part of machine size. 541 species records, 11 orders spanning **342x** in median mass, pinned by SHA-256, and run through `scaling_audit.py` rather than a copy of the fusion pipeline. Refitting the exponent freely gives **0.687** against Kleiber's 0.75, so the constraint is not free here either.
+
+| model | CV, by species | leave-one-order-out | widest mass cut |
+|---|---|---|---|
+| **Kleiber, exponent 3/4 (constrained)** | 0.396 | 0.440 | **0.374** |
+| power law, free exponent | 0.374 | 0.432 | 0.496 |
+| hist gradient boosting | 0.418 | 0.487 | 0.889 |
+| random forest | 0.437 | 0.517 | 0.710 |
+
+**Two halves, and the second one is the more useful.** The extrapolation failure reproduces completely: the tree ensembles lose to both power laws at **all 8 mass cuts**, the forest loses to Kleiber on **9 of 11** held-out orders, and error tracks distance for the trees (+0.64) far more than for the laws (+0.39). The constraint result reproduces in direction: Kleiber's published exponent costs +0.023 under cross-validation and wins the widest cut by 25%. It is weaker than on HDB5, though, winning at **4 of 8** cuts rather than the 8 of 8 the collisionless constraint manages: decisively at the extremes, narrowly losing in the middle.
+
+**But the ranking reversal does not reproduce, and that is a limit on this repository's headline rather than a footnote.** The trees never win the easy split here either, so there is nothing to invert. With a single predictor and a relationship that is close to a straight line in logs, a tree has far less to exploit, and the 41% cross-validated margin this README opens with is simply not available here to be reversed. **The reversal needs enough feature dimensionality for the flexible model to win interpolation first.** Nothing in Results 4 to 12 could have shown that, because one database cannot. See [Result 13](results/RESULTS.md#result-13-the-same-audit-on-a-scaling-law-from-a-different-science).
+
 ### What it predicts for ITER, written down before the answer exists
 
 Everything above is retrospective. `results/forecast.json` records what each model says about three real machines, with intervals, a date, and a digest over the rows so a later edit leaves a mark.
@@ -173,6 +190,53 @@ One thing nothing above anticipated: **SPARC sits further from the training data
 **The model's own feature matrix is rank deficient by two, and this audit found it.** Standardized, the ten log features have rank 8. Two exact dependencies, each confirmed by projection onto the null space at a residual of order 1e-16: minor radius is derived as `a = eps * R`, and the IPB98 prior is a fixed log-linear combination of the other eight features. That second one means a published physics scaling, added as a feature, contributes exactly nothing to a log-linear model, however much it looks like added knowledge. Nothing crashed, because `scipy.linalg.lstsq` inverts through the SVD pseudoinverse and silently returns the minimum-norm member of a two-parameter family.
 
 **Refitting IPB98(y,2) from the database disagrees with the published exponents almost entirely where the data is blind.** Solving three ways from scratch (Cholesky on the normal equations, QR, SVD, agreeing to 8e-13) gives Ip 1.08 against 0.93 and R 1.58 against 1.97, while P and Bt come back essentially exactly. Decomposing that difference along the singular directions of the design matrix: **77% of it lies in the single weakest direction, which carries 0.3% of the matrix's variance**. That weak direction is plasma current traded against machine size, structurally hard to resolve because tokamaks are not designed to vary the two independently.
+
+## Use it
+
+The finding above is only useful if the thing you can call knows about it. `pip install fusionflux` puts one command on the path, and it is the study rather than a demo:
+
+```bash
+fusionflux predict --ip-ma 15 --bt-t 5.3 --ne-line-1e19-m3 10 --p-loss-mw 87 \
+                   --r-m 6.2 --inverse-aspect-ratio 0.3226 --kappa 1.7 --m-eff-amu 2.5
+```
+
+```
+  extrapolation distance     4.72
+  training ceiling           1.321 s
+
+  model                         tau_E (s)          interval (s)   trust
+  IPB98(y,2), analytic             3.591        2.657 to 4.855     yes
+* power law, collisionless         2.837        2.094 to 3.843     yes
+  power law, unconstrained         2.860        2.070 to 3.951     yes
+  any range-bounded ensemble     <= 1.321       (cannot exceed)      NO
+
+  * recommended: power law, collisionless
+
+  Any range-bounded model is capped at 1.321 s here, the largest confinement
+  time in the training data, which is a factor of 2.1 below the 2.84 s
+  recommended above. By Result 4c a tree ensemble averages training targets, so
+  no random forest or gradient booster can return the right answer for this
+  machine whatever its inputs, features or tuning.
+```
+
+Those are ITER's parameters. The point is the last two rows: **the tool refuses to recommend the model that wins cross-validation, and says why in terms of the machine you asked about.** The refusal is decidable from the inputs alone, before any model runs, and it is the direct product of Results 4b, 4c, 8 and 10 rather than a threshold someone picked.
+
+The same call from Python returns the numbers rather than the report:
+
+```python
+from predictor import predict
+
+result = predict(ip_ma=15.0, bt_t=5.3, ne_line_1e19_m3=10.0, p_loss_mw=87.0,
+                 r_m=6.2, inverse_aspect_ratio=0.3226, kappa=1.7, m_eff_amu=2.5)
+
+result.tau_s                              # 2.837
+result.interval_s                         # (2.094, 3.843), nominal 90%
+result.extrapolation_distance             # 4.72
+result.physics_exceeds_training_ceiling   # True
+result.warnings                           # why, in sentences
+```
+
+It reads `results/predictor.json`, a few kilobytes of coefficients, so a fresh checkout predicts with no download and nothing to unpickle. `fusionflux card` rebuilds it; `fusionflux neutron ...` is the synthetic pipeline, one level down where it belongs.
 
 ## Quickstart
 
@@ -210,7 +274,9 @@ The real-data confinement study is the whole of the argument above:
 - `conformal_shift.py` is the machine-level and distance-scaled interval calibration of Result 10.
 - `replication.py` assembles the two STD5-disjoint populations of Result 11 from the full DB5.2.3 revision, pinned by its own SHA-256.
 - `forecast.py` holds the three device design points and writes the locked prediction record.
-- `analysis_*.py` are the eleven scripts that regenerate every number and figure under `results/`.
+- `allometry.py` is Result 13's second domain: mammalian metabolic rate against body mass, pinned by SHA-256, with Kleiber's published 3/4 exponent as the baseline. It is the one analysis here with no plasma physics in it.
+- `predictor.py` is the study made callable: a point estimate, a calibrated interval, an extrapolation distance and a refusal, read from `results/predictor.json` so it needs no download and unpickles nothing. `cli.py` is the `fusionflux` command over it.
+- `analysis_*.py` are the twelve scripts that regenerate every number and figure under `results/`.
 - `lawson.py` is a standalone triple-product and ignition-ratio calculation.
 
 One module is deliberately not about tokamaks:
@@ -220,6 +286,8 @@ One module is deliberately not about tokamaks:
 ## Infrastructure: the Neutron-Yield Pipeline
 
 **Nothing in this section supports a scientific claim.** `train_model.py` and the `neutron_yield/` package predict `neutron_yield` from plasma operating conditions, and the dataset they ship with is synthetic, generated from a hand-crafted signal, so any accuracy number they produce measures how learnable that generator is and nothing else. None of the results above come from it, and it shares only `config.py` and `storage.py` with the pipeline that does.
+
+It used to be the whole of what `pip install fusionflux` gave you, which meant the one command a new user got was the one part of the repository that measures nothing. It now sits under `fusionflux neutron ...`, with the study on the front door.
 
 It is here as engineering rather than as a result: a complete training and inference stack built to fail loudly instead of drifting silently, with a **versioned preprocessing contract** checked before any prediction, **atomic run publishing** so a crash never leaves a half-written run for the loader to find, and a saved-model wrapper that enforces both **even on a bare `joblib.load(...).predict(...)`** that bypasses the inference API. Full operating detail is in [docs/neutron-yield-pipeline.md](docs/neutron-yield-pipeline.md).
 

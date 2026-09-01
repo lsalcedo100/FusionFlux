@@ -1833,6 +1833,105 @@ them together and a measurement inside separates none of them. That is the
 honest shape of this particular test, and it is why the ITER row rather than
 this one carries the argument.
 
+## Result 13: the same audit on a scaling law from a different science
+
+Result 11 widened the evidence to rows the standard set does not
+contain, but those rows are still ITPA rows from the same devices. So
+the finding could still be a property of tokamaks rather than of how
+scaling laws get validated. This result leaves fusion entirely.
+
+Mammalian basal metabolic rate against body mass is the same object and
+the older one. Kleiber (1932) found metabolic rate scales as mass to the
+**3/4**, and that exponent is still the published baseline a fitted
+model has to beat. The correspondence is exact where it has to be:
+**taxonomic order** is the unit a species belongs to, as a tokamak is
+the unit a discharge belongs to, and **body mass** is the axis a next
+instance lies beyond, as machine size is. The data is Supplement 1 of a
+metabolic-rate compilation deposited on Figshare (article 3549807),
+pinned by SHA-256 the same way, giving 541 species records across 11
+orders whose median masses span **342x**.
+
+Two things make this a harder test than a restatement. The analysis runs
+through `scaling_audit.py`, the domain-agnostic module, not through a
+copy of `hdb5`, so it is the same procedure a reader would apply to
+their own data. And the problem has a **single predictor**, so no model
+can win by finding a better combination of features; the only thing
+separating them is functional form.
+
+![Kleiber's law under the same three splits](allometry.png)
+
+| model | CV, by species | leave-one-order-out | widest mass cut | rho vs distance |
+|---|---|---|---|---|
+| **Kleiber, exponent 3/4 (constrained)** | 0.396 | 0.440 | 0.374 | +0.39 |
+| power law, free exponent | 0.374 | 0.432 | 0.496 | +0.45 |
+| hist gradient boosting | 0.418 | 0.487 | 0.889 | +0.65 |
+| random forest | 0.437 | 0.517 | 0.710 | +0.64 |
+| mean baseline | 1.540 | 1.728 | 3.126 | +0.73 |
+
+Refitting the exponent freely gives **0.687** against Kleiber's 0.75, so
+the constraint is not free here any more than the Connor-Taylor ones
+were.
+
+### Result 13a: the extrapolation failure reproduces, completely
+
+Both tree ensembles are worse than both power laws **at all 8 mass
+cuts**, and the random forest loses to Kleiber on **9 of 11** held-out
+orders. The mechanism reproduces too: per-order error tracks
+extrapolation distance at rho = +0.64 and +0.65 for the trees against
++0.39 and +0.45 for the power laws. The gap is narrower than the tokamak
+contrast (+0.85 against -0.06) but points the same way, and the
+training-range bound of Result 4c binds at every cut: the forest's
+predictions never exceed its largest training target.
+
+**So the part of this study that is about flexible models extrapolating
+is not about tokamaks.**
+
+### Result 13b: the ranking reversal does not reproduce, and that bounds the claim
+
+The headline of Results 4 and 11 does not appear here, and the reason is
+worth more than another confirmation would have been. **The trees never
+win the easy split either.** Under cross-validation by species they
+score 0.437 and 0.418 against the free power law's 0.374. There is no
+inflated margin, so there is nothing available to invert.
+
+That is a real limit on the original claim, and it names the missing
+ingredient. The 41% cross-validated gain on HDB5 came from a flexible
+model exploiting structure across **ten** features, much of it machine
+identity recoverable from feature combinations. With one predictor, and
+a true relationship that is close to a straight line in logs, a tree has
+far less to exploit and does not buy the interpolation win that later
+inverts. **The reversal needs enough feature dimensionality for the
+flexible model to win interpolation first.** Nothing in Results 4 to 12
+said so, because a single database cannot show it.
+
+### Result 13c: the constraint result reproduces in direction, not in strength
+
+Result 8's pattern is the one that carries over most directly. Kleiber's
+published exponent **costs +0.023 under cross-validation** and **wins at
+the widest cut**, 0.374 against the free fit's 0.496, a 25% improvement
+where the held-out order is 69x heavier than the training median. Pay in
+sample, collect out of distribution: exactly the collisionless
+constraint's trade.
+
+But it is weaker than on HDB5, and the honest number is that Kleiber
+beats the free fit at **4 of 8** cuts rather than the 8 of 8 the
+collisionless constraint manages. It wins decisively at the extremes and
+loses narrowly in the middle. A constraint helps out of distribution;
+that it helps *reliably* is not something this second dataset supports.
+
+### What Result 13 does not show
+
+One replication in one other field, with one predictor and eleven
+groups, and the groups are phylogenetically related rather than
+independent: closely related orders share ancestry, which is the
+analogue of JET and JET-ILW not being two independent machines. The
+comparative-biology literature handles that with
+phylogenetically-controlled regression and this does not. Eleven orders
+is also a small number to count 4-of-8 and 8-of-8 records over. It is
+enough to show that the extrapolation failure is not fusion-specific,
+and that the reversal needs a condition this dataset lacks; it is not
+enough to establish a rate at which either happens.
+
 ## Limitations
 
 - **The refit population is not IPB98's population.** No ITPA standard-set

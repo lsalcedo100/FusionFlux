@@ -646,6 +646,77 @@ code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-sunk);
   </div>
 </section>
 
+<section>
+  <div class="wrap">
+    <div class="col">
+      <p class="kicker">Step 08 &middot; is any of this about fusion?</p>
+      <h2>The same audit on a scaling law from another science</h2>
+      <p>
+        Everything above rests on ITPA data, so the last question is whether any of it is about plasma. The
+        way to find out is to run the identical audit on a scaling law from a different field. Mammalian
+        basal metabolic rate against body mass is the same object and the older one: Kleiber found in 1932
+        that rate scales as mass to the <span class="num">3/4</span>, and that exponent is still the
+        published baseline. Taxonomic <em>order</em> plays the part of tokamak, <em>body mass</em> the part
+        of machine size. <span class="num" id="al-rows">&mdash;</span> species records across
+        <span class="num" id="al-orders">&mdash;</span> orders spanning
+        <span class="num" id="al-span">&mdash;</span> in median mass, pinned by content hash, and run
+        through the reusable module rather than a copy of the fusion pipeline.
+      </p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Model</th><th>CV, by species</th><th>Leave-one-order-out</th>
+          <th>Widest mass cut</th><th>rho vs distance</th></tr></thead>
+        <tbody id="tbl7"></tbody>
+      </table>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <p class="tag">The half that reproduces</p>
+        <span class="big good" id="al-cuts">&mdash;</span>
+        <h3>Mass cuts where the power laws beat both trees</h3>
+        <p>
+          All of them. The random forest also loses to Kleiber on
+          <b><span id="al-losses">&mdash;</span></b> held-out orders, and error tracks extrapolation
+          distance for the trees far more than for the laws. <b>The extrapolation failure is not about
+          tokamaks.</b>
+        </p>
+      </div>
+      <div class="card">
+        <p class="tag">The half that does not</p>
+        <span class="big bad" id="al-noflip">no</span>
+        <h3>Ranking reversal here</h3>
+        <p>
+          The trees never win the easy split either, so there is no inflated margin to invert. With one
+          predictor and a relationship close to a straight line in logs, a tree has nothing to exploit.
+          <b>The reversal needs enough feature dimensionality for the flexible model to win interpolation
+          first</b>, and nothing above could have shown that.
+        </p>
+      </div>
+    </div>
+
+    <p class="sub" style="margin-top:22px;max-width:74ch">
+      The constraint result travels in direction but not in strength: Kleiber's published exponent costs
+      <span class="num" id="al-cost">&mdash;</span> under cross-validation and wins the widest cut by
+      <span class="num" id="al-gain">&mdash;</span>, but at only
+      <b><span id="al-kwins">&mdash;</span></b> of the cuts rather than the 8 of 8 the collisionless
+      constraint manages. A constraint helps out of distribution; that it helps <em>reliably</em> is not
+      something this second dataset supports.
+    </p>
+
+    <figure>
+      <div class="plate"><img src="__FIG5__" alt="Kleiber's law under the same three splits: no inversion, error against distance, and the mass-ordered sweep."></div>
+      <figcaption>
+        <b>Kleiber's law under the same three splits.</b> One replication, one predictor, eleven
+        phylogenetically related groups. Enough to show the extrapolation failure generalises and that the
+        reversal needs a condition this dataset lacks; not enough to put a rate on either.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
 <footer>
   <div class="wrap">
     <div class="cols">
@@ -918,6 +989,38 @@ document.getElementById('c-msparc').textContent = FC.maha['SPARC'].toFixed(1);
 document.getElementById('c-miter').textContent = FC.maha['ITER'].toFixed(1);
 document.getElementById('c-date').textContent = FC.generatedOn;
 document.getElementById('c-digest').textContent = FC.digest + '…';
+
+/* ---- Result 13: the audit in another science ---------------------------- */
+const AL = D.allometry;
+document.getElementById('al-rows').textContent = AL.rows;
+document.getElementById('al-orders').textContent = AL.orders;
+document.getElementById('al-span').textContent = AL.massSpan + '\u00d7';
+document.getElementById('al-cuts').textContent =
+  `${AL.wins.power_laws_beat_trees}/${AL.wins.n_cuts}`;
+document.getElementById('al-losses').textContent = `${AL.forestLosses} of ${AL.nGroups}`;
+document.getElementById('al-kwins').textContent =
+  `${AL.wins.kleiber_beats_free_power_law} of ${AL.wins.n_cuts}`;
+
+document.getElementById('al-cost').textContent =
+  (AL.costVsFree >= 0 ? '+' : '\u2212') + Math.abs(AL.costVsFree).toFixed(3);
+document.getElementById('al-gain').textContent = (AL.gainAtCut * 100).toFixed(0) + '%';
+
+/* The "no" card is only honest while the reversal genuinely fails to appear. */
+document.getElementById('al-noflip').textContent = AL.reversed ? 'yes' : 'no';
+
+const alOrder = ['kleiber','ols_loglinear','hist_gradient_boosting','random_forest','mean_baseline'];
+const AL_LABELS = Object.assign({}, D.labels, {mean_baseline: 'mean baseline'});
+document.getElementById('tbl7').innerHTML = alOrder.filter(k => AL.scores[k]).map(k => {
+  const r = AL.scores[k];
+  const best = k === 'kleiber';
+  return `<tr${best ? ' class="win"' : ''}>
+    <td>${best ? '<b>' : ''}${AL_LABELS[k] || k}${best ? '</b>' : ''}</td>
+    <td class="n">${r.cv.toFixed(3)}</td>
+    <td class="n">${r.loo.toFixed(3)}</td>
+    <td class="n"><b>${r.cut.toFixed(3)}</b></td>
+    <td class="n flip">${r.rho >= 0 ? '+' : '\u2212'}${Math.abs(r.rho).toFixed(2)}</td>
+  </tr>`;
+}).join('');
 
 /* JET is the default: largest device in the database, closest analogue to the
    case a next-step machine presents. */

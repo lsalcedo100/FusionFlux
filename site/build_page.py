@@ -45,12 +45,17 @@ LABELS = {
     "powerlaw_collisionless": "power law, collisionless",
     "powerlaw_electrostatic": "power law, electrostatic",
     "hybrid_gbm_s1": "hybrid (power law + correction)",
+    # Result 13 lives in another science; its two power laws are named here
+    # so the closing section can reuse the same label lookup.
+    "kleiber": "Kleiber, exponent 3/4",
+    "ols_loglinear": "power law, free exponent",
 }
 FIGURES = {
     "__FIG1__": "extrapolation.png",
     "__FIG2__": "size_extrapolation.png",
     "__FIG3__": "dimensional.png",
     "__FIG4__": "conformal_shift.png",
+    "__FIG5__": "allometry.png",
 }
 
 # Result 8's constraint hierarchy, weakest constraint last. ``powerlaw_free`` is
@@ -203,6 +208,42 @@ def _forecast_payload() -> dict[str, Any]:
     }
 
 
+def _allometry_payload() -> dict[str, Any]:
+    """Result 13: the same audit on Kleiber's law, in another science entirely."""
+    raw = json.loads((RESULTS / "allometry.json").read_text())
+    scores = raw["scores"]
+    return {
+        # Derived here at full precision rather than in the page from the
+        # rounded cells: 0.396 - 0.374 rounds to 0.022 while the underlying
+        # difference is 0.023, and the prose quotes the latter.
+        "costVsFree": round(
+            scores["kleiber"]["cv_rmsle"] - scores["ols_loglinear"]["cv_rmsle"], 3
+        ),
+        "gainAtCut": round(
+            1 - scores["kleiber"]["mass_cut_rmsle"] / scores["ols_loglinear"]["mass_cut_rmsle"], 4
+        ),
+        "rows": raw["n_rows"],
+        "orders": raw["n_orders_scored"],
+        "massSpan": round(raw["order_mass_ratio"]),
+        "freeExponent": round(raw["free_refit_exponent"], 3),
+        "publishedExponent": raw["kleiber_exponent"],
+        "treesWinCv": raw["trees_win_cv"],
+        "reversed": raw["ranking_reversed"],
+        "forestLosses": raw["n_orders_forest_loses_to_kleiber"],
+        "nGroups": raw["n_orders"],
+        "wins": raw["sweep_wins"],
+        "scores": {
+            k: {
+                "cv": round(v["cv_rmsle"], 3),
+                "loo": round(v["loo_mean_rmsle"], 3),
+                "cut": round(v["mass_cut_rmsle"], 3),
+                "rho": round(v["distance_spearman"], 2),
+            }
+            for k, v in raw["scores"].items()
+        },
+    }
+
+
 def build_payload() -> dict[str, object]:
     """Read every number the page displays out of the generated artifacts."""
     per_machine = pd.read_csv(RESULTS / "extrapolation_per_machine.csv")
@@ -258,6 +299,7 @@ def build_payload() -> dict[str, object]:
         "shift": _shift_payload(),
         "replication": _replication_payload(),
         "forecast": _forecast_payload(),
+        "allometry": _allometry_payload(),
     }
 
 

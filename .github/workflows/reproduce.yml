@@ -26,7 +26,9 @@ on:
       - "spectral.py"
       - "conformal_shift.py"
       - "replication.py"
+      - "allometry.py"
       - "forecast.py"
+      - "predictor.py"
       - "results/**"
       - "site/build_page.py"
       - ".github/workflows/reproduce.yml"
@@ -64,7 +66,8 @@ jobs:
           path: |
             data/raw/hdb5_std5.csv
             data/raw/hdb5_db523.csv
-          key: hdb5-${{ hashFiles('hdb5.py', 'replication.py') }}
+            data/raw/allometry_bmr.txt
+          key: hdb5-${{ hashFiles('hdb5.py', 'replication.py', 'allometry.py') }}
 
       - name: Fetch and verify the datasets
         # Both are pinned by SHA-256 and verified on the staged download, so a
@@ -73,6 +76,7 @@ jobs:
           python3 hdb5.py download
           python3 hdb5.py verify
           python3 -c "import replication; replication.download_db523()"
+          python3 -c "import allometry; allometry.download_allometry()"
 
       # Keep the committed artifacts to compare against, since the analyses
       # overwrite results/ in place.

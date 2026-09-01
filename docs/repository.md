@@ -31,7 +31,10 @@ FusionFlux/
 ├── analysis_conformal_shift.py      # Result 10: repairing the interval collapse, and its limit
 ├── analysis_replication.py          # Result 11: the reversal on rows STD5 does not contain
 ├── analysis_forecast.py             # Result 12: SPARC, JT-60SA and ITER, written down in advance
+├── predictor.py                     # the study made callable: interval, distance, refusal
+├── cli.py                           # the `fusionflux` command; the study first, demo under `neutron`
 ├── lawson.py                        # standalone Lawson criterion utility
+├── allometry.py                     # Result 13: Kleiber's law, pinned; no plasma physics
 ├── scaling_audit.py                 # the method, packaged domain-agnostically (imports nothing here)
 ├── analysis_summary_figure.py       # results/summary.png; reads artifacts only, never the raw data
 ├── results/
@@ -160,7 +163,10 @@ Real-data confinement study:
 - `conformal_shift.py` owns the two repaired interval schemes of Result 10, machine-level calibration and distance-scaled nonconformity. It delegates the `split` baseline to `hdb5._conformal_arm` rather than reimplementing it, so the comparison is against Result 7's exact procedure.
 - `replication.py` owns the full DB5.2.3 revision: its own SHA-256 pin, the unit conversions to STD5's units, the row match that establishes disjointness, and the ITER89-P L-mode baseline the non-H arm needs. It reuses `hdb5.map_to_canonical` for cleaning, because a replication that cleaned its data differently would not be replicating anything.
 - `forecast.py` owns the three device design points, the tree-ensemble bound check, and the locked prediction record with its content digest.
+- `predictor.py` owns the callable form of the study. It builds and reads ``results/predictor.json``, a service card of coefficients, calibration constants and thresholds, so a prediction is arithmetic rather than a model load: nothing is unpickled, the card is diffable, and a fresh checkout can predict without the dataset. It is also the only module that decides when *not* to answer, and both of its refusal conditions are derived from results elsewhere rather than chosen here.
+- `cli.py` owns the `fusionflux` console command. It exposes the study's prediction and card-building, and delegates `neutron` to `neutron_yield.fusionflux_cli` unchanged, so that pipeline's arguments and behaviour stay defined in one place.
 - `lawson.py` owns the standalone triple-product and ignition-ratio calculation, and is the one physics utility both pipelines can borrow from.
+- `allometry.py` owns Result 13's dataset and its Kleiber baseline. It is deliberately the only analysis module that does not import `hdb5`, and `analysis_allometry.py` reaches it through `scaling_audit` rather than through the fusion pipeline, so the replication is run by the same code path an outside reader would use.
 - `scaling_audit.py` owns the reusable form of the study's method and is deliberately isolated: it imports no other module here, so it can be lifted out whole. It carries its own copy of the KKT solve for that reason, and `tests/test_scaling_audit.py` asserts the copy still agrees with `scaling_law.solve_constrained_lstsq` so the two cannot drift.
 - `analysis_summary_figure.py` owns `results/summary.png`. It is the only analysis script that reads exclusively from `results/`, so it runs without the HDB5 download and is last in `make results`.
 

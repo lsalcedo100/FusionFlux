@@ -42,6 +42,7 @@ train:
 results:
 	python3 hdb5.py download
 	python3 -c "import replication; replication.download_db523()"
+	python3 -c "import allometry; allometry.download_allometry()"
 	python3 analysis_scaling_law.py
 	python3 analysis_extrapolation.py
 	python3 analysis_flexibility_sweep.py
@@ -52,6 +53,7 @@ results:
 	python3 analysis_conformal_shift.py
 	python3 analysis_replication.py
 	python3 analysis_forecast.py
+	python3 analysis_allometry.py
 	python3 analysis_summary_figure.py
 	python3 predictor.py build
 	python3 site/build_page.py
@@ -114,7 +116,7 @@ arxiv: paper/paper.tex
 	@python3 tools/check_paper_submission.py
 	@rm -rf build/arxiv && mkdir -p build/arxiv
 	@cp paper/paper.tex build/arxiv/
-	@cp results/extrapolation.png results/size_extrapolation.png results/dimensional.png results/conformal_shift.png build/arxiv/
+	@cp results/extrapolation.png results/size_extrapolation.png results/dimensional.png results/conformal_shift.png results/allometry.png build/arxiv/
 	@cd build/arxiv && tar czf ../arxiv-submission.tar.gz paper.tex *.png
 	@echo "wrote build/arxiv-submission.tar.gz"
 	@echo "Build it exactly as arXiv will, from the flat directory:"
