@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fusionflux"
 version = "0.1.0"
-description = "Train and run FusionFlux: a physics-aware ML pipeline for predicting D-T fusion neutron yield."
+description = "Confinement scaling as a linear algebra problem: machine learning against the IPB98(y,2) scaling law on the ITPA HDB5 tokamak database."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -38,15 +38,24 @@ fusionflux = "neutron_yield.fusionflux_cli:main"
 packages = ["neutron_yield", "tools"]
 py-modules = [
     "analysis_conformal",
+    "analysis_conformal_shift",
+    "analysis_dimensional",
     "analysis_extrapolation",
     "analysis_flexibility_sweep",
+    "analysis_forecast",
     "analysis_hybrid",
-    "analysis_size_extrapolation",
+    "analysis_replication",
     "analysis_scaling_law",
+    "analysis_size_extrapolation",
     "config",
+    "conformal_shift",
+    "dimensional",
+    "forecast",
     "hdb5",
     "lawson",
+    "replication",
     "scaling_law",
+    "spectral",
     "storage",
     "train_model",
     "validation",
@@ -90,30 +99,39 @@ ignore_missing_imports = true
 [tool.coverage.run]
 source = [
     "analysis_conformal",
+    "analysis_conformal_shift",
+    "analysis_dimensional",
     "analysis_extrapolation",
     "analysis_flexibility_sweep",
+    "analysis_forecast",
     "analysis_hybrid",
-    "analysis_size_extrapolation",
+    "analysis_replication",
     "analysis_scaling_law",
+    "analysis_size_extrapolation",
     "config",
+    "conformal_shift",
+    "dimensional",
+    "forecast",
     "hdb5",
     "lawson",
+    "neutron_yield",
+    "replication",
     "scaling_law",
+    "spectral",
     "storage",
+    "tools",
     "train_model",
     "validation",
-    "neutron_yield",
-    "tools",
 ]
 
 [tool.coverage.report]
 show_missing = true
-# Measured, not guessed. The suite covers 75.57% with the HDB5 dataset present
-# (1172 of 4798 statements missed) and 75.53% without it, which is the state CI
-# is in: 13 tests skip there for want of the dataset or a trained artifact, and
-# between them they account for 2 statements. Both figures reproduce exactly
-# across clean runs, and no measured module branches on sys.version_info, so
-# the four CI interpreters have nothing to disagree about.
+# Measured, not guessed. The suite covers 77.40% with both HDB5 datasets present
+# (1210 of 5353 statements missed) and 76.11% without them, which is the state
+# CI is in: 25 tests skip there for want of a dataset or a trained artifact.
+# Both figures reproduce exactly across clean runs, and no measured module
+# branches on sys.version_info, so the three CI interpreters have nothing to
+# disagree about.
 #
 # The floor is therefore set just under the CI figure rather than well under
 # it. Its job is to catch a test file or module falling out of the suite, and
@@ -124,4 +142,4 @@ show_missing = true
 #
 # A ratchet, not a target. Raise it when coverage genuinely rises. Never lower
 # it to make a run pass -- if it trips, find out what stopped running.
-fail_under = 75
+fail_under = 76

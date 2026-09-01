@@ -1,9 +1,27 @@
 # The paper
 
-`paper.tex` is a six-page writeup of the results in
+`paper.tex` is a nine-page writeup of the results in
 [`../results/RESULTS.md`](../results/RESULTS.md), in the format a reviewer can
 evaluate at a glance. Every number in it is taken from the generated artifacts
 under `../results/`, so regenerate those first if anything has changed.
+
+**Scope: the paper covers all twelve results.** It builds to the reversal and
+its three mechanisms, then to the two things that repair it: the bounded hybrid
+correction, and the Connor-Taylor constraint hierarchy that beats it. It closes
+on the replication over STD5-disjoint rows and the locked device forecast.
+Result 9's prior-shrinkage control is reported as a paragraph rather than a
+section, since its finding is a negative one about an alternative to Result 8
+rather than a result in its own right.
+
+`tests/test_reported_numbers.py` binds every headline number to the artifact it
+came from, and its `LATE_RESULTS` document tuple includes `PAPER` and
+`PAPER_PDF`, so the paper's copies are enforced along with the prose. The PDF is
+committed, so **rebuild it whenever `paper.tex` changes** or the test will catch
+the two disagreeing.
+
+Cross-references use `\label`/`\ref` rather than hardcoded section numbers.
+Two hand-written ones were wrong before that change, and adding a section to the
+middle of the paper is exactly the edit that produces such an error silently.
 
 ## Build
 

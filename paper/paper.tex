@@ -65,10 +65,22 @@ the same boundedness that disqualifies trees as predictors, now applied to a
 residual centred on zero. Finally, split-conformal intervals calibrated to 90\%
 under cross-validation cover 35\% of rows on an unseen machine and 3\% across
 the ITER-matched cut, at essentially unchanged width: the models are not vague
-out of distribution, they are confidently wrong. Separately, we report that the
-ten-feature design matrix used here is rank deficient by exactly two, one
-dependency being that a published scaling law added as a model feature is a
-fixed linear combination of the features already present.
+out of distribution, they are confidently wrong. We then show that one line of
+dimensional analysis outperforms every model built here: imposing the
+Connor--Taylor constraints, which a scaling law expressible in dimensionless
+variables must satisfy, as linear equality constraints on the exponents gives
+0.183 at the ITER-matched cut, the best blind score in this study, with no
+hyperparameter to tune. Calibrating the intervals on held-out machines repairs
+coverage to within two points of nominal on an unseen machine and, as the
+diagnosis predicts, fails to repair it across the size cut. The reversal
+reproduces on 5358 rows the standard set does not contain and again in a
+different confinement regime against a different published law. Finally we
+record a locked prediction for SPARC, JT-60SA and ITER: inside the database's
+size range the models agree to within 15\%, and on ITER they disagree by a
+factor of 8.3. Separately, we report that the ten-feature design matrix used
+here is rank deficient by exactly two, one dependency being that a published
+scaling law added as a model feature is a fixed linear combination of the
+features already present.
 \end{abstract}
 
 \section{Introduction}
@@ -121,6 +133,7 @@ bootstraps resampling whole \emph{machines}, since the claim concerns behaviour
 on an unseen machine.
 
 \section{The design matrix is rank deficient by two}
+\label{sec:rank}
 
 Standardised, the ten-feature matrix has rank 8, with the last two singular
 values at $4.9\times10^{-14}$ and $2.4\times10^{-14}$. Projecting candidate
@@ -146,6 +159,7 @@ comparison. Omitting this gives residuals of 0.41 and 0.96 for dependencies
 that are exactly true.
 
 \section{Refitting, and where the disagreement lives}
+\label{sec:refit}
 
 Refitting Eq.~\eqref{eq:powerlaw} on all STD5 rows (design matrix
 $6228\times9$, condition number 10.7) gives $I_p$ 1.08 against the published
@@ -172,6 +186,7 @@ reason: tokamaks are not designed to vary the two independently, so no number
 of additional shots from existing machines separates them.
 
 \section{The ranking inversion}
+\label{sec:reversal}
 
 \begin{table}[t]
 \centering
@@ -219,6 +234,7 @@ flexibility is the tail rather than the centre.}
 \end{figure*}
 
 \subsection{Three mechanisms}
+\label{sec:mechanisms}
 
 \paragraph{Distance.} Ranking each model's per-machine error against the
 Mahalanobis distance of that machine's mean log-feature vector from the
@@ -233,7 +249,7 @@ error is uncorrelated with how far the machine sits from anything it saw.
 \caption{Per-machine RMSLE under leave-one-tokamak-out, ordered by Mahalanobis
 distance of the held-out machine's mean log-feature vector from the training
 mean (computed through the pseudo-inverse, since that covariance is singular by
-Sec.~3). The trees degrade with distance; the power law does not.}
+Sec.~\ref{sec:rank}). The trees degrade with distance; the power law does not.}
 \label{tab:permachine}
 \begin{tabular}{lrrrrrr}
 \toprule
@@ -278,6 +294,7 @@ simultaneously why trees cannot extrapolate and why they cannot blow up: their
 worst cases, 0.686 and 0.857, sit far below degree 3's.
 
 \section{The size extrapolation ITER asks for}
+\label{sec:size}
 
 Holding out JET still leaves twelve machines spanning much of its range, so
 leave-one-out extrapolates in identity while interpolating in size. ITER's major
@@ -317,6 +334,7 @@ of JET's weight, and dropping the spherical tokamaks moves the random forest
 from 0.938 to 0.936, so the effect is size rather than plasma shape.
 
 \section{A power law with a bounded correction}
+\label{sec:hybrid}
 
 The diagnosis implies a cure. Fit the power law, learn a correction on its log
 residuals, and damp it by $\lambda$:
@@ -357,6 +375,7 @@ all nine correction settings tried there, a bounded correction beats the power
 law and the reason is understood.
 
 \section{Calibrated intervals and their collapse}
+\label{sec:conformal}
 
 \begin{table}[t]
 \centering
@@ -396,7 +415,7 @@ distribution. They stay the same size and miss.
 
 Coverage collapses along the same axis the errors grow, but only for the trees:
 $\rho=-0.77$ for the random forest and $-0.54$ for the gradient booster against
-$+0.27$ for the power law, mirroring the point-error correlations of Sec.~5.1
+$+0.27$ for the power law, mirroring the point-error correlations of Sec.~\ref{sec:mechanisms}
 with the sign flipped. The power law's intervals are somewhat too narrow
 everywhere rather than catastrophically too narrow far away, and for a
 next-step device that distinction is most of what matters, because distance is
@@ -412,6 +431,221 @@ sweep across every cut, with underpowered cuts marked and excluded from claims.}
 \label{fig:size}
 \end{figure*}
 
+\section{One line of dimensional analysis}
+\label{sec:dimensional}
+
+Every model to this point learns its functional form from the data. None is
+told any physics. That is worth revisiting, because the field has known since
+Connor and Taylor~\cite{connor} that a confinement scaling law is not free:
+requiring it to be expressible in the dimensionless plasma variables imposes
+\emph{linear equality constraints on the exponents}. A physics assumption is
+therefore a matrix $C$, and the fit becomes
+\begin{equation}
+\min_{b}\ \lVert Xb - y \rVert^{2} \quad \text{subject to} \quad Cb = d ,
+\label{eq:constrained}
+\end{equation}
+which the KKT system solves in closed form. Nothing new is needed to run the
+experiment: the solver is the one written by hand for Sec.~\ref{sec:refit}.
+
+We derive the constraints in code from the definitions of $\rho^{*}$, $\beta$
+and $\nu^{*}$ rather than transcribing exponents from a paper, which makes the
+derivation checkable against something external. IPB98(y,2) was published in
+1999 and was never told about these surfaces. It lands on the Kadomtsev surface
+at a distance of 0.00096 and on the collisionless surface at
+0.0045, both inside the rounding of its own two-decimal exponents. A
+transcription error would not reproduce that.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Fitting under the Connor--Taylor constraint hierarchy. The only
+difference between the first and last rows is the constraint: same features,
+same solver, no hyperparameter.}
+\label{tab:dimensional}
+\begin{tabular}{lrrrr}
+\toprule
+Model & in sample & CV & LOMO & ITER cut \\
+\midrule
+power law, collisionless & 0.1818 & 0.182 & 0.206 & \textbf{0.183} \\
+IPB98(y,2), analytic$^{*}$ & --- & 0.199 & 0.188 & 0.194 \\
+bounded hybrid (Sec.~\ref{sec:hybrid}) & --- & 0.151 & 0.246 & 0.206 \\
+power law, electrostatic & 0.2245 & 0.225 & 0.241 & 0.237 \\
+power law, Kadomtsev & 0.1808 & 0.181 & 0.210 & 0.254 \\
+power law, unconstrained & 0.1808 & 0.181 & 0.214 & 0.279 \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\footnotesize $^{*}$fitted on this database including the held-out machines;
+not a blind model.}
+\end{table}
+
+Table~\ref{tab:dimensional} is the result. At the ITER-matched cut the
+collisionless power law scores \textbf{0.183}, the best of any blind model in
+this study. It beats the bounded hybrid of Sec.~\ref{sec:hybrid}, which was built specifically
+for that cut, and it beats the analytic law that was fitted with those machines
+included. It has no hyperparameter and nothing to tune.
+
+The two constraints behave differently, and the difference is informative. The
+Kadomtsev constraint is \emph{free}: at 0.1808 in sample it is identical to the
+unconstrained fit to four decimals, because the data already satisfies it
+unaided. It nonetheless beats the unconstrained fit at 15 of 15 cuts in the size
+sweep, since a constraint the data satisfies on average still stops the fit
+wandering when the training half is small. The collisionless constraint costs
+0.001 in sample and wins at 8 of 8 well-powered cuts. Push one rung further to a
+beta-independent law and it degrades sharply, to 0.237. There is an optimum in
+the middle of the hierarchy, and nothing in this analysis predicted where it
+would fall; as with the hybrid, cross-validation does not select it, because
+every constrained fit is slightly worse than unconstrained under CV by
+construction.
+
+It matters that this is a constraint and not a prior. Supplying the same physics
+as a Gaussian prior instead, shrunk along the weak singular direction of
+Sec.~\ref{sec:refit}, is worth much less. Targeting the shrinkage beats isotropic shrinkage at
+every matched penalty strength, which is a real effect, but nothing in that
+family beats simply adopting IPB98's published exponents outright. A constraint
+names a surface; a prior names a point. The weaker information is worth more,
+because the surface is what the physics actually asserts.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{dimensional.png}
+\caption{\textbf{Cost against benefit across the size sweep.} Left: the
+in-sample penalty each constraint imposes. Middle and right: the score at every
+size cut for the constrained and unconstrained fits, with underpowered cuts
+marked. The constraint costs almost nothing where the data is plentiful and pays
+where it is not.}
+\label{fig:dimensional}
+\end{figure*}
+
+\section{Repairing the intervals, and the limit of the repair}
+\label{sec:shift}
+
+The diagnosis in Sec.~\ref{sec:conformal} makes a falsifiable prediction. If the interval collapse
+is really about exchangeability rather than about the models, then calibrating
+on held-out \emph{machines} instead of held-out discharges should repair it, and
+should repair it only as far as that unit reaches. We test both halves.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Empirical coverage of nominal 90\% intervals under three calibration
+schemes, on a held-out machine and across the ITER-matched size cut.}
+\label{tab:shift}
+\begin{tabular}{lrrrrrr}
+\toprule
+& \multicolumn{2}{c}{split conformal} & \multicolumn{2}{c}{by machine}
+& \multicolumn{2}{c}{$+$ distance} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Model & LOMO & cut & LOMO & cut & LOMO & cut \\
+\midrule
+random forest & 35\% & 3\% & \textbf{88\%} & 29\% & 88\% & 40\% \\
+hist grad.\ boosting & 45\% & 0\% & \textbf{90\%} & 4\% & 89\% & 13\% \\
+ridge, log-linear & 83\% & 70\% & 91\% & 77\% & 92\% & 82\% \\
+power law, collisionless & 85\% & 91\% & 91\% & \textbf{95\%} & 92\% & 92\% \\
+IPB98(y,2)$^{*}$ & 89\% & 88\% & 89\% & 89\% & 89\% & 87\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Both halves land. On a held-out machine the repair is essentially complete:
+every model returns to within two points of nominal, tree ensembles included,
+and the random forest goes from 35\% to 88\%. Across the size cut none does. No
+recalibration makes the two exchangeable there, because every calibration
+machine is smaller than every test machine, and scaling the interval by
+extrapolation distance recovers only part of the gap (3\% to 40\% for the
+forest). A repair that stops exactly where the diagnosis says it should is
+stronger evidence for the diagnosis than one that worked everywhere would be.
+
+The constrained power law of Sec.~\ref{sec:dimensional} is the single exception in
+Table~\ref{tab:shift}: its intervals hold at the ITER-matched cut under every
+scheme, including plain split conformal, which fails there for everything else.
+
+\section{Replication on rows the standard set does not contain}
+\label{sec:replication}
+
+Everything above rests on one file, which is the honest ceiling on all of it.
+The same OSF project publishes the full database revision, DB5.2.3, with 14153
+rows against STD5's 6228, and we pin it by its own SHA-256. Matching on
+(tokamak, shot, time) shows STD5 is an ELMy-H-mode quality selection out of it
+and leaves two populations this study had not analysed: \textbf{5358 H-mode rows
+STD5 does not contain} (12 machines, zero row overlap) and \textbf{3860 ohmic
+and L-mode rows} in a different confinement regime, which we score against
+ITER89-P~\cite{iter89p} because an H-mode law is the wrong baseline for an
+L-mode plasma.
+
+This replication has exactly one way to be silently fake, and it is worth
+naming. If the row match against STD5 fails, every STD5 row stays in the
+"disjoint" arm, the arm becomes a superset of the data Sec.~\ref{sec:reversal} was computed on,
+and it reproduces Sec.~\ref{sec:reversal} by construction. We therefore check the matcher
+positively as well as negatively: STD5 matched against itself must overlap
+completely, and the disjoint arm must share zero rows.
+
+The ranking inverts in both arms. On the disjoint H-mode rows the best
+cross-validated model beats the published law by 42\%, within a point of the
+41\% this paper opens with, computed on rows that headline never saw, and the
+best model on an unseen machine is IPB98(y,2). On the ohmic and L-mode rows the
+cross-validation gain over ITER89-P is 67\% and the best model on an unseen
+machine is the collisionless power law of Sec.~\ref{sec:dimensional}. Counting machine--model pairs
+where a tree ensemble loses to the published law on an unseen machine: 19 of 24
+and 10 of 10.
+
+So the reversal is not an artifact of the standard set's selection criteria, and
+not a property of ELMy H-mode or of IPB98(y,2) specifically. It is emphatically
+\emph{not} an independent database: both arms come from the same ITPA collection
+and the same devices, and the five-machine arm is too small to carry a claim
+alone.
+
+\section{A locked prediction for three machines that have no data}
+\label{sec:forecast}
+
+Everything above is retrospective. To make the disagreement falsifiable rather
+than merely described, we record what each model predicts for three real
+devices, with intervals, a date, and a digest over the input rows so that a
+later edit leaves a mark. The parameter sets are published design values, and
+each reproduces the confinement time its own source quotes: SPARC to 0.6\% and
+ITER to 2.9\%.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Predicted energy confinement time, with nominal 90\% intervals. Locked
+31 August 2026 against a fixed dataset digest.}
+\label{tab:forecast}
+\begin{tabular}{lrrr}
+\toprule
+& SPARC & JT-60SA & ITER \\
+& \SI{1.85}{\metre} & \SI{2.96}{\metre} & \SI{6.2}{\metre} \\
+Model & & (operating) & \\
+\midrule
+IPB98(y,2)$^{*}$ & \SI{0.765}{\second} & \SI{0.479}{\second} & \textbf{\SI{3.591}{\second}} \\
+power law, collisionless & \SI{0.724}{\second} & \SI{0.428}{\second} & \SI{2.837}{\second} \\
+ridge, log-linear & \SI{0.720}{\second} & \SI{0.444}{\second} & \SI{2.858}{\second} \\
+random forest & \SI{0.136}{\second} & \SI{0.449}{\second} & \textbf{\SI{0.435}{\second}} \\
+hist grad.\ boosting & \SI{0.305}{\second} & \SI{0.418}{\second} & \SI{0.444}{\second} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:forecast} is the argument of this paper in one place. On JT-60SA,
+which sits inside the database's size range and is already operating, all five
+models agree to within 15\%. On ITER, $1.82\times$ beyond it, they disagree by a
+factor of \textbf{8.3}.
+
+That gap cannot be closed by tuning, and Sec.~\ref{sec:reversal} says why: a tree ensemble
+predicts by averaging training targets, so its output cannot exceed the largest
+one, which here is \SI{1.321}{\second}. The random forest that beats the
+published law by 41\% under cross-validation is arithmetically incapable of
+returning ITER's predicted confinement time whatever it is asked, and its
+nominal 90\% interval at ITER runs from \SI{0.19}{\second} to
+\SI{0.98}{\second}, containing neither the physics answer nor anything near it.
+
+One feature of this table was not anticipated by anything above: \textbf{SPARC
+sits further from the training data than ITER does}, at a Mahalanobis distance
+of 6.9 against 4.7, despite being the smaller machine. Its \SI{12.2}{\tesla}
+field is far outside a database that tops out near \SI{4}{\tesla}. Size is not
+the only direction in which a next-step device leaves the data behind, and an
+extrapolation audit organised around size alone would have missed it.
+
 \section{Limitations}
 
 The refit population is not IPB98's, and the refit exponents should not be read
@@ -422,9 +656,18 @@ if anything optimistic. Thirteen machines is a small bootstrap and the paired
 differences are the more reliable statistic. The ITER-matched cut reproduces
 ITER's size ratio and nothing else: ITER is a burning plasma dominated by alpha
 self-heating at a gain no row here approaches, so clearing this bar is necessary
-and not sufficient. The per-machine coverages in Sec.~8 are proportions over as
+and not sufficient. The per-machine coverages in Sec.~\ref{sec:conformal} are proportions over as
 few as 39 rows and carry binomial uncertainty of ten points or more; the pooled
-contrasts are far larger than that noise, the within-column ordering is not.
+contrasts are far larger than that noise, the within-column ordering is not. The
+constraint hierarchy of Sec.~\ref{sec:dimensional} has an optimum in its middle that nothing here
+predicted and that cross-validation cannot select, so the result is that a
+constraint helps rather than that this constraint is the right one. The
+replication of Sec.~\ref{sec:replication} is disjoint in rows but not independent in provenance:
+both arms come from the same ITPA collection and the same devices, and its
+five-machine arm is too small to carry a claim alone. The locked forecast of
+Sec.~\ref{sec:forecast} is a record, not a validation; only JT-60SA can be checked against
+measurement in the near term, and it is the one device of the three that sits
+inside the database's size range.
 
 \section{Conclusion}
 
@@ -439,6 +682,17 @@ is the functional form that survives leaving the data behind. A bounded
 correction on its residuals improves it in the one direction a next-step device
 lies in, and the same boundedness that disqualifies trees as predictors is what
 makes that correction safe.
+
+The strongest repair, though, is not a model at all. Constraining the exponents
+to a surface the physics requires them to lie on beats every model built here at
+the ITER-matched cut, costs 0.001 in sample, and has nothing to tune. Supplying
+the same physics as a prior is worth substantially less: a constraint names a
+surface where a prior names a point, and the weaker information is the more
+useful one. The reversal itself reproduces on rows the standard set does not
+contain and in a second confinement regime, so it is a property of how these
+models are validated rather than of one file. What the models disagree about is
+recorded rather than argued: on a machine inside the database's size range they
+agree to within 15\%, and on ITER they differ by a factor of 8.3.
 
 \section*{Data and code availability}
 
@@ -456,6 +710,10 @@ confinement database: description and analysis,'' \emph{Nucl.\ Fusion}
 \textbf{61}, 076006 (2021).
 \bibitem{conformal} V. Vovk, A. Gammerman and G. Shafer,
 \emph{Algorithmic Learning in a Random World}, Springer (2005).
+\bibitem{connor} J.W. Connor and J.B. Taylor, ``Scaling laws for plasma
+confinement,'' \emph{Nucl.\ Fusion} \textbf{17}, 1047 (1977).
+\bibitem{iter89p} P.N. Yushmanov \emph{et al.}, ``Scalings for tokamak energy
+confinement,'' \emph{Nucl.\ Fusion} \textbf{30}, 1999 (1990). ITER89-P.
 \end{thebibliography}
 
 \end{document}

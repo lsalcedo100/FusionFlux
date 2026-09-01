@@ -1,16 +1,17 @@
 """Build the single-page summary at ``site/index.html`` from ``results/``.
 
 Run ``python3 site/build_page.py``. The page is the public-facing version of
-``results/RESULTS.md``: the reversal, the ITER-direction escalation, and an
+``results/RESULTS.md``: the reversal, the ITER-direction escalation, an
 interactive panel where a reader picks the held-out machine and watches the
-ranking rearrange.
+ranking rearrange, the dimensional constraint that repairs it, and the locked
+forecast for three machines that have no data.
 
 Every number on it is read out of the generated artifacts rather than typed in,
 for the same reason the rest of the repository works that way: a hand-copied
 number on a public page is a number that silently stops matching the analysis
 the first time the analysis is rerun. Regenerate the results first, then this.
 
-The two figures are inlined as base64 data URIs rather than referenced, so the
+The figures are inlined as base64 data URIs rather than referenced, so the
 output is one self-contained file that can be dropped on any static host with
 no asset paths to keep in sync.
 """
@@ -36,8 +37,31 @@ LABELS = {
     "ridge_loglinear": "ridge (power law)",
     "hist_gradient_boosting": "hist gradient boosting",
     "random_forest": "random forest",
+    # Carried in the same map so the later sections can label a model without a
+    # second lookup table, but deliberately not in MODELS: the four above are
+    # the ones the reversal narrative and the interactive panel step through.
+    "powerlaw_free": "power law, unconstrained",
+    "powerlaw_kadomtsev": "power law, Kadomtsev",
+    "powerlaw_collisionless": "power law, collisionless",
+    "powerlaw_electrostatic": "power law, electrostatic",
+    "hybrid_gbm_s1": "hybrid (power law + correction)",
 }
-FIGURES = {"__FIG1__": "extrapolation.png", "__FIG2__": "size_extrapolation.png"}
+FIGURES = {
+    "__FIG1__": "extrapolation.png",
+    "__FIG2__": "size_extrapolation.png",
+    "__FIG3__": "dimensional.png",
+    "__FIG4__": "conformal_shift.png",
+}
+
+# Result 8's constraint hierarchy, weakest constraint last. ``powerlaw_free`` is
+# the unconstrained fit the other two are scored against; it is the same model
+# as ``ridge_loglinear`` at zero penalty, and the sweep below compares against
+# it rather than against ridge so that the only difference is the constraint.
+CONSTRAINED = ("powerlaw_kadomtsev", "powerlaw_collisionless", "powerlaw_electrostatic")
+
+# Result 10's three calibration schemes, in the order the page steps through
+# them: the one that fails, the repair, and the repair plus distance scaling.
+SCHEMES = ("split", "machine_cv", "machine_cv_distance")
 
 
 # ``DataFrame.loc`` is typed as returning a union of every dtype pandas can
@@ -48,6 +72,135 @@ def _f(frame: pd.DataFrame, row: str, column: str) -> float:
 
 def _i(frame: pd.DataFrame, row: str, column: str) -> int:
     return int(cast(Any, frame.loc[row, column]))
+
+
+def _dimensional_payload() -> dict[str, Any]:
+    """Result 8: what the Connor-Taylor constraints cost and what they buy."""
+    raw = json.loads((RESULTS / "dimensional.json").read_text())
+    scores = {row["model_name"]: row for row in raw["split_scores"]}
+
+    # The external check that the derivation is right: IPB98(y,2) was published
+    # in 1999 and lands on these surfaces without being told about them.
+    published = {
+        row["constraint_model"]: row["residual_norm"]
+        for row in raw["constraint_distances"]
+        if row["exponent_source"] == "ipb98y2_published"
+    }
+
+    # The size sweep, counted here rather than copied from the prose. Cuts are
+    # keyed by how many machines are in the training half, which is unique per
+    # cut; size_ratio is not, since three cuts share a ratio.
+    sweep = pd.read_csv(RESULTS / "dimensional_size_sweep.csv")
+    sweep = sweep[sweep["scope"] == "__pooled__"]
+    rmsle = sweep.pivot_table(index="n_train_machines", columns="model_name", values="rmsle")
+    powered = sweep.pivot_table(index="n_train_machines", columns="model_name", values="well_powered")
+
+    def _wins(model: str, *, well_powered_only: bool) -> dict[str, int]:
+        mask = powered[model].astype(bool) if well_powered_only else powered[model].notna()
+        beat = rmsle[model][mask] < rmsle["powerlaw_free"][mask]
+        return {"won": int(beat.sum()), "of": int(mask.sum())}
+
+    return {
+        "inSample": {k: round(v, 4) for k, v in raw["in_sample_rmsle"].items()},
+        "scores": {
+            k: {
+                "cv": round(scores[k]["cv_rmsle"], 3),
+                "lomo": round(scores[k]["lomo_mean_rmsle"], 3),
+                "size": round(scores[k]["size_cut_rmsle"], 3),
+            }
+            for k in (*CONSTRAINED, "powerlaw_free", "ipb98y2_analytic", "hybrid_gbm_s1")
+        },
+        "published": {k: round(v, 5) for k, v in published.items()},
+        "best": raw["best_blind_at_size_cut"],
+        "bestRmsle": round(raw["best_blind_size_cut_rmsle"], 3),
+        # Kadomtsev is free, so it is scored at every cut. Collisionless costs
+        # something in sample, so it is only claimed where the training half is
+        # large enough for the cost to be resolvable.
+        "kadomtsevWins": _wins("powerlaw_kadomtsev", well_powered_only=False),
+        "collisionlessWins": _wins("powerlaw_collisionless", well_powered_only=True),
+    }
+
+
+def _shift_payload() -> dict[str, Any]:
+    """Result 10: the interval repair, and the cut where it stops working."""
+    raw = json.loads((RESULTS / "conformal_shift.json").read_text())
+    repairs = {(r["model_name"], r["method"]): r for r in raw["repairs"]}
+    models = sorted({m for m, _ in repairs})
+    return {
+        "nominal": raw["nominal_coverage"],
+        "schemes": list(SCHEMES),
+        "coverage": {
+            m: {
+                s: {
+                    "lomo": round(repairs[(m, s)]["lomo_coverage"], 3),
+                    "size": round(repairs[(m, s)]["size_cut_coverage"], 3),
+                }
+                for s in SCHEMES
+                if (m, s) in repairs
+            }
+            for m in models
+        },
+    }
+
+
+def _replication_payload() -> list[dict[str, Any]]:
+    """Result 11: the same reversal on rows STD5 does not contain."""
+    raw = json.loads((RESULTS / "replication.json").read_text())
+    return [
+        {
+            "arm": arm["arm"],
+            "baseline": arm["baseline_label"],
+            "rows": arm["n_rows"],
+            "machines": arm["n_machines_scored"],
+            "shared": arm["n_rows_shared_with_std5"],
+            "bestCv": arm["best_cv_model"],
+            "bestLomo": arm["best_lomo_model"],
+            "reversed": arm["ranking_reversed"],
+            "gain": round(arm["cv_gain_over_baseline"], 3),
+            "treeLosses": arm["n_machines_trees_lose_to_baseline"],
+        }
+        for arm in raw["arms"]
+    ]
+
+
+def _forecast_payload() -> dict[str, Any]:
+    """Result 12: the locked prediction for three machines with no data."""
+    raw = json.loads((RESULTS / "forecast.json").read_text())
+    devices = [
+        {
+            "name": d["name"],
+            "r": d["r_m"],
+            "status": d["status"],
+            "published": d.get("published_ipb98_tau_s"),
+        }
+        for d in raw["devices"]
+    ]
+    rows: dict[str, dict[str, Any]] = {}
+    for f in raw["forecasts"]:
+        rows.setdefault(f["model_name"], {})[f["device"]] = {
+            "tau": round(f["tau_predicted_s"], 3),
+            "lo": round(f["tau_interval_low_s"], 3),
+            "hi": round(f["tau_interval_high_s"], 3),
+            "bounded": bool(f["bounded_by_training_range"]),
+        }
+
+    # The headline of the whole page, computed rather than asserted: how far
+    # apart the models are on the one machine none of them can be checked on.
+    at_iter = [v["ITER"]["tau"] for v in rows.values()]
+    return {
+        "generatedOn": raw["generated_on"],
+        "digest": raw["content_digest_sha256"][:12],
+        "trainMax": round(raw["train_tau_max_s"], 3),
+        "devices": devices,
+        "rows": rows,
+        "spread": round(max(at_iter) / min(at_iter), 1),
+        "maha": {
+            d["name"]: round(
+                next(f["feature_mahalanobis"] for f in raw["forecasts"] if f["device"] == d["name"]), 1
+            )
+            for d in raw["devices"]
+        },
+    }
 
 
 def build_payload() -> dict[str, object]:
@@ -101,6 +254,10 @@ def build_payload() -> dict[str, object]:
             "lomo": round(_f(frontier, "hybrid_gbm_s1", "lomo_mean_rmsle"), 3),
             "size": round(_f(frontier, "hybrid_gbm_s1", "size_cut_rmsle"), 3),
         },
+        "dimensional": _dimensional_payload(),
+        "shift": _shift_payload(),
+        "replication": _replication_payload(),
+        "forecast": _forecast_payload(),
     }
 
 

@@ -67,6 +67,12 @@ def artifacts() -> dict[str, object]:
         "summary": _csv("extrapolation_summary.csv", "model_name"),
         "escalation": _csv("size_extrapolation_escalation.csv", "model_name"),
         "coverage": _csv("conformal_summary.csv", "model_name"),
+        "dimensional": _json("dimensional.json"),
+        "dim_splits": _csv("dimensional_splits.csv", "model_name"),
+        "dim_constraints": pd.read_csv(RESULTS / "dimensional_constraints.csv"),
+        "shift": pd.read_csv(RESULTS / "conformal_shift_summary.csv"),
+        "replication": _json("replication.json"),
+        "forecast": _json("forecast.json"),
     }
 
 
@@ -170,12 +176,69 @@ def _cov(a: dict, model: str, column: str) -> float:
     return float(a["coverage"].loc[model, column])
 
 
+def _dim(a: dict, model: str, column: str) -> float:
+    return float(a["dim_splits"].loc[model, column])
+
+
+def _constraint(a: dict, source: str, model: str) -> float:
+    frame = a["dim_constraints"]
+    row = frame[(frame["exponent_source"] == source) & (frame["constraint_model"] == model)]
+    if row.empty:
+        raise AssertionError(f"no constraint distance for {source} against {model}")
+    return float(row["residual_norm"].iloc[0])
+
+
+def _shift(a: dict, model: str, method: str, column: str) -> float:
+    frame = a["shift"]
+    row = frame[(frame["model_name"] == model) & (frame["method"] == method)]
+    if row.empty:
+        raise AssertionError(f"no coverage row for {model} under {method}")
+    return float(row[column].iloc[0])
+
+
+def _arm(a: dict, name: str) -> dict:
+    for arm in a["replication"]["arms"]:
+        if arm["arm"] == name:
+            return arm
+    raise AssertionError(f"no replication arm named {name}")
+
+
+def _cast(a: dict, device: str, model: str) -> float:
+    for row in a["forecast"]["forecasts"]:
+        if row["device"] == device and row["model_name"] == model:
+            return float(row["tau_predicted_s"])
+    raise AssertionError(f"no forecast for {model} on {device}")
+
+
+def _spread(a: dict, device: str) -> float:
+    """How far apart the models are on one device, max over min.
+
+    This is the number the forecast table exists to produce, and before it was
+    bound here the prose carried 8.1 while the artifact said 8.3: it is a ratio
+    of two other reported values rather than a field of its own, so nothing
+    recomputed it when the forecast was regenerated.
+    """
+    taus = [
+        float(row["tau_predicted_s"])
+        for row in a["forecast"]["forecasts"]
+        if row["device"] == device
+    ]
+    assert taus, f"no forecasts for {device}"
+    return max(taus) / min(taus)
+
+
 def _paired(a: dict, model_a: str, model_b: str) -> dict:
     for row in a["extrapolation"]["paired_differences"]:
         if row["model_a"] == model_a and row["model_b"] == model_b:
             return row
     raise AssertionError(f"no paired difference for {model_a} against {model_b}")
 
+
+# Results 8 to 12, which the paper carries alongside the prose documents. The
+# site template is not in this tuple: ``site/build_page.py`` reads those numbers
+# out of ``results/`` and substitutes them, so the template holds placeholders
+# rather than literals and there is nothing there to go stale.
+LATE_RESULTS = (README, RESULTS_MD, PAPER, PAPER_PDF)
 
 CLAIMS: tuple[Claim, ...] = (
     # -- dataset scale -----------------------------------------------------
@@ -275,6 +338,69 @@ CLAIMS: tuple[Claim, ...] = (
           lambda a: a["analysis"]["rank_audit"]["rank"], lambda v: f"rank {v}"),
     Claim("rank deficiency", "2",
           lambda a: a["analysis"]["rank_audit"]["rank_deficiency"]),
+    # -- Result 8: physics as a constraint --------------------------------
+    Claim("collisionless power law at the ITER-matched cut", "0.183",
+          lambda a: _dim(a, "powerlaw_collisionless", "size_cut_rmsle"), _r(3),
+          documents=LATE_RESULTS),
+    Claim("IPB98 distance from the Kadomtsev surface", "0.00096",
+          lambda a: _constraint(a, "ipb98y2_published", "kadomtsev"), _r(5),
+          documents=LATE_RESULTS),
+    Claim("IPB98 distance from the collisionless surface", "0.0045",
+          lambda a: _constraint(a, "ipb98y2_published", "collisionless"), _r(4),
+          documents=LATE_RESULTS),
+    Claim("unconstrained fit, in sample", "0.1808",
+          lambda a: float(a["dimensional"]["in_sample_rmsle"]["powerlaw_free"]), _r(4),
+          documents=LATE_RESULTS),
+    Claim("collisionless fit, in sample", "0.1818",
+          lambda a: float(a["dimensional"]["in_sample_rmsle"]["powerlaw_collisionless"]), _r(4),
+          documents=LATE_RESULTS),
+
+    # -- Result 10: the repaired intervals --------------------------------
+    Claim("random forest coverage on a held-out machine, machine-CV", "88%",
+          lambda a: _shift(a, "random_forest", "machine_cv", "lomo_coverage"), _pct(0),
+          documents=LATE_RESULTS),
+    Claim("random forest coverage at the ITER cut, distance-scaled", "40%",
+          lambda a: _shift(a, "random_forest", "machine_cv_distance", "size_cut_coverage"),
+          _pct(0), documents=LATE_RESULTS),
+    Claim("collisionless coverage at the ITER cut, split conformal", "91%",
+          lambda a: _shift(a, "powerlaw_collisionless", "split", "size_cut_coverage"),
+          _pct(0), documents=LATE_RESULTS),
+
+    # -- Result 11: the replication ---------------------------------------
+    Claim("disjoint H-mode rows", "5358",
+          lambda a: _arm(a, "disjoint_h")["n_rows"], documents=LATE_RESULTS),
+    Claim("non-H rows", "3860",
+          lambda a: _arm(a, "non_h")["n_rows"], documents=LATE_RESULTS),
+    Claim("CV gain over IPB98 on the disjoint arm", "42%",
+          lambda a: _arm(a, "disjoint_h")["cv_gain_over_baseline"], _pct(0),
+          documents=LATE_RESULTS),
+    Claim("CV gain over ITER89-P on the non-H arm", "67%",
+          lambda a: _arm(a, "non_h")["cv_gain_over_baseline"], _pct(0),
+          documents=LATE_RESULTS),
+
+    # -- Result 12: the locked forecast -----------------------------------
+    Claim("largest confinement time in the training data", "1.321",
+          lambda a: float(a["forecast"]["train_tau_max_s"]), _r(3),
+          documents=LATE_RESULTS),
+    Claim("IPB98 on ITER", "3.591",
+          lambda a: _cast(a, "ITER", "ipb98y2_analytic"), _r(3),
+          documents=LATE_RESULTS),
+    Claim("random forest on ITER", "0.435",
+          lambda a: _cast(a, "ITER", "random_forest"), _r(3),
+          documents=LATE_RESULTS),
+    Claim("collisionless power law on ITER", "2.837",
+          lambda a: _cast(a, "ITER", "powerlaw_collisionless"), _r(3),
+          documents=LATE_RESULTS),
+    Claim("model disagreement at ITER", "8.3",
+          lambda a: _spread(a, "ITER"), _r(1),
+          documents=LATE_RESULTS,
+          phrases=lambda lit: (f"a factor of **{lit}**", f"a factor of {lit}")),
+    Claim("model agreement on JT-60SA", "15%",
+          # Rendered as the excess over perfect agreement, because that is how
+          # the prose says it: "agree to within 15%".
+          lambda a: _spread(a, "JT-60SA") - 1.0, _pct(0),
+          documents=LATE_RESULTS,
+          phrases=lambda lit: (f"agree to within {lit}",)),
 )
 
 

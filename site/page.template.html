@@ -446,6 +446,206 @@ code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-sunk);
   </div>
 </section>
 
+<section>
+  <div class="wrap">
+    <div class="col">
+      <p class="kicker">Step 04 &middot; the cure</p>
+      <h2>One line of physics, and it is not a model at all</h2>
+      <p>
+        Every model above learns its form from the data. None of them is told any physics, which is odd,
+        because the field has known since Connor and Taylor (1977) that a scaling law is not free: requiring
+        it to be expressible in dimensionless variables imposes <em>linear equality constraints on the
+        exponents</em>. So a physics assumption is a matrix <span class="num">C</span>, the fit becomes
+        least squares subject to <span class="num">Cb = d</span>, and the solver for exactly that was
+        already in the repository.
+      </p>
+      <p>
+        The check that the derivation is right is external and hard to fake. IPB98(y,2) was published in
+        1999 and was never told about these surfaces, yet it lands on the Kadomtsev surface at a distance of
+        <span class="num" id="d-kad">&mdash;</span> and on the collisionless surface at
+        <span class="num" id="d-col">&mdash;</span>, both inside the rounding of its own two-decimal
+        exponents.
+      </p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Model</th><th>In sample</th><th>CV, by discharge</th>
+          <th>Held-out machine</th><th>ITER-matched cut</th></tr></thead>
+        <tbody id="tbl3"></tbody>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:14px;max-width:74ch">
+      <b id="dim-best">&mdash;</b> is the best score any blind model on this page reaches at the
+      ITER-matched cut. It beats the hybrid above, and it beats the analytic law that was fitted with those
+      machines included. It has no hyperparameter and nothing to tune: <b>the only difference from the
+      unconstrained row is the constraint</b>.
+    </p>
+
+    <div class="cards">
+      <div class="card">
+        <p class="tag">The free constraint</p>
+        <span class="big good" id="c-kad">&mdash;</span>
+        <h3>Kadomtsev wins at every size cut</h3>
+        <p>
+          It costs nothing in sample, because the data already satisfies it unaided, and it still beats the
+          unconstrained fit at every cut in the sweep. A constraint the data satisfies on average still stops
+          the fit wandering when the training set is small.
+        </p>
+      </div>
+      <div class="card">
+        <p class="tag">The one that costs something</p>
+        <span class="big good" id="c-col">&mdash;</span>
+        <h3>Collisionless wins where it is resolvable</h3>
+        <p>
+          It costs <span class="num">0.001</span> in sample and wins at every well-powered cut. Push one
+          rung further, to a beta-independent law, and it degrades again: there is an optimum in the middle
+          of the hierarchy, and <b>nothing here predicted where</b>. Cross-validation cannot select any of
+          it.
+        </p>
+      </div>
+    </div>
+
+    <figure>
+      <div class="plate"><img src="__FIG3__" alt="Cost against benefit across the size sweep: in-sample penalty for each constraint, and the score at every size cut for the constrained and unconstrained fits."></div>
+      <figcaption>
+        <b>Cost against benefit across the size sweep.</b> The constraints are derived in code from the
+        definitions of rho*, beta and nu* rather than copied out of a paper, so the surfaces move if the
+        definitions do.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="col">
+      <p class="kicker">Step 05 &middot; the interval, repaired</p>
+      <h2>The collapse is repairable, and the repair stops exactly where the diagnosis says</h2>
+      <p>
+        If the interval failure really is about exchangeability rather than about the models, then
+        calibrating on <em>held-out machines</em> instead of held-out discharges should repair it, and should
+        repair it only as far as that unit reaches. Both halves land, and the half that fails is the stronger
+        result.
+      </p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Nominal 90% interval</th><th>Split conformal, held-out machine</th>
+          <th>Calibrated on machines</th><th>Plus distance scaling</th>
+          <th>Best scheme at the ITER cut</th></tr></thead>
+        <tbody id="tbl4"></tbody>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:14px;max-width:74ch">
+      On a held-out machine every model returns to within two points of nominal, tree ensembles included.
+      Across the size cut none does, because <b>every calibration machine is smaller than every test
+      machine</b> and no recalibration makes those two exchangeable. The constrained power law is the single
+      exception: its intervals hold at the ITER-matched cut under every scheme, including the plain split
+      conformal that fails there for everything else.
+    </p>
+
+    <figure>
+      <div class="plate"><img src="__FIG4__" alt="Coverage under three calibration schemes, on a held-out machine and across the ITER-matched size cut."></div>
+      <figcaption>
+        <b>Coverage under three calibration schemes.</b> A repair that does not work everywhere is worth more
+        than one that appears to: it tells you which assumption was actually doing the work.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="col">
+      <p class="kicker">Step 06 &middot; is it just this file?</p>
+      <h2>It reproduces on rows this database does not contain</h2>
+      <p>
+        Everything above rests on one file, which is the honest ceiling on all of it. The same OSF project
+        publishes the full database revision, <span class="num">14153</span> rows against STD5's
+        <span class="num">6228</span>, pinned by its own content hash. Matching on
+        <span class="num">(tokamak, shot, time)</span> shows STD5 is a quality selection out of it, and
+        leaves two populations this repository had never analysed.
+      </p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Population</th><th>Rows</th><th>Rows shared with STD5</th><th>Machines</th>
+          <th>Best under CV</th><th>Best on an unseen machine</th><th>CV gain over the published law</th></tr></thead>
+        <tbody id="tbl5"></tbody>
+      </table>
+    </div>
+    <p class="sub" style="margin-top:14px;max-width:74ch">
+      The column ordering inverts in both arms. On the disjoint H-mode rows the best cross-validated model
+      beats the published law by a margin within a point of the one this page opens with, computed on rows
+      that headline never saw. So the reversal is not an artifact of the standard set's selection criteria,
+      and not a property of ELMy H-mode or of IPB98(y,2) specifically. <b>It is not an independent database
+      either</b>: both arms come from the same ITPA collection and the same devices, and the five-machine arm
+      is too small to carry a claim alone.
+    </p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="col">
+      <p class="kicker">Step 07 &middot; the whole argument in one table</p>
+      <h2>What it predicts for ITER, written down before the answer exists</h2>
+      <p>
+        Everything above is retrospective. This table is not. It records what each model says about three
+        real machines, with intervals, a date and a digest over the rows, so that a later edit leaves a mark.
+        The parameter sets are published design values, and each reproduces the confinement time its own
+        source quotes.
+      </p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Model</th><th id="fc-h1">&mdash;</th><th id="fc-h2">&mdash;</th>
+          <th id="fc-h3">&mdash;</th></tr></thead>
+        <tbody id="tbl6"></tbody>
+      </table>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <p class="tag">Inside the data, they agree</p>
+        <span class="big good" id="c-agree">&mdash;</span>
+        <h3>Spread on JT&#8209;60SA, which is operating</h3>
+        <p>
+          JT&#8209;60SA sits inside the database's size range, and there all five models land within a few
+          percent of each other. Nothing about the disagreement below is visible from a machine you already
+          have.
+        </p>
+      </div>
+      <div class="card">
+        <p class="tag">Outside it, they do not</p>
+        <span class="big bad" id="c-spread">&mdash;</span>
+        <h3>Spread on ITER, 1.82&times; beyond the data</h3>
+        <p>
+          A tree ensemble averages training targets, so it cannot exceed the largest one, which here is
+          <span class="num" id="c-max">&mdash;</span> s. <b>The random forest that wins cross-validation by
+          41% is arithmetically incapable of returning ITER's predicted confinement time</b>, and its 90%
+          interval does not contain the physics answer or anything near it.
+        </p>
+      </div>
+    </div>
+
+    <p class="sub" style="margin-top:22px;max-width:74ch">
+      One thing nothing above anticipated: <b>SPARC sits further from the training data than ITER does</b>,
+      <span class="num" id="c-msparc">&mdash;</span> against <span class="num" id="c-miter">&mdash;</span>,
+      despite being smaller than JT&#8209;60U. Its 12.2 T field is far outside a database that tops out near
+      4 T. Size is not the only direction a next-step device leaves the data in.
+    </p>
+    <p class="sub" style="margin-top:10px;max-width:74ch">
+      Locked <span class="num" id="c-date">&mdash;</span> &middot; content digest
+      <span class="num" id="c-digest">&mdash;</span>
+    </p>
+  </div>
+</section>
+
 <footer>
   <div class="wrap">
     <div class="cols">
@@ -609,6 +809,115 @@ document.getElementById('tbl2').innerHTML = esc.map(k => {
 
 document.getElementById('c-hyb').textContent = D.hybrid.size.toFixed(3);
 document.getElementById('c-cov').textContent = fmtPct(D.coverage['random_forest'].size);
+
+/* ---- Result 8: the dimensional constraints ------------------------------ */
+const DM = D.dimensional;
+const f3 = v => (v == null ? '&mdash;' : v.toFixed(3));
+
+document.getElementById('d-kad').textContent = DM.published.kadomtsev.toFixed(5);
+document.getElementById('d-col').textContent = DM.published.collisionless.toFixed(4);
+document.getElementById('dim-best').textContent = DM.bestRmsle.toFixed(3);
+document.getElementById('c-kad').textContent =
+  `${DM.kadomtsevWins.won}/${DM.kadomtsevWins.of}`;
+document.getElementById('c-col').textContent =
+  `${DM.collisionlessWins.won}/${DM.collisionlessWins.of}`;
+
+/* Ordered by the column the section is about, the ITER-matched cut, so the row
+   the prose calls the winner is the row at the top. */
+const dimOrder = ['powerlaw_collisionless','ipb98y2_analytic','hybrid_gbm_s1',
+                  'powerlaw_kadomtsev','powerlaw_free'];
+document.getElementById('tbl3').innerHTML = dimOrder.map(k => {
+  const r = DM.scores[k];
+  const star = k === 'ipb98y2_analytic' ? ' *' : '';
+  const best = k === DM.best;
+  return `<tr${best ? ' class="win"' : ''}>
+    <td>${best ? '<b>' : ''}${D.labels[k]}${star}${best ? '</b>' : ''}</td>
+    <td class="n">${DM.inSample[k] != null ? DM.inSample[k].toFixed(4) : '&mdash;'}</td>
+    <td class="n">${f3(r.cv)}</td>
+    <td class="n">${f3(r.lomo)}</td>
+    <td class="n"><b>${f3(r.size)}</b></td>
+  </tr>`;
+}).join('');
+
+/* ---- Result 10: the interval repair ------------------------------------- */
+const SH = D.shift;
+const shiftOrder = ['random_forest','hist_gradient_boosting','ridge_loglinear',
+                    'powerlaw_collisionless','ipb98y2_analytic']
+  .filter(k => SH.coverage[k]);
+
+document.getElementById('tbl4').innerHTML = shiftOrder.map(k => {
+  const c = SH.coverage[k];
+  const star = k === 'ipb98y2_analytic' ? ' *' : '';
+  // Which scheme gets closest to nominal across the size cut, which is the
+  // column the section says nothing fully repairs.
+  const best = SH.schemes
+    .filter(s => c[s])
+    .reduce((a, s) => Math.abs(c[s].size - SH.nominal) < Math.abs(c[a].size - SH.nominal) ? s : a,
+            SH.schemes[0]);
+  const cell = s => c[s] ? fmtPct(c[s].lomo) : '&mdash;';
+  return `<tr>
+    <td>${D.labels[k]}${star}</td>
+    <td class="n">${cell('split')}</td>
+    <td class="n"><b>${cell('machine_cv')}</b></td>
+    <td class="n">${cell('machine_cv_distance')}</td>
+    <td class="n flip">${fmtPct(c[best].size)}</td>
+  </tr>`;
+}).join('');
+
+/* ---- Result 11: the replication arms ------------------------------------ */
+const ARM_LABEL = {
+  disjoint_h: 'disjoint H-mode rows',
+  non_h: 'ohmic / L-mode rows',
+};
+document.getElementById('tbl5').innerHTML = D.replication.map(a => `
+  <tr>
+    <td>${ARM_LABEL[a.arm] || a.arm}<br><span class="hint">scored against ${a.baseline}</span></td>
+    <td class="n">${a.rows}</td>
+    <td class="n"><b>${a.shared}</b></td>
+    <td class="n">${a.machines}</td>
+    <td class="n">${a.bestCv}</td>
+    <td class="n flip">${a.bestLomo}</td>
+    <td class="n">${(a.gain * 100).toFixed(0)}%</td>
+  </tr>`).join('');
+
+/* ---- Result 12: the locked forecast ------------------------------------- */
+const FC = D.forecast;
+const devs = FC.devices.map(d => d.name);
+devs.forEach((name, i) => {
+  const d = FC.devices[i];
+  const th = document.getElementById(`fc-h${i + 1}`);
+  if (th) th.innerHTML = `${name}<br><span class="hint">${d.r} m &middot; ${d.status.split(' / ')[0]}</span>`;
+});
+
+/* IPB98 first as the physics reference, then the models that track it, then the
+   two that cannot. Same order as the RESULTS.md table. */
+const fcOrder = ['ipb98y2_analytic','powerlaw_collisionless','ridge_loglinear',
+                 'random_forest','hist_gradient_boosting'].filter(k => FC.rows[k]);
+document.getElementById('tbl6').innerHTML = fcOrder.map(k => {
+  const star = k === 'ipb98y2_analytic' ? ' *' : '';
+  const cells = devs.map(n => {
+    const c = FC.rows[k][n];
+    if (!c) return '<td class="n">&mdash;</td>';
+    // A prediction pinned to the top of the training range is the Result 4c
+    // bound biting, not a coincidence, so it is marked rather than left to be
+    // inferred from the number.
+    const mark = c.bounded && n === 'ITER' ? '<sup class="ref">bounded</sup>' : '';
+    return `<td class="n"><b>${c.tau.toFixed(3)}</b> s${mark}
+      <br><span class="hint">[${c.lo.toFixed(2)}, ${c.hi.toFixed(2)}]</span></td>`;
+  }).join('');
+  return `<tr><td>${D.labels[k]}${star}</td>${cells}</tr>`;
+}).join('');
+
+const iterTaus = fcOrder.map(k => FC.rows[k]['ITER'].tau);
+const saTaus = fcOrder.map(k => FC.rows[k]['JT-60SA'].tau);
+const spread = a => Math.max(...a) / Math.min(...a);
+document.getElementById('c-spread').textContent = spread(iterTaus).toFixed(1) + '×';
+document.getElementById('c-agree').textContent = spread(saTaus).toFixed(2) + '×';
+document.getElementById('c-max').textContent = FC.trainMax.toFixed(3);
+document.getElementById('c-msparc').textContent = FC.maha['SPARC'].toFixed(1);
+document.getElementById('c-miter').textContent = FC.maha['ITER'].toFixed(1);
+document.getElementById('c-date').textContent = FC.generatedOn;
+document.getElementById('c-digest').textContent = FC.digest + '…';
 
 /* JET is the default: largest device in the database, closest analogue to the
    case a next-step machine presents. */
