@@ -39,7 +39,15 @@ REL_TOL = 1e-6
 ABS_TOL = 1e-12
 
 # Fields that legitimately differ between runs or between machines.
-VOLATILE_KEYS = frozenset({"path", "seconds_per_solve"})
+#
+# ``generated_on`` is the date an artifact was built, carried by
+# ``forecast.json`` and ``predictor.json`` so a reader knows how old a locked
+# prediction is. It changes whenever the analysis is rerun and says nothing
+# about whether the numbers moved, which is what this comparator is for. The
+# substance of those two files is pinned separately and not by the date: the
+# forecast carries a SHA-256 over its own rows and the dataset they came from,
+# and every value in both is compared here on its own.
+VOLATILE_KEYS = frozenset({"path", "seconds_per_solve", "generated_on"})
 VOLATILE_SUFFIXES = ("_seconds", "_path", "_at_utc")
 
 

@@ -118,9 +118,15 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    """Run the neutron-yield CLI.
+
+    ``argv`` defaults to ``sys.argv[1:]`` as argparse does, and exists so the
+    top-level ``fusionflux`` command can delegate here with an explicit argument
+    list rather than rewriting ``sys.argv`` around the call.
+    """
     parser = build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if args.command == "train":
         artifacts = train_models(

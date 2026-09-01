@@ -32,7 +32,7 @@ dev = [
 ]
 
 [project.scripts]
-fusionflux = "neutron_yield.fusionflux_cli:main"
+fusionflux = "cli:main"
 
 [tool.setuptools]
 packages = ["neutron_yield", "tools"]
@@ -48,12 +48,14 @@ py-modules = [
     "analysis_scaling_law",
     "analysis_size_extrapolation",
     "analysis_summary_figure",
+    "cli",
     "config",
     "conformal_shift",
     "dimensional",
     "forecast",
     "hdb5",
     "lawson",
+    "predictor",
     "replication",
     "scaling_audit",
     "scaling_law",
@@ -111,6 +113,7 @@ source = [
     "analysis_scaling_law",
     "analysis_size_extrapolation",
     "analysis_summary_figure",
+    "cli",
     "config",
     "conformal_shift",
     "dimensional",
@@ -118,6 +121,7 @@ source = [
     "hdb5",
     "lawson",
     "neutron_yield",
+    "predictor",
     "replication",
     "scaling_audit",
     "scaling_law",

@@ -167,6 +167,24 @@ python3 analysis_forecast.py      # Result 12: SPARC, JT-60SA and ITER, with int
 
 Writes `results/forecast.json` with each model's prediction for three real machines, the date, the dataset digest, and a content digest over the forecast rows so a later edit leaves a mark. The parameter sets are checked against the IPB98(y,2) figure each design paper quotes. See [Result 12](../results/RESULTS.md#result-12-a-locked-prediction-for-three-machines-that-have-no-data).
 
+### Predict with an interval, and be refused when appropriate
+
+The command a fresh install puts on the path:
+
+```bash
+fusionflux predict --ip-ma 15 --bt-t 5.3 --ne-line-1e19-m3 10 --p-loss-mw 87 \
+                   --r-m 6.2 --inverse-aspect-ratio 0.3226 --kappa 1.7 --m-eff-amu 2.5
+fusionflux predict ... --json      # the same thing as JSON
+fusionflux card                    # rebuild results/predictor.json
+fusionflux neutron train ...       # the synthetic demo pipeline, one level down
+```
+
+Reports the point estimate, a nominal 90% interval from Result 10's calibration, the Mahalanobis distance of the operating point from the training data, and an explicit refusal when that point sits beyond what this study measured. Two conditions trigger the refusal and both are read off the results rather than chosen: the query is farther out than any machine Result 4 held out and scored, or the analytic law predicts a confinement time above the training ceiling, in which case Result 4c says no range-bounded model can be right there whatever its tuning.
+
+The equivalent from Python is `predictor.predict(...)`, keyword-only, returning a `ConfinementPrediction`. Both read `results/predictor.json`, which is committed, so neither needs the dataset. See [`predictor.py`](../predictor.py).
+
+Note that `python3 hdb5.py predict` is the older, lower-level path: it returns a saved artifact's point estimate with no interval, no distance and no refusal, which is exactly the gap `predictor.py` exists to close. Prefer `fusionflux predict` unless you specifically want a particular saved artifact's number.
+
 ### Predict
 
 ```bash

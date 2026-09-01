@@ -739,7 +739,21 @@ def build_single_case_frame(inputs: dict[str, float]) -> pd.DataFrame:
 def predict_single_case(
     inputs: dict[str, float], *, model_path: Path | str | None = None
 ) -> dict[str, object]:
-    """Predict confinement time for one operating point using a saved artifact."""
+    """Predict confinement time for one operating point using a saved artifact.
+
+    This is the low-level path: it returns the saved model's point estimate and
+    nothing else. It does not attach an interval, does not measure how far the
+    operating point sits from the training data, and does not check whether the
+    answer lies above the range the artifact can even emit. Handed ITER's
+    parameters it will return a tree ensemble's number, roughly 0.4 s, against
+    the 3.6 s the analytic law gives, with no complaint: Results 4b, 4c and 5
+    are the reasons that number is wrong and none of them are consulted here.
+
+    Use :func:`predictor.predict` instead unless you specifically want one saved
+    artifact's raw output. It reports the same estimate alongside a calibrated
+    interval, the extrapolation distance, and an explicit refusal when the point
+    is beyond what this study measured.
+    """
     artifact = load_confinement_artifact(model_path)
     featured = build_single_case_frame(inputs)
     predicted = float(artifact.predict(featured)[0])

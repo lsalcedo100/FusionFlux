@@ -53,6 +53,7 @@ results:
 	python3 analysis_replication.py
 	python3 analysis_forecast.py
 	python3 analysis_summary_figure.py
+	python3 predictor.py build
 	python3 site/build_page.py
 
 # Rebuild only the page, for when results/ is current but the template changed.
