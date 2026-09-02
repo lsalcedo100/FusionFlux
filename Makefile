@@ -1,5 +1,5 @@
 # Developer shortcuts. Run `make check` to reproduce the CI quality gate locally.
-.PHONY: install check lint type test train results reproduce page arxiv
+.PHONY: install check lint type test train results reproduce page arxiv dist
 
 # Install the package plus dev tooling against the pinned, tested environment.
 install:
@@ -55,7 +55,7 @@ results:
 	python3 analysis_forecast.py
 	python3 analysis_allometry.py
 	python3 analysis_summary_figure.py
-	python3 predictor.py build
+	python3 -m fusionflux card
 	python3 site/build_page.py
 
 # Rebuild only the page, for when results/ is current but the template changed.
@@ -121,3 +121,25 @@ arxiv: paper/paper.tex
 	@echo "wrote build/arxiv-submission.tar.gz"
 	@echo "Build it exactly as arXiv will, from the flat directory:"
 	@echo "    cd build/arxiv && pdflatex paper.tex && pdflatex paper.tex"
+
+# Build the distribution and prove it works, which are different claims.
+#
+# `python -m build` alone only shows that a wheel can be produced. Version 0.2.0
+# produced one happily: it was missing results/predictor.json, so `fusionflux
+# predict` raised FileNotFoundError on every clean install, and it shipped the
+# analysis scripts as top-level modules that shadowed `config`, `storage` and
+# `validation` in whatever environment it landed in. Neither fault is visible
+# from a checkout, because a checkout has the repository root on sys.path and
+# results/ already on disk.
+#
+# So this runs the two suites that build a wheel, install it into a fresh
+# virtualenv with no access to this directory, and run the command the README
+# leads with. build/ is removed first because setuptools accumulates into
+# build/lib and never prunes it, so a stale tree gets packed along with the
+# current one.
+dist:
+	rm -rf build dist
+	python3 -m build
+	python3 -m pytest -q --no-cov tests/test_packaging.py tests/test_wheel_smoke.py
+	@echo
+	@echo "wrote dist/. Push a matching vX.Y.Z tag to publish; see docs/releasing.md."

@@ -14,6 +14,7 @@ This module makes the front door the study:
     fusionflux card          rebuild ``results/predictor.json``, which is what
                              ``predict`` reads
     fusionflux neutron ...   the synthetic pipeline, unchanged, one level down
+                             (checkout only: the wheel does not install it)
 
 The ``neutron`` subcommand delegates to ``neutron_yield.fusionflux_cli`` rather
 than reimplementing it, so that pipeline's arguments, defaults and behaviour are
@@ -28,7 +29,7 @@ import argparse
 import json
 import sys
 
-import predictor
+from fusionflux import predictor
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -98,7 +99,23 @@ def main(argv: list[str] | None = None) -> None:
         return
 
     if args.command == "neutron":
-        from neutron_yield.fusionflux_cli import main as neutron_main
+        # Checkout-only, and not as a demotion. `neutron_yield` reaches its data
+        # directories through `config.PROJECT_ROOT`, which is derived from that
+        # module's own location, so an installed copy would resolve them inside
+        # site-packages and write training runs there. The wheel therefore does
+        # not ship it, and this says so instead of surfacing a bare import error.
+        try:
+            from neutron_yield.fusionflux_cli import main as neutron_main
+        except ModuleNotFoundError as error:
+            raise SystemExit(
+                "The neutron-yield pipeline is not installed by the wheel "
+                f"({error.name} is missing). It resolves its data directories "
+                "relative to its own source file, so an installed copy would read "
+                "and write inside site-packages. Clone the repository and run it "
+                "from there: see docs/neutron-yield-pipeline.md. Nothing in that "
+                "pipeline supports a scientific claim; `fusionflux predict` is the "
+                "study and it needs no checkout."
+            ) from error
 
         neutron_main(args.args)
         return

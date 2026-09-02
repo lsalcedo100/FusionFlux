@@ -190,9 +190,9 @@ fusionflux neutron train ...       # the synthetic demo pipeline, one level down
 
 Reports the point estimate, a nominal 90% interval from Result 10's calibration, the Mahalanobis distance of the operating point from the training data, and an explicit refusal when that point sits beyond what this study measured. Two conditions trigger the refusal and both are read off the results rather than chosen: the query is farther out than any machine Result 4 held out and scored, or the analytic law predicts a confinement time above the training ceiling, in which case Result 4c says no range-bounded model can be right there whatever its tuning.
 
-The equivalent from Python is `predictor.predict(...)`, keyword-only, returning a `ConfinementPrediction`. Both read `results/predictor.json`, which is committed, so neither needs the dataset. See [`predictor.py`](../predictor.py).
+The equivalent from Python is `fusionflux.predict(...)`, keyword-only, returning a `ConfinementPrediction`. Both read `results/predictor.json`, which is committed and is also copied into the wheel at build time, so neither needs the dataset and neither needs a checkout. See [`fusionflux/predictor.py`](../fusionflux/predictor.py).
 
-Note that `python3 hdb5.py predict` is the older, lower-level path: it returns a saved artifact's point estimate with no interval, no distance and no refusal, which is exactly the gap `predictor.py` exists to close. Prefer `fusionflux predict` unless you specifically want a particular saved artifact's number.
+Note that `python3 hdb5.py predict` is the older, lower-level path: it returns a saved artifact's point estimate with no interval, no distance and no refusal, which is exactly the gap `fusionflux/predictor.py` exists to close. Prefer `fusionflux predict` unless you specifically want a particular saved artifact's number.
 
 ### Predict
 

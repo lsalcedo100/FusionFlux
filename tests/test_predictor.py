@@ -34,7 +34,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import predictor
+from fusionflux import predictor
 
 # ITER's Q=10 inductive baseline, the case the refusal exists for.
 ITER = {
@@ -63,7 +63,7 @@ IN_RANGE = {
 
 def _card_or_skip() -> predictor.ServiceCard:
     if not predictor.DEFAULT_CARD_PATH.exists():
-        pytest.skip("No predictor card; run `python3 predictor.py build`.")
+        pytest.skip("No predictor card; run `python3 -m fusionflux card`.")
     return predictor.load_card()
 
 
@@ -261,7 +261,7 @@ def test_card_is_pinned_to_the_dataset_it_was_built_from() -> None:
 
 
 def test_missing_card_raises_a_useful_error(tmp_path: Path) -> None:
-    with pytest.raises(FileNotFoundError, match="predictor.py build"):
+    with pytest.raises(FileNotFoundError, match="fusionflux card"):
         predictor.load_card(tmp_path / "absent.json")
 
 
@@ -371,7 +371,7 @@ def test_save_and_reload_a_card_round_trips(tmp_path: Path) -> None:
 def test_the_module_entry_point_builds_a_card(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
 ) -> None:
-    """``python3 predictor.py build``, which is what ``make results`` runs."""
+    """``python3 -m fusionflux card``, which is what ``make results`` runs."""
     monkeypatch.setattr(predictor, "build_service_card", lambda: predictor.load_card())
     target = tmp_path / "rebuilt.json"
     predictor.main(["build", "--output", str(target)])

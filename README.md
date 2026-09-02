@@ -224,7 +224,7 @@ Those are ITER's parameters. The point is the last two rows: **the tool refuses 
 The same call from Python returns the numbers rather than the report:
 
 ```python
-from predictor import predict
+from fusionflux import predict
 
 result = predict(ip_ma=15.0, bt_t=5.3, ne_line_1e19_m3=10.0, p_loss_mw=87.0,
                  r_m=6.2, inverse_aspect_ratio=0.3226, kappa=1.7, m_eff_amu=2.5)
@@ -236,7 +236,9 @@ result.physics_exceeds_training_ceiling   # True
 result.warnings                           # why, in sentences
 ```
 
-It reads `results/predictor.json`, a few kilobytes of coefficients, so a fresh checkout predicts with no download and nothing to unpickle. `fusionflux card` rebuilds it; `fusionflux neutron ...` is the synthetic pipeline, one level down where it belongs.
+It reads `results/predictor.json`, a few kilobytes of coefficients shipped inside the wheel, so a fresh install predicts with no download and nothing to unpickle. Its only dependencies are numpy and pandas: the tool is arithmetic, and a study arguing you should prefer a power law to a tree ensemble should not make you install the tree ensemble to hear it.
+
+`fusionflux card` rebuilds the coefficients and `fusionflux neutron ...` runs the synthetic pipeline, and both of those need a checkout rather than the wheel. They read the analysis modules and the datasets, which are fetched from OSF on demand and never redistributed, so there is nothing for an installed copy to work from. Both say so when run from an install.
 
 ## Quickstart
 
@@ -275,7 +277,7 @@ The real-data confinement study is the whole of the argument above:
 - `replication.py` assembles the two STD5-disjoint populations of Result 11 from the full DB5.2.3 revision, pinned by its own SHA-256.
 - `forecast.py` holds the three device design points and writes the locked prediction record.
 - `allometry.py` is Result 13's second domain: mammalian metabolic rate against body mass, pinned by SHA-256, with Kleiber's published 3/4 exponent as the baseline. It is the one analysis here with no plasma physics in it.
-- `predictor.py` is the study made callable: a point estimate, a calibrated interval, an extrapolation distance and a refusal, read from `results/predictor.json` so it needs no download and unpickles nothing. `cli.py` is the `fusionflux` command over it.
+- `fusionflux/` is the installable package, and the only thing `pip install fusionflux` puts in your environment. `fusionflux/predictor.py` is the study made callable: a point estimate, a calibrated interval, an extrapolation distance and a refusal, read from `results/predictor.json` so it needs no download and unpickles nothing. `fusionflux/cli.py` is the `fusionflux` command over it. Everything else in this list is run from a checkout.
 - `analysis_*.py` are the twelve scripts that regenerate every number and figure under `results/`.
 - `lawson.py` is a standalone triple-product and ignition-ratio calculation.
 

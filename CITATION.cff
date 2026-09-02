@@ -34,7 +34,7 @@ keywords:
   - extrapolation
   - out-of-distribution generalization
 license: MIT
-version: 0.2.0
+version: 0.2.1
 references:
   - type: article
     title: "Chapter 2: Plasma confinement and transport (ITER Physics Basis)"

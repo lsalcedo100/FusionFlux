@@ -28,7 +28,7 @@ on:
       - "replication.py"
       - "allometry.py"
       - "forecast.py"
-      - "predictor.py"
+      - "fusionflux/**"
       - "results/**"
       - "site/build_page.py"
       - ".github/workflows/reproduce.yml"

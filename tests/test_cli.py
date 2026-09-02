@@ -18,13 +18,12 @@ import json
 
 import pytest
 
-import cli
-import predictor
+from fusionflux import cli, predictor
 
 
 def _card_or_skip() -> None:
     if not predictor.DEFAULT_CARD_PATH.exists():
-        pytest.skip("No predictor card; run `python3 predictor.py build`.")
+        pytest.skip("No predictor card; run `python3 -m fusionflux card`.")
 
 
 ITER_ARGS = [
@@ -129,6 +128,43 @@ def test_console_script_points_at_this_module() -> None:
     config = tomllib.loads(
         (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
     )
-    assert config["project"]["scripts"]["fusionflux"] == "cli:main"
-    modules = config["tool"]["setuptools"]["py-modules"]
-    assert "cli" in modules and "predictor" in modules
+    assert config["project"]["scripts"]["fusionflux"] == "fusionflux.cli:main"
+
+    # The entry point has to resolve inside a package the wheel actually ships.
+    # It previously named the top-level module `cli`, which was shipped, and that
+    # was half the reason installing this project put a dozen generic names into
+    # site-packages. tests/test_packaging.py checks the built artifact; this
+    # checks the declaration the build reads.
+    assert config["tool"]["setuptools"]["packages"] == ["fusionflux"]
+    assert "py-modules" not in config["tool"]["setuptools"]
+    assert config["tool"]["setuptools"]["package-data"]["fusionflux"] == ["predictor.json"]
+
+
+def test_module_entry_point_runs_without_an_install() -> None:
+    """``python3 -m fusionflux`` is what `make results` calls, so it has to work.
+
+    The card rebuild in the Makefile went through ``python3 predictor.py build``
+    while that module was top level. It now lives in the package, and
+    ``python3 -m fusionflux.predictor`` reaches it but warns: importing the
+    package imports that submodule eagerly, so runpy finds it in ``sys.modules``
+    before executing it. ``fusionflux/__main__.py`` exists to give the same entry
+    point without the warning, and nothing else would notice if it broke, because
+    the console script takes a different path into the same function.
+    """
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    result = subprocess.run(
+        [sys.executable, "-m", "fusionflux", "predict", "--json",
+         "--ip-ma", "15", "--bt-t", "5.3", "--ne-line-1e19-m3", "10",
+         "--p-loss-mw", "87", "--r-m", "6.2", "--inverse-aspect-ratio", "0.3226",
+         "--kappa", "1.7", "--m-eff-amu", "2.5"],
+        capture_output=True,
+        text=True,
+        cwd=root,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "RuntimeWarning" not in result.stderr
+    assert json.loads(result.stdout)["recommended_model"] == "powerlaw_collisionless"

@@ -98,3 +98,27 @@ def test_there_is_exactly_one_zenodo_record() -> None:
         f"expected only {ZENODO}, found {copies}. Zenodo reads the root file "
         f"only, so any other copy is dead metadata that will drift."
     )
+
+
+def test_citation_version_matches_the_packaged_version() -> None:
+    """docs/releasing.md requires these to agree; nothing enforced it until now.
+
+    A DOI is minted on a tag, and Zenodo reads CITATION.cff to describe the
+    record it creates. If that file says 0.2.0 while the wheel on PyPI says
+    0.2.1, the permanent citation points at a version nobody can install, and
+    the record cannot be edited afterwards to fix it.
+    """
+    import tomllib
+
+    with (ROOT / "pyproject.toml").open("rb") as handle:
+        packaged = tomllib.load(handle)["project"]["version"]
+
+    declared = next(
+        line.split(":", 1)[1].strip()
+        for line in CITATION.read_text().splitlines()
+        if line.startswith("version:")
+    )
+    assert declared == packaged, (
+        f"CITATION.cff says {declared} and pyproject.toml says {packaged}; "
+        "the release checklist requires them to match"
+    )

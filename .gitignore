@@ -46,6 +46,11 @@ data/raw/hdb5_db523.csv
 data/raw/allometry_bmr.txt
 site/index.html
 
+# Copied into the package at build time from results/predictor.json by
+# setup.py, so the wheel carries the card its console command reads. Generated,
+# never committed: results/predictor.json is the single source.
+fusionflux/predictor.json
+
 # Baseline copy made by `make reproduce`.
 .reproduce_baseline/
 

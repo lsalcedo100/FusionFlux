@@ -74,7 +74,24 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-DEFAULT_CARD_PATH = Path(__file__).resolve().parent / "results" / "predictor.json"
+# The card is resolved rather than fixed, because this module is read from two
+# places that disagree about where it lives.
+#
+# In a checkout, ``results/predictor.json`` is the single source: `make results`
+# regenerates it, the reproduce workflow diffs it against the raw data, and
+# `site/build_page.py` reads the same file. Preferring it here means a rebuilt
+# card takes effect immediately, with no copy to refresh.
+#
+# In an installed wheel there is no ``results/`` directory, so the build copies
+# that same file to ``fusionflux/predictor.json`` as package data (see
+# ``setup.py``) and this falls through to it. The copy is generated at build
+# time and gitignored, so it cannot drift from the artifact it came from: there
+# is nothing committed to go stale.
+_PACKAGE_DIR = Path(__file__).resolve().parent
+_REPO_CARD = _PACKAGE_DIR.parent / "results" / "predictor.json"
+_PACKAGED_CARD = _PACKAGE_DIR / "predictor.json"
+
+DEFAULT_CARD_PATH = _REPO_CARD if _REPO_CARD.exists() else _PACKAGED_CARD
 
 # The model Result 8 selected, used as the recommendation whenever the query is
 # outside what the learned models were validated on.
@@ -223,10 +240,25 @@ def build_service_card(dataset: pd.DataFrame | None = None) -> ServiceCard:
 
     Imports the study modules lazily so that :func:`predict` and
     :func:`load_card`, which are the hot path, do not pull in scikit-learn at all.
+
+    Those modules are analysis scripts and the wheel does not install them, so
+    this is the one entry point in the package that requires a checkout. It says
+    so rather than surfacing a bare ``ModuleNotFoundError`` naming an internal
+    module the caller has no reason to have heard of.
     """
-    import conformal_shift as cshift
-    import dimensional as dm
-    import hdb5
+    try:
+        import conformal_shift as cshift
+        import dimensional as dm
+        import hdb5
+    except ModuleNotFoundError as error:  # pragma: no cover - requires an installed wheel
+        raise ModuleNotFoundError(
+            "Rebuilding the predictor card needs the analysis modules "
+            f"({error.name} is missing) and the HDB5 dataset. Neither ships in the "
+            "wheel: `pip install fusionflux` installs the callable study, not the "
+            "pipeline that generated it. Clone the repository and run "
+            "`python3 -m fusionflux card` there. Prediction itself needs "
+            "none of this and works from the installed package alone."
+        ) from error
 
     if dataset is None:
         dataset = hdb5.prepare_dataset()
@@ -363,6 +395,8 @@ def build_service_card(dataset: pd.DataFrame | None = None) -> ServiceCard:
 
 
 def save_card(card: ServiceCard, path: Path | str = DEFAULT_CARD_PATH) -> Path:
+    # Same checkout-only story as ``build_service_card``: the only caller that
+    # reaches here is the card rebuild, which already needs the dataset.
     from storage import write_json_strict
 
     target = Path(path)
@@ -380,7 +414,8 @@ def load_card(path: Path | str = DEFAULT_CARD_PATH) -> ServiceCard:
         if not resolved.exists():
             raise FileNotFoundError(
                 f"No predictor card at {resolved}. Build one with "
-                "`python3 predictor.py build`, which needs the HDB5 dataset."
+                "`python3 -m fusionflux card`, which needs the HDB5 dataset and a\n"
+                "checkout: the analysis modules it reads are not installed by the wheel."
             )
         _CARD_CACHE[resolved] = ServiceCard.from_json(json.loads(resolved.read_text()))
     return _CARD_CACHE[resolved]
@@ -614,7 +649,8 @@ def main(argv: list[str] | None = None) -> None:
     Deliberately build-only. ``fusionflux predict`` is the prediction front door
     and defining the same flags twice would be two parsers to keep in step; this
     entry point exists so ``make results`` and a checkout without the package
-    installed can still regenerate the card with ``python3 predictor.py build``.
+    installed can still regenerate the card. ``python3 -m fusionflux card`` is the
+    same thing through the CLI and is what ``make results`` runs.
     """
     import argparse
 

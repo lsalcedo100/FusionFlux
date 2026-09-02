@@ -50,4 +50,38 @@ jobs:
         run: mypy .
 
       - name: Pytest
-        run: pytest -q --cov --cov-report=term-missing
+        # The clean-install suite builds a wheel and a virtualenv per run, which
+        # is far slower than the rest of the suite and needs no interpreter
+        # matrix. It gets its own job below.
+        run: pytest -q --cov --cov-report=term-missing -m "not slow"
+
+  # What a user gets from `pip install fusionflux`, as opposed to what a
+  # contributor gets from a checkout.
+  #
+  # This job exists because version 0.2.0's packaging was broken in two ways that
+  # no test in the matrix above could see. The wheel did not carry
+  # results/predictor.json, so the README's headline command raised
+  # FileNotFoundError on a clean install; and it shipped every analysis script as
+  # a top-level module, so installing it put `config`, `storage`, `validation`
+  # and `tools` into site-packages where they shadowed anything else of that
+  # name. Both are invisible from a checkout, because a checkout has the
+  # repository root on sys.path and results/ already on disk.
+  wheel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install build
+
+      - name: Build the wheel and install it into a clean environment
+        run: pytest -q --no-cov tests/test_packaging.py tests/test_wheel_smoke.py

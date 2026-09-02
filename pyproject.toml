@@ -1,26 +1,48 @@
 [build-system]
-requires = ["setuptools>=64"]
+# 77 is the first release that accepts PEP 639 `license`/`license-files`. The
+# TOML-table form below it is deprecated and stops being accepted after
+# 2027-Feb-18, so pinning the floor here is cheaper than a build that starts
+# failing on a date nobody is watching for.
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "fusionflux"
-version = "0.2.0"
+version = "0.2.1"
 description = "Confinement scaling as a linear algebra problem: machine learning against the IPB98(y,2) scaling law on the ITPA HDB5 tokamak database."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "Liam" }]
+# What `fusionflux predict` actually needs, which is arithmetic over a few
+# kilobytes of JSON. The wheel no longer ships the analysis scripts, so it no
+# longer has to install what only they use: scikit-learn, matplotlib, seaborn
+# and joblib moved to the `study` extra below. A tool whose whole argument is
+# that you should prefer a power law to a tree ensemble should not make you
+# install the tree ensemble to hear it.
 dependencies = [
-    "joblib",
-    "matplotlib",
     "numpy",
     "pandas",
+]
+
+[project.optional-dependencies]
+# Everything the analysis scripts need, for a checkout that is going to run
+# `make results` rather than just predict.
+study = [
+    "joblib",
+    "matplotlib",
     "scikit-learn",
     "seaborn",
 ]
 
-[project.optional-dependencies]
 dev = [
+    "fusionflux[study]",
+    # Builds the wheel that tests/test_packaging.py and tests/test_wheel_smoke.py
+    # inspect and install. Without it both suites skip rather than fail, which is
+    # deliberate for a contributor and not acceptable in CI, so both CI jobs
+    # install it explicitly.
+    "build",
     "jupyter",
     "mypy",
     # Reads the committed paper PDF back so tests/test_reported_numbers.py can
@@ -29,43 +51,44 @@ dev = [
     "pytest",
     "pytest-cov",
     "ruff",
+    # setup.py's build hook needs it, and `python -m build --no-isolation` in the
+    # packaging suites builds against this environment rather than fetching one.
+    "setuptools>=77",
 ]
 
 [project.scripts]
-fusionflux = "cli:main"
+fusionflux = "fusionflux.cli:main"
 
 [tool.setuptools]
-packages = ["neutron_yield", "tools"]
-py-modules = [
-    "allometry",
-    "analysis_allometry",
-    "analysis_conformal",
-    "analysis_conformal_shift",
-    "analysis_dimensional",
-    "analysis_extrapolation",
-    "analysis_flexibility_sweep",
-    "analysis_forecast",
-    "analysis_hybrid",
-    "analysis_replication",
-    "analysis_scaling_law",
-    "analysis_size_extrapolation",
-    "analysis_summary_figure",
-    "cli",
-    "config",
-    "conformal_shift",
-    "dimensional",
-    "forecast",
-    "hdb5",
-    "lawson",
-    "predictor",
-    "replication",
-    "scaling_audit",
-    "scaling_law",
-    "spectral",
-    "storage",
-    "train_model",
-    "validation",
-]
+# The wheel installs the callable study and nothing else. It deliberately does
+# not install the analysis modules (`hdb5.py`,
+# `scaling_law.py`, `dimensional.py`, `analysis_*.py`, `config.py`, `storage.py`,
+# `validation.py`, `forecast.py`, ...).
+#
+# Two reasons, and the first is the serious one. Shipped as top-level modules
+# they would land in site-packages under names as generic as `config`, `tools`,
+# `storage` and `validation`, where they shadow any other project's module of
+# the same name in the same environment. Installing a fusion study should not
+# change what `import config` means for everything else installed alongside it.
+#
+# Second, they could not run anyway: every one of them needs a dataset fetched
+# from OSF on demand and never redistributed, so the wheel has nothing to feed
+# them. They are run from a checkout, which is how the documentation has always
+# invoked them (`python3 hdb5.py train`).
+#
+# `neutron_yield` is left out for the same reason rather than as a demotion. It
+# imports the top-level `config`, `storage` and `validation` above, and
+# `config.PROJECT_ROOT` is `Path(config.__file__).parent`, so an installed copy
+# resolves its data directories inside site-packages and writes training runs
+# there. It has therefore never been usable from a wheel, and it does not become
+# usable by being listed here. It runs from a checkout, which is what
+# `docs/neutron-yield-pipeline.md` documents.
+packages = ["fusionflux"]
+
+[tool.setuptools.package-data]
+# Copied from results/predictor.json by setup.py at build time. Without it the
+# installed `fusionflux predict` has no coefficients to read.
+fusionflux = ["predictor.json"]
 
 [tool.ruff]
 line-length = 120
@@ -79,6 +102,13 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    # Builds a wheel and a virtualenv, so it costs seconds rather than
+    # milliseconds and resolves dependencies from the network. Run in its own CI
+    # job (`wheel` in ci.yml) and before every release; deselected from the
+    # interpreter matrix with `-m "not slow"`.
+    "slow: exercises a real clean install of the built distribution",
+]
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::PendingDeprecationWarning",
@@ -117,15 +147,14 @@ source = [
     "analysis_scaling_law",
     "analysis_size_extrapolation",
     "analysis_summary_figure",
-    "cli",
     "config",
     "conformal_shift",
     "dimensional",
     "forecast",
+    "fusionflux",
     "hdb5",
     "lawson",
     "neutron_yield",
-    "predictor",
     "replication",
     "scaling_audit",
     "scaling_law",
@@ -138,9 +167,10 @@ source = [
 
 [tool.coverage.report]
 show_missing = true
-# Measured, not guessed. The suite covers 79.01% with all three datasets present
-# (1242 of 5917 statements missed) and 77.47% without them, which is the state
-# CI is in: 35 tests skip there for want of a dataset or a trained artifact.
+# Measured, not guessed. The suite covers 78.93% with all three datasets present
+# (1250 of 5933 statements missed), which is the state CI is in modulo the 35
+# tests that skip there for want of a dataset or a trained artifact; without
+# them it was 77.47% when last measured on the same basis.
 # "All three" is now HDB5 STD5, the full DB5.2.3 revision, and the mammalian
 # metabolic-rate deposit Result 13 replicates on.
 # Both figures reproduce exactly across clean runs, and no measured module

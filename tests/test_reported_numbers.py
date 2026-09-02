@@ -226,7 +226,7 @@ def _served(a: dict, device: str, model: str) -> float:
     artifacts. It binds the README's worked example, which is CLI output typed
     by hand and would otherwise be the one block in the repository free to drift.
     """
-    import predictor
+    from fusionflux import predictor
 
     inputs = _device_inputs(a, device)
     result = predictor.predict(

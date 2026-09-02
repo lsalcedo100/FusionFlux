@@ -15,6 +15,7 @@ Everything here has to be true of the *tagged commit*, not of a working tree.
 
 ```bash
 make check        # ruff, mypy, pytest
+make dist         # build the wheel and install it into a clean venv, then predict
 make reproduce    # regenerate results/ from the raw data and diff numerically
 make arxiv        # builds build/arxiv-submission.tar.gz and runs the submission gate
 ```
@@ -35,14 +36,65 @@ Then confirm the release metadata describes the work as it now stands:
 `v0.1.0` exists and points at a commit that predates all of the current work, so
 it must not be the tag a DOI is minted on.
 
+The tag has to match `version` in `pyproject.toml`, which is `0.2.1`. The
+release workflow fails rather than publishing a mismatch.
+
 ```bash
-git tag -a v0.2.0 -m "All twelve results: the reversal, its mechanisms, and the constraint that repairs it"
-git push origin v0.2.0
+git tag -a v0.2.1 -m "All thirteen results, and a distribution that installs and runs"
+git push origin v0.2.1
 ```
 
 Then publish a GitHub release on that tag and **attach `paper/paper.pdf`**, so
 the paper is archived alongside the code rather than only being buildable from
 source.
+
+## 1b. PyPI
+
+The tag push runs `.github/workflows/release.yml`, which builds the sdist and
+wheel and uploads them to PyPI. There is nothing to run by hand and no token to
+supply: publishing uses PyPI's Trusted Publishing, so PyPI verifies the OIDC
+identity of that workflow in this repository directly.
+
+**This has to be configured once, before the first tag, and it cannot be done
+retroactively.** At <https://pypi.org/manage/account/publishing/>, add a pending
+publisher for the project name `fusionflux` with owner `lsalcedo100`, repository
+`FusionFlux`, workflow `release.yml`, environment `pypi`. Create a GitHub
+environment of the same name under Settings, Environments.
+
+Rehearse on TestPyPI first. Run the workflow manually (Actions, Release, Run
+workflow) with `test_pypi` left checked; it goes to TestPyPI, which is
+throwaway, and a failure there costs nothing. A version number on the real PyPI
+is permanent and cannot be reused even after a delete, so the rehearsal is worth
+the five minutes.
+
+What the release job checks before it uploads anything, and why each one exists:
+
+- the packaging and clean-install suites (`tests/test_packaging.py`,
+  `tests/test_wheel_smoke.py`), which build a wheel, install it into a fresh
+  virtualenv, and run `fusionflux predict` on ITER from a directory that is not
+  this repository. Version 0.2.0's metadata was self-consistent and produced a
+  wheel that raised `FileNotFoundError` on the README's headline command,
+  because `results/predictor.json` was not package data. Nothing in a checkout
+  can see that, which is why this suite installs rather than inspects.
+- that the wheel installs only `fusionflux` at top level. 0.2.0 also shipped
+  every analysis script as a top-level module, so installing it put `config`,
+  `storage`, `validation` and `tools` into site-packages, where they shadowed
+  any other project's module of those names.
+- `twine check --strict`, which catches the metadata faults PyPI rejects on
+  upload, while rejection is still free.
+- that the tag matches `version` in `pyproject.toml`, so the release page and
+  the published version cannot disagree.
+
+After it lands, confirm the thing this is all for actually works, from
+somewhere that is not a checkout:
+
+```bash
+cd $(mktemp -d) && python3 -m venv v && ./v/bin/pip install fusionflux
+./v/bin/fusionflux predict --ip-ma 15 --bt-t 5.3 --ne-line-1e19-m3 10 --p-loss-mw 87 \
+                   --r-m 6.2 --inverse-aspect-ratio 0.3226 --kappa 1.7 --m-eff-amu 2.5
+```
+
+Then add the PyPI badge to the README badge row.
 
 ## 2. Zenodo DOI
 
@@ -51,7 +103,7 @@ licence caveat about the HDB5 data, are in [`../paper/README.md`](../paper/READM
 The short version: enable the repository in Zenodo's GitHub integration
 *before* publishing the release, because Zenodo only archives releases published
 after the toggle is on. Then add the badge to the README and the DOI to the
-paper's title page, and cut a `v0.2.1` for that edit.
+paper's title page, and cut a `v0.2.2` for that edit.
 
 ## 3. arXiv
 
