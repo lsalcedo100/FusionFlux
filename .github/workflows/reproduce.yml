@@ -27,6 +27,8 @@ on:
       - "conformal_shift.py"
       - "replication.py"
       - "allometry.py"
+      - "gp.py"
+      - "tree_allometry.py"
       - "forecast.py"
       - "fusionflux/**"
       - "results/**"

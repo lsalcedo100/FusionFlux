@@ -24,7 +24,7 @@ Then you ask whether that is a fact about this one database, and it is not: the 
 | | |
 |---|---|
 | **[Interactive summary](https://lsalcedo100.github.io/FusionFlux/)** | One page: the reversal, the ITER-direction result, a panel where you pick the held-out machine and watch the ranking rearrange, the one line of physics that repairs it, and the locked ITER forecast. |
-| **[Nine-page paper](paper/paper.pdf)** (`paper/paper.tex`) | Abstract, method, all twelve results, limitations. |
+| **[Nine-page paper](paper/paper.pdf)** (`paper/paper.tex`) | Abstract, method, Results 1 to 13, limitations. Results 14 and 15 are newer than this draft and live in the full writeup. |
 | **[results/RESULTS.md](results/RESULTS.md)** | The full writeup: every claim, table, mechanism and limitation, with nothing left out. |
 
 ## Results
@@ -164,6 +164,53 @@ Every result above rests on ITPA data. So the last thing to ask is whether any o
 
 **But the ranking reversal does not reproduce, and that is a limit on this repository's headline rather than a footnote.** The trees never win the easy split here either, so there is nothing to invert. With a single predictor and a relationship that is close to a straight line in logs, a tree has far less to exploit, and the 41% cross-validated margin this README opens with is simply not available here to be reversed. **The reversal needs enough feature dimensionality for the flexible model to win interpolation first.** Nothing in Results 4 to 12 could have shown that, because one database cannot. See [Result 13](results/RESULTS.md#result-13-the-same-audit-on-a-scaling-law-from-a-different-science).
 
+### The reversal has a precondition, and it can be measured by varying it
+
+![The feature ladder on tree allometry](results/tree_allometry.png)
+
+Result 13 found that the extrapolation failure reproduces on Kleiber's law but the *ranking reversal* does not, and guessed why: with one predictor a tree has nothing to exploit, so it never wins the easy split and there is nothing to invert. That was a conjecture, and comparing two databases that differ in a dozen ways cannot test it.
+
+The Biomass And Allometry Database can, because it records a ladder of predictors for the same plants. Fix the rows, the species, the splits and the models; vary only how many columns the models may see. 3599 plants, 53 species, 33 with enough individuals to hold out, spanning 36x in diameter and **7.6 orders of magnitude in mass**. Species plays the part of tokamak, diameter the part of machine size, and West-Brown-Enquist's mass proportional to diameter^(8/3) the part of IPB98(y,2).
+
+| predictors | interpolation gain of the best tree | held-out species gain | reversal |
+|---|---|---|---|
+| diameter | **-1.7%** | -10.5% | no |
+| + height | **-0.6%** | -10.8% | no |
+| + leaf area | **+1.8%** | -13.1% | **yes** |
+| + leaf mass | **+6.8%** | -13.4% | **yes** |
+
+**One column moves and the other does not.** The trees' margin on the easy split rises monotonically and crosses zero between two and three predictors. Their deficit on a species they have never seen does not shrink as they get better; it grows, and the power law wins at **4 of 4** rungs. So the reversal appears at exactly 3 predictors and every rung above, which is precisely where the interpolation gain turns positive.
+
+**That splits one finding into two that had been travelling together.** The extrapolation failure is unconditional: a bounded flexible model loses to a power law on an unseen group whatever the dimension, in tokamaks, mammals and trees alike. The reversal is conditional, and its condition has nothing to do with the failure. It is only whether the flexible model had enough to work with to win the comparison a practitioner runs first.
+
+Which makes the reversal the *warning light* rather than the disease. It is what makes a flexible model look good enough to adopt in the first place. Below three predictors the danger is identical and the warning light is off. See [Result 15](results/RESULTS.md#result-15-the-reversal-needs-dimensionality-and-here-is-the-measurement).
+
+### And the diagnosis was half wrong: it was never flexibility, it was boundedness
+
+![The kernel ladder](results/gp.png)
+
+Everything above says flexible models fail out of distribution. That conclusion is measured on one kind of flexibility, polynomial degree under a ridge penalty, and this repository's own limitations section names the missing test: a Gaussian process with a physically motivated kernel. Running it changes the explanation.
+
+Every model scored so far confounds two properties. **Flexibility** is how much structure a model can learn beyond a power law. **Boundedness** is what it does far outside the training data. A random forest is both flexible and bounded; ridge is neither; a degree-3 polynomial is flexible and unbounded but diverges. Nothing here was flexible, unbounded and well behaved at once. A kernel choice supplies exactly that, changing one property and nothing else:
+
+| model | CV, by discharge | held-out machine | ITER-matched cut | rho(error, distance) |
+|---|---|---|---|---|
+| **GP, linear + RBF** (flexible, unbounded) | **0.112** | 0.218 | **0.191** | **-0.01** |
+| GP, RBF only (flexible, bounded) | 0.142 | 0.541 | **1.948** | +0.65 |
+| GP, linear only (a power law) | 0.181 | 0.214 | 0.278 | -0.06 |
+| random forest | 0.128 | 0.465 | 0.938 | +0.85 |
+| IPB98(y,2), analytic (not blind) | 0.199 | 0.188 | 0.194 | -0.49 |
+
+Same family, same optimizer, same rows, same splits. Only the kernel's long-range behaviour changes, and it spans a factor of **10** at the ITER-matched cut.
+
+**The bounded rung fails exactly like a tree.** `gp_rbf` beats the power law under cross-validation and then scores 1.948 at the ITER cut, *worse than predicting a constant*, with error tracking distance at +0.65. The mechanism is Result 4c's reached by different machinery: a tree averages training targets, an RBF kernel decays to zero so the posterior returns to its prior mean. Far enough out, the prediction is the training mean whatever the features say.
+
+**The same flexibility on an unbounded kernel is the best model in this repository.** `gp_linear_rbf` wins cross-validation outright at 0.112, beating the random forest's 0.128 that this README opens with, *and* scores 0.191 at the ITER-matched cut: 31% better than the plain power law, better than the analytic law fitted with those machines included, second only to Result 8's constrained fit at 0.183. Its error is flat against distance at rho = -0.01.
+
+**So the reversal is not a fact about flexible models. It is a fact about bounded ones.** The best cross-validated model no longer has to be the worst on a new machine. Results 4 and 5 measure their zoo correctly; every flexible member of that zoo was bounded or divergent, and none separated the two properties. "Do not use a flexible model out of distribution" was the wrong lesson. "Do not use a model whose predictions are bounded by its training targets" is the right one.
+
+It does not overturn the rest: the GP does not beat the power law on a held-out machine (0.218 against 0.214), and one line of dimensional analysis still wins the ITER cut for no hyperparameters at all. **And its own intervals hold where every calibrated one fails**: nominal 90%, the GP covers **92.5%** across the ITER-matched cut without recalibration, where Result 7's conformal intervals give the random forest 3% and the gradient booster 0%. The bounded rung is the instructive failure, the one model here that *does* go vague out of distribution, with a half-width four times anyone else's, and it still covers 16.7%. See [Result 14](results/RESULTS.md#result-14-it-was-never-flexibility-it-was-boundedness).
+
 ### What it predicts for ITER, written down before the answer exists
 
 Everything above is retrospective. `results/forecast.json` records what each model says about three real machines, with intervals, a date, and a digest over the rows so a later edit leaves a mark.
@@ -278,7 +325,9 @@ The real-data confinement study is the whole of the argument above:
 - `forecast.py` holds the three device design points and writes the locked prediction record.
 - `allometry.py` is Result 13's second domain: mammalian metabolic rate against body mass, pinned by SHA-256, with Kleiber's published 3/4 exponent as the baseline. It is the one analysis here with no plasma physics in it.
 - `fusionflux/` is the installable package, and the only thing `pip install fusionflux` puts in your environment. `fusionflux/predictor.py` is the study made callable: a point estimate, a calibrated interval, an extrapolation distance and a refusal, read from `results/predictor.json` so it needs no download and unpickles nothing. `fusionflux/cli.py` is the `fusionflux` command over it. Everything else in this list is run from a checkout.
-- `analysis_*.py` are the twelve scripts that regenerate every number and figure under `results/`.
+- `tree_allometry.py` is Result 15's feature ladder: the Biomass And Allometry Database, pinned by SHA-256, where the number of predictors is varied on a fixed set of plants so the reversal's precondition can be measured rather than inferred.
+- `gp.py` is Result 14's kernel ladder: three Gaussian processes that differ only in what the kernel does far from the data, which is what separates *flexible* from *bounded* and shows the second was always the problem.
+- `analysis_*.py` are the fourteen scripts that regenerate every number and figure under `results/`.
 - `lawson.py` is a standalone triple-product and ignition-ratio calculation.
 
 One module is deliberately not about tokamaks:

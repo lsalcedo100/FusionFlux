@@ -1932,6 +1932,268 @@ enough to show that the extrapolation failure is not fusion-specific,
 and that the reversal needs a condition this dataset lacks; it is not
 enough to establish a rate at which either happens.
 
+## Result 14: it was never flexibility, it was boundedness
+
+Result 4d compares five model forms and concludes that flexibility costs the
+tail. Result 4e sweeps polynomial degree against nine decades of ridge penalty
+and finds no setting that rescues a flexible form. Both are measured on one kind
+of flexibility, and the limitations section says so:
+
+> What the sweep does not vary is the *kind* of flexibility. It is polynomial
+> degree under an isotropic L2 penalty throughout, so it supports "adding
+> unconstrained polynomial freedom costs the tail" and not the broader
+> "flexibility is bad". A differently constrained flexible model, one whose
+> penalty targeted the weak direction from Result 3, or a Gaussian process with
+> a physically motivated kernel, is untested here.
+
+`gp.py` runs that test, and the answer changes what Results 4 and 5 mean.
+
+Every model scored so far confounds two properties. **Flexibility** is how much
+structure a model can learn beyond a power law. **Boundedness** is what it does
+when asked about a point far outside the training data. A random forest is
+flexible and bounded. Ridge is inflexible and unbounded. Polynomial ridge is
+flexible and unbounded, which is why Result 4d uses it as the discriminating
+control, but its unboundedness is violent: degree 3 diverges, and that is why
+its worst machine is 4.601. Nothing in the repository was flexible, unbounded
+and well behaved at long range at the same time.
+
+A Gaussian process supplies one, and the property is a choice of kernel rather
+than a tuning parameter. Three rungs, same optimizer, same features, same rows,
+same splits, differing only in what the kernel does at long range:
+
+| kernel | flexible | unbounded | what it does far from the data |
+|---|---|---|---|
+| RBF | yes | no | decays to zero, so the posterior returns to the prior mean |
+| linear (dot product) | no | yes | Bayesian linear regression in the log features: a power law |
+| linear + RBF | yes | yes | the power law carries it; the RBF correction decays to nothing |
+
+| model | CV, by discharge | held-out machine | ITER-matched cut | rho(error, distance) |
+|---|---|---|---|---|
+| **GP, linear + RBF** | **0.112** | 0.218 | **0.191** | **-0.01** |
+| GP, RBF only | 0.142 | 0.541 | **1.948** | +0.65 |
+| GP, linear only | 0.181 | 0.214 | 0.278 | -0.06 |
+| ridge, log-linear | 0.181 | 0.214 | 0.278 | -0.06 |
+| random forest | 0.128 | 0.465 | 0.938 | +0.85 |
+| hist gradient boosting | 0.130 | 0.359 | 1.072 | +0.54 |
+| IPB98(y,2), analytic (not blind) | 0.199 | 0.188 | 0.194 | -0.49 |
+| mean baseline | 0.869 | 0.994 | 1.459 | +0.56 |
+
+### Result 14a: the control lands exactly
+
+A dot-product kernel is Bayesian linear regression in the log features, so
+`gp_linear` and `ridge_loglinear` are the same model reached two ways. They
+agree to **0.0000** under grouped CV, **0.0000** on a held-out machine and
+**0.0007** at the ITER-matched cut. That is what licenses reading the other two
+rungs as changes to the kernel rather than to anything else in the pipeline.
+
+### Result 14b: a bounded kernel fails exactly like a tree, for the same reason
+
+`gp_rbf` wins cross-validation against the power law (0.142 against 0.181) and
+then scores **1.948 at the ITER-matched cut, worse than predicting a constant**
+(1.459). Its error tracks distance from the training data at rho = **+0.65**,
+alongside the random forest's +0.85 and against the power law's -0.06.
+
+The mechanism is Result 4c's, reached by different machinery. A tree ensemble
+averages training targets, so it cannot output a value above the largest one it
+saw. An RBF kernel decays to zero with distance, so the posterior mean returns
+to the prior, which `normalize_y` places at the training mean of log tau. Far
+enough away the prediction *is* the training mean whatever the features say, and
+`tests/test_gp.py` asserts that directly rather than inferring it. Measured on
+the held-out rows, the RBF rung's predictions have **half the spread of the
+truth** (0.220 against 0.449), which is the collapse in the form that applies to
+both model families.
+
+### Result 14c: the same flexibility, carried on an unbounded kernel, is the best model here
+
+`gp_linear_rbf` adds exactly the flexibility that sinks `gp_rbf`, to a kernel
+that does not decay to zero. It is:
+
+- **the best cross-validated model in this repository, 0.112**, beating the
+  random forest's 0.128 that the README's headline is about, by 12%;
+- **0.191 at the ITER-matched cut**, which is 31% better than the plain power
+  law's 0.278, better than the analytic IPB98(y,2)'s 0.194 that was fitted with
+  those machines included, and second only to Result 8's constrained power law
+  at 0.183;
+- **flat against distance at rho = -0.01**, the diagnostic that separates the
+  power law from the trees in Result 4b, now reading like the power law for a
+  model far more flexible than either tree ensemble.
+
+**So the reversal this document opens with is not a fact about flexible models.
+It is a fact about bounded ones.** The best cross-validated model no longer has
+to be the worst on a new machine: here it is neither. What Results 4 and 5
+measure, and measure correctly, is that the flexible models *in that zoo* were
+all bounded or divergent, and no member of it separated the two properties.
+
+This does not overturn those results. `gp_linear_rbf` does not beat the power
+law on a held-out machine (0.218 against 0.214) or the analytic law anywhere,
+and Result 8's one line of dimensional analysis still produces the best blind
+score at the ITER cut for no hyperparameters at all. What changes is the
+explanation: "do not use a flexible model out of distribution" was the wrong
+lesson, and "do not use a model whose predictions are bounded by its training
+targets" is the right one.
+
+### Result 14d: and its own intervals hold where every calibrated one fails
+
+Result 7 gives every model a nominal 90% split-conformal interval and finds that
+out of distribution they do not merely widen, they stay the same width and miss:
+across the ITER-matched cut the random forest covers 3% and the histogram
+gradient booster covers none of the 2730 rows. Result 10 repairs that by
+calibrating on held-out machines, and finds the repair stops exactly where the
+diagnosis says it should, with the constrained power law the single exception.
+
+A Gaussian process supplies an interval by construction rather than by
+calibration, so the same question can be put to a model that was never
+calibrated at all. At the ITER-matched cut, nominal 90%:
+
+| model | coverage at the ITER-matched cut | median half-width (log) |
+|---|---|---|
+| **GP, linear + RBF** | **92.5%** | 0.349 |
+| GP, linear only | 67.9% | 0.305 |
+| GP, RBF only | 16.7% | 1.427 |
+| random forest, split conformal (Result 7) | 3% | - |
+| hist gradient boosting, split conformal (Result 7) | 0% | - |
+
+**The flexible unbounded rung is the only model in this repository whose
+out-of-distribution intervals reach nominal without being recalibrated to do
+so.** The RBF rung is the instructive failure: it is the one model here that
+*does* become vague out of distribution, with a half-width four times anyone
+else's, and it still covers only 16.7%, because it has reverted to a prior mean
+that is nowhere near the answer. Width was never the problem, and this is the
+cleanest demonstration of it in the document.
+
+### What Result 14 does not show
+
+The kernel hyperparameters are fitted by marginal likelihood on a seeded
+subsample of each training fold rather than on all of its rows, because an exact
+GP pays an O(n^3) factorization at every optimizer step. The learned kernel
+moves by less than 4% in every hyperparameter between 750 and 1500 tuning rows,
+and `tests/test_gp.py` pins that stability, but it is stability in the range
+that was affordable rather than a proof that the full-data optimum is the same.
+
+The result is one kernel family on one database. "Linear plus RBF" is a
+reasonable reading of "the law is a power law with a bounded correction" and it
+is not the only one: a Matern kernel, an anisotropic RBF with per-feature length
+scales, or a kernel whose linear part is constrained the way Result 8 constrains
+the power law are all untested. The last of those is the obvious next
+experiment, because Results 8 and 14 are the two things that work here and
+nothing has tried them together.
+
+And the ITER-matched cut is still three machines and 2730 rows, 1762 of them
+JET, with every caveat Result 5 and Result 8 carry about that. The 92.5%
+coverage in particular is a proportion over those rows, not over machines.
+
+## Result 15: the reversal needs dimensionality, and here is the measurement
+
+Result 13 ran this audit on Kleiber's law and split into two halves. The
+extrapolation failure reproduced completely. The ranking reversal did not, and
+Result 13b offered an explanation as a conjecture rather than a measurement:
+
+> With a single predictor and a relationship that is close to a straight line in
+> logs, a tree has far less to exploit, and the 41% cross-validated margin this
+> README opens with is simply not available here to be reversed. **The reversal
+> needs enough feature dimensionality for the flexible model to win
+> interpolation first.** Nothing in Results 4 to 12 could have shown that,
+> because one database cannot.
+
+Two databases cannot show it either, if they differ in a dozen ways at once.
+HDB5 has nine features and a reversal; the mammalian data has one feature and
+none; between them sit different sciences, group structures, sample sizes and
+noise levels. Feature count is one candidate among many.
+
+`tree_allometry.py` isolates it. The Biomass And Allometry Database (Falster et
+al. 2015, released CC0, pinned by SHA-256) records, for the same plants, a
+ladder of predictors of increasing dimension. So the experiment fixes the rows,
+the groups, the splits and the models, and varies only how many features the
+models may see. Each rung is a prefix of the next, and all four are scored on
+one row set of **3599 plants across 53 species, 33 of them with enough
+individuals to hold out**, spanning **36x** in diameter across species medians
+and **7.6 orders of magnitude** in mass.
+
+Taxonomic species plays the part of tokamak; diameter plays the part of machine
+size; and West, Brown and Enquist's mass proportional to diameter^(8/3), derived
+from a branching-network model rather than fitted, plays the part of IPB98(y,2)
+and of Kleiber's 3/4.
+
+| predictors | interpolation, power law | interpolation, best tree | gain | held-out species, power law | held-out species, best tree | gain | reversal |
+|---|---|---|---|---|---|---|---|
+| diameter | 0.5643 | 0.5740 | **-1.7%** | 0.5009 | 0.5535 | -10.5% | no |
+| + height | 0.4746 | 0.4773 | **-0.6%** | 0.4190 | 0.4642 | -10.8% | no |
+| + leaf area | 0.4074 | 0.4001 | **+1.8%** | 0.3638 | 0.4116 | -13.1% | **yes** |
+| + leaf mass | 0.3372 | 0.3143 | **+6.8%** | 0.2649 | 0.3005 | -13.4% | **yes** |
+
+### Result 15a: the interpolation gain rises monotonically with dimension, and crosses zero
+
+The flexible models' margin over the power law on the easy split runs **-1.7%,
+-0.6%, +1.8%, +6.8%** across the four rungs. At one predictor they lose, which
+is Result 13's outcome reproduced in a different kingdom of life: with a single
+input and a relationship that is a straight line in logs, a tree has nothing to
+exploit and pays for its variance. The margin turns positive between two and
+three predictors and grows from there.
+
+Nothing about the data, the species, the splits or the models changed across
+those four numbers. Only the number of columns did.
+
+### Result 15b: the extrapolation failure does not depend on dimension at all
+
+The power law beats both tree ensembles on a held-out species at **4 of 4
+rungs**, and its margin does not shrink as the trees get better at
+interpolation. It **grows**: -10.5%, -10.8%, -13.1%, -13.4%. The extra features
+that let a tree win the easy split buy it nothing on a species it has never
+seen, and cost it slightly more.
+
+This is the half of Result 13 that always reproduced, now measured against the
+axis that was suspected of controlling it, and it is flat.
+
+### Result 15c: so the reversal appears exactly where the interpolation gain crosses zero
+
+A reversal is the conjunction of the two: the flexible model wins the easy split
+and loses the hard one. Result 15b supplies the second half at every rung, so
+the reversal is gated entirely by the first, and it appears at **3 predictors
+and every rung above**, which is precisely where Result 15a's gain turns
+positive.
+
+**Result 13b's conjecture is therefore confirmed, and sharpened into two
+statements that had been travelling as one.** The extrapolation failure is
+unconditional: a bounded flexible model loses to a power law on an unseen group
+whatever the dimension, in tokamaks, in mammals and in trees. The *reversal* is
+conditional, and the condition is not a property of the failure at all. It is
+whether the flexible model had enough to work with to win the comparison a
+practitioner would actually run first. A field whose scaling law has one
+predictor never sees the reversal and still has the problem.
+
+That is the practically important form of the finding. The reversal is what
+makes the failure *visible*, because it is what makes the flexible model look
+good enough to adopt. Below three predictors the danger is identical and the
+warning sign is absent.
+
+### Result 15d: the published exponent, tested the way Kleiber's was
+
+Refitting the exponent freely on these plants gives **2.512** against WBE's
+**2.667**, so the theoretical value is not what the data would choose, and
+holding it there costs **0.5641 to 0.5780** in sample. That is the same
+structure Result 13 reports for Kleiber, whose published 0.75 refits to 0.687
+and costs +0.023: a theory-derived exponent that the data mildly disagrees with.
+
+### What Result 15 does not show
+
+The ladder is one ordering of one set of predictors. Adding height, then leaf
+area, then leaf mass is a reasonable order of increasing measurement difficulty,
+and it is not the only order: a different sequence could cross zero at a
+different rung, and this does not establish that "three" is a threshold rather
+than an artifact of which three. What it establishes is that the crossing exists
+and that the reversal tracks it.
+
+The rows are an intersection, and a selective one. Requiring all four
+measurements on the same plant cuts 21084 plants to 3599 and 674 species to 53,
+and those are disproportionately the studies that measured leaves destructively.
+The growing conditions are mixed: 1593 of these plants are glasshouse-grown and
+1017 come from common gardens, so this is not a sample of wild forest.
+
+Species are phylogenetically related rather than independent, exactly as Result
+13's orders are, and this uses no phylogenetic correction. And 14 studies supply
+these rows, so a species effect and a study effect are partly the same effect;
+holding out a species sometimes holds out a laboratory.
+
 ## Limitations
 
 - **The refit population is not IPB98's population.** No ITPA standard-set
@@ -2103,6 +2365,37 @@ enough to establish a rate at which either happens.
   `p_loss_mw` in particular is a derived, scenario-dependent quantity. The
   falsifiable content is the ordering and the factor-of-8 disagreement at ITER,
   not the individual numbers.
+- **Result 14 tunes its kernels on a subsample.** Hyperparameters are fitted
+  by marginal likelihood on a seeded subsample of each training fold rather
+  than on all of its rows, because an exact GP pays an O(n^3) factorization at
+  every optimizer step. The learned kernel moves by less than 4% between 750
+  and 1500 tuning rows and `tests/test_gp.py` pins that, but stability across
+  the affordable range is not a proof that the full-data optimum is the same.
+- **Result 14 is one kernel family.** "Linear plus RBF" is a reasonable reading
+  of "a power law with a bounded correction" and not the only one. An
+  anisotropic RBF, a Matern kernel, or a linear part constrained the way Result
+  8 constrains the power law are all untested, and the last is the obvious next
+  experiment because Results 8 and 14 are the two things that work here and
+  nothing has tried them together.
+- **Result 14 does not make the GP the recommended model.** It wins
+  cross-validation and comes second at the ITER-matched cut, but it does not
+  beat the power law on a held-out machine (0.218 against 0.214), and Result
+  8's constrained fit still produces the best blind score at the ITER cut with
+  no hyperparameters at all. `fusionflux predict` still recommends the
+  constrained power law, and Result 14 does not change that.
+- **Result 15's ladder is one ordering of one set of predictors.** Height, then
+  leaf area, then leaf mass is a reasonable order of increasing measurement
+  difficulty and not the only one. A different sequence could cross zero at a
+  different rung, so this establishes that a crossing exists and that the
+  reversal tracks it, not that three is a threshold.
+- **Result 15's rows are a selective intersection.** Requiring all four
+  measurements on the same plant cuts 21084 plants to 3599 and 674 species to
+  53, favouring studies that measured leaves destructively. 1593 of these
+  plants are glasshouse-grown and 1017 come from common gardens, so this is not
+  a sample of wild forest. Its 14 studies also mean a species effect and a
+  study effect are partly the same effect: holding out a species sometimes
+  holds out a laboratory. As in Result 13, species are phylogenetically related
+  and no phylogenetic correction is applied.
 - **A separate synthetic pipeline uses `log1p`, not `log`.** In `neutron_yield/features.py`,
   `log_triple_product = log1p(n T tau)`, which is *not* `log1p(n) + log1p(T) +
   log1p(tau)`; the additivity residual reaches 4.6%. The engineered features

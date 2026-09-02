@@ -44,6 +44,10 @@ data/raw/hdb5_db523.csv
 # Result 13's second domain: mammalian BMR, Figshare article 3549807
 # (python3 -c "import allometry; allometry.download_allometry()")
 data/raw/allometry_bmr.txt
+# Result 15's tree-allometry ladder: the Biomass And Allometry Database,
+# GitHub release v1.0.1, CC0
+# (python3 -c "import tree_allometry; tree_allometry.download_baad()")
+data/raw/baad_data.zip
 site/index.html
 
 # Copied into the package at build time from results/predictor.json by

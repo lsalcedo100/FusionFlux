@@ -74,6 +74,8 @@ def artifacts() -> dict[str, object]:
         "replication": _json("replication.json"),
         "forecast": _json("forecast.json"),
         "allometry": _json("allometry.json"),
+        "gp": _json("gp.json"),
+        "tree": _json("tree_allometry.json"),
     }
 
 
@@ -263,6 +265,16 @@ def _spread(a: dict, device: str) -> float:
     return max(taus) / min(taus)
 
 
+def _rung(a: dict, n_features: int, field: str) -> float:
+    """One rung of Result 15's feature ladder, keyed by predictor count."""
+    return a["tree"]["ladder"][str(n_features)][field]
+
+
+def _gp(a: dict, model: str, field: str) -> float:
+    """One model's entry in results/gp.json, which is keyed by model then split."""
+    return a["gp"]["scores"][model][field]
+
+
 def _allo(a: dict, model: str, field: str) -> float:
     return float(a["allometry"]["scores"][model][field])
 
@@ -284,6 +296,13 @@ LATE_RESULTS = (README, RESULTS_MD, PAPER, PAPER_PDF)
 # bound to the same four documents; where the paper words something differently
 # the claim carries both spellings rather than being dropped.
 ALLOMETRY = (README, RESULTS_MD, PAPER, PAPER_PDF)
+
+# Result 14 is carried by the README and the full writeup. The paper is a
+# nine-page condensation that predates it and has no section for it yet.
+GP = (README, RESULTS_MD)
+
+# Result 15, likewise carried by the README and the full writeup only.
+TREE = (README, RESULTS_MD)
 
 CLAIMS: tuple[Claim, ...] = (
     # -- dataset scale -----------------------------------------------------
@@ -482,6 +501,67 @@ CLAIMS: tuple[Claim, ...] = (
     Claim("mass cuts where Kleiber beats the free fit", "4 of 8",
           lambda a: a["allometry"]["sweep_wins"]["kleiber_beats_free_power_law"],
           lambda v: f"{v} of 8", documents=ALLOMETRY),
+
+    # -- Result 14: flexibility against boundedness ------------------------
+    # Carried by the README and RESULTS.md. The paper has no Result 14 section
+    # yet, so it is deliberately not in this documents tuple.
+    Claim("GP linear+RBF, CV", "0.112",
+          lambda a: _gp(a, "gp_linear_rbf", "cv"), _r(3), documents=GP),
+    Claim("GP linear+RBF, held-out machine", "0.218",
+          lambda a: _gp(a, "gp_linear_rbf", "leave_one_tokamak_out"), _r(3), documents=GP),
+    Claim("GP linear+RBF at the ITER cut", "0.191",
+          lambda a: _gp(a, "gp_linear_rbf", "iter_matched_cut"), _r(3), documents=GP),
+    Claim("GP RBF-only at the ITER cut", "1.948",
+          lambda a: _gp(a, "gp_rbf", "iter_matched_cut"), _r(3), documents=GP),
+    Claim("GP RBF-only, CV", "0.142",
+          lambda a: _gp(a, "gp_rbf", "cv"), _r(3), documents=GP),
+    Claim("GP RBF-only error against distance", "+0.65",
+          lambda a: _gp(a, "gp_rbf", "distance_correlation"),
+          lambda v: f"{v:+.2f}", documents=GP),
+    Claim("GP linear+RBF error against distance", "-0.01",
+          lambda a: _gp(a, "gp_linear_rbf", "distance_correlation"),
+          lambda v: f"{v:+.2f}".replace("+", "-") if v < 0 else f"{v:+.2f}",
+          documents=GP),
+    Claim("GP linear+RBF coverage at the ITER cut", "92.5%",
+          lambda a: _gp(a, "gp_linear_rbf", "coverage_at_iter_cut"),
+          lambda v: f"{v:.1%}", documents=GP),
+    Claim("GP RBF-only coverage at the ITER cut", "16.7%",
+          lambda a: _gp(a, "gp_rbf", "coverage_at_iter_cut"),
+          lambda v: f"{v:.1%}", documents=GP),
+
+    # -- Result 15: the reversal's precondition ----------------------------
+    Claim("tree allometry plants", "3599",
+          lambda a: a["tree"]["n_rows"], documents=TREE),
+    Claim("tree allometry species", "53",
+          lambda a: a["tree"]["n_species_total"], documents=TREE,
+          phrases=lambda lit: (f"{lit} species",)),
+    Claim("tree allometry species scored", "33",
+          lambda a: a["tree"]["n_species_scored"], documents=TREE),
+    Claim("tree allometry diameter span", "36x",
+          lambda a: a["tree"]["species_size_span"], lambda v: f"{v:.0f}x",
+          documents=TREE),
+    Claim("free refit of the WBE exponent", "2.512",
+          lambda a: a["tree"]["free_refit_exponent"], _r(3), documents=(RESULTS_MD,)),
+    Claim("dimension at which the reversal appears", "3 predictors",
+          lambda a: a["tree"]["first_reversal_n_features"],
+          lambda v: f"{v} predictors", documents=TREE),
+    Claim("rungs where the power law wins the held-out species", "4 of 4",
+          lambda a: a["tree"]["n_rungs_power_law_wins_extrapolation"],
+          lambda v: f"{v} of 4", documents=TREE),
+    Claim("ladder rung 1 interpolation gain", "-1.7%",
+          lambda a: _rung(a, 1, "cv_gain_over_powerlaw"),
+          lambda v: f"{v:+.1%}".replace("+", "-") if v < 0 else f"{v:+.1%}",
+          documents=TREE),
+    Claim("ladder rung 2 interpolation gain", "-0.6%",
+          lambda a: _rung(a, 2, "cv_gain_over_powerlaw"),
+          lambda v: f"{v:+.1%}".replace("+", "-") if v < 0 else f"{v:+.1%}",
+          documents=TREE),
+    Claim("ladder rung 3 interpolation gain", "+1.8%",
+          lambda a: _rung(a, 3, "cv_gain_over_powerlaw"),
+          lambda v: f"{v:+.1%}", documents=TREE),
+    Claim("ladder rung 4 interpolation gain", "+6.8%",
+          lambda a: _rung(a, 4, "cv_gain_over_powerlaw"),
+          lambda v: f"{v:+.1%}", documents=TREE),
 )
 
 
