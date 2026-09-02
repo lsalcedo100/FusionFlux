@@ -46,7 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -61,7 +61,7 @@ jobs:
       # a change to the pin misses the cache and refetches rather than silently
       # analysing the old bytes.
       - name: Cache the HDB5 datasets
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             data/raw/hdb5_std5.csv
@@ -103,7 +103,7 @@ jobs:
       # so the diff can be inspected without reproducing the run locally.
       - name: Upload the regenerated results on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: regenerated-results
           path: results/
