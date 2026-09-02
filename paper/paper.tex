@@ -77,7 +77,20 @@ reproduces on 5358 rows the standard set does not contain and again in a
 different confinement regime against a different published law. Finally we
 record a locked prediction for SPARC, JT-60SA and ITER: inside the database's
 size range the models agree to within 15\%, and on ITER they disagree by a
-factor of 8.3. Separately, we report that the ten-feature design matrix used
+factor of 8.3. Two further results qualify the diagnosis above. Varying only the
+number of predictors on a fixed set of 3599 plants from a tree-allometry
+database, the interpolation margin of the flexible models crosses zero between
+two and three predictors while their deficit on a held-out species does not
+shrink at all, so the extrapolation failure is unconditional and the ranking
+inversion is not: the inversion requires the flexible model to win the easy
+split first, and is therefore the warning sign rather than the hazard. And
+separating flexibility from boundedness with a Gaussian process, whose long-range
+behaviour is a choice of kernel, shows the failure belongs to the second: a
+bounded RBF kernel scores 1.948 at the ITER-matched cut, worse than a constant,
+while adding a linear term to that same kernel gives the best cross-validated
+score in this work (0.112 against the random forest's 0.128) together with 0.191
+at the ITER-matched cut and 92.5\% coverage of a nominal 90\% interval that was
+never recalibrated. Separately, we report that the ten-feature design matrix used
 here is rank deficient by exactly two, one dependency being that a published
 scaling law added as a model feature is a fixed linear combination of the
 features already present.
@@ -743,6 +756,181 @@ training-range-bounded cuts circled.}
 \label{fig:allometry}
 \end{figure*}
 
+\section{The reversal's precondition, measured directly}
+\label{sec:ladder}
+
+Section~\ref{sec:allometry} leaves an asymmetry. The extrapolation failure
+reproduced in full on Kleiber's law; the ranking inversion did not, and the
+explanation offered there was a conjecture: with a single predictor a tree has
+little to exploit, never wins the interpolation split, and so has no advantage
+to lose. Two datasets cannot test that, because HDB5 and the mammalian
+compilation differ in feature count and also in science, group structure, sample
+size and noise.
+
+A third dataset can, if the feature count is varied inside it while everything
+else is held fixed. The Biomass And Allometry Database~\cite{baad} records, for
+individual plants, a nested set of measurements: basal diameter, height, leaf
+area and leaf mass. Taking the rows complete in all four gives 3599 plants
+across 53 species, 33 of them with the 30 individuals we require to hold a
+species out, spanning 36x in diameter across species medians and over seven
+orders of magnitude in mass. It is released CC0 and pinned by SHA-256 as the
+other deposits are. Species plays the part of tokamak, diameter the part of
+machine size, and the branching-network prediction that mass scales as diameter
+to the 8/3~\cite{wbe} the part of IPB98(y,2): an exponent derived from theory
+rather than fitted, which refits here to 2.512 and costs 0.5641 against 0.5780
+in sample when held.
+
+Each rung of the ladder is a prefix of the next and all four are scored on the
+same rows, so the only quantity that changes across them is how many predictors
+the models may see. The split structure matters and is easy to get wrong:
+grouped cross-validation by discharge keeps every machine on both sides, so its
+analogue keeps every species on both sides. Grouping the cross-validation by
+species instead would be a second leave-one-group-out, and against it no
+reversal can appear at any dimension.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+predictors & interp.\ gain & held-out gain & reversal \\
+\midrule
+diameter & $-1.7\%$ & $-10.5\%$ & no \\
+$+$ height & $-0.6\%$ & $-10.8\%$ & no \\
+$+$ leaf area & $+1.8\%$ & $-13.1\%$ & yes \\
+$+$ leaf mass & $+6.8\%$ & $-13.4\%$ & yes \\
+\bottomrule
+\end{tabular}
+\caption{The best tree ensemble's margin over the log-linear power law, on 3599
+plants held fixed across the four rungs. Positive favours the trees. The
+interpolation column crosses zero; the extrapolation column does not, and grows
+slightly against them.}
+\label{tab:ladder}
+\end{table}
+
+Table~\ref{tab:ladder} separates two statements that had been travelling as one.
+The interpolation margin rises monotonically and crosses zero between two and
+three predictors. The extrapolation margin does not shrink as the trees improve;
+it widens, and the power law wins the held-out species at 4 of 4 rungs. The
+inversion therefore appears at 3 predictors and every rung above, which is
+exactly where the interpolation margin turns positive.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{tree_allometry.png}
+\caption{\textbf{The reversal's precondition, on 3599 plants held fixed.} Left:
+the interpolation split, where every species appears on both sides. Right: an
+entire species held out. Only the number of predictors varies. The left curves
+cross; the right ones do not.}
+\label{fig:ladder}
+\end{figure*}
+
+So the extrapolation failure is unconditional, and holds in tokamaks, mammals
+and trees alike at every dimension tested. The \emph{inversion} is conditional,
+and its condition has nothing to do with the failure: it is only whether the
+flexible model had enough to work with to win the comparison a practitioner runs
+first. The inversion is the warning light rather than the disease. Below three
+predictors the hazard is identical and the light is off.
+
+\section{Flexibility, or boundedness?}
+\label{sec:gp}
+
+Section~\ref{sec:reversal} attributes the failure to flexibility, and the
+polynomial ladder there supports that reading only for one kind of flexibility:
+polynomial degree under an isotropic penalty, swept over nine decades without
+rescue. Every model scored to this point confounds two properties. Flexibility
+is how much structure a model can learn beyond a power law. \emph{Boundedness}
+is what it does far outside the training data. A tree ensemble is flexible and
+bounded; ridge is neither; a degree-3 polynomial is flexible and unbounded but
+divergent, which is why its worst machine is 4.601. No model here was flexible,
+unbounded and well behaved at long range at once.
+
+A Gaussian process~\cite{gpml} supplies one, and the property is a choice of
+kernel rather than a tuning parameter. We fit three over the same log features, with the same
+optimizer on the same rows, differing only in what the kernel does at long
+range. An RBF kernel decays to zero with distance, so the posterior returns to
+its prior mean, which centring places at the training mean: bounded. A
+dot-product kernel is Bayesian linear regression in the log features, which is a
+power law: unbounded and inflexible. Their sum is both. Hyperparameters are
+fitted by maximising the log marginal likelihood on a seeded subsample of each
+training fold, never on held-out rows; hand-chosen values are not adequate here,
+since a length scale an order of magnitude from the one the data supports makes
+the third rung look like a failure.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+model & CV & held-out & ITER cut & $\rho$ \\
+\midrule
+GP, linear $+$ RBF & \textbf{0.112} & 0.218 & \textbf{0.191} & $-0.01$ \\
+GP, RBF only & 0.142 & 0.541 & 1.948 & $+0.65$ \\
+GP, linear only & 0.181 & 0.214 & 0.278 & $-0.06$ \\
+random forest & 0.128 & 0.465 & 0.938 & $+0.85$ \\
+IPB98(y,2), not blind & 0.199 & 0.188 & 0.194 & $-0.49$ \\
+mean baseline & 0.869 & 0.994 & 1.459 & $+0.56$ \\
+\bottomrule
+\end{tabular}
+\caption{RMSLE under the three splits, and the rank correlation of per-machine
+error against extrapolation distance. Only the kernel's long-range behaviour
+differs across the first three rows, and it spans a factor of ten at the
+ITER-matched cut. IPB98(y,2) was fitted with these machines included and is a
+reference point rather than a blind baseline.}
+\label{tab:gp}
+\end{table}
+
+The control lands: the linear-kernel process and ridge agree to $0.0000$ under
+cross-validation and on a held-out machine, and to $0.0007$ at the ITER-matched
+cut, which is what licenses reading the other two rows as consequences of the
+kernel. The bounded rung then fails exactly as a tree does. It beats the power
+law under cross-validation and scores 1.948 at the ITER-matched cut, worse than
+predicting a constant, with error tracking distance at $\rho = +0.65$. The
+mechanism is the one in Sec.~\ref{sec:reversal}: a tree cannot exceed the
+largest training target, and an RBF process reverts to its prior mean. Both are
+hard limits rather than shortfalls, and on the held-out rows this one's
+predictions carry half the spread of the truth.
+
+Adding a dot-product term to that same kernel changes nothing about its
+flexibility and everything about its behaviour at range. It gives the best
+cross-validated score in this work, 0.112 against the random forest's 0.128; it
+scores 0.191 at the ITER-matched cut, better than the analytic law fitted with
+those machines included and second only to the constrained fit of
+Sec.~\ref{sec:dimensional} at 0.183; and its error is flat against distance at
+$\rho = -0.01$.
+
+The consequence is a correction to this paper's own diagnosis. The inversion is
+not a fact about flexible models but about bounded ones. The zoo of
+Sec.~\ref{sec:reversal} is measured correctly and every flexible member of it
+was bounded or divergent, so nothing in it could separate the two properties.
+``Do not use a flexible model out of distribution'' is the wrong lesson; ``do
+not use a model whose predictions are bounded by its training targets'' is the
+right one. This does not displace the constrained power law, which still wins
+the ITER-matched cut with nothing to tune, and the process does not beat the
+power law on a held-out machine (0.218 against 0.214).
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{gp.png}
+\caption{\textbf{One model family, three kernels.} Left: RMSLE on a held-out
+machine and at the ITER-matched cut; only the kernel's long-range behaviour
+differs. Right: spread of the predictions against spread of the truth on the
+held-out rows. A model that has reverted to its prior mean sits near zero
+however good its in-range fit was.}
+\label{fig:gp}
+\end{figure*}
+
+One further result comes free. A Gaussian process supplies an interval by
+construction rather than by calibration, so Sec.~\ref{sec:conformal}'s question
+can be put to a model that was never calibrated. At the ITER-matched cut, at
+nominal 90\%, the flexible unbounded rung covers 92.5\%, where split-conformal
+intervals give the random forest 3\% and the gradient booster none. It is the
+only model here whose out-of-distribution intervals reach nominal without being
+recalibrated to do so. The bounded rung is the instructive failure: it is the
+one model that does become vague out of distribution, with a half-width four
+times any other, and it still covers 16.7\%, having reverted to a prior mean
+nowhere near the answer. Width was never the problem.
+
 \section{Limitations}
 
 The refit population is not IPB98's, and the refit exponents should not be read
@@ -771,7 +959,22 @@ groups are phylogenetically related rather than independent, which the
 comparative-biology literature handles with phylogenetically-controlled
 regression and we do not; it suffices to show the extrapolation failure is
 not fusion-specific and that the reversal needs a condition that dataset
-lacks, not to establish a rate for either.
+lacks, not to establish a rate for either. The ladder of
+Sec.~\ref{sec:ladder} is one ordering of one set of predictors, so it
+establishes that a crossing exists and that the inversion tracks it, not that
+three is a threshold; its rows are a selective intersection, cutting 21084
+plants to 3599 and favouring studies that measured leaves destructively, most of
+those plants are glasshouse-grown or from common gardens rather than wild
+forest, and its 14 source studies mean holding out a species sometimes holds out
+a laboratory. The kernels of Sec.~\ref{sec:gp} are tuned by marginal likelihood
+on a seeded subsample of each training fold rather than on all of its rows,
+which is stable across the range we could afford (under 4\% in every
+hyperparameter between 750 and 1500 rows) but is not a proof that the full-data
+optimum agrees; and ``linear plus RBF'' is one reading of ``a power law with a
+bounded correction'' among several, with an anisotropic kernel, a Matern kernel
+and a linear part constrained as in Sec.~\ref{sec:dimensional} all untested. The
+last of these is the obvious next experiment, since the constraint and the
+kernel are the two things that work here and nothing has tried them together.
 
 \section{Conclusion}
 
@@ -798,6 +1001,21 @@ models are validated rather than of one file. What the models disagree about is
 recorded rather than argued: on a machine inside the database's size range they
 agree to within 15\%, and on ITER they differ by a factor of 8.3.
 
+Two results temper the diagnosis and neither weakens the practical advice.
+Varying only the number of predictors shows that the extrapolation failure is
+unconditional while the ranking inversion is not: the inversion needs the
+flexible model to win the interpolation split first, which makes it the warning
+sign rather than the hazard, and a field whose scaling law has one predictor
+faces the same danger with no warning at all. And separating flexibility from
+boundedness shows the failure belongs to the second. A Gaussian process with a
+bounded kernel fails exactly as a tree does, while the same flexibility carried
+on an unbounded one gives the best cross-validated score here, holds up at the
+ITER-matched cut, and is the only model in this work whose out-of-distribution
+intervals reach nominal without recalibration. The lesson is not that flexible
+models cannot be trusted beyond their data. It is that models bounded by their
+training targets cannot, and that the two are easy to confuse because every
+flexible model in the standard zoo is also bounded.
+
 \section*{Data and code availability}
 
 The HDB5 STD5 dataset is third-party data obtained from OSF
@@ -820,6 +1038,14 @@ confinement database: description and analysis,'' \emph{Nucl.\ Fusion}
 confinement,'' \emph{Nucl.\ Fusion} \textbf{17}, 1047 (1977).
 \bibitem{iter89p} P.N. Yushmanov \emph{et al.}, ``Scalings for tokamak energy
 confinement,'' \emph{Nucl.\ Fusion} \textbf{30}, 1999 (1990). ITER89-P.
+\bibitem{baad} D.S. Falster \emph{et al.}, ``BAAD: a Biomass And Allometry
+Database for woody plants,'' \emph{Ecology} \textbf{96}, 1445 (2015).
+Released CC0.
+\bibitem{wbe} G.B. West, J.H. Brown and B.J. Enquist, ``A general model for the
+structure and allometry of plant vascular systems,'' \emph{Nature}
+\textbf{400}, 664 (1999).
+\bibitem{gpml} C.E. Rasmussen and C.K.I. Williams, \emph{Gaussian Processes for
+Machine Learning}, MIT Press (2006).
 \end{thebibliography}
 
 \end{document}

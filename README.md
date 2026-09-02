@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
 [![data: ITPA HDB5 STD5](https://img.shields.io/badge/data-ITPA%20HDB5%20STD5-8a3ffc.svg)](https://osf.io/drwcq)
 
-**[Read the interactive summary](https://lsalcedo100.github.io/FusionFlux/)** · [nine-page paper](paper/paper.pdf) · [full writeup](results/RESULTS.md)
+**[Read the interactive summary](https://lsalcedo100.github.io/FusionFlux/)** · [the paper](paper/paper.pdf) · [full writeup](results/RESULTS.md)
 
 A tokamak holds a plasma hot enough to fuse inside a magnetic field, and the plasma leaks its heat back out. How long it holds that heat, the **energy confinement time**, is what decides how large the machine has to be before fusion produces more energy than it consumes. Nobody can compute that time from first principles, so the field predicts it with a power law fitted across the machines already built, and ITER is being built on that prediction.
 
@@ -24,7 +24,7 @@ Then you ask whether that is a fact about this one database, and it is not: the 
 | | |
 |---|---|
 | **[Interactive summary](https://lsalcedo100.github.io/FusionFlux/)** | One page: the reversal, the ITER-direction result, a panel where you pick the held-out machine and watch the ranking rearrange, the one line of physics that repairs it, and the locked ITER forecast. |
-| **[Nine-page paper](paper/paper.pdf)** (`paper/paper.tex`) | Abstract, method, Results 1 to 13, limitations. Results 14 and 15 are newer than this draft and live in the full writeup. |
+| **[The paper](paper/paper.pdf)** (`paper/paper.tex`) | Abstract, method, all fifteen results, limitations. |
 | **[results/RESULTS.md](results/RESULTS.md)** | The full writeup: every claim, table, mechanism and limitation, with nothing left out. |
 
 ## Results
@@ -363,6 +363,7 @@ It is here as engineering rather than as a result: a complete training and infer
 | [docs/neutron-yield-pipeline.md](docs/neutron-yield-pipeline.md) | Operating detail for the synthetic-data infrastructure above. |
 | [paper/README.md](paper/README.md) | How to build the paper, and the Zenodo DOI flow. |
 | [docs/releasing.md](docs/releasing.md) | The ordered checklist for the DOI, the arXiv preprint, and who to send it to. |
+| [docs/outreach.md](docs/outreach.md) | Drafts of the three emails that checklist ends in. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to change an analysis without breaking the prose that quotes it, and what is most useful to contribute. |
 | [scaling-audit/README.md](scaling-audit/README.md) | The extracted method as a standalone package, with the three domains it has been run on. |
 

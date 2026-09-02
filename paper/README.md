@@ -1,6 +1,6 @@
 # The paper
 
-`paper.tex` is a nine-page writeup of the results in
+`paper.tex` is a condensed writeup of the results in
 [`../results/RESULTS.md`](../results/RESULTS.md), in the format a reviewer can
 evaluate at a glance. Every number in it is taken from the generated artifacts
 under `../results/`, so regenerate those first if anything has changed.

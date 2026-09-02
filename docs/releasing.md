@@ -18,9 +18,29 @@ make check        # ruff, mypy, pytest
 make dist         # build the wheel and install it into a clean venv, then predict
 make reproduce    # regenerate results/ from the raw data and diff numerically
 make arxiv        # builds build/arxiv-submission.tar.gz and runs the submission gate
+make paper-fresh  # is paper/paper.pdf built from the current paper.tex?
 ```
 
-`make reproduce` needs both datasets and takes roughly fifteen minutes. It is
+`make paper-fresh` is the one that is easy to skip and expensive to get wrong.
+`paper/paper.pdf` is committed rather than built on demand, the README links
+readers straight to it, and a DOI archives it permanently, so a PDF that
+predates the current `paper.tex` is a permanent record of the wrong paper. It is
+a separate target rather than part of `make check` because rebuilding needs a
+LaTeX toolchain that a contributor may not have:
+
+```bash
+make arxiv
+cd build/arxiv && pdflatex paper.tex && pdflatex paper.tex
+cp paper.pdf ../../paper/paper.pdf
+```
+
+Twice, because the cross-references and the table of contents need a second
+pass. Then `make paper-fresh` again, and `make check`, since
+`tests/test_reported_numbers.py` reads the PDF back and checks the numbers in it
+against `results/`.
+
+`make reproduce` needs all four datasets and takes roughly half an hour now that
+Results 14 and 15 are in it. It is
 the one that matters here: a DOI is permanent, so archiving a state whose
 `results/` no longer follows from the data is not correctable by an edit.
 
@@ -173,6 +193,11 @@ the constraint result (0.183 at the ITER-matched cut, better than the analytic
 law fitted with those machines included), and that the whole thing regenerates
 from their published file by SHA-256. A link to the repository and the paper is
 enough; do not attach anything.
+
+Three drafts, ready to fill in and send, are in [`outreach.md`](outreach.md).
+They are drafts rather than sent messages on purpose: they go to named
+researchers under your name, and the wording of a first approach to the people
+whose data you have just published a negative result about is yours to own.
 
 A reply from someone in that group is worth more than any further work on the
 repository, and an endorsement for step 3 is a plausible side effect.

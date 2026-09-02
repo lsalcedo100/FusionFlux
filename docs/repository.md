@@ -57,7 +57,7 @@ FusionFlux/
 │   └── ipb98_refit_exponents.csv    # refit against published, with bootstrap intervals
 │
 ├── paper/
-│   ├── paper.tex                    # nine-page writeup; build with `tectonic paper/paper.tex`
+│   ├── paper.tex                    # condensed writeup; build with `tectonic paper/paper.tex`
 │   └── README.md                    # how to build it, and the Zenodo DOI flow
 ├── site/
 │   ├── page.template.html           # the one-page interactive summary

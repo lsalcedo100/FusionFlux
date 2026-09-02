@@ -18,6 +18,18 @@ and the problem appears at upload time or, worse, in a permanent record.
 * **A placeholder author line**, which is cheap to check and permanent to get
   wrong.
 
+A fifth check is opt-in, because it is the only one that can fail for a reason
+a contributor cannot fix without a LaTeX toolchain installed:
+
+* **A stale committed PDF.** `paper/paper.pdf` is committed rather than built on
+  demand, so it goes out of date the moment `paper.tex` gains a section and is
+  not rebuilt. Every reader who follows the README's link gets that PDF, and a
+  DOI would archive it permanently. `--check-pdf-fresh` compares the section
+  titles in the source against the text of the PDF and reports the ones missing.
+  It is deliberately *not* part of the default rule set: `make check` must stay
+  green on a machine with no `pdflatex`, and the release path is where this
+  actually matters.
+
 Run standalone (`python3 tools/check_paper_submission.py`) or via `make arxiv`,
 which refuses to build the tarball if anything here fails.
 """
@@ -31,7 +43,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PAPER = ROOT / "paper" / "paper.tex"
 MAKEFILE = ROOT / "Makefile"
+PDF = ROOT / "paper" / "paper.pdf"
 FIGURE_DIR = ROOT / "results"
+
+LIGATURES = {"\ufb00": "ff", "\ufb01": "fi", "\ufb02": "fl", "\ufb03": "ffi", "\ufb04": "ffl"}
 
 PLACEHOLDER_AUTHORS = ("Your Name", "TODO", "FIXME", "Author Name", "Anonymous")
 
@@ -106,8 +121,60 @@ def check(paper: Path = PAPER, makefile: Path = MAKEFILE) -> list[str]:
     return problems
 
 
-def main() -> int:
+def stale_pdf_sections(paper: Path = PAPER, pdf: Path = PDF) -> list[str]:
+    """Section titles present in the source but absent from the committed PDF.
+
+    Returns an empty list when the PDF is fresh, and also when it cannot be read
+    at all: an unreadable PDF is a different problem from a stale one, and
+    reporting it here would turn a missing optional dependency into a paper
+    defect. `pypdf` is in the dev extra, so a developer environment has it.
+    """
+    if not pdf.exists():
+        return []
+    try:
+        from pypdf import PdfReader
+    except ImportError:  # pragma: no cover - pypdf is in the dev extra
+        return []
+
+    try:
+        text = " ".join(page.extract_text() or "" for page in PdfReader(str(pdf)).pages)
+    except Exception:  # pragma: no cover - a corrupt PDF is not a staleness result
+        return []
+    # LaTeX typesets ff, fi, fl, ffi and ffl as single ligature glyphs, so the
+    # PDF says "deficient" with one character where the source says two and a
+    # literal comparison reports a stale section that is present. Expanding them
+    # is the whole difference between this check working and always failing.
+    for ligature, expansion in LIGATURES.items():
+        text = text.replace(ligature, expansion)
+    normalized = re.sub(r"\s+", " ", text)
+
+    latex = _strip_comments(paper.read_text())
+    missing = []
+    for title in re.findall(r"\\section\{([^}]*)\}", latex):
+        # Section titles are plain prose here; strip the little LaTeX that does
+        # appear so the comparison is against what a reader sees.
+        plain = re.sub(r"\\[a-zA-Z]+\s*", "", title).replace("{", "").replace("}", "")
+        plain = re.sub(r"\s+", " ", plain).strip()
+        if plain and plain not in normalized:
+            missing.append(plain)
+    return missing
+
+
+def main(argv: list[str] | None = None) -> int:
+    arguments = sys.argv[1:] if argv is None else argv
     problems = check()
+
+    if "--check-pdf-fresh" in arguments:
+        missing = stale_pdf_sections()
+        if missing:
+            problems.append(
+                "paper/paper.pdf does not contain "
+                + ", ".join(f"{title!r}" for title in missing)
+                + ". The committed PDF is stale: rebuild it with "
+                "`make arxiv && cd build/arxiv && pdflatex paper.tex && pdflatex paper.tex` "
+                "and copy the result over paper/paper.pdf."
+            )
+
     if problems:
         print(f"{PAPER.relative_to(ROOT)} is not ready to submit:", file=sys.stderr)
         for problem in problems:

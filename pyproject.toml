@@ -176,8 +176,8 @@ source = [
 
 [tool.coverage.report]
 show_missing = true
-# Measured, not guessed. The suite covers 78.28% with all four datasets present
-# (1353 of 6229 statements missed), which is the state CI is in modulo the tests
+# Measured, not guessed. The suite covers 78.29% with all four datasets present
+# (1358 of 6254 statements missed), which is the state CI is in modulo the tests
 # that skip there for want of a dataset or a trained artifact; without them it
 # was 77.47% when last measured on the same basis.
 # "All four" is HDB5 STD5, the full DB5.2.3 revision, the mammalian

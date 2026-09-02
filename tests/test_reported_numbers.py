@@ -303,10 +303,15 @@ ALLOMETRY = (README, RESULTS_MD, PAPER, PAPER_PDF)
 
 # Result 14 is carried by the README and the full writeup. The paper is a
 # nine-page condensation that predates it and has no section for it yet.
-GP = (README, RESULTS_MD)
+# The paper now carries both, so its source is checked too. `PAPER_PDF` is
+# deliberately absent: the committed PDF is rebuilt from this source by hand
+# (`make arxiv`, then pdflatex), so listing it here would fail every run between
+# an edit to paper.tex and the next rebuild. `make arxiv` gates the release on
+# that rebuild instead, via `tools/check_paper_submission.py --check-pdf-fresh`.
+GP = (README, RESULTS_MD, PAPER)
 
-# Result 15, likewise carried by the README and the full writeup only.
-TREE = (README, RESULTS_MD)
+# Result 15, the same.
+TREE = (README, RESULTS_MD, PAPER)
 
 CLAIMS: tuple[Claim, ...] = (
     # -- dataset scale -----------------------------------------------------

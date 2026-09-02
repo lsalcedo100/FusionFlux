@@ -19,7 +19,17 @@ abstract: >-
   the exponents repairs it and is the best blind model at a size cut matched
   to ITER's, with no hyperparameter. The reversal replicates on rows the
   standard set does not contain and in a second confinement regime, and a
-  locked prediction is recorded for SPARC, JT-60SA and ITER. Includes a
+  locked prediction is recorded for SPARC, JT-60SA and ITER. Two results
+  qualify the diagnosis. Varying only the number of predictors on a fixed
+  set of woody plants shows the extrapolation failure is unconditional while
+  the ranking reversal is not: the reversal requires the flexible model to
+  win the interpolation split first, making it the warning sign rather than
+  the hazard. And separating flexibility from boundedness with a Gaussian
+  process shows the failure belongs to boundedness: a bounded kernel scores
+  worse than a constant at the ITER-matched cut, while adding a linear term
+  to it gives the best cross-validated score in the study together with
+  intervals that reach nominal coverage out of distribution without
+  recalibration. Includes a
   rank-deficiency audit of the design matrix, a from-scratch least-squares
   implementation (Cholesky, QR, SVD), a refit of the IPB98(y,2) exponents
   decomposed along the singular directions of the data, and a domain-agnostic
@@ -33,6 +43,9 @@ keywords:
   - machine learning
   - extrapolation
   - out-of-distribution generalization
+  - Gaussian processes
+  - allometry
+  - model selection
 license: MIT
 version: 0.2.1
 references:

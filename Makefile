@@ -1,5 +1,5 @@
 # Developer shortcuts. Run `make check` to reproduce the CI quality gate locally.
-.PHONY: install check lint type test train results reproduce page arxiv dist
+.PHONY: install check lint type test train results reproduce page arxiv dist paper-fresh
 
 # Install the package plus dev tooling against the pinned, tested environment.
 install:
@@ -119,7 +119,7 @@ arxiv: paper/paper.tex
 	@python3 tools/check_paper_submission.py
 	@rm -rf build/arxiv && mkdir -p build/arxiv
 	@cp paper/paper.tex build/arxiv/
-	@cp results/extrapolation.png results/size_extrapolation.png results/dimensional.png results/conformal_shift.png results/allometry.png build/arxiv/
+	@cp results/extrapolation.png results/size_extrapolation.png results/dimensional.png results/conformal_shift.png results/allometry.png results/tree_allometry.png results/gp.png build/arxiv/
 	@cd build/arxiv && tar czf ../arxiv-submission.tar.gz paper.tex *.png
 	@echo "wrote build/arxiv-submission.tar.gz"
 	@echo "Build it exactly as arXiv will, from the flat directory:"
@@ -146,3 +146,12 @@ dist:
 	python3 -m pytest -q --no-cov tests/test_packaging.py tests/test_wheel_smoke.py
 	@echo
 	@echo "wrote dist/. Push a matching vX.Y.Z tag to publish; see docs/releasing.md."
+
+# Is the committed PDF built from the current paper.tex?
+#
+# Deliberately not folded into `arxiv`, which is the target you run to *get* the
+# tarball the PDF is rebuilt from: gating that on the PDF being current would
+# block the only supported way of making it current. This is the release gate,
+# and `docs/releasing.md` runs it in pre-flight.
+paper-fresh:
+	python3 tools/check_paper_submission.py --check-pdf-fresh

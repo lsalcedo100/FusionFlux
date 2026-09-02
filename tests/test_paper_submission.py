@@ -3,7 +3,7 @@
 The paper is the artifact that leaves the repository, and the ways it breaks on
 the way out are invisible from inside: it compiles here, `make check` is green,
 and the failure shows up at upload time or, for a DOI, in a record that cannot
-be edited afterwards. `tools/check_paper_submission.py` states those rules;
+be edited afterwards. `tools/checker.py` states those rules;
 this module runs them in the ordinary suite so they hold continuously rather
 than only when someone remembers to run `make arxiv`.
 
@@ -116,3 +116,58 @@ def test_an_escaped_percent_does_not_truncate_the_source(tmp_path: Path) -> None
     """`\\%` is a percent sign, not a comment; stripping it would hide later rules."""
     with_pct = GOOD_PAPER.replace(r"\title{A title}", r"\title{A 41\% margin}")
     assert checker.check(*_write(tmp_path, with_pct)) == []
+
+
+# --- the opt-in PDF freshness gate -----------------------------------------
+#
+# `paper/paper.pdf` is committed, the README links readers to it, and a DOI
+# would archive it permanently, so a PDF that predates the current paper.tex is
+# a permanent record of the wrong paper. Rebuilding needs a LaTeX toolchain, so
+# this is a release gate (`make paper-fresh`) rather than part of `make check`.
+
+
+def test_the_freshness_check_is_not_in_the_default_rule_set() -> None:
+    """`make check` has to stay green on a machine with no pdflatex."""
+    problems = checker.check()
+    assert not any("stale" in problem for problem in problems)
+
+
+def test_stale_pdf_sections_reports_a_section_the_pdf_lacks(tmp_path: Path) -> None:
+    paper = tmp_path / "paper.tex"
+    paper.write_text(
+        "\\documentclass{article}\n"
+        "\\begin{document}\n"
+        "\\section{A section no PDF has ever contained}\n"
+        "\\end{document}\n"
+    )
+    missing = checker.stale_pdf_sections(
+        paper=paper, pdf=ROOT / "paper" / "paper.pdf"
+    )
+    assert missing == ["A section no PDF has ever contained"]
+
+
+def test_stale_pdf_sections_is_quiet_when_there_is_no_pdf(tmp_path: Path) -> None:
+    """A missing PDF is a different problem, and must not read as staleness."""
+    paper = tmp_path / "paper.tex"
+    paper.write_text("\\section{Anything}\n")
+    assert checker.stale_pdf_sections(paper=paper, pdf=tmp_path / "absent.pdf") == []
+
+
+def test_ligatures_do_not_read_as_a_stale_section() -> None:
+    """LaTeX sets `fi` as one glyph, so a literal comparison always failed.
+
+    This is not hypothetical: before the ligature expansion the check reported
+    two sections stale that were present in the PDF all along, which would have
+    trained a reader to ignore it.
+    """
+    paper = ROOT / "paper" / "paper.tex"
+    pdf = ROOT / "paper" / "paper.pdf"
+    if not pdf.exists():
+        pytest.skip("no committed PDF to read back")
+
+    missing = checker.stale_pdf_sections(paper=paper, pdf=pdf)
+    for title in missing:
+        assert "fi" not in title.lower() or title in (
+            "The reversal's precondition, measured directly",
+            "Flexibility, or boundedness?",
+        ), f"{title!r} looks like a ligature false positive rather than a stale section"
