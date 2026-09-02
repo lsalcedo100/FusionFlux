@@ -85,3 +85,46 @@ jobs:
 
       - name: Build the wheel and install it into a clean environment
         run: pytest -q --no-cov tests/test_packaging.py tests/test_wheel_smoke.py
+
+  # The reproduction image, built but not run.
+  #
+  # `docker build` here proves the image assembles and that the dependency
+  # install inside it succeeds, which is the part that rots: a pin that stops
+  # resolving, or a system package matplotlib starts needing. Actually running
+  # `make reproduce` inside it would download two third-party datasets and take
+  # about twenty minutes, which is the `reproduce` workflow's job, on its own
+  # schedule. This keeps the Dockerfile honest on every push for about a minute.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build the reproduction image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: fusionflux:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # A built image that cannot import the study is not a reproduction image.
+      - name: Confirm the study imports inside the image
+        run: |
+          docker run --rm fusionflux:ci python -c "
+          import hdb5, scaling_audit, gp, tree_allometry
+          from fusionflux import predict
+          print('modules import; fusionflux', predict.__module__)
+          "
+
+      # No network, no datasets: this must still work, because the predictor
+      # card ships inside the package.
+      - name: Confirm `fusionflux predict` runs offline in the image
+        run: |
+          docker run --rm --network none fusionflux:ci \
+            fusionflux predict --ip-ma 15 --bt-t 5.3 --ne-line-1e19-m3 10 \
+            --p-loss-mw 87 --r-m 6.2 --inverse-aspect-ratio 0.3226 \
+            --kappa 1.7 --m-eff-amu 2.5

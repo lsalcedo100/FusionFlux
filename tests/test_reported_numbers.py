@@ -43,6 +43,10 @@ PAGE = "site/page.template.html"
 PAPER = "paper/paper.tex"
 PAPER_PDF = "paper/paper.pdf"
 ZENODO = ".zenodo.json"
+# The standalone package's README is the whole of what a reader outside this
+# repository sees, and it quotes the study's headline numbers as evidence that
+# the method works. It goes stale exactly the way the study's own prose would.
+SA_README = "scaling-audit/README.md"
 
 
 # --------------------------------------------------------------------------
@@ -89,7 +93,7 @@ def documents() -> dict[str, str]:
     than the way it happens to be wrapped today.
     """
     out = {}
-    for name in (README, RESULTS_MD, PAGE, PAPER, ZENODO):
+    for name in (README, RESULTS_MD, PAGE, PAPER, ZENODO, SA_README):
         path = ROOT / name
         if not path.exists():
             continue
@@ -307,7 +311,7 @@ TREE = (README, RESULTS_MD)
 CLAIMS: tuple[Claim, ...] = (
     # -- dataset scale -----------------------------------------------------
     Claim("rows in the database", "6228", lambda a: a["extrapolation"]["n_rows"],
-          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
+          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF, SA_README)),
     Claim("machines scored under leave-one-out", "13",
           lambda a: a["extrapolation"]["n_machines_held_out"]),
 
@@ -337,7 +341,7 @@ CLAIMS: tuple[Claim, ...] = (
     # -- Result 4b: error against distance --------------------------------
     Claim("forest error against distance", "+0.85",
           lambda a: _sm(a, "random_forest", "distance_spearman"),
-          lambda v: f"{v:+.2f}", documents=(README, RESULTS_MD, PAPER, PAPER_PDF)),
+          lambda v: f"{v:+.2f}", documents=(README, RESULTS_MD, PAPER, PAPER_PDF, SA_README)),
     Claim("power law error against distance", "-0.06",
           lambda a: _sm(a, "ridge_loglinear", "distance_spearman"),
           lambda v: f"{v:+.2f}".replace("+", "-") if v < 0 else f"{v:+.2f}"),
@@ -348,7 +352,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim("machines where the forest is worse", "13 of 13",
           lambda a: _paired(a, "random_forest", "ridge_loglinear")["n_machines_a_worse"],
           lambda v: f"{v} of {v}",
-          documents=(README, RESULTS_MD, PAPER, PAPER_PDF, ZENODO)),
+          documents=(README, RESULTS_MD, PAPER, PAPER_PDF, ZENODO, SA_README)),
     Claim("paired gap, forest against power law", "+0.251",
           lambda a: _paired(a, "random_forest", "ridge_loglinear")["mean_difference"],
           lambda v: f"{v:+.3f}"),
@@ -474,9 +478,9 @@ CLAIMS: tuple[Claim, ...] = (
 
     # -- Result 13: the replication on Kleiber's law -----------------------
     Claim("allometry species records", "541",
-          lambda a: a["allometry"]["n_rows"], documents=ALLOMETRY),
+          lambda a: a["allometry"]["n_rows"], documents=(*ALLOMETRY, SA_README)),
     Claim("allometry orders scored", "11",
-          lambda a: a["allometry"]["n_orders_scored"], documents=ALLOMETRY,
+          lambda a: a["allometry"]["n_orders_scored"], documents=(*ALLOMETRY, SA_README),
           # A bare "11" appears all over these documents; anchor it.
           phrases=lambda lit: (f"{lit} orders",)),
     Claim("allometry order mass span", "342x",
@@ -496,7 +500,7 @@ CLAIMS: tuple[Claim, ...] = (
           lambda v: f"{v} of 11", documents=ALLOMETRY),
     Claim("mass cuts where the power laws beat the trees", "all 8",
           lambda a: a["allometry"]["sweep_wins"]["power_laws_beat_trees"],
-          lambda v: f"all {v}", documents=ALLOMETRY,
+          lambda v: f"all {v}", documents=(*ALLOMETRY, SA_README),
           phrases=lambda lit: (f"{lit} mass cuts",)),
     Claim("mass cuts where Kleiber beats the free fit", "4 of 8",
           lambda a: a["allometry"]["sweep_wins"]["kleiber_beats_free_power_law"],
@@ -531,7 +535,7 @@ CLAIMS: tuple[Claim, ...] = (
 
     # -- Result 15: the reversal's precondition ----------------------------
     Claim("tree allometry plants", "3599",
-          lambda a: a["tree"]["n_rows"], documents=TREE),
+          lambda a: a["tree"]["n_rows"], documents=(*TREE, SA_README)),
     Claim("tree allometry species", "53",
           lambda a: a["tree"]["n_species_total"], documents=TREE,
           phrases=lambda lit: (f"{lit} species",)),
@@ -544,24 +548,24 @@ CLAIMS: tuple[Claim, ...] = (
           lambda a: a["tree"]["free_refit_exponent"], _r(3), documents=(RESULTS_MD,)),
     Claim("dimension at which the reversal appears", "3 predictors",
           lambda a: a["tree"]["first_reversal_n_features"],
-          lambda v: f"{v} predictors", documents=TREE),
+          lambda v: f"{v} predictors", documents=(*TREE, SA_README)),
     Claim("rungs where the power law wins the held-out species", "4 of 4",
           lambda a: a["tree"]["n_rungs_power_law_wins_extrapolation"],
-          lambda v: f"{v} of 4", documents=TREE),
+          lambda v: f"{v} of 4", documents=(*TREE, SA_README)),
     Claim("ladder rung 1 interpolation gain", "-1.7%",
           lambda a: _rung(a, 1, "cv_gain_over_powerlaw"),
           lambda v: f"{v:+.1%}".replace("+", "-") if v < 0 else f"{v:+.1%}",
-          documents=TREE),
+          documents=(*TREE, SA_README)),
     Claim("ladder rung 2 interpolation gain", "-0.6%",
           lambda a: _rung(a, 2, "cv_gain_over_powerlaw"),
           lambda v: f"{v:+.1%}".replace("+", "-") if v < 0 else f"{v:+.1%}",
-          documents=TREE),
+          documents=(*TREE, SA_README)),
     Claim("ladder rung 3 interpolation gain", "+1.8%",
           lambda a: _rung(a, 3, "cv_gain_over_powerlaw"),
-          lambda v: f"{v:+.1%}", documents=TREE),
+          lambda v: f"{v:+.1%}", documents=(*TREE, SA_README)),
     Claim("ladder rung 4 interpolation gain", "+6.8%",
           lambda a: _rung(a, 4, "cv_gain_over_powerlaw"),
-          lambda v: f"{v:+.1%}", documents=TREE),
+          lambda v: f"{v:+.1%}", documents=(*TREE, SA_README)),
 )
 
 

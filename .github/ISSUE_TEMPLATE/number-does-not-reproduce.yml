@@ -1,0 +1,57 @@
+name: A number does not reproduce
+description: A figure in the prose disagrees with the artifact, or a regenerated artifact moved.
+title: "[reproduce] "
+labels: ["reproducibility"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        This is the most useful issue anyone can open here. Every reported number
+        is supposed to be bound to a generated artifact, so a disagreement is
+        either a real defect or a stale document, and both need fixing.
+  - type: input
+    id: artifact
+    attributes:
+      label: Which artifact
+      description: The file under `results/`, and the field or column inside it.
+      placeholder: "results/gp.json, scores.gp_linear_rbf.iter_matched_cut"
+    validations:
+      required: true
+  - type: input
+    id: expected
+    attributes:
+      label: What the prose says
+      description: The value as written, and where.
+      placeholder: "0.191, in README.md and results/RESULTS.md Result 14c"
+    validations:
+      required: true
+  - type: input
+    id: observed
+    attributes:
+      label: What you got
+      placeholder: "0.207"
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: What you ran
+      description: >-
+        The exact command, and whether the datasets were present. Without them
+        35 tests skip rather than fail, which changes what a run means.
+      render: shell
+      placeholder: |
+        python3 analysis_gp.py
+        make reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: >-
+        `python3 -V`, OS, and whether you installed with `-c constraints.txt` or
+        resolved fresh. Results were generated in the constrained environment.
+      placeholder: "Python 3.12.14, macOS 15, pip install -e '.[dev]' -c constraints.txt"
+    validations:
+      required: true

@@ -1,0 +1,42 @@
+name: A claim looks wrong
+description: A conclusion overreaches, a control is missing, or the statistics do not support the statement.
+title: "[claim] "
+labels: ["method"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Before filing, please check the "What Result N does not show" section for
+        the result in question and the Limitations list at the end of
+        `results/RESULTS.md`. Most of the obvious objections are already stated
+        there, and an issue that engages with the stated limitation is far more
+        useful than one that rediscovers it.
+  - type: input
+    id: claim
+    attributes:
+      label: Which claim
+      description: Quote it, and say where it appears.
+      placeholder: >-
+        "the random forest is worse than the power law on 13 of 13 machines",
+        README.md
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong with it
+      description: >-
+        The strongest version of this names the specific inference that does not
+        follow, rather than the conclusion you disagree with.
+    validations:
+      required: true
+  - type: textarea
+    id: test
+    attributes:
+      label: What would settle it
+      description: >-
+        A control, a split, a model or a dataset whose outcome would distinguish
+        your reading from the current one. This is the part that turns a
+        disagreement into a result; Result 14 began as exactly this kind of note.
+    validations:
+      required: false

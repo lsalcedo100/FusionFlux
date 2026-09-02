@@ -1,0 +1,50 @@
+name: scaling-audit on another dataset
+description: You ran the audit on a domain this study has never seen.
+title: "[audit] "
+labels: ["scaling-audit", "replication"]
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        `scaling_audit.py` is the part of this study with no plasma physics in
+        it, published as the `scaling-audit` package. It has been run on tokamak
+        confinement, mammalian metabolic rate and tree allometry. A fourth domain
+        is worth more than another fusion result, and a domain where the reversal
+        does **not** appear is worth the most: Result 15 exists because of one.
+  - type: input
+    id: domain
+    attributes:
+      label: The domain and its published scaling law
+      placeholder: "River discharge against catchment area; Hack's law, L ~ A^0.6"
+    validations:
+      required: true
+  - type: input
+    id: shape
+    attributes:
+      label: Rows, groups and predictors
+      placeholder: "4200 catchments, 31 basins, 5 predictors"
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What the audit reported
+      description: >-
+        Ideally `summarize(report)` and `distance_score_correlation(report)`, plus
+        whether the flexible model won the interpolation split. Result 15 found
+        the reversal appears only once it does, so that detail decides how your
+        result reads.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: availability
+    attributes:
+      label: Is the data public?
+      description: >-
+        This study only reports numbers from data it can pin by SHA-256 and
+        re-fetch. A public deposit means the result can be checked; a private one
+        is still interesting but cannot be carried here.
+      placeholder: "Yes, CC0 on Zenodo, DOI 10.5281/..."
+    validations:
+      required: true

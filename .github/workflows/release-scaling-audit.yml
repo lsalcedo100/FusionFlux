@@ -1,0 +1,134 @@
+name: Release scaling-audit
+
+# Publish the standalone `scaling-audit` package on its own tag.
+#
+# Separate from release.yml because the two distributions are versioned
+# independently: `scaling-audit` is a method that changes rarely, `fusionflux`
+# is a study whose version tracks its results. A shared tag would force a
+# release of one every time the other moved.
+#
+#     fusionflux        v0.2.1
+#     scaling-audit     scaling-audit-v0.1.0
+#
+# Trusted Publishing (OIDC), so there is no token to store. Configure once at
+# https://pypi.org/manage/account/publishing/ with:
+#     owner            lsalcedo100
+#     repository       FusionFlux
+#     workflow         release-scaling-audit.yml
+#     environment      pypi-scaling-audit
+on:
+  push:
+    tags:
+      - "scaling-audit-v*"
+  workflow_dispatch:
+    inputs:
+      test_pypi:
+        description: "Publish to TestPyPI instead of PyPI"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-scaling-audit-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install build twine
+
+      # The package's whole claim is that the study runs through this exact
+      # module rather than a copy of it. These tests build a wheel and assert
+      # the module inside is byte-identical to the root file, that nothing from
+      # the study leaked in, and that the README documents the real API.
+      - name: Packaging and API-documentation suites
+        run: pytest -q --no-cov tests/test_scaling_audit.py
+
+      - name: Build sdist and wheel
+        working-directory: scaling-audit
+        run: python -m build
+
+      - name: Confirm the wheel carries the module from the repository root
+        run: |
+          python - <<'PY'
+          import glob, hashlib, sys, zipfile
+          wheel, = glob.glob("scaling-audit/dist/*.whl")
+          packaged = zipfile.ZipFile(wheel).read("scaling_audit.py")
+          root = open("scaling_audit.py", "rb").read()
+          if packaged != root:
+              sys.exit(f"{wheel} carries a module that differs from scaling_audit.py")
+          print(f"{wheel}: ok, sha256 {hashlib.sha256(root).hexdigest()[:16]}")
+          PY
+
+      - name: Check distribution metadata
+        working-directory: scaling-audit
+        run: twine check --strict dist/*
+
+      - name: Confirm the tag matches the packaged version
+        if: startsWith(github.ref, 'refs/tags/scaling-audit-v')
+        run: |
+          tag="${GITHUB_REF_NAME#scaling-audit-v}"
+          packaged=$(python - <<'PY'
+          import tomllib
+          with open("scaling-audit/pyproject.toml", "rb") as handle:
+              print(tomllib.load(handle)["project"]["version"])
+          PY
+          )
+          if [ "$tag" != "$packaged" ]; then
+            echo "tag scaling-audit-v$tag does not match version $packaged" >&2
+            exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scaling-audit-distributions
+          path: scaling-audit/dist/
+
+  testpypi:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && inputs.test_pypi
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/scaling-audit
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: scaling-audit-distributions
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  pypi:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/scaling-audit-v')
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi-scaling-audit
+      url: https://pypi.org/p/scaling-audit
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: scaling-audit-distributions
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

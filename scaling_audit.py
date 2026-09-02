@@ -354,8 +354,12 @@ class ConstrainedLinearRegression(RegressorMixin, BaseEstimator):
 
     def __init__(
         self,
-        constraint: np.ndarray | None = None,
-        rhs: np.ndarray | None = None,
+        # Array-like rather than ndarray: ``fit`` coerces with ``np.asarray``, and
+        # a constraint is usually written as a literal list of rows at the call
+        # site. Requiring the caller to wrap it was friction the implementation
+        # never actually imposed, and the annotation said otherwise.
+        constraint: Sequence[Sequence[float]] | np.ndarray | None = None,
+        rhs: Sequence[float] | np.ndarray | None = None,
         *,
         fit_intercept: bool = True,
     ) -> None:

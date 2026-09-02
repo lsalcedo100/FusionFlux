@@ -21,11 +21,17 @@ the finding is about the split rather than about fusion.
 
 from __future__ import annotations
 
+import subprocess
+import sys
+import tempfile
+import zipfile
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
 
 import scaling_audit as sa
 import scaling_law as sl
@@ -391,3 +397,135 @@ def test_extrapolating_along_the_ordering_is_harder_than_leaving_one_out(
         scores.append(float(np.sqrt(np.mean((y[test_index] - predicted) ** 2))))
 
     assert max(scores) > lomo_worst
+
+# --- the packaged distribution ----------------------------------------------
+#
+# `scaling-audit/` publishes this module as a standalone package. Two things can
+# rot silently there and neither is visible from the study's own use of it: the
+# published module drifting from the tested one, and the README's API examples
+# going stale against the code they document.
+
+
+PACKAGE_DIR = Path(__file__).resolve().parents[1] / "scaling-audit"
+
+
+def test_the_packaged_module_is_the_one_the_study_uses() -> None:
+    """A built wheel must carry this exact file, not a vendored fork of it.
+
+    The package's whole claim is that the fusion study, the mammalian
+    replication and the tree-allometry ladder all run through the published
+    module rather than a copy. A second copy under version control would make
+    that false from the first divergent edit, and nothing would notice, so the
+    root file is the single source and `scaling-audit/setup.py` copies it in at
+    build time.
+    """
+    try:
+        import build  # noqa: F401
+    except ImportError:
+        pytest.skip("`build` is not installed; cannot exercise the distribution.")
+
+    root_module = PACKAGE_DIR.parent / "scaling_audit.py"
+    with tempfile.TemporaryDirectory() as output:
+        completed = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "-o", output],
+            cwd=PACKAGE_DIR,
+            capture_output=True,
+            text=True,
+        )
+        if completed.returncode != 0:
+            pytest.skip(f"wheel build unavailable here:\n{completed.stderr[-2000:]}")
+        (wheel,) = Path(output).glob("*.whl")
+        with zipfile.ZipFile(wheel) as archive:
+            packaged = archive.read("scaling_audit.py")
+
+    assert packaged == root_module.read_bytes(), (
+        "the published scaling-audit module differs from the one this repository tests"
+    )
+
+
+def test_the_package_ships_only_the_module() -> None:
+    """Nothing from the study may leak into a package that claims to be domain-agnostic."""
+    try:
+        import build  # noqa: F401
+    except ImportError:
+        pytest.skip("`build` is not installed; cannot exercise the distribution.")
+
+    with tempfile.TemporaryDirectory() as output:
+        completed = subprocess.run(
+            [sys.executable, "-m", "build", "--wheel", "--no-isolation", "-o", output],
+            cwd=PACKAGE_DIR,
+            capture_output=True,
+            text=True,
+        )
+        if completed.returncode != 0:
+            pytest.skip(f"wheel build unavailable here:\n{completed.stderr[-2000:]}")
+        (wheel,) = Path(output).glob("*.whl")
+        with zipfile.ZipFile(wheel) as archive:
+            names = {name.split("/")[0] for name in archive.namelist()}
+
+    installed = {name for name in names if not name.endswith(".dist-info")}
+    assert installed == {"scaling_audit.py"}, f"the wheel would install {sorted(installed)}"
+
+
+def test_readme_documents_the_actual_api() -> None:
+    """Every public name and every keyword the README shows must exist.
+
+    The README is the package's entire documentation and its examples were wrong
+    when first written: they named `constraint_matrix`, `constraint_values` and
+    `n_test_groups`, none of which exist, and `feature_mahalanobis` for a column
+    called `mahalanobis`. Prose that a reader will paste has to be checked
+    against the code the way `tests/test_reported_numbers.py` checks the study's
+    numbers against its artifacts.
+    """
+    import inspect
+
+    readme = (PACKAGE_DIR / "README.md").read_text()
+
+    for name in sa.__all__:
+        assert name in readme, f"{name} is public but the README never mentions it"
+
+    split_parameters = set(inspect.signature(sa.OrderedGroupSplit.__init__).parameters)
+    for keyword in ("min_train_groups", "min_test_rows"):
+        assert keyword in split_parameters
+        assert keyword in readme
+
+    clr_parameters = set(inspect.signature(sa.ConstrainedLinearRegression.__init__).parameters)
+    for keyword in ("constraint", "rhs"):
+        assert keyword in clr_parameters
+    assert "constraint=[[0.0, 1.0]]" in readme
+    assert "rhs=[0.75]" in readme
+
+    # Names the README explicitly got wrong once.
+    for wrong in ("constraint_matrix", "constraint_values", "n_test_groups",
+                  "feature_mahalanobis", "target_above_train_max_fraction"):
+        assert wrong not in readme, f"the README still names {wrong}, which does not exist"
+
+
+def test_readme_report_columns_are_real_columns(allometry: pd.DataFrame) -> None:
+    """The field table in the README must match what `audit_groups` returns."""
+    readme = (PACKAGE_DIR / "README.md").read_text()
+
+    report = sa.audit_groups(
+        allometry[FEATURES],
+        allometry["log_rate"],
+        allometry["clade"],
+        {"ridge": Ridge()},
+        min_held_out_rows=5,
+    )
+    for column in ("score", "mahalanobis", "fraction_above_train_max",
+                   "log_target_headroom", "prediction_bounded_by_train_range"):
+        assert column in report.columns
+        assert f"`{column}`" in readme, f"the README does not document {column}"
+
+
+def test_readme_constrained_example_runs_and_holds_the_exponent() -> None:
+    """The Kleiber snippet, executed rather than admired."""
+    generator = np.random.default_rng(1)
+    mass = generator.uniform(10.0, 100_000.0, 500)
+    rate = 70.0 * mass**0.75 * np.exp(generator.normal(0.0, 0.1, 500))
+
+    model = sa.ConstrainedLinearRegression(constraint=[[0.0, 1.0]], rhs=[0.75])
+    model.fit(np.log(mass).reshape(-1, 1), np.log(rate))
+
+    assert model.coef_[0] == pytest.approx(0.75)
+    assert model.constraint_violation() < 1e-10

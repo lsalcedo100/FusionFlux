@@ -126,7 +126,12 @@ warn_unused_ignores = true
 # A wheel build copies every top-level module into build/lib, which mypy then
 # sees as a second definition of each one and refuses to check anything at all.
 # Building the distribution should not break `make check`.
-exclude = ["^build/"]
+# `scaling-audit/` is a second distribution over the module at the repository
+# root. Its `scaling_audit.py` is a build-time copy of the root file, so mypy
+# sees two modules of one name and refuses to check anything; and its setup.py
+# collides with the root one the same way. The sources they duplicate are both
+# checked here at their real paths.
+exclude = ["^build/", "^scaling-audit/"]
 
 [[tool.mypy.overrides]]
 module = ["joblib.*", "sklearn.*", "seaborn.*", "matplotlib.*"]
@@ -171,12 +176,18 @@ source = [
 
 [tool.coverage.report]
 show_missing = true
-# Measured, not guessed. The suite covers 78.93% with all three datasets present
-# (1250 of 5933 statements missed), which is the state CI is in modulo the 35
-# tests that skip there for want of a dataset or a trained artifact; without
-# them it was 77.47% when last measured on the same basis.
-# "All three" is now HDB5 STD5, the full DB5.2.3 revision, and the mammalian
-# metabolic-rate deposit Result 13 replicates on.
+# Measured, not guessed. The suite covers 78.28% with all four datasets present
+# (1353 of 6229 statements missed), which is the state CI is in modulo the tests
+# that skip there for want of a dataset or a trained artifact; without them it
+# was 77.47% when last measured on the same basis.
+# "All four" is HDB5 STD5, the full DB5.2.3 revision, the mammalian
+# metabolic-rate deposit Result 13 replicates on, and the Biomass And Allometry
+# Database Result 15's feature ladder runs on.
+#
+# The figure fell from 78.93% when Results 14 and 15 were added, because their
+# analysis modules joined the measured set and the ordinary suite exercises
+# their model definitions rather than their full regeneration paths. That is the
+# same shape as the other analysis_*.py modules and not a regression.
 # Both figures reproduce exactly across clean runs, and no measured module
 # branches on sys.version_info, so the three CI interpreters have nothing to
 # disagree about.

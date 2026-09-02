@@ -313,6 +313,16 @@ make check        # == ruff check . && mypy . && pytest -q
 make reproduce    # regenerates, compares numerically, then runs the prose claims
 ```
 
+Or skip all of it. The environment is the most likely reason a reader's numbers would differ from the committed ones, so it is pinned in a container:
+
+```bash
+docker build -t fusionflux .
+docker run --rm fusionflux                # make reproduce, in the pinned environment
+docker run --rm fusionflux make check     # ruff, mypy, pytest
+```
+
+The datasets are fetched at run time rather than baked in: they are third-party, verified by SHA-256 on every load, and not redistributed here.
+
 ## What is in the repository
 
 The real-data confinement study is the whole of the argument above:
@@ -332,7 +342,7 @@ The real-data confinement study is the whole of the argument above:
 
 One module is deliberately not about tokamaks:
 
-- `scaling_audit.py` packages the method rather than the result, for anyone with a different dataset. It provides `audit_groups` (leave-one-group-out scored *alongside* the extrapolation distance and the training-range bound that explain the score), `OrderedGroupSplit` (a scikit-learn splitter that trains on one end of an ordering and predicts the far end), and `ConstrainedLinearRegression` (equality-constrained least squares, so a dimensional-analysis constraint is a constructor argument). It imports nothing else in this repository, and `tests/test_scaling_audit.py` exercises it on a synthetic allometric problem with no plasma physics in it, where **the same reversal appears**: the flexible model wins within groups and loses on an unseen one, for the same structural reason.
+- `scaling_audit.py` packages the method rather than the result, for anyone with a different dataset. [`scaling-audit/`](scaling-audit/) packages it for PyPI as a standalone distribution, built from this exact file rather than a vendored copy, so the three domains below all run through the code the package would ship. It is not published yet; the release workflow and the checks that gate it are in place, see [docs/releasing.md](docs/releasing.md). It provides `audit_groups` (leave-one-group-out scored *alongside* the extrapolation distance and the training-range bound that explain the score), `OrderedGroupSplit` (a scikit-learn splitter that trains on one end of an ordering and predicts the far end), and `ConstrainedLinearRegression` (equality-constrained least squares, so a dimensional-analysis constraint is a constructor argument). It imports nothing else in this repository, and `tests/test_scaling_audit.py` exercises it on a synthetic allometric problem with no plasma physics in it, where **the same reversal appears**: the flexible model wins within groups and loses on an unseen one, for the same structural reason.
 
 ## Infrastructure: the Neutron-Yield Pipeline
 
@@ -353,6 +363,8 @@ It is here as engineering rather than as a result: a complete training and infer
 | [docs/neutron-yield-pipeline.md](docs/neutron-yield-pipeline.md) | Operating detail for the synthetic-data infrastructure above. |
 | [paper/README.md](paper/README.md) | How to build the paper, and the Zenodo DOI flow. |
 | [docs/releasing.md](docs/releasing.md) | The ordered checklist for the DOI, the arXiv preprint, and who to send it to. |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to change an analysis without breaking the prose that quotes it, and what is most useful to contribute. |
+| [scaling-audit/README.md](scaling-audit/README.md) | The extracted method as a standalone package, with the three domains it has been run on. |
 
 ## Sources
 

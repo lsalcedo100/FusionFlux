@@ -1,0 +1,23 @@
+# Build context hygiene: none of this belongs in the image, and the caches in
+# particular are large and machine-specific.
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.coverage
+htmlcov
+build
+dist
+*.egg-info
+.reproduce_baseline
+.claude
+.DS_Store
+site/index.html
+
+# Fetched at run time and verified by SHA-256; see the Dockerfile.
+data/raw
+data/processed

@@ -96,6 +96,36 @@ cd $(mktemp -d) && python3 -m venv v && ./v/bin/pip install fusionflux
 
 Then add the PyPI badge to the README badge row.
 
+## 1c. scaling-audit, if it is going out too
+
+`scaling-audit/` is a second distribution over the same `scaling_audit.py`, and
+it is versioned independently: the method changes rarely, the study's version
+tracks its results. A shared tag would force a release of one whenever the other
+moved, so it has its own tag prefix and its own workflow.
+
+```bash
+git tag -a scaling-audit-v0.1.0 -m "The extrapolation audit as a standalone package"
+git push origin scaling-audit-v0.1.0
+```
+
+Trusted Publishing again, configured the same way but with project name
+`scaling-audit` and environment `pypi-scaling-audit`. Rehearse on TestPyPI
+first, the same way.
+
+The build gate is what matters here. The package's whole claim is that the
+fusion study, the mammalian replication and the tree-allometry ladder all run
+through the published module rather than a copy of it, so
+`.github/workflows/release-scaling-audit.yml` asserts that the module inside the
+built wheel is byte-identical to `scaling_audit.py` at the repository root, that
+nothing from the study leaked into the wheel, and that its README documents the
+API that actually exists. That last check exists because the README's examples
+were wrong when first written: they named three parameters and a column that do
+not exist.
+
+After it lands, update the two places that currently say it is unpublished:
+the `scaling_audit.py` bullet in `README.md` and the Provenance section of
+`scaling-audit/README.md`.
+
 ## 2. Zenodo DOI
 
 Full instructions, including the concept-versus-version DOI distinction and the

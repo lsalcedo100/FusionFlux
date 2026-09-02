@@ -55,6 +55,10 @@ site/index.html
 # never committed: results/predictor.json is the single source.
 fusionflux/predictor.json
 
+# Copied into the scaling-audit distribution at build time from the module at
+# the repository root, which is the single source under version control.
+scaling-audit/scaling_audit.py
+
 # Baseline copy made by `make reproduce`.
 .reproduce_baseline/
 

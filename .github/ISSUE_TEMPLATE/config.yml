@@ -1,0 +1,13 @@
+blank_issues_enabled: true
+contact_links:
+  - name: The ITPA HDB5 dataset itself
+    url: https://osf.io/drwcq
+    about: >-
+      Questions about the confinement database, its contents or its terms belong
+      with its maintainers. This repository fetches it and never redistributes
+      it. What this study does with it is on topic here.
+  - name: How a result was derived
+    url: https://github.com/lsalcedo100/FusionFlux/blob/main/results/RESULTS.md
+    about: >-
+      Every result has its mechanism, its tables and a "What it does not show"
+      section. The answer is often already there, including for most objections.

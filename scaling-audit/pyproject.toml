@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scaling-audit"
+version = "0.1.0"
+description = "Leave-one-group-out extrapolation auditing for scaling laws: the score, the reason for the score, and a constrained fit."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Liam" }]
+keywords = [
+    "extrapolation",
+    "out-of-distribution",
+    "scaling law",
+    "cross-validation",
+    "model selection",
+    "dimensional analysis",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering",
+]
+
+# Deliberately small. This is a method, not a study: three objects over numpy,
+# pandas and scikit-learn's estimator API, and nothing else. Anything heavier
+# would be a reason not to depend on it.
+dependencies = [
+    "numpy",
+    "pandas",
+    "scikit-learn",
+]
+
+[project.optional-dependencies]
+dev = ["build", "mypy", "pytest", "ruff", "setuptools>=77"]
+
+[project.urls]
+Homepage = "https://github.com/lsalcedo100/FusionFlux"
+Source = "https://github.com/lsalcedo100/FusionFlux/blob/main/scaling_audit.py"
+"Worked examples" = "https://github.com/lsalcedo100/FusionFlux/blob/main/results/RESULTS.md"
+
+[tool.setuptools]
+# A single-module distribution. `scaling_audit.py` is copied here from the
+# repository root at build time by setup.py, so the study and the package can
+# never drift: there is exactly one copy of the source under version control.
+py-modules = ["scaling_audit"]
