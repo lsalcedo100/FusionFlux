@@ -46,7 +46,24 @@ MAKEFILE = ROOT / "Makefile"
 PDF = ROOT / "paper" / "paper.pdf"
 FIGURE_DIR = ROOT / "results"
 
-LIGATURES = {"\ufb00": "ff", "\ufb01": "fi", "\ufb02": "fl", "\ufb03": "ffi", "\ufb04": "ffl"}
+# Characters LaTeX substitutes on the way to the PDF. Comparing section titles
+# against extracted text without undoing these reports sections stale that are
+# present, which is worse than no check at all: it teaches the reader to ignore
+# it. Ligatures first (ff, fi, fl and friends become one glyph), then the
+# typographic quotes and dashes that `'`, `` ` `` and `--` are set as.
+TYPESET_SUBSTITUTIONS = {
+    "\ufb00": "ff",
+    "\ufb01": "fi",
+    "\ufb02": "fl",
+    "\ufb03": "ffi",
+    "\ufb04": "ffl",
+    "\u2019": "'",
+    "\u2018": "'",
+    "\u201c": '"',
+    "\u201d": '"',
+    "\u2013": "-",
+    "\u2014": "--",
+}
 
 PLACEHOLDER_AUTHORS = ("Your Name", "TODO", "FIXME", "Author Name", "Anonymous")
 
@@ -140,12 +157,12 @@ def stale_pdf_sections(paper: Path = PAPER, pdf: Path = PDF) -> list[str]:
         text = " ".join(page.extract_text() or "" for page in PdfReader(str(pdf)).pages)
     except Exception:  # pragma: no cover - a corrupt PDF is not a staleness result
         return []
-    # LaTeX typesets ff, fi, fl, ffi and ffl as single ligature glyphs, so the
-    # PDF says "deficient" with one character where the source says two and a
-    # literal comparison reports a stale section that is present. Expanding them
-    # is the whole difference between this check working and always failing.
-    for ligature, expansion in LIGATURES.items():
-        text = text.replace(ligature, expansion)
+    # Undo the substitutions LaTeX made on the way to the PDF, so the comparison
+    # is against what the source actually says. Without this the check reports
+    # sections stale that are present: the ff/fi/fl ligatures and the
+    # right single quote in a possessive both caused exactly that.
+    for glyph, plain in TYPESET_SUBSTITUTIONS.items():
+        text = text.replace(glyph, plain)
     normalized = re.sub(r"\s+", " ", text)
 
     latex = _strip_comments(paper.read_text())

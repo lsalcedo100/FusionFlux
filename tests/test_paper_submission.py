@@ -153,21 +153,32 @@ def test_stale_pdf_sections_is_quiet_when_there_is_no_pdf(tmp_path: Path) -> Non
     assert checker.stale_pdf_sections(paper=paper, pdf=tmp_path / "absent.pdf") == []
 
 
-def test_ligatures_do_not_read_as_a_stale_section() -> None:
-    """LaTeX sets `fi` as one glyph, so a literal comparison always failed.
+def test_typeset_substitutions_do_not_read_as_stale_sections() -> None:
+    """The committed PDF must read as fresh against its own source.
 
-    This is not hypothetical: before the ligature expansion the check reported
-    two sections stale that were present in the PDF all along, which would have
-    trained a reader to ignore it.
+    Two false positives were found this way and neither was hypothetical. LaTeX
+    sets `fi` as a single ligature glyph, so "deficient" in the source did not
+    match "deﬁcient" in the PDF; and it sets `'` as a right single quote, so
+    "reversal's" did not match "reversal's". Both reported a section stale that
+    was present all along, which is worse than having no check, because it
+    teaches the reader to ignore the one gate standing between them and a
+    permanently archived wrong paper.
     """
-    paper = ROOT / "paper" / "paper.tex"
     pdf = ROOT / "paper" / "paper.pdf"
     if not pdf.exists():
         pytest.skip("no committed PDF to read back")
 
-    missing = checker.stale_pdf_sections(paper=paper, pdf=pdf)
-    for title in missing:
-        assert "fi" not in title.lower() or title in (
-            "The reversal's precondition, measured directly",
-            "Flexibility, or boundedness?",
-        ), f"{title!r} looks like a ligature false positive rather than a stale section"
+    missing = checker.stale_pdf_sections(paper=ROOT / "paper" / "paper.tex", pdf=pdf)
+    assert missing == [], (
+        f"the committed PDF reads as missing {missing}. Either it is genuinely "
+        "stale and needs rebuilding, or another typeset substitution needs adding "
+        "to TYPESET_SUBSTITUTIONS."
+    )
+
+
+def test_the_freshness_check_still_catches_a_genuinely_absent_section(tmp_path: Path) -> None:
+    """Normalising away false positives must not normalise away the signal."""
+    paper = tmp_path / "paper.tex"
+    paper.write_text("\\section{Ligatures, quotes and a section never written}\n")
+    missing = checker.stale_pdf_sections(paper=paper, pdf=ROOT / "paper" / "paper.pdf")
+    assert missing == ["Ligatures, quotes and a section never written"]
