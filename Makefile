@@ -46,6 +46,7 @@ results:
 	python3 -c "import tree_allometry; tree_allometry.download_baad()"
 	python3 analysis_scaling_law.py
 	python3 analysis_extrapolation.py
+	python3 analysis_boundedness.py
 	python3 analysis_flexibility_sweep.py
 	python3 analysis_size_extrapolation.py
 	python3 analysis_hybrid.py

@@ -47,37 +47,29 @@ quasi-stationary slices from 4471 discharges across 18 tokamaks) a random
 forest beats the published IPB98(y,2) scaling law by 36\% in RMSLE under
 grouped cross-validation by discharge. That margin does not survive the
 question a scaling law exists to answer. Under leave-one-tokamak-out the
-ordering of the fitted models is exactly reversed: the random forest is worse
-than a log-linear power law on 13 of 13 held-out machines, with a paired 95\%
-interval of $[+0.157, +0.342]$ on the gap. The failure is an extrapolation
-failure and we measure it as one. The trees' errors track the Mahalanobis
-distance of the held-out machine ($\rho=+0.85$) where the power law's do not
-($\rho=-0.06$), and a tree ensemble cannot predict outside its training target
-range: on the largest device 48\% of rows lie above anything it can output.
-Ordering the machines by size reproduces, inside the database, the
-$1.82\times$ jump from the database to ITER. At that cut the tree ensembles
-score closer to a constant predictor than to the power law, and split-conformal
-intervals calibrated to 90\% under cross-validation cover 3\% of the rows at
-essentially unchanged width: the models are not vague out of distribution, they
-are confidently wrong. Two repairs work, and both add structure rather than
-flexibility. Imposing the Connor--Taylor constraints, which a scaling law
-expressible in dimensionless variables must satisfy, as linear equality
-constraints on the exponents gives 0.183 at the ITER-matched cut, the best
-blind score in this study, with no hyperparameter to tune. And a Gaussian
-process whose kernel is flexible but unbounded at long range gives both the
-best cross-validated score in this work (0.112 against the random forest's
-0.128) and 0.191 at that cut, with 92.5\% coverage of a nominal 90\% interval
-that was never recalibrated, where the same process with a bounded kernel
-scores 1.948 there, worse than a constant. That experiment corrects this
-paper's own first diagnosis: what fails out of distribution is not flexibility
-but boundedness. The reversal reproduces on 5358 rows the standard set does not
-contain, in a second confinement regime against a different published law, and
-on two scaling laws from biology; a predictor-count ladder on 3599 plants
-separates the extrapolation failure, which is unconditional, from the ranking
-inversion, which needs the flexible model to win the easy split first and is
-therefore the warning sign rather than the hazard. We record a locked
-prediction for SPARC, JT-60SA and ITER: inside the database's size range the
-models agree to within 15\%, and on ITER they disagree by a factor of 8.3.
+ordering of the three primary fitted models is exactly reversed: the random
+forest is worse than a log-linear power law on 13 of 13 held-out machines,
+paired 95\% interval $[+0.157, +0.342]$. The trees' errors track the
+distance of the held-out machine from the training data ($\rho=+0.85$) where
+the power law's do not ($\rho=-0.06$), and a random forest cannot predict
+outside its training target range: on the largest device 48\% of rows lie above
+anything it can output. A size-ordered cut inside the database reproduces
+ITER's $1.82\times$ jump; there the tree ensembles score closer to a constant
+predictor than to the power law, and split-conformal intervals calibrated to
+90\% cover 3\% of rows at unchanged width: the models are not
+vague out of distribution, they are confidently wrong. Two repairs work, and
+both impose structure on long-range behaviour rather than adding flexibility.
+The Connor--Taylor dimensional constraints, imposed as linear equality
+constraints on the exponents, give 0.183 at that cut, the best blind score
+here, with nothing to tune. And a Gaussian process whose kernel is flexible but
+unbounded gives the best cross-validated score here, 0.112, with 0.191 at the
+cut and 92.5\% coverage of a never-recalibrated nominal 90\% interval, where
+the same process with a bounded kernel scores 1.948, worse than a constant.
+What fails out of distribution is therefore not flexibility but boundedness,
+correcting this paper's own first diagnosis. The reversal reproduces on rows
+the standard set does not contain, in a second confinement regime, and on two
+biological scaling laws. For ITER the surviving and failing models differ by a
+factor of 8.3, which we record as a locked prediction.
 \end{abstract}
 
 \section{Introduction}
@@ -130,11 +122,12 @@ scored. A scaling law is not for the machines that exist.
 This paper measures what the honest split costs. We escalate what is held out
 in three steps, a discharge, then a whole machine, then an entire size range,
 and score the same models under each. The results are: (i) under
-leave-one-tokamak-out the ranking of the fitted models is the exact reverse of
-their ranking under grouped cross-validation, and the best cross-validated
-model loses to a log-linear power law on 13 of 13 machines; (ii) three
-measurements of why, covering extrapolation distance, the training-target bound
-of a tree ensemble, and what polynomial flexibility costs in the tail; (iii) a
+leave-one-tokamak-out the ranking of the three primary fitted models is the
+exact reverse of their ranking under grouped cross-validation, and the best
+cross-validated model loses to a log-linear power law on 13 of 13 machines;
+(ii) three measurements of why, covering extrapolation distance, the
+training-target bound of a random forest, and what polynomial flexibility costs
+in the tail; (iii) a
 size-ordered split inside the database that reproduces ITER's extrapolation
 factor, at which conformal intervals calibrated to 90\% cover 3\% of rows
 without becoming any wider; (iv) the Connor--Taylor dimensional constraints,
@@ -144,8 +137,9 @@ that separates flexibility from boundedness and corrects the diagnosis the
 earlier sections support; (vi) replication on rows the standard analysis set
 does not contain, in a second confinement regime, and on two scaling laws from
 biology, with a predictor-count ladder that separates the extrapolation
-failure, which is unconditional, from the ranking inversion, which is not; and
-(vii) a locked forecast for SPARC, JT-60SA and ITER. Section~\ref{sec:rank}
+failure, which persists at every predictor count tested, from the ranking
+inversion, which does not appear below three; and (vii) a locked forecast for
+SPARC, JT-60SA and ITER. Section~\ref{sec:rank}
 begins with a property of the design matrix itself: it is rank deficient by
 two, and one of the two dependencies is that a published scaling law added as a
 model feature contributes nothing a log-linear fit can use.
@@ -174,8 +168,12 @@ physics reference, and is marked throughout as \emph{not blind}.
 \paragraph{Splits.} (i) Grouped cross-validation by discharge. (ii)
 Leave-one-tokamak-out over the 13 machines with at least 30 rows. (iii) A
 size-ordered cut: machines are ordered by median major radius, and the model is
-trained below a cut and scored on every machine above it. Scores are RMSLE,
-$\sqrt{\overline{(\log\hat\tau-\log\tau)^2}}$. Intervals are percentile
+trained below a cut and scored on every machine above it. Scores are the
+root-mean-square error in $\log\tau$,
+$\sqrt{\overline{(\log\hat\tau-\log\tau)^2}}$, abbreviated RMSLE here and in
+the figures. This is the plain log residual rather than the $\log(1+y)$ variant
+the same acronym sometimes denotes; confinement times are strictly positive, so
+no offset is needed. Intervals are percentile
 bootstraps resampling whole \emph{machines}, since the claim concerns behaviour
 on an unseen machine.
 
@@ -255,11 +253,14 @@ mean baseline            & 0.869 & 0.994 & 1.1$\times$ & 7 & 7 \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:reversal} is the central result. Among the three models that
-actually fit something and are genuinely blind, the order under one split is
-the exact reverse of the order under the other. The random forest is the best
-model in the study by cross-validation and the worst of the three on a machine
-it has not seen.
+Table~\ref{tab:reversal} is the central result. Among the three primary
+models, a power law, a random forest and a gradient booster, the order under
+one split is the exact reverse of the order under the other. The random forest
+is the best model in the study by cross-validation and the worst of the three
+on a machine it has not seen. The two polynomial rungs are controls, scored in
+the same table but outside the ranking claim, and including them breaks the
+inversion rather than extending it: the log-cubic rung is third of the five
+blind models under cross-validation and last of them on a held-out machine.
 
 Because the machines differ enormously in difficulty, the marginal bootstrap
 intervals overlap and are the wrong test; resampling the \emph{paired}
@@ -322,13 +323,24 @@ On the four most distant machines (PBX-M, NSTX, C-Mod, JFT-2M, all small, one
 of them spherical) the forest's error is $2.7$ to $4.8\times$ the power law's;
 on the four nearest it is within $1.7\times$.
 
-\paragraph{A hard bound.} A tree ensemble predicts by averaging training
-targets, so every prediction it can make lies in
-$[\min y_{\text{train}}, \max y_{\text{train}}]$ whatever the features say.
-With JET held out, 48\% of its rows exceed the maximum confinement time in the
-remaining 12 machines and its best shot is $3.7\times$ above anything any tree
-in the forest can output. This is not a shortfall more data would close; it is
-the functional form.
+\paragraph{A hard bound.} A random forest predicts by averaging leaf values,
+and every leaf value is itself a mean of training targets, so every prediction
+it can make lies in $[\min y_{\text{train}}, \max y_{\text{train}}]$ whatever
+the features say. With JET held out, 48\% of its rows exceed the maximum
+confinement time in the remaining 12 machines and its best shot is
+$3.7\times$ above anything any tree in the forest can output. This is not a
+shortfall more data would close; it is the functional form.
+
+A gradient booster carries no such guarantee. It sums tree outputs onto an
+initial estimate rather than averaging targets, and nothing in that
+construction confines the sum to the training range, so the argument above does
+not transfer to it. What we can report is that it never uses the freedom: over
+the 13 leave-one-out folds and the size cut of Sec.~\ref{sec:size}, its largest
+prediction stays below $\max y_{\text{train}}$ on every one, coming closest with
+JET held out at 0.066 in logs beneath the ceiling and sitting 0.567 beneath it
+across the size cut. Its boundedness on these rows is measured rather than
+guaranteed, and every claim below that needs the guarantee is made about the
+forest.
 
 \paragraph{Flexibility costs the tail, not the centre.} A polynomial ladder in
 the log features (degrees 1--3) is flexible but still extrapolates. Degree 2 is
@@ -336,8 +348,8 @@ the log features (degrees 1--3) is flexible but still extrapolates. Degree 2 is
 against 0.216, better on 8 of 13, paired interval $[-0.013,+0.237]$ containing
 zero. What flexibility costs is the tail. Degree 1's worst machine is 0.289;
 degree 2's is 1.083 and degree 3's is 4.601, both on C-Mod. Boundedness is
-simultaneously why trees cannot extrapolate and why they cannot blow up: their
-worst cases, 0.686 and 0.857, sit far below degree 3's.
+simultaneously why neither ensemble extrapolates and why neither blows up:
+their worst cases, 0.686 and 0.857, sit far below degree 3's.
 
 \section{The size extrapolation ITER asks for}
 \label{sec:size}
@@ -393,8 +405,8 @@ Anchoring a learned correction on a frozen power law is also the design used in
 concurrent work on this database~\cite{wang}; what is varied here is the one
 property the diagnosis points at. Two
 correction families differ in precisely the property that matters: a degree-2
-log polynomial (unbounded) and depth-2 boosted trees (bounded by the residual
-range they were trained on).
+log polynomial, which is unbounded, and depth-2 boosted trees, which as
+measured below never leave the residual range they were trained on.
 
 Across the ITER-matched cut the two go opposite ways. Both start at 0.278; the
 polynomial correction climbs to 0.356 and the bounded correction falls
@@ -409,10 +421,10 @@ is \emph{biased} on the held-out ones: mean log residual $-0.218$, so it
 over-predicts by about 20\%, while its scatter (0.172) is no worse than
 in-sample (0.187). The tree correction never leaves the range it was trained on,
 on any held-out row, and inside that bound it points the right way and is
-largest where the bias is largest. The same boundedness that makes a tree
-ensemble useless as a predictor of $\tau$ on a larger machine makes it safe as
-a corrector, because the quantity it is bounded on is no longer a
-target that grows with machine size but a residual centred on zero.
+largest where the bias is largest. The same boundedness that makes these
+ensembles useless as predictors of $\tau$ on a larger machine makes them safe
+as correctors, because the quantity they are bounded on is no longer a target
+that grows with machine size but a residual centred on zero.
 
 Two honest limits. Cross-validation selects $\lambda=1$ in both families, while
 the rung best on a held-out machine is $\lambda=0$; nothing in the CV signal
@@ -683,9 +695,10 @@ which sits inside the database's size range and is already operating, all five
 models agree to within 15\%. On ITER, $1.82\times$ beyond it, they disagree by a
 factor of \textbf{8.3}.
 
-That gap cannot be closed by tuning, and Sec.~\ref{sec:reversal} says why: a tree ensemble
-predicts by averaging training targets, so its output cannot exceed the largest
-one, which here is \SI{1.321}{\second}. The random forest that beats the
+That gap cannot be closed by tuning, and Sec.~\ref{sec:reversal} says why: the
+random forest predicts by averaging training targets, so its output cannot
+exceed the largest one, which here is \SI{1.321}{\second}. The gradient booster
+is not bound by that arithmetic and lands in the same place anyway. The random forest that beats the
 published law by 36\% under cross-validation is arithmetically incapable of
 returning ITER's predicted confinement time whatever it is asked, and its
 nominal 90\% interval at ITER runs from \SI{0.19}{\second} to
@@ -856,8 +869,8 @@ cross; the right ones do not.}
 \label{fig:ladder}
 \end{figure*}
 
-So the extrapolation failure is unconditional, and holds in tokamaks, mammals
-and trees alike at every dimension tested. The \emph{inversion} is conditional,
+So the extrapolation failure holds in tokamaks, mammals and trees alike, at
+every predictor count tested here. The \emph{inversion} is conditional,
 and its condition has nothing to do with the failure: it is only whether the
 flexible model had enough to work with to win the comparison a practitioner runs
 first. The inversion is the warning light rather than the disease. Below three
@@ -871,8 +884,8 @@ polynomial ladder there supports that reading only for one kind of flexibility:
 polynomial degree under an isotropic penalty, swept over nine decades without
 rescue. Every model scored to this point confounds two properties. Flexibility
 is how much structure a model can learn beyond a power law. \emph{Boundedness}
-is what it does far outside the training data. A tree ensemble is flexible and
-bounded; ridge is neither; a degree-3 polynomial is flexible and unbounded but
+is what it does far outside the training data. The tree ensembles here are
+flexible and bounded; ridge is neither; a degree-3 polynomial is flexible and unbounded but
 divergent, which is why its worst machine is 4.601. No model here was flexible,
 unbounded and well behaved at long range at once.
 
@@ -917,8 +930,8 @@ cut, which is what licenses reading the other two rows as consequences of the
 kernel. The bounded rung then fails exactly as a tree does. It beats the power
 law under cross-validation and scores 1.948 at the ITER-matched cut, worse than
 predicting a constant, with error tracking distance at $\rho = +0.65$. The
-mechanism is the one in Sec.~\ref{sec:reversal}: a tree cannot exceed the
-largest training target, and an RBF process reverts to its prior mean. Both are
+mechanism is the one in Sec.~\ref{sec:reversal}: a random forest cannot exceed
+the largest training target, and an RBF process reverts to its prior mean. Both are
 hard limits rather than shortfalls, and on the held-out rows this one's
 predictions carry half the spread of the truth.
 
@@ -969,7 +982,11 @@ as a correction to it. Two machines (JET and ASDEX Upgrade with their variants)
 supply 77\% of rows. Only 13 of 18 machines are scored under leave-one-out; the
 five excluded are the smallest and most unlike the rest, so the reported gap is
 if anything optimistic. Thirteen machines is a small bootstrap and the paired
-differences are the more reliable statistic. The ITER-matched cut reproduces
+differences are the more reliable statistic. The training-target bound of
+Sec.~\ref{sec:mechanisms} is a theorem for the random forest and an observation
+for the gradient booster: boosting sums tree outputs rather than averaging
+targets, so nothing confines it to the training range, and what is reported
+here is only that it stayed inside that range on all 14 splits scored. The ITER-matched cut reproduces
 ITER's size ratio and nothing else: ITER is a burning plasma dominated by alpha
 self-heating at a gain no row here approaches, so clearing this bar is necessary
 and not sufficient. The per-machine coverages in Sec.~\ref{sec:conformal} are proportions over as
@@ -1033,9 +1050,9 @@ recorded rather than argued: on a machine inside the database's size range they
 agree to within 15\%, and on ITER they differ by a factor of 8.3.
 
 Two results temper the diagnosis and neither weakens the practical advice.
-Varying only the number of predictors shows that the extrapolation failure is
-unconditional while the ranking inversion is not: the inversion needs the
-flexible model to win the interpolation split first, so a field whose scaling
+Varying only the number of predictors shows that the extrapolation failure
+persists at every predictor count tested while the ranking inversion does not:
+the inversion needs the flexible model to win the interpolation split first, so a field whose scaling
 law has one predictor faces the same danger with no warning at all. And
 separating flexibility from boundedness shows the failure belongs to the second. A Gaussian process with a
 bounded kernel fails as a tree does, while the same flexibility carried
