@@ -13,3 +13,4 @@ pytest-cov==7.1.0
 ruff==0.15.22
 scikit-learn==1.7.2
 seaborn==0.13.2
+tomli==2.4.1 ; python_version < "3.11"

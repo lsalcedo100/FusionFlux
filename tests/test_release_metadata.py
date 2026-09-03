@@ -108,7 +108,12 @@ def test_citation_version_matches_the_packaged_version() -> None:
     0.2.1, the permanent citation points at a version nobody can install, and
     the record cannot be edited afterwards to fix it.
     """
-    import tomllib
+    import sys
+
+    if sys.version_info >= (3, 11):
+        import tomllib
+    else:  # Python 3.10, which `requires-python` still supports
+        import tomli as tomllib
 
     with (ROOT / "pyproject.toml").open("rb") as handle:
         packaged = tomllib.load(handle)["project"]["version"]

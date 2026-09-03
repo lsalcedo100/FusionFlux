@@ -51,6 +51,9 @@ dev = [
     "pytest",
     "pytest-cov",
     "ruff",
+    # tomllib is stdlib from 3.11; the release-metadata and entry-point tests
+    # read pyproject.toml and need a reader on the lowest supported version.
+    "tomli; python_version < '3.11'",
     # setup.py's build hook needs it, and `python -m build --no-isolation` in the
     # packaging suites builds against this environment rather than fetching one.
     "setuptools>=77",

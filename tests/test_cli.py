@@ -121,9 +121,13 @@ def test_console_script_points_at_this_module() -> None:
     would leave a fresh install running the synthetic demo while every document
     said otherwise.
     """
+    import sys
     from pathlib import Path
 
-    import tomllib
+    if sys.version_info >= (3, 11):
+        import tomllib
+    else:  # Python 3.10, which `requires-python` still supports
+        import tomli as tomllib
 
     config = tomllib.loads(
         (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()

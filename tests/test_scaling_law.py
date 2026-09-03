@@ -187,12 +187,25 @@ def test_expected_dependencies_are_found_by_projection_not_by_reading_the_basis(
     assert report.lies_in_null_space(triple)
     assert report.lies_in_null_space(pair)
 
-    # The naive check fails even though the vectors are right: no returned basis
-    # vector is parallel to either expected dependency.
-    for basis_vector in report.null_space:
-        for expected in (triple, pair):
-            cosine = abs(basis_vector @ expected / (np.linalg.norm(basis_vector) * np.linalg.norm(expected)))
-            assert cosine < 0.999
+    # The naive check cannot deliver both dependencies, whatever basis LAPACK
+    # happens to return. `triple` and `pair` are not orthogonal, so no
+    # orthonormal basis can be parallel to both; at most one of the two can be
+    # read off the basis at all, and which one, if either, is an accident of the
+    # SVD implementation rather than a property of the design. Asserting that
+    # neither shows up was wrong for that reason: numpy on Python 3.12 returns a
+    # basis vector 0.9992 parallel to one of them where 3.11 returns neither,
+    # and CI failed on an arithmetic coincidence. The residual checks above are
+    # basis-independent, which is the whole point of the projection.
+    def cosine(u: np.ndarray, v: np.ndarray) -> float:
+        return float(abs(u @ v / (np.linalg.norm(u) * np.linalg.norm(v))))
+
+    assert cosine(triple, pair) > 0.5  # far from orthogonal, so no basis shows both
+    readable = sum(
+        cosine(basis_vector, expected) > 0.999
+        for basis_vector in report.null_space
+        for expected in (triple, pair)
+    )
+    assert readable <= 1
 
     unrelated = np.array([1.0, 0.0, 0.0, 0.0, 0.0])
     assert not report.lies_in_null_space(unrelated)
