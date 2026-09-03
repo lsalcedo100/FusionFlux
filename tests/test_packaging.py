@@ -72,11 +72,17 @@ def wheel(tmp_path_factory: pytest.TempPathFactory) -> Path:
     except ImportError:
         pytest.skip("`build` is not installed; cannot exercise the distribution.")
 
-    # setuptools accumulates into build/lib and never prunes it, so a tree that
-    # has previously built a different set of modules packs the leftovers as
-    # well. That is not hypothetical: it is how the removed top-level modules
-    # kept appearing in the wheel after they were dropped from pyproject.toml.
+    # Build from the state a fresh clone is in, which is the state CI builds in.
+    #
+    # Two leftovers made these tests pass while the real build was broken.
+    # setuptools accumulates into build/lib and never prunes it, so removed
+    # modules kept reappearing in the wheel. And `fusionflux/predictor.json` is
+    # generated: with a copy left on disk from an earlier build, setuptools
+    # packaged it and the suite went green on a tree whose sdist could not
+    # actually produce a wheel. A test that only passes on a dirty tree is worse
+    # than no test, so both are removed first.
     shutil.rmtree(PROJECT_ROOT / "build", ignore_errors=True)
+    (PROJECT_ROOT / "fusionflux" / "predictor.json").unlink(missing_ok=True)
 
     output = tmp_path_factory.mktemp("wheel")
     completed = subprocess.run(
@@ -154,13 +160,19 @@ def test_build_refuses_when_no_card_exists_anywhere(tmp_path: Path) -> None:
         setup_module.SOURCE_CARD, setup_module.PACKAGED_CARD = original
 
 
-def test_sdist_carries_the_card_so_a_source_build_works(tmp_path: Path) -> None:
-    """`pip install --no-binary :all: fusionflux` builds from the sdist.
+def test_a_plain_build_succeeds_from_a_clean_tree(tmp_path: Path) -> None:
+    """`python -m build` with no flags, which is what the release workflow runs.
 
-    The sdist has no `results/` directory, because that holds analysis outputs
-    rather than package source. The card it needs was copied into the package
-    when the sdist was built, so the hook must accept that copy rather than
-    insisting on a source it cannot have.
+    This is the exact command that failed in CI while every other test here
+    passed. With no flags, `build` produces the sdist and then builds the wheel
+    *from that sdist*, in a temporary directory with no `results/` in it. A card
+    missing from the sdist therefore fails the wheel with nothing to recover
+    from, and hooking only `build_py` left it missing, because `sdist` never
+    invokes `build_py`.
+
+    Building only the wheel, as the other tests here do, never exercises that
+    path. So this one runs the real command, from a tree with the generated card
+    removed.
     """
     if not SOURCE_CARD.exists():
         pytest.skip("No results/predictor.json to package; run `make results`.")
@@ -170,6 +182,41 @@ def test_sdist_carries_the_card_so_a_source_build_works(tmp_path: Path) -> None:
         pytest.skip("`build` is not installed; cannot exercise the distribution.")
 
     shutil.rmtree(PROJECT_ROOT / "build", ignore_errors=True)
+    (PROJECT_ROOT / "fusionflux" / "predictor.json").unlink(missing_ok=True)
+
+    completed = subprocess.run(
+        [sys.executable, "-m", "build", "--no-isolation", "-o", str(tmp_path)],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.returncode == 0, (
+        "`python -m build` failed, so the release workflow would fail:\n"
+        + completed.stdout[-3000:]
+        + completed.stderr[-3000:]
+    )
+    (wheel,) = tmp_path.glob("*.whl")
+    with zipfile.ZipFile(wheel) as archive:
+        assert "fusionflux/predictor.json" in archive.namelist()
+
+
+def test_sdist_carries_the_card_so_a_source_build_works(tmp_path: Path) -> None:
+    """`pip install --no-binary fusionflux` builds from the sdist.
+
+    The sdist has no `results/` directory, because that holds analysis outputs
+    rather than package source. The card it needs must therefore already be
+    inside the package when the sdist is written, which is why `sdist` carries
+    the same hook `build_py` does.
+    """
+    if not SOURCE_CARD.exists():
+        pytest.skip("No results/predictor.json to package; run `make results`.")
+    try:
+        import build  # noqa: F401
+    except ImportError:
+        pytest.skip("`build` is not installed; cannot exercise the distribution.")
+
+    shutil.rmtree(PROJECT_ROOT / "build", ignore_errors=True)
+    (PROJECT_ROOT / "fusionflux" / "predictor.json").unlink(missing_ok=True)
     completed = subprocess.run(
         [sys.executable, "-m", "build", "--sdist", "--no-isolation", "-o", str(tmp_path)],
         cwd=PROJECT_ROOT,

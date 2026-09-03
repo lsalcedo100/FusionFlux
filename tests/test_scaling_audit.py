@@ -21,6 +21,7 @@ the finding is about the split rather than about fusion.
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -441,6 +442,40 @@ def test_the_packaged_module_is_the_one_the_study_uses() -> None:
     assert packaged == root_module.read_bytes(), (
         "the published scaling-audit module differs from the one this repository tests"
     )
+
+
+def test_a_plain_build_of_the_package_succeeds_from_a_clean_tree(tmp_path: Path) -> None:
+    """`python -m build` with no flags, which is what its release workflow runs.
+
+    Same defect the fusionflux package shipped: with no flags, `build` writes the
+    sdist and then builds the wheel *from that sdist*, in a temporary directory
+    with no repository root above it. Hooking only `build_py` left the module out
+    of the sdist, so the wheel build failed with nothing to copy from. Building
+    only the wheel never exercises that path.
+    """
+    try:
+        import build  # noqa: F401
+    except ImportError:
+        pytest.skip("`build` is not installed; cannot exercise the distribution.")
+
+    shutil.rmtree(PACKAGE_DIR / "build", ignore_errors=True)
+    (PACKAGE_DIR / "scaling_audit.py").unlink(missing_ok=True)
+
+    completed = subprocess.run(
+        [sys.executable, "-m", "build", "--no-isolation", "-o", str(tmp_path)],
+        cwd=PACKAGE_DIR,
+        capture_output=True,
+        text=True,
+    )
+    assert completed.returncode == 0, (
+        "`python -m build` failed, so the release workflow would fail:\n"
+        + completed.stdout[-3000:]
+        + completed.stderr[-3000:]
+    )
+    (wheel,) = tmp_path.glob("*.whl")
+    with zipfile.ZipFile(wheel) as archive:
+        packaged = archive.read("scaling_audit.py")
+    assert packaged == (PACKAGE_DIR.parent / "scaling_audit.py").read_bytes()
 
 
 def test_the_package_ships_only_the_module() -> None:

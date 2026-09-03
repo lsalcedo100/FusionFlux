@@ -23,29 +23,55 @@ from pathlib import Path
 
 from setuptools import setup
 from setuptools.command.build_py import build_py
+from setuptools.command.sdist import sdist
 
 HERE = Path(__file__).parent
 SOURCE_MODULE = HERE.parent / "scaling_audit.py"
 VENDORED_MODULE = HERE / "scaling_audit.py"
 
 
+def _refresh_vendored_module() -> None:
+    """Copy the module in from the repository root, or confirm one is already here.
+
+    Registered against both ``build_py`` and ``sdist``. Hooking only ``build_py``
+    was a real defect: `python -m build` writes the sdist and then builds the
+    wheel *from that sdist*, in a temporary directory with no repository root
+    above it. A module missing from the sdist therefore fails the wheel with
+    nothing to recover from, and `sdist` never invokes `build_py`.
+    """
+    if SOURCE_MODULE.exists():
+        shutil.copyfile(SOURCE_MODULE, VENDORED_MODULE)
+    elif not VENDORED_MODULE.exists():
+        # Building from an unpacked sdist is the legitimate case for the source
+        # being absent: the sdist carries the module already. With neither, the
+        # wheel would install an empty distribution.
+        raise SystemExit(
+            f"Cannot build: neither {SOURCE_MODULE} nor {VENDORED_MODULE} exists, "
+            "so the wheel would contain no module. Build from a checkout of "
+            "the FusionFlux repository, or from the published sdist."
+        )
+
+
+class SdistFromRepositoryRoot(sdist):
+    """Put the module in the sdist, so a wheel can be built from it alone."""
+
+    def run(self) -> None:
+        _refresh_vendored_module()
+        super().run()
+
+
 class BuildPyFromRepositoryRoot(build_py):
     """Refresh ``scaling_audit.py`` from the repository root before collecting files."""
 
     def run(self) -> None:
-        if SOURCE_MODULE.exists():
-            shutil.copyfile(SOURCE_MODULE, VENDORED_MODULE)
-        elif not VENDORED_MODULE.exists():
-            # Building from an unpacked sdist is the legitimate case for the
-            # source being absent: the sdist carries the module already. With
-            # neither, the wheel would install an empty distribution.
-            raise SystemExit(
-                f"Cannot build: neither {SOURCE_MODULE} nor {VENDORED_MODULE} exists, "
-                "so the wheel would contain no module. Build from a checkout of "
-                "the FusionFlux repository, or from the published sdist."
-            )
+        _refresh_vendored_module()
         super().run()
 
 
 if __name__ == "__main__":
-    setup(cmdclass={"build_py": BuildPyFromRepositoryRoot})
+    setup(
+        cmdclass={
+            "build_py": BuildPyFromRepositoryRoot,
+            "sdist": SdistFromRepositoryRoot,
+        }
+    )

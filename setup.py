@@ -26,9 +26,42 @@ from pathlib import Path
 
 from setuptools import setup
 from setuptools.command.build_py import build_py
+from setuptools.command.sdist import sdist
 
 SOURCE_CARD = Path(__file__).parent / "results" / "predictor.json"
 PACKAGED_CARD = Path(__file__).parent / "fusionflux" / "predictor.json"
+
+
+def _refresh_packaged_card() -> None:
+    """Copy the card in from ``results/``, or confirm one is already here.
+
+    Registered against both ``build_py`` and ``sdist``. Hooking only ``build_py``
+    was a real defect that a clean checkout exposed and a dirty one hid: `python
+    -m build` builds the sdist first and then builds the wheel *from that sdist*,
+    so a card missing from the sdist fails the wheel with no ``results/`` in
+    sight to recover from. `sdist` never invokes `build_py`, so the copy has to
+    happen for both commands.
+    """
+    if SOURCE_CARD.exists():
+        shutil.copyfile(SOURCE_CARD, PACKAGED_CARD)
+    elif not PACKAGED_CARD.exists():
+        # Fail here rather than shipping a distribution that is missing the one
+        # file its console command cannot start without. A build is the last
+        # point at which this is cheap to notice.
+        raise SystemExit(
+            f"Cannot build: neither {SOURCE_CARD} nor {PACKAGED_CARD} exists, "
+            "so the install would have a `fusionflux predict` that cannot read "
+            "its coefficients. Run `python3 -m fusionflux card` (needs the HDB5 "
+            "dataset) or `make results` first."
+        )
+
+
+class SdistWithCard(sdist):
+    """Put the card in the sdist, so a wheel can be built from it alone."""
+
+    def run(self) -> None:
+        _refresh_packaged_card()
+        super().run()
 
 
 class BuildPyWithCard(build_py):
@@ -49,18 +82,7 @@ class BuildPyWithCard(build_py):
     """
 
     def run(self) -> None:
-        if SOURCE_CARD.exists():
-            shutil.copyfile(SOURCE_CARD, PACKAGED_CARD)
-        elif not PACKAGED_CARD.exists():
-            # Fail here rather than shipping a distribution that is missing the
-            # one file its console command cannot start without. A build is the
-            # last point at which this is cheap to notice.
-            raise SystemExit(
-                f"Cannot build: neither {SOURCE_CARD} nor {PACKAGED_CARD} exists, "
-                "so the install would have a `fusionflux predict` that cannot read "
-                "its coefficients. Run `python3 -m fusionflux card` (needs the HDB5 "
-                "dataset) or `make results` first."
-            )
+        _refresh_packaged_card()
         super().run()
 
 
@@ -68,4 +90,4 @@ class BuildPyWithCard(build_py):
 # a build. `setuptools.build_meta` executes this file with `__name__` set to
 # `"__main__"`, so the real build path is unaffected.
 if __name__ == "__main__":
-    setup(cmdclass={"build_py": BuildPyWithCard})
+    setup(cmdclass={"build_py": BuildPyWithCard, "sdist": SdistWithCard})
