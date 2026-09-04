@@ -12,5 +12,9 @@ pytest==9.1.1
 pytest-cov==7.1.0
 ruff==0.15.22
 scikit-learn==1.7.2
+# Pulled in by scikit-learn rather than named directly, but it supplies the
+# LAPACK paths behind several fits, so it is pinned like anything else the
+# numbers depend on.
+scipy==1.18.1
 seaborn==0.13.2
 tomli==2.4.1 ; python_version < "3.11"
