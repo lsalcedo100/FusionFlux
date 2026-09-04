@@ -15,6 +15,20 @@ scikit-learn==1.7.2
 # Pulled in by scikit-learn rather than named directly, but it supplies the
 # LAPACK paths behind several fits, so it is pinned like anything else the
 # numbers depend on.
-scipy==1.18.1
+#
+# Split by interpreter because 1.18 requires Python >=3.12. The Dockerfile and
+# the reproduce job both run 3.12 and both regenerate results/, so they get the
+# version those numbers were produced under. The lowest-supported-Python job
+# runs the suite rather than regenerating anything, so it takes the newest scipy
+# that installs on 3.10.
+#
+# A single unsatisfiable pin does not fail cleanly here. pip cannot report "no
+# scipy for this interpreter" and stop; it backtracks through the whole
+# dependency graph looking for a combination that works, and walks far enough
+# down to try building a pyparsing sdist from before Python 3.10, which dies on
+# `collections.MutableMapping`. The error names pyparsing and says nothing about
+# scipy.
+scipy==1.18.1 ; python_version >= "3.12"
+scipy==1.15.3 ; python_version < "3.12"
 seaborn==0.13.2
 tomli==2.4.1 ; python_version < "3.11"
