@@ -368,16 +368,16 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
             (positions[1], values[1]),
             textcoords="offset points",
             xytext=(7, -3),
-            fontsize=9,
+            fontsize=13,
             color=colour,
         )
     left.set_xticks(positions)
     left.set_xticklabels(["held-out machine", "ITER-matched size cut"])
     left.set_yscale("log")
     left.set_ylabel("RMSLE (log scale)")
-    left.set_title("One model family, three kernels:\nonly the long-range behaviour differs")
+    left.set_title("One model family, three kernels")
     left.grid(alpha=0.15)
-    left.legend(fontsize=8, loc="upper left")
+    left.legend(fontsize=11, loc="upper left")
 
     spread = study.reversion.set_index("model_name")
     for model, (colour, marker, label) in palette.items():
@@ -398,7 +398,7 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
             (float(row["actual_spread"]), float(row["predicted_spread"])),
             textcoords="offset points",
             xytext=(8, 4),
-            fontsize=8,
+            fontsize=11,
             color=colour,
         )
     if not spread.empty:
@@ -407,7 +407,7 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
         right.annotate(
             "predictions as spread as the truth",
             (limit * 0.55, limit * 0.58),
-            fontsize=8,
+            fontsize=11,
             color="#444444",
             rotation=38,
         )
@@ -415,7 +415,7 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
         right.set_ylim(0, limit)
     right.set_xlabel("spread of the truth, held-out rows (std of log tau)")
     right.set_ylabel("spread of the predictions")
-    right.set_title("A bounded kernel reverts to the training mean:\nthe tree ceiling, reached another way")
+    right.set_title("Spread of predictions against spread of truth")
     right.grid(alpha=0.15)
 
     figure.tight_layout()

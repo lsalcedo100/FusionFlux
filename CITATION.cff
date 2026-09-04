@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: "FusionFlux: confinement scaling as a linear algebra problem"
+title: "FusionFlux: extrapolation, long-range saturation and physics constraints in confinement scaling"
 message: "If you use this software or its results, please cite it as below."
 type: software
 authors:

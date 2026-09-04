@@ -147,6 +147,14 @@ def analyze_robustness(dataset: pd.DataFrame) -> dict[str, object]:
         "lomo_by_physical_device": _leave_one_unit_out(dataset, devices),
     }
 
+    paired_intervals = {
+        arm: paired_interval(
+            cast("dict[str, float]", arms[arm]["random_forest"]["per_unit"]),
+            cast("dict[str, float]", arms[arm]["ridge_loglinear"]["per_unit"]),
+        )
+        for arm in ("lomo_by_database_label", "lomo_by_physical_device")
+    }
+
     sign_tests = {
         arm: _sign_test(arms[arm]["random_forest"]["per_unit"], arms[arm]["ridge_loglinear"]["per_unit"])
         for arm in ("lomo_by_database_label", "lomo_by_physical_device")
@@ -169,6 +177,7 @@ def analyze_robustness(dataset: pd.DataFrame) -> dict[str, object]:
         "physical_device_map": PHYSICAL_DEVICE,
         "arms": arms,
         "sign_tests": sign_tests,
+        "paired_intervals": paired_intervals,
         "inversion_holds": inversion,
         "inversion_holds_everywhere": all(inversion.values()),
     }
@@ -196,6 +205,34 @@ def main() -> None:
         )
     print(f"\ninversion holds in every cell: {analysis['inversion_holds_everywhere']}")
     print(f"Wrote {RESULTS_DIR / 'robustness.json'}")
+
+
+def paired_interval(
+    per_unit_a: dict[str, float],
+    per_unit_b: dict[str, float],
+    *,
+    n_resamples: int = 2000,
+    seed: int = 20240617,
+) -> dict[str, Any]:
+    """Percentile bootstrap on the per-unit difference, resampling whole units.
+
+    The same estimator Sec. reversal reports over the 13 database labels, run
+    over whatever unit is passed. Quoting it for physical devices matters
+    because the 13 labels are not 13 independent machines, and an interval that
+    resamples them as if they were is too narrow.
+    """
+    units = sorted(per_unit_a)
+    differences = np.array([per_unit_a[u] - per_unit_b[u] for u in units])
+    generator = np.random.default_rng(seed)
+    draws = generator.integers(0, len(differences), size=(n_resamples, len(differences)))
+    means = differences[draws].mean(axis=1)
+    return {
+        "n_units": len(units),
+        "mean_difference": float(differences.mean()),
+        "ci_low": float(np.percentile(means, 2.5)),
+        "ci_high": float(np.percentile(means, 97.5)),
+        "excludes_zero": bool(np.percentile(means, 2.5) > 0.0),
+    }
 
 
 if __name__ == "__main__":

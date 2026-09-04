@@ -265,6 +265,8 @@ def main() -> None:
         "correlation_uncertainty": correlation_uncertainty(report),
         "machine_equal_weighting": machine_equal_weighting(dataset),
         "errors_in_variables": errors_in_variables(dataset),
+        "discharge_disjoint": discharge_disjoint_arm(),
+        "redundant_feature": redundant_feature(dataset),
         "permutation_draws": PERMUTATION_DRAWS,
     }
     write_json_strict(RESULTS_DIR / "sensitivity.json", analysis)
@@ -293,6 +295,122 @@ def main() -> None:
     for column in eiv["feature_columns"]:
         print(f"  {column:26s} OLS {eiv['ols_exponents'][column]:+.3f}   ODR {eiv['odr_exponents'][column]:+.3f}")
     print(f"\nWrote {RESULTS_DIR / 'sensitivity.json'}")
+
+
+def discharge_disjoint_arm() -> dict[str, Any]:
+    """The H-mode robustness arm with every discharge STD5 samples removed.
+
+    Sec. replication removes rows that STD5 contains. That leaves 7.8% of the
+    arm sitting in a discharge STD5 samples at a different time, which is row
+    disjointness without discharge disjointness, and the whole paper argues that
+    the cluster is the unit that matters. This drops the shared discharges
+    outright and rescores, so the arm has no shot in common with STD5 at all.
+    """
+    import replication as rep
+
+    raw = rep.load_db523_raw()
+    std5 = hdb5.load_hdb5_dataframe()
+    std5_rows = set(rep._match_keys(std5))
+    std5_shots = set(std5["TOK"].astype(str) + "|" + std5["SHOT"].astype(str))
+
+    phase = raw["PHASE"].astype(str)
+    shots = raw["TOK"].astype(str) + "|" + raw["SHOT"].astype(str)
+    row_disjoint = phase.str.startswith("H") & ~rep._match_keys(raw).isin(std5_rows)
+    shot_disjoint = row_disjoint & ~shots.isin(std5_shots)
+
+    out: dict[str, Any] = {}
+    for label, mask in (("row_disjoint", row_disjoint), ("discharge_disjoint", shot_disjoint)):
+        dataset = rep.prepare_db523_frame(raw.loc[mask])
+        tau = dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float)
+        labels = dataset[hdb5.TOKAMAK_LABEL_COLUMN].to_numpy()
+        eligible = hdb5.eligible_tokamaks(dataset, min_rows=hdb5.MIN_HELD_OUT_ROWS)
+
+        features = dataset[list(hdb5.BLIND_FEATURE_COLUMNS)]
+        groups = dataset[hdb5.GROUP_COLUMN].to_numpy()
+        n_splits = min(hdb5.N_CV_FOLDS, int(pd.Series(groups).nunique()))
+        zoo = hdb5._assemble_zoo()
+
+        scores: dict[str, Any] = {}
+        for name in (*CONTENDERS, "IPB98(y,2)"):
+            if name == "IPB98(y,2)":
+                cv_pred = dataset["ipb98y2_tau_s"].to_numpy(dtype=float)
+                per_machine = {str(m): _rmsle(tau[labels == m], cv_pred[labels == m]) for m in eligible}
+            else:
+                cv_pred = np.exp(hdb5._grouped_cv_predictions(zoo[name], features, np.log(tau), groups, n_splits))
+                per_machine = {}
+                for machine in eligible:
+                    held = labels == machine
+                    model = hdb5.clone_pipeline(zoo[name])
+                    with hdb5._suppress_benign_matmul_warnings():
+                        hdb5.fit_pipeline(model, features[~held], np.log(tau)[~held])
+                        per_machine[str(machine)] = _rmsle(tau[held], np.exp(model.predict(features[held])))
+            scores[name] = {
+                "cv": _rmsle(tau, cv_pred),
+                "leave_one_machine_out": float(np.mean(list(per_machine.values()))),
+            }
+        best_cv = min(scores, key=lambda n: scores[n]["cv"])
+        best_lomo = min(scores, key=lambda n: scores[n]["leave_one_machine_out"])
+        out[label] = {
+            "n_rows": int(len(dataset)),
+            "n_discharges": int(dataset[hdb5.GROUP_COLUMN].nunique()),
+            "n_machines_scored": len(eligible),
+            "scores": scores,
+            "best_cv_model": best_cv,
+            "best_lomo_model": best_lomo,
+            "reversal_holds": best_cv != best_lomo and best_cv in CONTENDERS,
+            "cv_gain_over_baseline": float(1.0 - scores[best_cv]["cv"] / scores["IPB98(y,2)"]["cv"]),
+        }
+    return out
+
+
+def redundant_feature(dataset: pd.DataFrame) -> dict[str, Any]:
+    """The same models on 8 independent features instead of the redundant 9.
+
+    Minor radius is exactly ``epsilon * R``, so the nine-column feature set has
+    an exact dependency. OLS is invariant to that, but ridge penalises in the
+    coordinates it is handed, so the redundancy is not free for the model the
+    paper leans on hardest. Dropping ``log_a_m`` removes it.
+    """
+    full = tuple(hdb5.BLIND_FEATURE_COLUMNS)
+    trimmed = tuple(c for c in full if c != "log_a_m")
+    if len(trimmed) != len(full) - 1:
+        raise AssertionError("log_a_m is not in the blind feature set; nothing was dropped")
+
+    tau = dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float)
+    log_tau = np.log(tau)
+    groups = dataset[hdb5.GROUP_COLUMN].to_numpy()
+    labels = dataset[hdb5.TOKAMAK_LABEL_COLUMN].to_numpy()
+    eligible = hdb5.eligible_tokamaks(dataset, min_rows=hdb5.MIN_HELD_OUT_ROWS)
+    cut = hdb5.iter_matched_split(dataset, hdb5.size_ordered_splits(dataset))
+    above = np.isin(labels, list(cut.test_machines))
+
+    out: dict[str, Any] = {}
+    for label, columns in (("nine_features", full), ("eight_features", trimmed)):
+        features = dataset[list(columns)]
+        n_splits = min(hdb5.N_CV_FOLDS, int(pd.Series(groups).nunique()))
+        zoo = hdb5._assemble_zoo()
+        scores: dict[str, Any] = {}
+        for name in CONTENDERS:
+            with hdb5._suppress_benign_matmul_warnings():
+                cv = np.exp(hdb5._grouped_cv_predictions(zoo[name], features, log_tau, groups, n_splits))
+            per_machine = {}
+            for machine in eligible:
+                held = labels == machine
+                model = hdb5.clone_pipeline(zoo[name])
+                with hdb5._suppress_benign_matmul_warnings():
+                    hdb5.fit_pipeline(model, features[~held], log_tau[~held])
+                    per_machine[str(machine)] = _rmsle(tau[held], np.exp(model.predict(features[held])))
+            cut_model = hdb5.clone_pipeline(zoo[name])
+            with hdb5._suppress_benign_matmul_warnings():
+                hdb5.fit_pipeline(cut_model, features[~above], log_tau[~above])
+                cut_pred = np.exp(cut_model.predict(features[above]))
+            scores[name] = {
+                "cv": _rmsle(tau, cv),
+                "leave_one_machine_out": float(np.mean(list(per_machine.values()))),
+                "iter_matched_cut": _rmsle(tau[above], cut_pred),
+            }
+        out[label] = {"n_features": len(columns), "scores": scores}
+    return out
 
 
 if __name__ == "__main__":

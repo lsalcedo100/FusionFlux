@@ -494,14 +494,14 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
         color="#c0392b",
         va="top",
         ha="left",
-        fontsize=9,
+        fontsize=13,
         xytext=(4, 0),
         textcoords="offset points",
     )
     left.set_xlabel("size ratio demanded by the cut (test R max / train R max)")
     left.set_ylabel("RMSLE on the held-out machines")
-    left.set_title("What the constraint buys, across the whole size sweep")
-    left.legend(fontsize=9, frameon=False)
+    left.set_title("Score at every size cut")
+    left.legend(fontsize=13, frameon=False)
     left.grid(alpha=0.15)
 
     in_sample = analysis.in_sample_rmsle
@@ -522,12 +522,12 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
             (in_sample[model], by_name[model].size_cut_rmsle),
             textcoords="offset points",
             xytext=(8, 4),
-            fontsize=9,
+            fontsize=13,
             color=colour,
         )
     right.set_xlabel("in-sample RMSLE (what the constraint costs)")
     right.set_ylabel("RMSLE at the ITER-matched cut (what it buys)")
-    right.set_title("Cost against benefit: more physics is not monotonically better")
+    right.set_title("What each constraint costs against what it buys")
     right.grid(alpha=0.15)
 
     figure.tight_layout()

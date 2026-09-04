@@ -326,14 +326,14 @@ def plot_tree_allometry(study: LadderStudy) -> Path | None:
                 f"reversal appears\nat {crossing} features",
                 (crossing, axis.get_ylim()[1]),
                 textcoords="offset points", xytext=(6, -28),
-                fontsize=8, color="#2a78d6",
+                fontsize=11, color="#2a78d6",
             )
         axis.set_xticks(counts)
         axis.set_xlabel("number of predictors the models may see")
         axis.set_ylabel("RMSLE")
         axis.set_title(title)
         axis.grid(alpha=0.15)
-        axis.legend(fontsize=8)
+        axis.legend(fontsize=11)
 
     figure.tight_layout()
     path = RESULTS_DIR / "tree_allometry.png"

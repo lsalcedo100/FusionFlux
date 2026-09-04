@@ -387,7 +387,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
     }
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    figure, axes = plt.subplots(1, 2, figsize=(15.5, 5.4), gridspec_kw={"width_ratios": [1.0, 1.15]})
+    figure, axes = plt.subplots(1, 2, figsize=(13.5, 5.4), gridspec_kw={"width_ratios": [1.0, 1.15]})
     for axis in axes:
         axis.grid(alpha=0.25, linewidth=0.6)
         axis.set_axisbelow(True)
@@ -419,7 +419,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
             xy=(2, row.size_cut_rmsle),
             xytext=(9, -3),
             textcoords="offset points",
-            fontsize=9,
+            fontsize=13,
             color=color,
         )
     axes[0].set_yscale("log")
@@ -431,16 +431,16 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
             "held-out\nmachine",
             "machine larger than\nanything in training",
         ],
-        fontsize=9.5,
+        fontsize=13.5,
         color=ink,
     )
-    axes[0].set_ylabel("RMSLE, log scale (lower is better)", fontsize=9, color=muted)
+    axes[0].set_ylabel("RMSLE, log scale (lower is better)", fontsize=13, color=muted)
     axes[0].set_title(
-        "Asked a harder question three times, the trees\ncollapse onto the mean baseline",
-        fontsize=11,
+        "Three questions of increasing difficulty",
+        fontsize=15,
         color=ink,
     )
-    axes[0].legend(frameon=False, fontsize=9, loc="upper left", labelcolor=muted)
+    axes[0].legend(frameon=False, fontsize=13, loc="upper left", labelcolor=muted)
 
     # --- Right: the sweep, with the ITER-matched rung marked --------------
     #
@@ -497,7 +497,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
         xy=(matched_ratio, top),
         xytext=(6, -11),
         textcoords="offset points",
-        fontsize=9,
+        fontsize=13,
         color=ink,
         ha="left",
         va="top",
@@ -510,26 +510,26 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
             xy=(band_centre, axes[1].get_ylim()[0]),
             xytext=(0, 14),
             textcoords="offset points",
-            fontsize=8,
+            fontsize=11,
             color=muted,
             ha="center",
             va="bottom",
         )
     axes[1].set_xlabel(
         "size extrapolation demanded\n(largest major radius asked about / largest one trained on)",
-        fontsize=9,
+        fontsize=13,
         color=muted,
     )
-    axes[1].set_ylabel("RMSLE on every machine above the cut", fontsize=9, color=muted)
+    axes[1].set_ylabel("RMSLE on every machine above the cut", fontsize=13, color=muted)
     axes[1].set_title(
-        "The power law holds across the whole sweep.\nThe trees never recover.",
-        fontsize=11,
+        "The size-ordered sweep",
+        fontsize=15,
         color=ink,
     )
     # The well-powered lines all bunch together at the left edge of this panel,
     # so direct end-labels overlap; the legend goes in the empty mid-band of the
     # underpowered region instead.
-    axes[1].legend(frameon=False, fontsize=8.5, loc="center right", labelcolor=muted)
+    axes[1].legend(frameon=False, fontsize=11.5, loc="center right", labelcolor=muted)
 
     figure.tight_layout()
     path = RESULTS_DIR / "size_extrapolation.png"

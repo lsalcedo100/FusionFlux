@@ -269,7 +269,7 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
         "hist_gradient_boosting": ("#c8873a", "hist grad boosting"),
     }
 
-    figure, axes = plt.subplots(1, 3, figsize=(17.5, 5.2))
+    figure, axes = plt.subplots(1, 3, figsize=(13.5, 5.2))
     for axis in axes:
         axis.set_facecolor("#fcfcfb")
         for side in ("top", "right"):
@@ -282,19 +282,19 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
         loo = payload["scores"][name]["loo_mean_rmsle"]
         axes[0].plot([0, 1], [cv, loo], "o-", color=colour, linewidth=2.2, markersize=8, label=label)
         axes[0].annotate(f"{cv:.3f}", xy=(0, cv), xytext=(-42, -3), textcoords="offset points",
-                         fontsize=9, color=colour)
+                         fontsize=13, color=colour)
         axes[0].annotate(f"{loo:.3f}", xy=(1, loo), xytext=(10, -3), textcoords="offset points",
-                         fontsize=9, color=colour)
+                         fontsize=13, color=colour)
     axes[0].set_xlim(-0.45, 1.5)
     axes[0].set_xticks([0, 1])
-    axes[0].set_xticklabels(["grouped CV\nby species", "leave-one-order-out"],
-                            fontsize=10, color=ink)
-    axes[0].set_ylabel("RMSLE (lower is better)", fontsize=9, color=muted)
+    axes[0].set_xticklabels(["held out:\nspecies", "held out:\norder"],
+                            fontsize=14, color=ink)
+    axes[0].set_ylabel("RMSLE (lower is better)", fontsize=13, color=muted)
     # Deliberately not "the same inversion". There is none here, and that is the
     # finding: the trees lose under *both* splits, so no ranking can invert.
-    axes[0].set_title("Mammalian metabolic rate: the trees lose\nunder both splits, so nothing inverts",
-                      fontsize=11, color=ink)
-    axes[0].legend(frameon=False, fontsize=9, loc="upper left", labelcolor=muted)
+    axes[0].set_title("Kleiber's law under both splits",
+                      fontsize=15, color=ink)
+    axes[0].legend(frameon=False, fontsize=13, loc="upper left", labelcolor=muted)
 
     # --- Middle: error against distance, as in Result 4b --------------------
     for name, (colour, label) in style.items():
@@ -302,11 +302,11 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
         rho = payload["scores"][name]["distance_spearman"]
         axes[1].plot(rows["mahalanobis"], rows["score"], "o", color=colour, markersize=8,
                      label=f"{label}  (rho = {rho:+.2f})")
-    axes[1].set_xlabel("distance of the held-out order from the rest", fontsize=9, color=muted)
-    axes[1].set_ylabel("RMSLE on that order", fontsize=9, color=muted)
-    axes[1].set_title("The flexible models fail as a function\nof how far out the order sits",
-                      fontsize=11, color=ink)
-    axes[1].legend(frameon=False, fontsize=9, loc="upper left", labelcolor=muted)
+    axes[1].set_xlabel("distance of the held-out order from the rest", fontsize=13, color=muted)
+    axes[1].set_ylabel("RMSLE on that order", fontsize=13, color=muted)
+    axes[1].set_title("Error against extrapolation distance",
+                      fontsize=15, color=ink)
+    axes[1].legend(frameon=False, fontsize=13, loc="upper left", labelcolor=muted)
 
     # --- Right: the mass-ordered sweep, as in Result 5 ----------------------
     for name, (colour, label) in style.items():
@@ -317,15 +317,15 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
     for _, row in bounded.iterrows():
         axes[2].plot(row["n_train_orders"], row["rmsle"], "o", markersize=15,
                      markerfacecolor="none", markeredgecolor=ink, markeredgewidth=1.3)
-    axes[2].set_xlabel("orders in the training half (lightest first)", fontsize=9, color=muted)
-    axes[2].set_ylabel("RMSLE on every heavier order", fontsize=9, color=muted)
+    axes[2].set_xlabel("orders in the training half", fontsize=13, color=muted)
+    axes[2].set_ylabel("RMSLE on every heavier order", fontsize=13, color=muted)
     axes[2].set_yscale("log")
     lowest = float(sweep[sweep["model_name"] != "mean_baseline"]["rmsle"].min())
     highest = float(sweep[sweep["model_name"] != "mean_baseline"]["rmsle"].max())
     axes[2].set_ylim(lowest * 0.9, highest * 2.1)
-    axes[2].set_title("Extrapolating up the mass axis.\nCircled: bounded by the training range.",
-                      fontsize=11, color=ink)
-    axes[2].legend(frameon=False, fontsize=9, loc="upper right", labelcolor=muted, ncol=2)
+    axes[2].set_title("The mass-ordered sweep",
+                      fontsize=15, color=ink)
+    axes[2].legend(frameon=False, fontsize=13, loc="upper right", labelcolor=muted, ncol=1)
 
     figure.tight_layout()
     path = RESULTS_DIR / "allometry.png"

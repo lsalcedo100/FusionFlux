@@ -376,6 +376,22 @@
       "exact_two_sided_p": 0.0009765625
     }
   },
+  "paired_intervals": {
+    "lomo_by_database_label": {
+      "n_units": 13,
+      "mean_difference": 0.25081704414396827,
+      "ci_low": 0.15682732681279973,
+      "ci_high": 0.3417963148668939,
+      "excludes_zero": true
+    },
+    "lomo_by_physical_device": {
+      "n_units": 11,
+      "mean_difference": 0.3151935014515989,
+      "ci_low": 0.22056520261278284,
+      "ci_high": 0.4078393539960534,
+      "excludes_zero": true
+    }
+  },
   "inversion_holds": {
     "cv_all_rows|lomo_by_database_label|pooled_rows": true,
     "cv_all_rows|lomo_by_database_label|unit_equal": true,

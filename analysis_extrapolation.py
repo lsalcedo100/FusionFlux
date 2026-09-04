@@ -559,7 +559,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     figure, axes = plt.subplots(
-        1, 3, figsize=(18.5, 5.2), gridspec_kw={"width_ratios": [1.0, 1.25, 1.05]}
+        1, 3, figsize=(13.5, 5.4), gridspec_kw={"width_ratios": [1.0, 1.25, 1.05]}
     )
     for axis in axes:
         axis.grid(alpha=0.25, linewidth=0.6)
@@ -608,7 +608,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             xy=(1, transfer.lomo_mean_rmsle),
             xytext=(10, -3),
             textcoords="offset points",
-            fontsize=9,
+            fontsize=13,
             color=color,
         )
         axes[0].annotate(
@@ -616,32 +616,23 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             xy=(0, transfer.cv_rmsle),
             xytext=(-40, cv_offsets[transfer.model_name]),
             textcoords="offset points",
-            fontsize=9,
+            fontsize=13,
             color=color,
         )
-    axes[0].set_xlim(-0.42, 1.55)
+    axes[0].set_xlim(-0.75, 1.95)
     axes[0].set_xticks([0, 1])
     axes[0].set_xticklabels(
-        ["grouped CV by discharge\n(interpolation)", "leave-one-tokamak-out\n(extrapolation)"],
-        fontsize=10,
+        ["held out:\ndischarge", "held out:\nmachine"],
+        fontsize=14,
         color=ink,
     )
-    axes[0].set_ylabel("RMSLE (lower is better)", fontsize=9, color=muted)
+    axes[0].set_ylabel("RMSLE (lower is better)", fontsize=13, color=muted)
     axes[0].set_title(
-        "The ranking inverts when the\nheld-out unit becomes a machine",
-        fontsize=11,
+        "Interpolation against extrapolation",
+        fontsize=15,
         color=ink,
     )
-    axes[0].legend(frameon=False, fontsize=9, loc="upper left", labelcolor=muted)
-    axes[0].annotate(
-        "bars: 95% interval over the 13 machines",
-        xy=(0.98, 0.02),
-        xycoords="axes fraction",
-        ha="right",
-        va="bottom",
-        fontsize=8,
-        color=muted,
-    )
+    axes[0].legend(frameon=False, fontsize=13, loc="upper left", labelcolor=muted)
 
     # --- Middle: error against distance from the training distribution -----
     per_machine = analysis.per_machine
@@ -680,7 +671,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             xy=(row["feature_mahalanobis"], row["rmsle"]),
             xytext=(6, 4),
             textcoords="offset points",
-            fontsize=8,
+            fontsize=11,
             color=ink if machine in truncated else muted,
             fontweight="bold" if machine in truncated else "normal",
         )
@@ -691,32 +682,19 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
         ].max()
     )
     # Open a band under the data for the caption rather than printing over points.
-    axes[1].set_ylim(lowest - 0.28 * (highest - lowest), highest + 0.06 * (highest - lowest))
-    if truncated:
-        axes[1].annotate(
-            "circled: the other failure mode, where the machine's\n"
-            "true confinement times run above anything a tree\n"
-            "can output at all (see Result 4c)",
-            xy=(0.98, 0.02),
-            xycoords="axes fraction",
-            ha="right",
-            va="bottom",
-            fontsize=8,
-            color=muted,
-        )
+    axes[1].set_ylim(lowest - 0.10 * (highest - lowest), highest + 0.30 * (highest - lowest))
     axes[1].set_xlabel(
-        "how far the held-out machine sits outside the training data\n"
-        "(Mahalanobis distance of its mean log-feature vector)",
-        fontsize=9,
+        "Mahalanobis distance from training data",
+        fontsize=13,
         color=muted,
     )
-    axes[1].set_ylabel("RMSLE on the held-out machine", fontsize=9, color=muted)
+    axes[1].set_ylabel("RMSLE on the held-out machine", fontsize=13, color=muted)
     axes[1].set_title(
-        "The trees fail as a function of distance.\nThe power law does not.",
-        fontsize=11,
+        "Error against extrapolation distance",
+        fontsize=15,
         color=ink,
     )
-    axes[1].legend(frameon=False, fontsize=9, loc="upper left", labelcolor=muted)
+    axes[1].legend(frameon=False, fontsize=13, loc="upper left", labelcolor=muted)
 
     # --- Right: median against worst case along the flexibility ladder -----
     by_name = {transfer.model_name: transfer for transfer in analysis.transfers}
@@ -731,7 +709,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     # step between them is the panel's point rather than part of a trend.
     split = bounded.index(True) if True in bounded else len(rungs)
     for series, color, label in (
-        (medians, blue, "median over the 13 machines"),
+        (medians, blue, "median of 13 machines"),
         (worst, orange, "worst single machine"),
     ):
         axes[2].plot(positions[:split], series[:split], "o-", color=color, linewidth=2.0,
@@ -742,10 +720,10 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
         axes[2].axvline(split - 0.5, color=muted, linestyle=":", linewidth=1.0)
         axes[2].annotate("polynomial\n(unbounded)", xy=(split - 0.62, 0.02),
                          xycoords=("data", "axes fraction"), ha="right", va="bottom",
-                         fontsize=8, color=muted)
+                         fontsize=11, color=muted)
         axes[2].annotate("trees\n(bounded)", xy=(split - 0.38, 0.02),
                          xycoords=("data", "axes fraction"), ha="left", va="bottom",
-                         fontsize=8, color=muted)
+                         fontsize=11, color=muted)
     for index, is_bounded in enumerate(bounded):
         if is_bounded:
             axes[2].plot(positions[index], worst[index], "o", markersize=15,
@@ -755,14 +733,14 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     axes[2].set_ylim(min(medians) * 0.6, max(worst) * 3.0)
     axes[2].set_xticks(positions)
     axes[2].set_xticklabels([label for _, label in rungs], rotation=28, ha="right",
-                            fontsize=9, color=ink)
-    axes[2].set_ylabel("RMSLE (log scale)", fontsize=9, color=muted)
+                            fontsize=13, color=ink)
+    axes[2].set_ylabel("RMSLE (log scale)", fontsize=13, color=muted)
     axes[2].set_title(
-        "Flexibility costs the tail, not the median.\nCircled: bounded by Result 4c.",
-        fontsize=11,
+        "The flexibility ladder",
+        fontsize=15,
         color=ink,
     )
-    axes[2].legend(frameon=False, fontsize=9, loc="upper left", labelcolor=muted)
+    axes[2].legend(frameon=False, fontsize=13, loc="upper left", labelcolor=muted)
 
     figure.tight_layout()
     path = RESULTS_DIR / "extrapolation.png"
