@@ -44,7 +44,23 @@ concurrency:
 
 jobs:
   reproduce:
-    runs-on: ubuntu-latest
+    # macOS, because that is the platform results/ was generated on, and the
+    # numbers depend on it. The analyses are deterministic -- every random draw
+    # is seeded, and two consecutive local runs are bit-identical to the
+    # committed values -- but they are only deterministic *per platform*. The
+    # solvers underneath them are not: macOS links Accelerate for LAPACK and the
+    # Linux runners use OpenBLAS, and on identical seeded input matrices the two
+    # disagree. On ubuntu-latest this job reported the Cholesky sweep breaking
+    # down 11 times where the committed run recorded 12, and a fitted slope of
+    # 1.9329 against 1.9190, along with roughly two thousand smaller moves. That
+    # is a different LAPACK, not a failure to reproduce, but the comparator
+    # cannot tell the difference and this job never once passed because of it.
+    #
+    # So it runs where the numbers were made. This narrows what the job claims:
+    # that results/ still follows from the raw data *on the platform it was
+    # generated on*, which is what it was always for. It is not a cross-platform
+    # bit-reproducibility check and never was one -- see docs/testing.md.
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
 
