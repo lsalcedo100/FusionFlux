@@ -182,3 +182,131 @@ def test_the_freshness_check_still_catches_a_genuinely_absent_section(tmp_path: 
     paper.write_text("\\section{Ligatures, quotes and a section never written}\n")
     missing = checker.stale_pdf_sections(paper=paper, pdf=ROOT / "paper" / "paper.pdf")
     assert missing == ["Ligatures, quotes and a section never written"]
+
+
+# ---------------------------------------------------------------------------
+# The provenance claim: the commit the paper says its numbers came from.
+#
+# This is the one statement in the repository that nothing else can check.
+# `test_reported_numbers` ties the prose to `results/`, and the reproduce
+# workflow ties `results/` to the raw data, but the sentence naming the commit
+# those artifacts were produced at is prose, and it went stale exactly the way
+# prose does: it named a commit from before `results/tuned.json` existed while
+# the paper cited that analysis eight times.
+# ---------------------------------------------------------------------------
+
+PAPER_WITH_COMMIT = r"""
+\documentclass{article}
+\begin{document}
+Every number and figure above was produced at commit
+\begin{center}\scriptsize
+\texttt{%s}
+\end{center}
+\end{document}
+"""
+
+
+def _git_repo(tmp_path: Path) -> Path:
+    """A repository with one file under results/, committed."""
+    import subprocess
+
+    root = tmp_path / "repo"
+    (root / "results").mkdir(parents=True)
+    (root / "results" / "analysis.json").write_text('{"value": 1}\n')
+
+    def git(*arguments: str) -> None:
+        subprocess.run(["git", "-C", str(root), *arguments], check=True, capture_output=True)
+
+    git("init", "-q")
+    git("config", "user.email", "test@example.invalid")
+    git("config", "user.name", "Test")
+    git("add", "-A")
+    git("commit", "-qm", "first")
+    return root
+
+
+def _head(root: Path) -> str:
+    import subprocess
+
+    return subprocess.run(
+        ["git", "-C", str(root), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+
+
+def test_the_provenance_check_is_not_in_the_default_rule_set() -> None:
+    """It shells out to git, so `make check` must not depend on it, as with the PDF rule."""
+    problems = checker.check()
+    assert not any("produced at commit" in problem for problem in problems)
+
+
+def test_a_commit_still_current_with_results_is_quiet(tmp_path: Path) -> None:
+    root = _git_repo(tmp_path)
+    paper = tmp_path / "paper.tex"
+    paper.write_text(PAPER_WITH_COMMIT % _head(root))
+    assert checker.stale_provenance_commit(paper=paper, root=root) == []
+
+
+def test_a_commit_that_predates_a_results_change_is_reported(tmp_path: Path) -> None:
+    """The real defect: results/ moved after the commit the paper names."""
+    import subprocess
+
+    root = _git_repo(tmp_path)
+    pinned = _head(root)
+    (root / "results" / "tuned.json").write_text('{"added": "later"}\n')
+    subprocess.run(["git", "-C", str(root), "add", "-A"], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "-C", str(root), "commit", "-qm", "add a result"], check=True, capture_output=True
+    )
+
+    paper = tmp_path / "paper.tex"
+    paper.write_text(PAPER_WITH_COMMIT % pinned)
+    problems = checker.stale_provenance_commit(paper=paper, root=root)
+    assert len(problems) == 1
+    assert "results/tuned.json" in problems[0]
+    assert pinned[:12] in problems[0]
+
+
+def test_a_commit_the_repository_does_not_contain_is_reported(tmp_path: Path) -> None:
+    root = _git_repo(tmp_path)
+    paper = tmp_path / "paper.tex"
+    paper.write_text(PAPER_WITH_COMMIT % ("0" * 40))
+    problems = checker.stale_provenance_commit(paper=paper, root=root)
+    assert len(problems) == 1
+    assert "not in this repository" in problems[0]
+
+
+def test_a_paper_that_pins_no_commit_is_quiet(tmp_path: Path) -> None:
+    paper = tmp_path / "paper.tex"
+    paper.write_text("\\documentclass{article}\\begin{document}No hash.\\end{document}")
+    assert checker.pinned_provenance_commit(paper) is None
+    assert checker.stale_provenance_commit(paper=paper, root=tmp_path) == []
+
+
+def test_a_content_digest_is_not_mistaken_for_a_commit(tmp_path: Path) -> None:
+    """The paper prints SHA-256 digests too; only the 40-character hash is a commit."""
+    paper = tmp_path / "paper.tex"
+    paper.write_text(
+        "\\texttt{67601c2da5c51f90cf6298ff499cccc7}\n"
+        "\\texttt{4d09ac80c2b98c7dde0d8db3ebb9ac5b}\n"
+        "produced at commit \\texttt{" + "a" * 40 + "}\n"
+    )
+    assert checker.pinned_provenance_commit(paper) == "a" * 40
+
+
+def test_a_hash_not_introduced_as_the_provenance_commit_is_ignored(tmp_path: Path) -> None:
+    """Only the hash the claim points at counts, so an unrelated one cannot become it."""
+    paper = tmp_path / "paper.tex"
+    paper.write_text("An unrelated object \\texttt{" + "b" * 40 + "} appears here.\n")
+    assert checker.pinned_provenance_commit(paper) is None
+
+
+def test_the_check_is_quiet_outside_a_git_repository(tmp_path: Path) -> None:
+    """A tarball of the sources is not a defective paper."""
+    paper = tmp_path / "paper.tex"
+    paper.write_text(PAPER_WITH_COMMIT % ("c" * 40))
+    outside = tmp_path / "not-a-repo"
+    outside.mkdir()
+    assert checker.stale_provenance_commit(paper=paper, root=outside) == []
