@@ -1,5 +1,6 @@
 # FusionFlux
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22215142.svg)](https://doi.org/10.5281/zenodo.22215142)
 [![CI](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml/badge.svg)](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml)
 [![Pages](https://github.com/lsalcedo100/FusionFlux/actions/workflows/pages.yml/badge.svg)](https://lsalcedo100.github.io/FusionFlux/)
 [![Python 3.10 - 3.12](https://img.shields.io/badge/python-3.10%20--%203.12-blue.svg)](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml)

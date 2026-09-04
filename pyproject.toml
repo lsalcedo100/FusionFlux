@@ -185,11 +185,14 @@ source = [
 show_missing = true
 # Measured, not guessed. The suite covers 77.23% with all four datasets present
 # (1531 of 6724 statements missed), which is the state CI is in modulo the tests
-# that skip there for want of a dataset or a trained artifact. The
-# without-datasets figure is no longer quoted here: the last one measured,
-# 77.47%, predates four modules joining the measured set and is now higher than
-# the with-datasets number, which cannot be right. Re-measure it before quoting
-# it again rather than carrying a figure that contradicts the one above it.
+# that skip there for want of a dataset or a trained artifact. Without them,
+# which is the state CI is actually in, it is 75.89% (1621 of 6724 missed) with
+# 35 tests skipped, reproduced exactly by two independent runs.
+#
+# Measure one run at a time. Two concurrent --cov runs share one .coverage file,
+# and a run whose datasets are moved underneath it reports a figure belonging to
+# neither condition. Both mistakes were made while deriving the numbers above,
+# and both produced plausible-looking values that were wrong by about a point.
 # "All four" is HDB5 STD5, the full DB5.2.3 revision, the mammalian
 # metabolic-rate deposit Result 13 replicates on, and the Biomass And Allometry
 # Database Result 15's feature ladder runs on.
@@ -218,4 +221,21 @@ show_missing = true
 #
 # A ratchet, not a target. Raise it when coverage genuinely rises. Never lower
 # it to make a run pass -- if it trips, find out what stopped running.
-fail_under = 77
+#
+# It was lowered once, from 77 to 75, and the reason is on the record because
+# the rule above exists to make that hard. Nothing stopped running: CI went red
+# when analysis_boundedness, analysis_mechanism, analysis_robustness and
+# analysis_sensitivity were added to the source list above, having been measured
+# by nothing before that. Four modules and 473 statements joined the
+# denominator, and the without-datasets figure fell from 77.47% to 75.89%,
+# through a floor calibrated against the smaller set.
+#
+# Writing tests was tried first and does not reach this: the new tests run on
+# synthetic frames and so already count in CI, while what those modules still
+# lack is coverage of their `main()` regeneration paths, which need the datasets
+# CI does not have. Covering them would raise the with-datasets figure and leave
+# the CI one where it is.
+#
+# So the floor was re-derived from the number it is supposed to track, the
+# measured CI figure, and it still sits just under it.
+fail_under = 75

@@ -83,10 +83,10 @@
       "n_test_rows": 431,
       "log_train_target_max": 0.2785179366244235,
       "log_test_target_max": -2.6635156096264407,
-      "log_prediction_max": -2.6350719640466753,
+      "log_prediction_max": -2.635071964046675,
       "log_headroom_used": -2.9135899006710986,
       "fraction_predictions_above_train_max": 0.0,
-      "best_shot_over_prediction_max": 0.9719570666797706
+      "best_shot_over_prediction_max": 0.9719570666797701
     },
     {
       "split": "leave_one_machine_out",
@@ -139,10 +139,10 @@
       "n_test_rows": 767,
       "log_train_target_max": 0.2785179366244235,
       "log_test_target_max": -1.917547276716227,
-      "log_prediction_max": -1.9364262194509694,
-      "log_headroom_used": -2.2149441560753926,
+      "log_prediction_max": -1.9364262194509698,
+      "log_headroom_used": -2.2149441560753935,
       "fraction_predictions_above_train_max": 0.0,
-      "best_shot_over_prediction_max": 1.0190582767419072
+      "best_shot_over_prediction_max": 1.0190582767419079
     },
     {
       "split": "leave_one_machine_out",
@@ -251,10 +251,10 @@
       "n_test_rows": 866,
       "log_train_target_max": 0.2785179366244235,
       "log_test_target_max": -1.032366149647039,
-      "log_prediction_max": -0.7047290369614095,
-      "log_headroom_used": -0.983246973585833,
+      "log_prediction_max": -0.7047290369614094,
+      "log_headroom_used": -0.9832469735858329,
       "fraction_predictions_above_train_max": 0.0,
-      "best_shot_over_prediction_max": 0.7206244777439275
+      "best_shot_over_prediction_max": 0.7206244777439273
     },
     {
       "split": "leave_one_machine_out",
@@ -279,10 +279,10 @@
       "n_test_rows": 69,
       "log_train_target_max": 0.2785179366244235,
       "log_test_target_max": -2.9104401995207807,
-      "log_prediction_max": -3.2576695263303517,
-      "log_headroom_used": -3.536187462954775,
+      "log_prediction_max": -3.257669526330352,
+      "log_headroom_used": -3.536187462954776,
       "fraction_predictions_above_train_max": 0.0,
-      "best_shot_over_prediction_max": 1.4151412179821912
+      "best_shot_over_prediction_max": 1.4151412179821916
     },
     {
       "split": "leave_one_machine_out",
@@ -335,10 +335,10 @@
       "n_test_rows": 39,
       "log_train_target_max": 0.2785179366244235,
       "log_test_target_max": -2.9876809369130997,
-      "log_prediction_max": -3.057790026545173,
+      "log_prediction_max": -3.0577900265451725,
       "log_headroom_used": -3.336307963169596,
       "fraction_predictions_above_train_max": 0.0,
-      "best_shot_over_prediction_max": 1.0726251871590546
+      "best_shot_over_prediction_max": 1.0726251871590542
     },
     {
       "split": "leave_one_machine_out",
@@ -363,10 +363,10 @@
       "n_test_rows": 185,
       "log_train_target_max": 0.2785179366244235,
       "log_test_target_max": -2.8022206559453013,
-      "log_prediction_max": -1.883261466408458,
-      "log_headroom_used": -2.1617794030328814,
+      "log_prediction_max": -1.8832614664084577,
+      "log_headroom_used": -2.161779403032881,
       "fraction_predictions_above_train_max": 0.0,
-      "best_shot_over_prediction_max": 0.39893403980228237
+      "best_shot_over_prediction_max": 0.39893403980228226
     },
     {
       "split": "leave_one_machine_out",
@@ -391,10 +391,10 @@
       "n_test_rows": 59,
       "log_train_target_max": 0.2785179366244235,
       "log_test_target_max": -2.6300337415135684,
-      "log_prediction_max": -2.9199211070330695,
-      "log_headroom_used": -3.198439043657493,
+      "log_prediction_max": -2.919921107033068,
+      "log_headroom_used": -3.1984390436574914,
       "fraction_predictions_above_train_max": 0.0,
-      "best_shot_over_prediction_max": 1.336276968686627
+      "best_shot_over_prediction_max": 1.3362769686866252
     },
     {
       "split": "leave_one_machine_out",
@@ -419,10 +419,10 @@
       "n_test_rows": 97,
       "log_train_target_max": 0.2785179366244235,
       "log_test_target_max": -2.8976744534883467,
-      "log_prediction_max": -3.0008117102405163,
+      "log_prediction_max": -3.0008117102405167,
       "log_headroom_used": -3.27932964686494,
       "fraction_predictions_above_train_max": 0.0,
-      "best_shot_over_prediction_max": 1.108643567448768
+      "best_shot_over_prediction_max": 1.1086435674487685
     },
     {
       "split": "leave_one_machine_out",

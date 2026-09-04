@@ -48,6 +48,7 @@ keywords:
   - model selection
 license: MIT
 version: 0.2.2
+doi: 10.5281/zenodo.22215142
 references:
   - type: article
     title: "Chapter 2: Plasma confinement and transport (ITER Physics Basis)"

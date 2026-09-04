@@ -9,7 +9,7 @@ Read [`releasing.md`](releasing.md) step 4 first for why this is the highest-val
 step. Send them **after** the DOI exists and ideally before the arXiv attempt,
 since the endorsement you need for step 3 is a plausible side effect of these.
 
-Before sending, fill in the two placeholders: `<DOI LINK>` and, if you have
+Before sending, fill in the two placeholders: `https://doi.org/10.5281/zenodo.22215142` and, if you have
 posted it, `<ARXIV LINK>`. Delete the arXiv line if you have not.
 
 ---
@@ -50,7 +50,7 @@ from an older paper.
 > and verified on load rather than redistributed, so the numbers are tied to
 > specific bytes:
 >
-> <DOI LINK>
+> https://doi.org/10.5281/zenodo.22215142
 > https://github.com/lsalcedo100/FusionFlux
 >
 > I would be glad of any correction, particularly on the physics.
@@ -92,7 +92,7 @@ for his reply.
 > The work is independent and not affiliated with any laboratory. Everything
 > regenerates from the published OSF file:
 >
-> <DOI LINK>
+> https://doi.org/10.5281/zenodo.22215142
 > https://github.com/lsalcedo100/FusionFlux
 >
 > I would welcome correction, and would be glad to present it if that is useful.
