@@ -52,12 +52,21 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: pyproject.toml
+          cache-dependency-path: |
+            pyproject.toml
+            constraints.txt
 
       - name: Install dependencies
+        # Against the pinned constraints, not a fresh resolve. results/ was
+        # generated in that environment, and the numbers depend on it: an
+        # unconstrained install picked up scikit-learn 1.9 and numpy 2.5, which
+        # moved several thousand values by up to a few percent -- a real change
+        # in the library, reported here as a failure to reproduce the study.
+        # This is the same environment the Dockerfile and the lowest-supported
+        # CI job install, and this job is the one that most needs it.
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e ".[dev]" -c constraints.txt
 
       # Cache the OSF download between runs. The key is the pinned SHA-256, so
       # a change to the pin misses the cache and refetches rather than silently
@@ -96,7 +105,7 @@ jobs:
         # uses a 1e-6 relative tolerance, well inside the precision anything is
         # reported at. Figures are not compared at all, since matplotlib output
         # is not byte-reproducible across versions.
-        run: python3 tools/compare_results.py .reproduce_baseline results
+        run: python3 tools/compare_results.py .reproduce_baseline results --max-report 200
 
       - name: Check the prose against the regenerated artifacts
         run: python -m pytest -q tests/test_reported_numbers.py

@@ -183,41 +183,60 @@ source = [
 
 [tool.coverage.report]
 show_missing = true
-# Measured, not guessed. The suite covers 77.23% with all four datasets present
-# (1531 of 6724 statements missed), which is the state CI is in modulo the tests
-# that skip there for want of a dataset or a trained artifact. Without them,
-# which is the state CI is actually in, it is 75.89% (1621 of 6724 missed) with
-# 35 tests skipped, reproduced exactly by two independent runs.
+precision = 2
+# Measured, not guessed, and measured on the basis the gate actually runs on. CI
+# has none of the four datasets, so the figure that has to clear the floor is the
+# one taken without them: 77.10% (1540 of 6724 statements missed), where 35 tests
+# skip for want of a deposit or a trained artifact. A full checkout with all four
+# present measures 78.17% and skips nothing. Reproduce CI's basis locally by
+# pointing config.DATA_RAW_DIR and config.DATA_PROCESSED_DIR at an empty tree;
+# that reproduction runs about half a point under CI's own figure, so read it as
+# a lower bound on CI rather than as CI.
+#
 #
 # Measure one run at a time. Two concurrent --cov runs share one .coverage file,
 # and a run whose datasets are moved underneath it reports a figure belonging to
-# neither condition. Both mistakes were made while deriving the numbers above,
-# and both produced plausible-looking values that were wrong by about a point.
+# neither condition. Both mistakes were made while deriving an earlier pair of
+# numbers here, and both produced plausible-looking values wrong by about a
+# point, which is more than the margin this floor leaves.
 # "All four" is HDB5 STD5, the full DB5.2.3 revision, the mammalian
 # metabolic-rate deposit Result 13 replicates on, and the Biomass And Allometry
 # Database Result 15's feature ladder runs on.
 #
-# The figure falls whenever a module joins the measured set, because the
-# denominator grows before any test for it exists. It went 78.93 -> 78.29 when
-# Results 14 and 15 arrived, and 78.29 -> 75.67 when analysis_boundedness,
+# Quoting only the with-datasets number is what broke this gate, and how it broke
+# is worth keeping. The figure falls whenever a module joins the measured set,
+# because the denominator grows before any test for it exists: 78.93 -> 78.29
+# when Results 14 and 15 arrived, and 78.29 -> 75.67 when analysis_boundedness,
 # analysis_mechanism, analysis_robustness and analysis_sensitivity were added
-# here, having been absent from this list and from the suite entirely.
+# here, having been absent from this list and from the suite entirely. Tests for
+# those four brought the with-datasets figure back over 77 and the floor was left
+# there -- but CI measures about a point lower than a full checkout, and had been
+# under 77 for several commits by then. It stayed green because coverage.py fails
+# only when the total rounds below the floor at `precision`, which defaults to 0:
+# 76.85% rounded to 77 and passed, 75.89% rounded to 76 and did not. The
+# `precision = 2` above makes the comparison exact, so the floor cannot again sit
+# quietly above the number it governs.
 #
-# That last one broke the floor, and the fix was tests rather than a lower
-# floor: robustness went 35 -> 85% and sensitivity 19 -> 47%, bringing the total
-# to 77.23%. The four sit at 63% together, in line with the other analysis_*.py
-# modules (42-90%), because the ordinary suite exercises their functions rather
-# than their full regeneration paths.
-# Both figures reproduce exactly across clean runs, and no measured module
-# branches on sys.version_info, so the three CI interpreters have nothing to
-# disagree about.
+# The fix was tests rather than a lower floor, as the rule below requires. The
+# three deposit modules had no dataset-free tests at all, so the download,
+# pin-check and parsing paths behind Results 11, 13 and 15 ran unmeasured on CI:
+# allometry 55 -> 100%, tree_allometry 60 -> 100%, replication 48 -> 100%, from
+# tests/test_dataset_provenance.py, which synthesises each deposit rather than
+# needing it.
 #
-# The floor is therefore set just under the CI figure rather than well under
-# it. Its job is to catch a test file or module falling out of the suite, and
-# the tighter it sits the smaller the regression it catches. The headroom that
-# would buy stability is not needed: the only time this metric moved by more
-# than a point, the cause was another process editing the working tree
-# mid-run, which is not a condition CI is ever in.
+# The four analysis modules still sit at 63% together, in line with the other
+# analysis_*.py modules (42-90%), because the ordinary suite exercises their
+# functions rather than their full regeneration paths, and `reproduce` covers
+# the rest. Both figures reproduce exactly across clean runs, and no measured
+# module branches on sys.version_info, so the three CI interpreters have nothing
+# to disagree about.
+#
+# The floor is therefore set just under the figure CI can reach rather than well
+# under it. Its job is to catch a test file or module falling out of the suite,
+# and the tighter it sits the smaller the regression it catches. It stays at 77
+# rather than ratcheting up to the new figure because the new figure has not been
+# measured on CI yet: raise it once a run reports one, which is the discipline
+# that was missing when it was last set from a local number.
 #
 # A ratchet, not a target. Raise it when coverage genuinely rises. Never lower
 # it to make a run pass -- if it trips, find out what stopped running.

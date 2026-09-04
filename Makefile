@@ -50,6 +50,7 @@ results:
 	python3 analysis_robustness.py
 	python3 analysis_sensitivity.py
 	python3 analysis_mechanism.py
+	python3 analysis_tuned.py
 	python3 analysis_flexibility_sweep.py
 	python3 analysis_size_extrapolation.py
 	python3 analysis_hybrid.py
