@@ -7,7 +7,7 @@ A scaling law is a power law fitted across the systems you have already built, u
 This package is the audit, with nothing domain-specific in it. Three independent pieces; use whichever applies.
 
 ```bash
-pip install scaling-audit          # once released; see Provenance below
+pip install scaling-audit
 ```
 
 ## The problem it exists for
@@ -133,8 +133,5 @@ So the reversal is the *warning light*, not the disease. It is what makes a flex
 ## Provenance
 
 Extracted from [FusionFlux](https://github.com/lsalcedo100/FusionFlux), a study of confinement scaling on the ITPA database, where it is the module deliberately containing no plasma physics. The repository runs its own analyses through this exact file rather than a copy, so "domain-agnostic" is tested rather than asserted. Every number quoted above regenerates from raw, SHA-256-pinned data.
-
-This package is not on PyPI yet. Until it is, use it from a checkout of the repository, where
-`scaling_audit.py` sits at the root and imports nothing else in the project.
 
 MIT licensed.

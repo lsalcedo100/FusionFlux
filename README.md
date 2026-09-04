@@ -4,6 +4,8 @@
 [![Pages](https://github.com/lsalcedo100/FusionFlux/actions/workflows/pages.yml/badge.svg)](https://lsalcedo100.github.io/FusionFlux/)
 [![Python 3.10 - 3.12](https://img.shields.io/badge/python-3.10%20--%203.12-blue.svg)](https://github.com/lsalcedo100/FusionFlux/actions/workflows/ci.yml)
 [![Reproduce](https://github.com/lsalcedo100/FusionFlux/actions/workflows/reproduce.yml/badge.svg)](https://github.com/lsalcedo100/FusionFlux/actions/workflows/reproduce.yml)
+[![PyPI: fusionflux](https://img.shields.io/pypi/v/fusionflux.svg?label=pypi%3A%20fusionflux)](https://pypi.org/project/fusionflux/)
+[![PyPI: scaling-audit](https://img.shields.io/pypi/v/scaling-audit.svg?label=pypi%3A%20scaling-audit)](https://pypi.org/project/scaling-audit/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
 [![data: ITPA HDB5 STD5](https://img.shields.io/badge/data-ITPA%20HDB5%20STD5-8a3ffc.svg)](https://osf.io/drwcq)
 
@@ -342,7 +344,7 @@ The real-data confinement study is the whole of the argument above:
 
 One module is deliberately not about tokamaks:
 
-- `scaling_audit.py` packages the method rather than the result, for anyone with a different dataset. [`scaling-audit/`](scaling-audit/) packages it for PyPI as a standalone distribution, built from this exact file rather than a vendored copy, so the three domains below all run through the code the package would ship. It is not published yet; the release workflow and the checks that gate it are in place, see [docs/releasing.md](docs/releasing.md). It provides `audit_groups` (leave-one-group-out scored *alongside* the extrapolation distance and the training-range bound that explain the score), `OrderedGroupSplit` (a scikit-learn splitter that trains on one end of an ordering and predicts the far end), and `ConstrainedLinearRegression` (equality-constrained least squares, so a dimensional-analysis constraint is a constructor argument). It imports nothing else in this repository, and `tests/test_scaling_audit.py` exercises it on a synthetic allometric problem with no plasma physics in it, where **the same reversal appears**: the flexible model wins within groups and loses on an unseen one, for the same structural reason.
+- `scaling_audit.py` packages the method rather than the result, for anyone with a different dataset. It is published as [`scaling-audit`](https://pypi.org/project/scaling-audit/) (`pip install scaling-audit`), built from this exact file rather than a vendored copy, so the three domains below all run through the code the package ships. It provides `audit_groups` (leave-one-group-out scored *alongside* the extrapolation distance and the training-range bound that explain the score), `OrderedGroupSplit` (a scikit-learn splitter that trains on one end of an ordering and predicts the far end), and `ConstrainedLinearRegression` (equality-constrained least squares, so a dimensional-analysis constraint is a constructor argument). It imports nothing else in this repository, and `tests/test_scaling_audit.py` exercises it on a synthetic allometric problem with no plasma physics in it, where **the same reversal appears**: the flexible model wins within groups and loses on an unseen one, for the same structural reason.
 
 ## Infrastructure: the Neutron-Yield Pipeline
 

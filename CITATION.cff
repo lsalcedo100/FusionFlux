@@ -47,7 +47,7 @@ keywords:
   - allometry
   - model selection
 license: MIT
-version: 0.2.1
+version: 0.2.2
 references:
   - type: article
     title: "Chapter 2: Plasma confinement and transport (ITER Physics Basis)"
