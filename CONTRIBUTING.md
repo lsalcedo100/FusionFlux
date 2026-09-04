@@ -52,7 +52,7 @@ Without them 35 tests skip rather than fail. If you would rather not install any
 ## What to expect from a change
 
 - **Lint and types are not optional.** `ruff check .` and `mypy .` are clean and CI enforces both.
-- **Coverage is a ratchet.** `fail_under` in `pyproject.toml` sits just under the measured figure. Raise it when coverage genuinely rises; never lower it to make a run pass. If it trips, find out what stopped running.
+- **Coverage is a ratchet.** `fail_under` in `pyproject.toml` sits just under the figure CI measures, which is the one taken without any of the four datasets and about a point below what a full checkout reports. Measure that basis before you touch the floor. Raise it when coverage genuinely rises; never lower it to make a run pass. If it trips, find out what stopped running.
 - **A new result needs its own module, artifacts, tests and limitations section.** See `docs/repository.md` for how the existing ones are laid out. The "What Result N does not show" sections are load-bearing: a result without one reads as overclaiming.
 - **Comments explain why, not what.** The surrounding code is unusually heavily commented because most of the decisions in it are non-obvious and several were wrong once. Matching that is more useful than matching a line length.
 
