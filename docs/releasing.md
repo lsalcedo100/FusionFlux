@@ -18,7 +18,8 @@ make check        # ruff, mypy, pytest
 make dist         # build the wheel and install it into a clean venv, then predict
 make reproduce    # regenerate results/ from the raw data and diff numerically
 make arxiv        # builds build/arxiv-submission.tar.gz and runs the submission gate
-make paper-fresh  # is paper/paper.pdf built from the current paper.tex?
+make paper-fresh  # is the PDF built from the current paper.tex, and does
+                  # the commit the paper names still match results/?
 ```
 
 `make paper-fresh` is the one that is easy to skip and expensive to get wrong.
@@ -38,6 +39,23 @@ Twice, because the cross-references and the table of contents need a second
 pass. Then `make paper-fresh` again, and `make check`, since
 `tests/test_reported_numbers.py` reads the PDF back and checks the numbers in it
 against `results/`.
+
+The same target's second question is the provenance commit. The paper names the
+commit its numbers were produced at, and that sentence is the join between the
+prose and a point in history: `tests/test_reported_numbers.py` ties the prose to
+`results/`, the reproduce workflow ties `results/` to the raw data, and nothing
+checked the hash. It went stale exactly the way an unchecked sentence does,
+naming a commit from before `results/tuned.json` existed while the paper cited
+that analysis eight times. Repoint it with:
+
+```bash
+git log -1 --format=%H -- results/
+```
+
+and commit the paper after the artifacts, never before. Note that this also has
+to hold for whatever gets archived: a DOI minted from a tag that predates the
+analyses the paper describes points readers at an artifact that cannot contain
+them.
 
 `make reproduce` needs all four datasets and takes roughly half an hour now that
 Results 14 and 15 are in it. It is

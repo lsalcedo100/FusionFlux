@@ -18,8 +18,9 @@ and the problem appears at upload time or, worse, in a permanent record.
 * **A placeholder author line**, which is cheap to check and permanent to get
   wrong.
 
-A fifth check is opt-in, because it is the only one that can fail for a reason
-a contributor cannot fix without a LaTeX toolchain installed:
+Two further checks are opt-in, because each can fail for a reason a contributor
+cannot fix from a plain checkout -- one needs a LaTeX toolchain, the other needs
+the git history:
 
 * **A stale committed PDF.** `paper/paper.pdf` is committed rather than built on
   demand, so it goes out of date the moment `paper.tex` gains a section and is
@@ -30,13 +31,24 @@ a contributor cannot fix without a LaTeX toolchain installed:
   green on a machine with no `pdflatex`, and the release path is where this
   actually matters.
 
+* **A stale provenance commit.** The paper names the commit its numbers were
+  produced at. Nothing else can check that sentence: `tests/test_reported_numbers.py`
+  ties the prose to `results/` and the reproduce workflow ties `results/` to the
+  raw data, but the hash joining them to a point in history is prose.
+  `--check-provenance` reports when `results/` has moved since the commit named.
+  It went stale exactly once, naming a commit from before `results/tuned.json`
+  existed while the paper cited that analysis eight times, which a referee
+  checking the hash would have found first.
+
 Run standalone (`python3 tools/check_paper_submission.py`) or via `make arxiv`,
-which refuses to build the tarball if anything here fails.
+which refuses to build the tarball if anything here fails. `make paper-fresh`
+runs both opt-in checks and is the release gate.
 """
 
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -177,6 +189,72 @@ def stale_pdf_sections(paper: Path = PAPER, pdf: Path = PDF) -> list[str]:
     return missing
 
 
+def pinned_provenance_commit(paper: Path = PAPER) -> str | None:
+    """The commit the paper claims its numbers were produced at, if it names one.
+
+    Git hashes are 40 hex characters and the content digests printed elsewhere in
+    the paper are SHA-256 split across two 32-character lines, so the width alone
+    separates them. The phrase is required as well, so that adding some other
+    40-character hash to the paper later cannot silently become the thing this
+    check enforces.
+    """
+    latex = _strip_comments(paper.read_text())
+    match = re.search(r"produced at commit(.{0,200}?)\b([0-9a-f]{40})\b", latex, re.S)
+    return match.group(2) if match else None
+
+
+def stale_provenance_commit(paper: Path = PAPER, root: Path = ROOT) -> list[str]:
+    """Whether `results/` has moved since the commit the paper pins.
+
+    The paper states that every number in it was produced at one commit. That is
+    the study's provenance claim, and it is the only claim in this repository
+    that nothing checks: `tests/test_reported_numbers.py` ties the prose to
+    `results/`, and the reproduce workflow ties `results/` to the raw data, but
+    the sentence naming the commit those artifacts came from is unverified prose.
+    It went stale exactly that way once, naming a commit from before
+    `results/tuned.json` existed while the paper cited the tuned analysis eight
+    times, which a referee checking the hash would have found before we did.
+
+    Quiet when the question cannot be answered rather than guessed at: no pinned
+    commit, no git, or a repository that does not contain the commit under a
+    shallow clone all return no problems, the same way `stale_pdf_sections` stays
+    quiet without `pypdf`. A wrong answer here is worse than no answer.
+    """
+    pinned = pinned_provenance_commit(paper)
+    if pinned is None:
+        return []
+
+    def _git(*arguments: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(root), *arguments],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+    if _git("rev-parse", "--git-dir").returncode != 0:
+        return []
+    if _git("cat-file", "-e", f"{pinned}^{{commit}}").returncode != 0:
+        return [
+            f"the paper says its numbers were produced at commit {pinned[:12]}, "
+            "which is not in this repository"
+        ]
+
+    changed = _git("diff", "--name-only", pinned, "HEAD", "--", "results/")
+    if changed.returncode != 0:
+        return []
+    moved = [line for line in changed.stdout.splitlines() if line.strip()]
+    if not moved:
+        return []
+    listed = ", ".join(moved[:6]) + (f", and {len(moved) - 6} more" if len(moved) > 6 else "")
+    return [
+        f"the paper says its numbers were produced at commit {pinned[:12]}, but "
+        f"{len(moved)} file(s) under results/ have changed since then ({listed}). "
+        "Repoint it at the commit those artifacts actually come from, which is "
+        "`git log -1 --format=%H -- results/`."
+    ]
+
+
 def main(argv: list[str] | None = None) -> int:
     arguments = sys.argv[1:] if argv is None else argv
     problems = check()
@@ -191,6 +269,9 @@ def main(argv: list[str] | None = None) -> int:
                 "`make arxiv && cd build/arxiv && pdflatex paper.tex && pdflatex paper.tex` "
                 "and copy the result over paper/paper.pdf."
             )
+
+    if "--check-provenance" in arguments:
+        problems.extend(stale_provenance_commit())
 
     if problems:
         print(f"{PAPER.relative_to(ROOT)} is not ready to submit:", file=sys.stderr)

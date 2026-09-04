@@ -152,11 +152,16 @@ dist:
 	@echo
 	@echo "wrote dist/. Push a matching vX.Y.Z tag to publish; see docs/releasing.md."
 
-# Is the committed PDF built from the current paper.tex?
+# Is the committed paper telling the truth about itself?
+#
+# Two questions, both of which only matter on the way out and neither of which
+# `make check` can answer. Is the committed PDF built from the current
+# paper.tex? And does the commit the paper names as the provenance of its
+# numbers still hold, or has results/ moved since?
 #
 # Deliberately not folded into `arxiv`, which is the target you run to *get* the
 # tarball the PDF is rebuilt from: gating that on the PDF being current would
 # block the only supported way of making it current. This is the release gate,
 # and `docs/releasing.md` runs it in pre-flight.
 paper-fresh:
-	python3 tools/check_paper_submission.py --check-pdf-fresh
+	python3 tools/check_paper_submission.py --check-pdf-fresh --check-provenance
