@@ -161,6 +161,7 @@ source = [
     "analysis_size_extrapolation",
     "analysis_summary_figure",
     "analysis_tree_allometry",
+    "analysis_tuned",
     "config",
     "conformal_shift",
     "dimensional",
@@ -186,9 +187,9 @@ show_missing = true
 precision = 2
 # Measured, not guessed, and measured on the basis the gate runs on. CI has none
 # of the four datasets, so the figure that has to clear the floor is the one
-# taken without them: 77.62% (1505 of 6724 statements missed), where 36 tests
+# taken without them: 77.83% (1512 of 6820 statements missed), where 36 tests
 # skip for want of a deposit or a trained artifact. A full checkout measures
-# 78.17% and skips nothing. Both are CI-confirmed on this tree.
+# 78.37% and skips nothing.
 #
 # "All four" is HDB5 STD5, the full DB5.2.3 revision, the mammalian
 # metabolic-rate deposit Result 13 replicates on, and the Biomass And Allometry
@@ -202,11 +203,17 @@ precision = 2
 # plausible-looking figure wrong by about a point, which is more than the margin
 # this floor leaves.
 #
-# The figure falls whenever a module joins the measured set, because the
-# denominator grows before any test for it exists. It went 78.93 -> 78.29 when
-# Results 14 and 15 arrived, and 78.29 -> 75.89 when analysis_boundedness,
-# analysis_mechanism, analysis_robustness and analysis_sensitivity were added
-# here, having been absent from this list and from the suite entirely.
+# The figure falls whenever a module joins the measured set *without* tests,
+# because the denominator grows before any test for it exists. It went
+# 78.93 -> 78.29 when Results 14 and 15 arrived, and 78.29 -> 75.89 when
+# analysis_boundedness, analysis_mechanism, analysis_robustness and
+# analysis_sensitivity were added here, having been absent from this list and
+# from the suite entirely.
+#
+# It is the "without tests" that does it, not the joining. analysis_tuned came
+# in the other way round -- tests/test_tuned.py first, then the entry here -- and
+# the total rose from 77.62% to 77.83% even though 96 statements joined the
+# denominator. A module lands here with its tests or it does not land here.
 #
 # That took the floor with it, and the way back is on the record because the
 # rule below exists to make lowering it hard. It was lowered to 75 on the
@@ -219,11 +226,15 @@ precision = 2
 # carry Results 13, 15 and 11. Reaching those needs no deposit, only a synthetic
 # one shaped like it. tests/test_dataset_provenance.py does that and takes them
 # from 55%, 60% and 48% to 100%: 116 statements, and the CI figure from 75.89%
-# to 77.62%. So the floor is back at 77.
+# to 77.62%. So the floor came back off 75, and analysis_tuned then took it to
+# 77.83%, which is what puts it at 77.5.
 #
 # The four analysis modules still sit at 63% together, in line with the other
-# analysis_*.py modules (42-90%), because the ordinary suite exercises their
+# analysis_*.py modules (42-93%), because the ordinary suite exercises their
 # functions rather than their full regeneration paths; `reproduce` covers those.
+# analysis_tuned is the exception at 93%, because its orchestration is reachable
+# on a synthetic dataset with the estimator factory patched small, and only its
+# main() is left.
 # No measured module branches on sys.version_info, so the three CI interpreters
 # have nothing to disagree about, and all three report the same total.
 #
@@ -241,4 +252,4 @@ precision = 2
 # to make a run pass -- if it trips, find out what stopped running, and check
 # whether something is simply untested before concluding that tests cannot reach
 # it.
-fail_under = 77
+fail_under = 77.5
