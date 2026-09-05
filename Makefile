@@ -79,6 +79,12 @@ page:
 # and the gate gets ignored. tools/compare_results.py compares to a relative
 # tolerance of 1e-6 instead: looser than the jitter, far tighter than the four
 # significant figures anything is reported at.
+#
+# A short list of paths is exempt from even that, because a change of LAPACK
+# moves them by far more than 1e-6 without the study having changed. They are
+# named one at a time, with the reason, in tools/compare_results.py. Expect this
+# target to be clean on the machine results/ was generated on and noisy on any
+# other; see docs/testing.md for what the gate does and does not claim.
 reproduce:
 	@rm -rf .reproduce_baseline && mkdir -p .reproduce_baseline
 	@cp results/*.json results/*.csv .reproduce_baseline/

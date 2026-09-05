@@ -122,3 +122,127 @@ def test_csv_row_count_change_is_caught(pair: tuple[Path, Path]) -> None:
     pd.DataFrame({"model": ["a", "b"]}).to_csv(left / "f.csv", index=False)
     pd.DataFrame({"model": ["a"]}).to_csv(right / "f.csv", index=False)
     assert any("rows" in d for d in compare_directories(left, right))
+
+
+# ---------------------------------------------------------------------------
+# The non-portable paths.
+#
+# These exist because results/ was generated on macOS and a Linux runner links
+# a different LAPACK, so a handful of values move by far more than REL_TOL
+# without anything about the study having changed. An exclusion list is a hole
+# in the gate by construction, so what is pinned here is its edges: that it
+# covers what it claims to, and that it covers nothing else. The second half
+# matters more. A list that quietly swallowed a neighbouring field would make
+# the gate report success over a real change, which is the failure this whole
+# module exists to prevent.
+# ---------------------------------------------------------------------------
+
+
+def test_the_conditioning_sweeps_measurements_are_excluded(pair: tuple[Path, Path]) -> None:
+    """Result 2c measures where float64 breaks down, so it moves with the LAPACK."""
+    left, right = pair
+    _write(left, "analysis.json", {"solver_conditioning": {"curves": [
+        {"median_errors": [1e-11, 0.002], "n_failures": [0, 12], "fitted_slope": 1.9190}]}})
+    _write(right, "analysis.json", {"solver_conditioning": {"curves": [
+        {"median_errors": [3e-11, 0.004], "n_failures": [0, 11], "fitted_slope": 1.9329}]}})
+    assert compare_directories(left, right) == []
+
+
+def test_the_design_behind_the_sweep_is_still_compared(pair: tuple[Path, Path]) -> None:
+    """Only the measurements are unportable. The inputs that produced them are not.
+
+    Without this, the entry above would be excusing the whole analysis, and a
+    sweep that silently started measuring a different matrix would pass.
+    """
+    left, right = pair
+    _write(left, "analysis.json", {"solver_conditioning": {
+        "n_trials": 40, "curves": [{"solver": "cholesky", "condition_numbers": [1e1, 1e4]}]}})
+    _write(right, "analysis.json", {"solver_conditioning": {
+        "n_trials": 25, "curves": [{"solver": "cholesky", "condition_numbers": [1e1, 1e6]}]}})
+    problems = compare_directories(left, right)
+    assert any("n_trials" in p for p in problems), problems
+    assert any("condition_numbers" in p for p in problems), problems
+
+
+def test_the_exclusion_is_by_path_and_not_by_name(pair: tuple[Path, Path]) -> None:
+    """``median_errors`` is excused under the sweep and nowhere else."""
+    left, right = pair
+    _write(left, "conformal.json", {"median_errors": [1e-11]})
+    _write(right, "conformal.json", {"median_errors": [3e-11]})
+    assert any("median_errors" in p for p in compare_directories(left, right))
+
+
+def test_the_sweeps_csv_columns_are_excluded_but_its_grid_is_not(pair: tuple[Path, Path]) -> None:
+    """The forward error and the breakdown flag move; the grid they were measured on does not."""
+    left, right = pair
+    pd.DataFrame({"solver": ["cholesky"], "condition_number": [1e9],
+                  "relative_forward_error": [1.04], "failed": [True]}).to_csv(
+        left / "solver_conditioning.csv", index=False)
+    pd.DataFrame({"solver": ["cholesky"], "condition_number": [1e9],
+                  "relative_forward_error": [1.48], "failed": [False]}).to_csv(
+        right / "solver_conditioning.csv", index=False)
+    assert compare_directories(left, right) == []
+
+    pd.DataFrame({"solver": ["cholesky"], "condition_number": [1e10],
+                  "relative_forward_error": [1.48], "failed": [False]}).to_csv(
+        right / "solver_conditioning.csv", index=False)
+    assert any("condition_number" in p for p in compare_directories(left, right))
+
+
+def test_a_key_appearing_under_an_excluded_path_is_also_excluded(pair: tuple[Path, Path]) -> None:
+    """Otherwise the walk reports it as added without ever descending into it."""
+    left, right = pair
+    _write(left, "analysis.json", {"solver_conditioning": {"curves": [{"median_errors": [1.0]}]}})
+    _write(right, "analysis.json", {"solver_conditioning": {"curves": [{}]}})
+    assert compare_directories(left, right) == []
+
+
+def test_the_rank_audit_alignments_are_excluded_but_the_rank_is_not(pair: tuple[Path, Path]) -> None:
+    """Result 1 reports the rank, which is an integer. The alignments are a basis choice."""
+    left, right = pair
+    _write(left, "analysis.json", {"rank_audit": {
+        "rank": 8, "rank_deficiency": 2,
+        "max_alignment_with_a_printed_basis_vector": {"a = eps * R": 0.9958}}})
+    _write(right, "analysis.json", {"rank_audit": {
+        "rank": 8, "rank_deficiency": 2,
+        "max_alignment_with_a_printed_basis_vector": {"a = eps * R": 0.9991}}})
+    assert compare_directories(left, right) == []
+
+    _write(right, "analysis.json", {"rank_audit": {
+        "rank": 7, "rank_deficiency": 2,
+        "max_alignment_with_a_printed_basis_vector": {"a = eps * R": 0.9991}}})
+    assert any("rank" in p for p in compare_directories(left, right))
+
+
+def test_the_forecast_digest_is_excluded_only_in_the_forecast(pair: tuple[Path, Path]) -> None:
+    """It hashes float64 at full precision, so it moves on the jitter REL_TOL absorbs."""
+    left, right = pair
+    _write(left, "forecast.json", {"content_digest_sha256": "960d537e"})
+    _write(right, "forecast.json", {"content_digest_sha256": "611d63ab"})
+    assert compare_directories(left, right) == []
+
+    _write(left, "predictor.json", {"content_digest_sha256": "960d537e"})
+    _write(right, "predictor.json", {"content_digest_sha256": "611d63ab"})
+    assert any("predictor" in p for p in compare_directories(left, right))
+
+
+def test_the_odr_exponents_are_loosened_rather_than_dropped(pair: tuple[Path, Path]) -> None:
+    """An iterative fit lands slightly differently; a changed exponent must still fail."""
+    left, right = pair
+    _write(left, "sensitivity.json", {"errors_in_variables": {
+        "odr_exponents": {"m_eff_amu": -0.13380692886953827}}})
+    _write(right, "sensitivity.json", {"errors_in_variables": {
+        "odr_exponents": {"m_eff_amu": -0.1338074193068061}}})
+    assert compare_directories(left, right) == []
+
+    _write(right, "sensitivity.json", {"errors_in_variables": {
+        "odr_exponents": {"m_eff_amu": -0.1341}}})
+    assert any("m_eff_amu" in p for p in compare_directories(left, right))
+
+
+def test_the_shift_the_paper_quotes_keeps_the_full_tolerance(pair: tuple[Path, Path]) -> None:
+    """max_abs_exponent_shift is derived from the exponents but is reported, so it stays tight."""
+    left, right = pair
+    _write(left, "sensitivity.json", {"errors_in_variables": {"max_abs_exponent_shift": 5.606}})
+    _write(right, "sensitivity.json", {"errors_in_variables": {"max_abs_exponent_shift": 5.6061}})
+    assert any("max_abs_exponent_shift" in p for p in compare_directories(left, right))
