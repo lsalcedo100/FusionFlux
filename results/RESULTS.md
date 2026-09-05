@@ -746,6 +746,47 @@ weak direction from Result 3 specifically -- would behave the same way. The
 claim supported here is narrower than "flexibility is bad": it is that adding
 unconstrained polynomial freedom, at any isotropic shrinkage, costs the tail.
 
+### Result 4f: tuning the flexible models, and what it does not fix
+
+Every score above uses library defaults, which invites the reading that the
+ensembles lost because nobody tried to make them win. So tune them, with the
+grid search nested inside each training fold: three grouped inner folds over the
+training rows only, so the held-out fold, machine or size cut never takes part
+in choosing a hyperparameter. The forest searched `max_features` over
+`{1.0, 0.5, sqrt}` and `min_samples_leaf` over `{1, 5}`, the booster
+`learning_rate` over `{0.05, 0.1}` and `max_leaf_nodes` over `{15, 31}`.
+
+The inner folds group two ways, and both are reported because they answer
+different questions. Grouping by discharge is how a practitioner would
+ordinarily tune. Grouping by whole machine matches the way the model is
+deployed, on a device the search has never seen.
+
+| model | CV | LOMO, inner by discharge | LOMO, inner by machine | ITER-size-matched cut |
+|---|---|---|---|---|
+| random forest, defaults | 0.128 | 0.465 | | 0.938 |
+| random forest, tuned | **0.126** | **0.403** | **0.376** | 1.121 |
+| gradient booster, defaults | 0.130 | 0.359 | | 1.072 |
+| gradient booster, tuned | 0.130 | 0.359 | **0.350** | 1.072 |
+| refitted power law, blind | 0.181 | **0.214** | | 0.278 |
+
+The search does real work on the forest. It moved off the default in 13 of the
+19 folds, and it helps where a flexible model should help: cross-validation
+improves from 0.128 to 0.126 and the leave-one-machine-out mean from 0.465 to
+0.403. At the ITER-size-matched cut it makes the forest *worse*, 0.938 to
+1.121, against the power law's 0.278. The booster's search returned
+scikit-learn's defaults in all 19 folds, so its numbers are unchanged.
+
+Tuning the inner folds by machine helps both models again, the forest to 0.376
+and the booster to 0.350, and both stay well above the power law's 0.214. The
+reversal therefore survives either selection procedure, which is the stronger
+statement: it is not an artifact of tuning a deployment problem as though it
+were an interpolation problem.
+
+Tuning widens the interpolation margin that later inverts and does not repair
+the extrapolation failure. That is what the Result 4c bound predicts: no
+setting of these hyperparameters moves a ceiling that comes from averaging
+training targets.
+
 ---
 
 ## Result 5: the same jump ITER asks for, measured inside the database
