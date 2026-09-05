@@ -48,7 +48,12 @@ import pandas as pd
 import gp
 import hdb5
 from analysis_extrapolation import spearman
-from figures import save_figure
+from figures import (
+    FONT_ANNOTATION,
+    FONT_SMALL,
+    PAPER_WIDTH_IN,
+    save_figure,
+)
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -335,7 +340,7 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
     except ImportError:  # pragma: no cover - figure is optional
         return None
 
-    figure, (left, right) = plt.subplots(1, 2, figsize=(12.5, 5.0))
+    figure, (top, bottom) = plt.subplots(2, 1, figsize=(PAPER_WIDTH_IN, 6.2))
 
     loo = _rmsle_by_model(study.leave_one_out)
     cut = _rmsle_by_model(study.iter_cut)
@@ -354,7 +359,7 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
             continue
         values = [float(loo[model]), float(cut[model])]
         style = "--" if model in ("random_forest", "hist_gradient_boosting") else "-"
-        left.plot(
+        top.plot(
             positions,
             values,
             style,
@@ -364,28 +369,36 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
             linewidth=2.0 if model.startswith("gp_") else 1.2,
             alpha=1.0 if model.startswith("gp_") else 0.65,
         )
-        left.annotate(
+        top.annotate(
             f"{values[1]:.3f}",
             (positions[1], values[1]),
             textcoords="offset points",
             xytext=(7, -3),
-            fontsize=13,
+            fontsize=FONT_ANNOTATION,
             color=colour,
         )
-    left.set_xticks(positions)
-    left.set_xticklabels(["held-out machine", "ITER-size-matched size cut"])
-    left.set_yscale("log")
-    left.set_ylabel("log-RMSE (log scale)")
-    left.set_title("One model family, three kernels")
-    left.grid(alpha=0.15)
-    left.legend(fontsize=11, loc="upper left")
+    top.set_xticks(positions)
+    top.set_xticklabels(["held-out machine", "ITER-size-matched cut"])
+    top.set_yscale("log")
+    top.set_ylabel("log-RMSE (log scale)")
+    top.set_title("One model family, three kernels")
+    top.grid(alpha=0.15)
+    top.legend(fontsize=FONT_SMALL, loc="upper left")
 
     spread = study.reversion.set_index("model_name")
+    # Two of the three kernels land almost on top of each other, so labels
+    # alternate above and below their marker by rank in predicted spread.
+    ranked = [
+        model
+        for model in spread.sort_values("predicted_spread", ascending=False).index
+        if model in palette
+    ]
+    spread_order = {model: i for i, model in enumerate(ranked)}
     for model, (colour, marker, label) in palette.items():
         if model not in spread.index:
             continue
         row = spread.loc[model]
-        right.scatter(
+        bottom.scatter(
             float(row["actual_spread"]),
             float(row["predicted_spread"]),
             color=colour,
@@ -394,30 +407,31 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
             label=label,
             zorder=3,
         )
-        right.annotate(
+        bottom.annotate(
             label,
             (float(row["actual_spread"]), float(row["predicted_spread"])),
             textcoords="offset points",
-            xytext=(8, 4),
-            fontsize=11,
+            xytext=(-10, 8 if spread_order.get(model, 0) % 2 == 0 else -15),
+            ha="right",
+            fontsize=FONT_SMALL,
             color=colour,
         )
     if not spread.empty:
         limit = float(spread["actual_spread"].max()) * 1.15
-        right.plot([0, limit], [0, limit], color="#444444", linewidth=1.0, linestyle=":")
-        right.annotate(
+        bottom.plot([0, limit], [0, limit], color="#444444", linewidth=1.0, linestyle=":")
+        bottom.annotate(
             "predictions as spread as the truth",
-            (limit * 0.55, limit * 0.58),
-            fontsize=11,
+            (limit * 0.30, limit * 0.33),
+            fontsize=FONT_SMALL,
             color="#444444",
             rotation=38,
         )
-        right.set_xlim(0, limit)
-        right.set_ylim(0, limit)
-    right.set_xlabel("spread of the truth, held-out rows (std of log tau)")
-    right.set_ylabel("spread of the predictions")
-    right.set_title("Spread of predictions against spread of truth")
-    right.grid(alpha=0.15)
+        bottom.set_xlim(0, limit)
+        bottom.set_ylim(0, limit)
+    bottom.set_xlabel("spread of the truth, held-out rows (std of log tau)")
+    bottom.set_ylabel("spread of the predictions")
+    bottom.set_title("Spread of predictions against spread of truth")
+    bottom.grid(alpha=0.15)
 
     figure.tight_layout()
     path = RESULTS_DIR / "gp.png"

@@ -4,7 +4,7 @@ Run ``python3 analysis_conformal_shift.py`` to regenerate everything under
 ``results/`` for Result 10.
 
 Result 7 ends on a diagnosis: nominal 90% intervals cover 90% under grouped CV,
-35% on an unseen machine and 3% across the ITER-size-matched size cut, at essentially
+35% on an unseen machine and 3% across the ITER-size-matched cut, at essentially
 unchanged width. The reading offered there is that this is not a defect in
 conformal prediction but an assumption being false, measured. That reading makes
 a prediction, and this script is the test of it.
@@ -297,7 +297,7 @@ def main() -> None:
     frame = pd.DataFrame([row.to_json() for row in analysis.repairs])
     for arm, coverage_column, width_column in (
         ("held-out machine", "lomo_coverage", "lomo_interval_factor"),
-        ("ITER-size-matched size cut", "size_cut_coverage", "size_cut_interval_factor"),
+        ("ITER-size-matched cut", "size_cut_coverage", "size_cut_interval_factor"),
     ):
         print(f"\n  {arm}")
         print(f"  {'model':<28}", end="")

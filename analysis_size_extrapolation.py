@@ -39,7 +39,16 @@ import numpy as np
 import pandas as pd
 
 import hdb5
-from figures import save_figure
+from figures import (
+    FONT_ANNOTATION,
+    FONT_LABEL,
+    FONT_LEGEND,
+    FONT_SMALL,
+    FONT_TICK,
+    FONT_TITLE,
+    PAPER_WIDTH_IN,
+    save_figure,
+)
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -388,7 +397,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
     }
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    figure, axes = plt.subplots(1, 2, figsize=(13.5, 5.4), gridspec_kw={"width_ratios": [1.0, 1.15]})
+    figure, axes = plt.subplots(2, 1, figsize=(PAPER_WIDTH_IN, 6.4), gridspec_kw={"height_ratios": [1.0, 1.15]})
     for axis in axes:
         axis.grid(alpha=0.25, linewidth=0.6)
         axis.set_axisbelow(True)
@@ -397,7 +406,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
         for side in ("left", "bottom"):
             axis.spines[side].set_color(muted)
             axis.spines[side].set_linewidth(0.8)
-        axis.tick_params(colors=muted, labelsize=9)
+        axis.tick_params(colors=muted, labelsize=FONT_TICK)
 
     # --- Left: three questions, increasing in difficulty ------------------
     for row in analysis.escalation:
@@ -420,7 +429,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
             xy=(2, row.size_cut_rmsle),
             xytext=(9, -3),
             textcoords="offset points",
-            fontsize=13,
+            fontsize=FONT_ANNOTATION,
             color=color,
         )
     axes[0].set_yscale("log")
@@ -432,16 +441,17 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
             "held-out\nmachine",
             "machine larger than\nanything in training",
         ],
-        fontsize=13.5,
+        fontsize=FONT_LABEL,
         color=ink,
     )
-    axes[0].set_ylabel("log-RMSE, log scale (lower is better)", fontsize=13, color=muted)
+    axes[0].set_ylabel("log-RMSE, log scale (lower is better)", fontsize=FONT_LABEL, color=muted)
     axes[0].set_title(
         "Three questions of increasing difficulty",
-        fontsize=15,
+        fontsize=FONT_TITLE,
         color=ink,
     )
-    axes[0].legend(frameon=False, fontsize=13, loc="upper left", labelcolor=muted)
+    axes[0].legend(frameon=True, facecolor="white", edgecolor="none",
+        framealpha=0.82, fontsize=FONT_LEGEND, loc="upper left", labelcolor=muted)
 
     # --- Right: the sweep, with the ITER-size-matched rung marked --------------
     #
@@ -498,7 +508,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
         xy=(matched_ratio, top),
         xytext=(6, -11),
         textcoords="offset points",
-        fontsize=13,
+        fontsize=FONT_ANNOTATION,
         color=ink,
         ha="left",
         va="top",
@@ -511,26 +521,27 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
             xy=(band_centre, axes[1].get_ylim()[0]),
             xytext=(0, 14),
             textcoords="offset points",
-            fontsize=11,
+            fontsize=FONT_SMALL,
             color=muted,
             ha="center",
             va="bottom",
         )
     axes[1].set_xlabel(
         "size extrapolation demanded\n(largest major radius asked about / largest one trained on)",
-        fontsize=13,
+        fontsize=FONT_LABEL,
         color=muted,
     )
-    axes[1].set_ylabel("log-RMSE on every machine above the cut", fontsize=13, color=muted)
+    axes[1].set_ylabel("log-RMSE on every machine above the cut", fontsize=FONT_LABEL, color=muted)
     axes[1].set_title(
         "The size-ordered sweep",
-        fontsize=15,
+        fontsize=FONT_TITLE,
         color=ink,
     )
     # The well-powered lines all bunch together at the left edge of this panel,
     # so direct end-labels overlap; the legend goes in the empty mid-band of the
     # underpowered region instead.
-    axes[1].legend(frameon=False, fontsize=11.5, loc="center right", labelcolor=muted)
+    axes[1].legend(frameon=True, facecolor="white", edgecolor="none",
+        framealpha=0.82, fontsize=FONT_SMALL, loc="center right", labelcolor=muted)
 
     figure.tight_layout()
     path = RESULTS_DIR / "size_extrapolation.png"

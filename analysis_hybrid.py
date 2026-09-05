@@ -7,7 +7,7 @@ figure.
 
 Results 4 and 5 diagnose a failure and stop. The trees win by 41% under grouped
 cross-validation and lose to a log-linear power law on all 13 held-out machines,
-and at the ITER-size-matched size cut they land closer to a constant predictor than
+and at the ITER-size-matched cut they land closer to a constant predictor than
 to the power law. Result 4d attributes that to functional form rather than to
 flexibility as such: the power law is the only form on the ladder whose error
 stays bounded away from the data.
@@ -25,7 +25,7 @@ whatever trade-off actually exists.
                while keeping its leave-one-machine-out score.
     Result 6b  What a practitioner tuning on CV actually gets, since the damping
                factor has to be chosen without the held-out machines.
-    Result 6c  The same rungs at the ITER-size-matched size cut of Result 5.
+    Result 6c  The same rungs at the ITER-size-matched cut of Result 5.
 
 Both outcomes are reportable. A rung that improves CV at no LOMO cost is a point
 neither pure model reaches. A sweep where every CV gain is paid for one-for-one
@@ -906,7 +906,7 @@ def plot_hybrid(analysis: HybridAnalysis) -> Path | None:
     axes[2].set_xlabel(
         "damping factor $\\lambda$ on the residual correction", fontsize=10, color=INK
     )
-    axes[2].set_ylabel("log-RMSE across the ITER-size-matched size cut", fontsize=10, color=INK)
+    axes[2].set_ylabel("log-RMSE across the ITER-size-matched cut", fontsize=10, color=INK)
     axes[2].set_title(
         f"Result 6c: predicting {analysis.size_cut_size_ratio:.2f}x beyond the training size",
         fontsize=11.5,

@@ -73,7 +73,12 @@ import scaling_law as sl
 import spectral as sp
 from analysis_extrapolation import bootstrap_paired_difference
 from analysis_size_extrapolation import MIN_WELL_POWERED_TRAIN_ROWS
-from figures import save_figure
+from figures import (
+    FONT_ANNOTATION,
+    FONT_LEGEND,
+    PAPER_WIDTH_IN,
+    save_figure,
+)
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -444,7 +449,7 @@ def analyze_dimensional(dataset: pd.DataFrame) -> DimensionalAnalysis:
 def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
     """Two panels: what each constraint costs, and what it buys.
 
-    Left is the size sweep, which is where the claim lives; right is the
+    Top is the size sweep, which is where the claim lives; bottom is the
     in-sample cost against the ITER-cut score, which is the trade the whole
     result is about. Matplotlib is imported inside the function so the analysis
     can run headless without it installed.
@@ -457,7 +462,7 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
     except ImportError:  # pragma: no cover - figure is optional
         return None
 
-    figure, (left, right) = plt.subplots(1, 2, figsize=(12.5, 5.0))
+    figure, (top, bottom) = plt.subplots(2, 1, figsize=(PAPER_WIDTH_IN, 6.2))
 
     sweep = analysis.size_sweep
     palette = {
@@ -472,14 +477,14 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
         powered = subset[subset["well_powered"]]
         style = {"color": colour, "label": label, "linewidth": 1.8}
         if marker is None:
-            left.plot(powered["size_ratio"], powered["rmsle"], linestyle="--", **style)
+            top.plot(powered["size_ratio"], powered["rmsle"], linestyle="--", **style)
         else:
-            left.plot(powered["size_ratio"], powered["rmsle"], marker=marker, **style)
+            top.plot(powered["size_ratio"], powered["rmsle"], marker=marker, **style)
         thin = subset[~subset["well_powered"]]
-        left.scatter(thin["size_ratio"], thin["rmsle"], color=colour, alpha=0.25, s=22)
+        top.scatter(thin["size_ratio"], thin["rmsle"], color=colour, alpha=0.25, s=22)
 
-    left.set_ylim(0.0, 0.75)
-    left.axvline(
+    top.set_ylim(0.0, 0.75)
+    top.axvline(
         analysis.iter_matched_size_ratio,
         color="#c0392b",
         linestyle=":",
@@ -488,29 +493,30 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
     # Axes-fraction y so the label sits just under the top spine whatever the
     # data limits end up being, rather than being placed at a data value that a
     # later ``set_ylim`` would move out from under it.
-    left.annotate(
+    top.annotate(
         "ITER-size-matched",
         xy=(analysis.iter_matched_size_ratio, 0.97),
         xycoords=("data", "axes fraction"),
         color="#c0392b",
         va="top",
         ha="left",
-        fontsize=13,
+        fontsize=FONT_ANNOTATION,
         xytext=(4, 0),
         textcoords="offset points",
     )
-    left.set_xlabel("size ratio demanded by the cut (test R max / train R max)")
-    left.set_ylabel("log-RMSE on the held-out machines")
-    left.set_title("Score at every size cut")
-    left.legend(fontsize=13, frameon=False)
-    left.grid(alpha=0.15)
+    top.set_xlabel("size ratio demanded by the cut (test R max / train R max)")
+    top.set_ylabel("log-RMSE on held-out machines")
+    top.set_title("Score at every size cut")
+    top.legend(fontsize=FONT_LEGEND, frameon=True, facecolor="white", edgecolor="none",
+        framealpha=0.82)
+    top.grid(alpha=0.15)
 
     in_sample = analysis.in_sample_rmsle
     by_name = {score.model_name: score for score in analysis.split_scores}
     for model, (colour, marker, label) in palette.items():
         if model not in in_sample or model not in by_name:
             continue
-        right.scatter(
+        bottom.scatter(
             in_sample[model],
             by_name[model].size_cut_rmsle,
             color=colour,
@@ -518,18 +524,19 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
             s=90,
             zorder=3,
         )
-        right.annotate(
+        bottom.annotate(
             label,
             (in_sample[model], by_name[model].size_cut_rmsle),
             textcoords="offset points",
             xytext=(8, 4),
-            fontsize=13,
+            fontsize=FONT_ANNOTATION,
             color=colour,
         )
-    right.set_xlabel("in-sample log-RMSE (what the constraint costs)")
-    right.set_ylabel("log-RMSE at the ITER-size-matched cut (what it buys)")
-    right.set_title("What each constraint costs against what it buys")
-    right.grid(alpha=0.15)
+    bottom.margins(x=0.20, y=0.14)
+    bottom.set_xlabel("in-sample log-RMSE (what the constraint costs)")
+    bottom.set_ylabel("log-RMSE at the cut (what it buys)")
+    bottom.set_title("What each constraint costs against what it buys")
+    bottom.grid(alpha=0.15)
 
     figure.tight_layout()
     path = RESULTS_DIR / "dimensional.png"

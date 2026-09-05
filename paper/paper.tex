@@ -40,8 +40,8 @@ machine-learning\\ rankings in tokamak confinement scaling}}
 % not. Both are placeholders until filled, and `tools/check_paper_submission.py`
 % refuses to pass while they read as written, so neither can reach a submission
 % by being forgotten.
-\author{Liam Salcedo\thanks{Independent researcher, FILL-IN-CITY,
-FILL-IN-COUNTRY. \texttt{liamsalcedo100@gmail.com}.
+\author{Liam Salcedo\thanks{Independent researcher, Montclair, New Jersey, USA.
+\texttt{liamsalcedo100@gmail.com}.
 ORCID: \texttt{FILL-IN-ORCID}.}}
 \date{4 September 2026}
 
@@ -428,12 +428,12 @@ gap widens to $+0.315$ with an interval of $[+0.221,+0.408]$.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{extrapolation}
-\caption{\textbf{Interpolation against extrapolation.} Left: each model under
+\caption{\textbf{Interpolation against extrapolation.} Top: each model under
 both splits, with bars giving the 95\% interval over the 13 held-out machines;
 the lines crossing is the result. Middle: per-machine error against Mahalanobis
 distance from the training data, rising strongly for the random forest, more
 weakly for the booster, and flat for the power law. The circled machine is the second failure mode, where the true confinement
-times run above anything the random forest can output. Right: the
+times run above anything the random forest can output. Bottom: the
 flexibility ladder, where what grows with flexibility is the tail rather than
 the centre; the circled points are the two tree ensembles, both observed here to
 stay inside the training-target range, though only the random forest is provably
@@ -805,12 +805,11 @@ conformal prediction. It is a measurement of an assumption being false.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{size_extrapolation}
-\caption{\textbf{Size-ordered extrapolation.} Left: the escalation across three
+\caption{\textbf{Size-ordered extrapolation.} Top: the escalation across three
 splits of increasing difficulty, where the tree ensembles collapse toward the
-mean baseline. Middle: the per-machine breakdown at the ITER-size-matched cut.
-Right: the sweep across every cut, with underpowered cuts marked and excluded
-from claims. The power law holds across the sweep and the trees do not
-recover.}
+mean baseline. Bottom: the sweep across every cut, with underpowered cuts drawn
+faint and excluded from claims. The power law holds across the sweep and the
+trees do not recover.}
 \label{fig:size}
 \end{figure*}
 
@@ -933,9 +932,9 @@ a subspace, and approaches a hard constraint as its variance goes to zero.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{dimensional}
-\caption{\textbf{Cost against benefit across the size sweep.} Left: the score at
+\caption{\textbf{Cost against benefit across the size sweep.} Top: the score at
 every size cut for the constrained and unconstrained fits, with underpowered
-cuts drawn faint and excluded from claims. Right: what each constraint costs in
+cuts drawn faint and excluded from claims. Bottom: what each constraint costs in
 sample against what it buys at the ITER-size-matched cut. The constraint costs almost
 nothing where the data is plentiful and pays where it is not, and more physics
 is not monotonically better: the hierarchy has an optimum in its middle, at the
@@ -1286,10 +1285,10 @@ power law on a held-out machine (0.218 against 0.214).
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{gp}
-\caption{\textbf{One model family, three kernels.} Left: log-RMSE on a held-out
+\caption{\textbf{One model family, three kernels.} Top: log-RMSE on a held-out
 machine and at the ITER-size-matched cut. The kernels differ in whether they permit a
 trend that continues at long range; adding the linear component also enlarges
-the function class. Right: spread of the predictions against spread of the truth on the
+the function class. Bottom: spread of the predictions against spread of the truth on the
 held-out rows. A model that has reverted to its prior mean sits near zero
 however good its in-range fit was, which is the tree ceiling of
 Sec.~\ref{sec:mechanisms} reached by a different route.}
@@ -1651,10 +1650,10 @@ reliably does not.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{allometry}
-\caption{\textbf{Kleiber's law under the same three splits.} Left: no inversion,
+\caption{\textbf{Kleiber's law under the same three splits.} Top: no inversion,
 because the trees lose under both splits and so have no interpolation margin to
 give up. Middle: error against extrapolation distance, rising for the flexible
-models as it does on HDB5. Right: the mass-ordered sweep, with the circled
+models as it does on HDB5. Bottom: the mass-ordered sweep, with the circled
 points marking cuts where the random forest is held inside its training
 range.}
 \label{fig:allometry}
@@ -1726,10 +1725,10 @@ rungs differ in more than their count.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{tree_allometry}
-\caption{\textbf{The reversal's precondition, on 3599 plants held fixed.} Left:
-the interpolation split, where every species appears on both sides. Right: an
-entire species held out. Only the number of predictors varies. The left curves
-cross; the right ones do not.}
+\caption{\textbf{The reversal's precondition, on 3599 plants held fixed.} Top:
+the interpolation split, where every species appears on both sides. Bottom: an
+entire species held out. Only the number of predictors varies. The top curves
+cross; the bottom ones do not.}
 \label{fig:ladder}
 \end{figure*}
 

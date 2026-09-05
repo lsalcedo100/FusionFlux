@@ -1149,7 +1149,7 @@ rest of the table. A shortfall elsewhere cannot be blamed on the construction.
 
 **Out of distribution it does not.** The random forest's nominal 90% interval
 covers 35% of the rows on a machine it has not seen, and **3% of the rows across
-the ITER-size-matched size cut**. The histogram gradient booster manages 0%: not one
+the ITER-size-matched cut**. The histogram gradient booster manages 0%: not one
 held-out row of the 2730 falls inside its 90% interval. These are the two best
 models in the repository by cross-validation.
 
@@ -1506,7 +1506,7 @@ the answer is the best it can do.
 
 Result 7 ends on a diagnosis and stops. Nominal 90% intervals cover 90% under
 grouped cross-validation, 35% on a machine the model has never seen, and 3%
-across the ITER-size-matched size cut, at essentially unchanged width. The reading
+across the ITER-size-matched cut, at essentially unchanged width. The reading
 offered there is that this is not a defect in conformal prediction but an
 assumption being false, measured: split conformal guarantees coverage under
 *exchangeability* of the calibration and test scores, and those arms break

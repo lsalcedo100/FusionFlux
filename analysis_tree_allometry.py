@@ -53,7 +53,11 @@ from sklearn.preprocessing import StandardScaler
 
 import scaling_audit as sa
 import tree_allometry as ta
-from figures import save_figure
+from figures import (
+    FONT_SMALL,
+    PAPER_WIDTH_IN,
+    save_figure,
+)
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -296,7 +300,7 @@ def plot_tree_allometry(study: LadderStudy) -> Path | None:
     except ImportError:  # pragma: no cover - figure is optional
         return None
 
-    figure, (left, right) = plt.subplots(1, 2, figsize=(12.5, 5.0))
+    figure, (left, right) = plt.subplots(2, 1, figsize=(PAPER_WIDTH_IN, 6.2))
     counts = [rung.n_features for rung in study.rungs]
 
     palette = {
@@ -327,14 +331,14 @@ def plot_tree_allometry(study: LadderStudy) -> Path | None:
                 f"reversal appears\nat {crossing} features",
                 (crossing, axis.get_ylim()[1]),
                 textcoords="offset points", xytext=(6, -28),
-                fontsize=11, color="#2a78d6",
+                fontsize=FONT_SMALL, color="#2a78d6",
             )
         axis.set_xticks(counts)
         axis.set_xlabel("number of predictors the models may see")
         axis.set_ylabel("log-RMSE")
         axis.set_title(title)
         axis.grid(alpha=0.15)
-        axis.legend(fontsize=11)
+        axis.legend(fontsize=FONT_SMALL)
 
     figure.tight_layout()
     path = RESULTS_DIR / "tree_allometry.png"

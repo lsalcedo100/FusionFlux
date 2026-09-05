@@ -10,7 +10,7 @@ a machine, or everything above the size cut, never takes part in choosing a
 hyperparameter.
 
     outer split     what the paper reports: grouped CV by discharge,
-                    leave-one-machine-out, and the ITER-size-matched size cut.
+                    leave-one-machine-out, and the ITER-size-matched cut.
 
     inner search    two selection procedures, run over the *training* rows
                     only. ``discharge`` groups the inner folds by discharge,

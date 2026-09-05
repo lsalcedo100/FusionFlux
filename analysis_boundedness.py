@@ -19,7 +19,7 @@ assert.
     question about these rows, and this script answers it.
 
 Scored on every split the paper's boundedness claims are made about: each
-leave-one-tokamak-out fold, and the ITER-size-matched size cut.
+leave-one-tokamak-out fold, and the ITER-size-matched cut.
 """
 
 from __future__ import annotations

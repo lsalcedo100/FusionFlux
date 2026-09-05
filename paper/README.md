@@ -45,6 +45,27 @@ raster at matching effective resolution. The PNG stays because the README and
 the built page need something that renders inline, and it is the fallback for a
 figure that has not been regenerated since.
 
+## Why the figures stack
+
+Every paper figure is authored at `PAPER_WIDTH_IN`, close to the 6.378 in text
+width it is printed at, with its panels stacked in one column. That is not a
+style choice, and reverting it to side-by-side panels will reintroduce a real
+defect.
+
+The figures were once drawn 12.5 to 13.5 in wide and placed across
+`\textwidth`, so everything on them reached the page at about half its
+specified size: 9 pt tick labels arrived at 4.3 pt, well under the 7 pt or so
+that figure lettering needs. Enlarging the type on a canvas that wide does not
+fix it. What governs legibility after scaling is type size *relative to the
+canvas*, so raising the type crowds the panels instead, and at the sizes needed
+the titles and tick labels collide outright. Shrinking the canvas with the type
+held fixed gives the identical ratio and fails the same way; both were tried.
+
+The only thing that buys room is giving each panel more of the width, which
+means one panel per row. A three-panel figure is then about 8 in tall, and the
+paper is a few pages longer than it would be with the old figures. That is the
+trade: the type on the page is now the size it says it is.
+
 ## Before publishing
 
 `tools/check_paper_submission.py` enforces the things that build fine here and

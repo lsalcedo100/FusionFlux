@@ -31,7 +31,16 @@ import numpy as np
 import pandas as pd
 
 import hdb5
-from figures import save_figure
+from figures import (
+    FONT_ANNOTATION,
+    FONT_LABEL,
+    FONT_LEGEND,
+    FONT_SMALL,
+    FONT_TICK,
+    FONT_TITLE,
+    PAPER_WIDTH_IN,
+    save_figure,
+)
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 if TYPE_CHECKING:  # imported for typing only; the factory imports it lazily
@@ -560,7 +569,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     figure, axes = plt.subplots(
-        1, 3, figsize=(13.5, 5.4), gridspec_kw={"width_ratios": [1.0, 1.25, 1.05]}
+        3, 1, figsize=(PAPER_WIDTH_IN, 8.4), gridspec_kw={"height_ratios": [1.2, 1.15, 1.0]}
     )
     for axis in axes:
         axis.grid(alpha=0.25, linewidth=0.6)
@@ -570,18 +579,32 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
         for side in ("left", "bottom"):
             axis.spines[side].set_color(muted)
             axis.spines[side].set_linewidth(0.8)
-        axis.tick_params(colors=muted, labelsize=9)
+        axis.tick_params(colors=muted, labelsize=FONT_TICK)
 
     # --- Left: the ranking inversion, with machine-level intervals ---------
     intervals = {interval.model_name: interval for interval in analysis.bootstrap}
     plotted = [t for t in analysis.transfers if t.model_name in style]
-    span = max(t.cv_rmsle for t in plotted) - min(t.cv_rmsle for t in plotted)
-    cv_offsets: dict[str, float] = {}
-    previous = -np.inf
+    # The four cross-validation scores bunch into the bottom of the panel, close
+    # enough that a label on each one overlaps its neighbour. Nudging alternate
+    # labels to opposite sides of their marker does not fix it: it separates the
+    # close pairs and drives the moderately spaced ones together.
+    #
+    # So the labels are spread instead. Walking up the sorted values and pushing
+    # each one to at least MIN_LABEL_GAP above the last gives the smallest
+    # displacement that leaves no two labels overlapping, whatever the data does.
+    # The gap is in data units, taken as the share of the y-range that eleven
+    # points of vertical space occupies at the printed panel height, which is
+    # what two lines of 8 pt type need.
+    cv_values = sorted(t.cv_rmsle for t in plotted)
+    lomo_values = [t.lomo_mean_rmsle for t in plotted]
+    y_span = max(lomo_values + cv_values) - min(lomo_values + cv_values)
+    min_label_gap = 0.075 * y_span
+
+    cv_label_y: dict[str, float] = {}
+    placed = -np.inf
     for transfer in sorted(plotted, key=lambda t: t.cv_rmsle):
-        crowded = transfer.cv_rmsle - previous < 0.04 * span
-        cv_offsets[transfer.model_name] = 8.0 if crowded else -3.0
-        previous = transfer.cv_rmsle
+        placed = max(transfer.cv_rmsle, placed + min_label_gap)
+        cv_label_y[transfer.model_name] = placed
 
     for transfer in plotted:
         color, label = style[transfer.model_name]
@@ -609,31 +632,35 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             xy=(1, transfer.lomo_mean_rmsle),
             xytext=(10, -3),
             textcoords="offset points",
-            fontsize=13,
+            fontsize=FONT_ANNOTATION,
             color=color,
         )
         axes[0].annotate(
             f"{transfer.cv_rmsle:.3f}",
-            xy=(0, transfer.cv_rmsle),
-            xytext=(-40, cv_offsets[transfer.model_name]),
+            xy=(0, cv_label_y[transfer.model_name]),
+            xytext=(-40, -3),
             textcoords="offset points",
-            fontsize=13,
+            fontsize=FONT_ANNOTATION,
             color=color,
         )
     axes[0].set_xlim(-0.75, 1.95)
+    low = min(lomo_values + cv_values)
+    high = max(list(cv_label_y.values()) + lomo_values)
+    axes[0].set_ylim(low - 0.10 * y_span, high + 0.28 * y_span)
     axes[0].set_xticks([0, 1])
     axes[0].set_xticklabels(
-        ["held out:\ndischarge", "held out:\nmachine"],
-        fontsize=14,
+        ["held out: discharge", "held out: machine"],
+        fontsize=FONT_LABEL,
         color=ink,
     )
-    axes[0].set_ylabel("log-RMSE (lower is better)", fontsize=13, color=muted)
+    axes[0].set_ylabel("log-RMSE (lower is better)", fontsize=FONT_LABEL, color=muted)
     axes[0].set_title(
         "Interpolation against extrapolation",
-        fontsize=15,
+        fontsize=FONT_TITLE,
         color=ink,
     )
-    axes[0].legend(frameon=False, fontsize=13, loc="upper left", labelcolor=muted)
+    axes[0].legend(frameon=True, facecolor="white", edgecolor="none",
+        framealpha=0.82, fontsize=FONT_LEGEND, loc="upper left", labelcolor=muted)
 
     # --- Middle: error against distance from the training distribution -----
     per_machine = analysis.per_machine
@@ -672,7 +699,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             xy=(row["feature_mahalanobis"], row["rmsle"]),
             xytext=(6, 4),
             textcoords="offset points",
-            fontsize=11,
+            fontsize=FONT_SMALL,
             color=ink if machine in truncated else muted,
             fontweight="bold" if machine in truncated else "normal",
         )
@@ -686,16 +713,17 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     axes[1].set_ylim(lowest - 0.10 * (highest - lowest), highest + 0.30 * (highest - lowest))
     axes[1].set_xlabel(
         "Mahalanobis distance from training data",
-        fontsize=13,
+        fontsize=FONT_LABEL,
         color=muted,
     )
-    axes[1].set_ylabel("log-RMSE on the held-out machine", fontsize=13, color=muted)
+    axes[1].set_ylabel("log-RMSE on the held-out machine", fontsize=FONT_LABEL, color=muted)
     axes[1].set_title(
         "Error against extrapolation distance",
-        fontsize=15,
+        fontsize=FONT_TITLE,
         color=ink,
     )
-    axes[1].legend(frameon=False, fontsize=13, loc="upper left", labelcolor=muted)
+    axes[1].legend(frameon=True, facecolor="white", edgecolor="none",
+        framealpha=0.82, fontsize=FONT_LEGEND, loc="upper left", labelcolor=muted)
 
     # --- Right: median against worst case along the flexibility ladder -----
     by_name = {transfer.model_name: transfer for transfer in analysis.transfers}
@@ -721,10 +749,10 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
         axes[2].axvline(split - 0.5, color=muted, linestyle=":", linewidth=1.0)
         axes[2].annotate("polynomial\n(unbounded)", xy=(split - 0.62, 0.02),
                          xycoords=("data", "axes fraction"), ha="right", va="bottom",
-                         fontsize=11, color=muted)
+                         fontsize=FONT_SMALL, color=muted)
         axes[2].annotate("trees\n(bounded)", xy=(split - 0.38, 0.02),
                          xycoords=("data", "axes fraction"), ha="left", va="bottom",
-                         fontsize=11, color=muted)
+                         fontsize=FONT_SMALL, color=muted)
     for index, is_bounded in enumerate(bounded):
         if is_bounded:
             axes[2].plot(positions[index], worst[index], "o", markersize=15,
@@ -733,15 +761,16 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     # Headroom above the worst point so the two family labels sit in clear space.
     axes[2].set_ylim(min(medians) * 0.6, max(worst) * 3.0)
     axes[2].set_xticks(positions)
-    axes[2].set_xticklabels([label for _, label in rungs], rotation=28, ha="right",
-                            fontsize=13, color=ink)
-    axes[2].set_ylabel("log-RMSE (log scale)", fontsize=13, color=muted)
+    axes[2].set_xticklabels([label for _, label in rungs], rotation=0, ha="center",
+                            fontsize=FONT_SMALL, color=ink)
+    axes[2].set_ylabel("log-RMSE (log scale)", fontsize=FONT_LABEL, color=muted)
     axes[2].set_title(
         "The flexibility ladder",
-        fontsize=15,
+        fontsize=FONT_TITLE,
         color=ink,
     )
-    axes[2].legend(frameon=False, fontsize=13, loc="upper left", labelcolor=muted)
+    axes[2].legend(frameon=True, facecolor="white", edgecolor="none",
+        framealpha=0.82, fontsize=FONT_LEGEND, loc="upper left", labelcolor=muted)
 
     figure.tight_layout()
     path = RESULTS_DIR / "extrapolation.png"
