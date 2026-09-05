@@ -80,6 +80,7 @@ def artifacts() -> dict[str, object]:
         "allometry": _json("allometry.json"),
         "gp": _json("gp.json"),
         "tree": _json("tree_allometry.json"),
+        "tuned": _json("tuned.json"),
     }
 
 
@@ -283,6 +284,10 @@ def _allo(a: dict, model: str, field: str) -> float:
     return float(a["allometry"]["scores"][model][field])
 
 
+def _tuned(a: dict, model: str, key: str) -> float:
+    return float(a["tuned"]["tuned"][model][key])
+
+
 def _paired(a: dict, model_a: str, model_b: str) -> dict:
     for row in a["extrapolation"]["paired_differences"]:
         if row["model_a"] == model_a and row["model_b"] == model_b:
@@ -367,6 +372,26 @@ CLAIMS: tuple[Claim, ...] = (
     Claim("paired gap, upper bound", "+0.342",
           lambda a: _paired(a, "random_forest", "ridge_loglinear")["ci_high"],
           lambda v: f"{v:+.3f}"),
+
+    # -- Nested tuning of the flexible models ------------------------------
+    # Quoted only in the paper, which is how results/tuned.json went stale
+    # unnoticed: analysis_tuned.py gained a second selection procedure and
+    # nothing bound its output to the prose that reports it.
+    Claim("tuned forest, CV", "0.126",
+          lambda a: _tuned(a, "random_forest", "cv"), _r(3),
+          documents=(PAPER, PAPER_PDF)),
+    Claim("tuned forest, leave-one-machine-out", "0.403",
+          lambda a: _tuned(a, "random_forest", "leave_one_machine_out"), _r(3),
+          documents=(PAPER, PAPER_PDF)),
+    Claim("tuned forest, ITER-size-matched cut", "1.121",
+          lambda a: _tuned(a, "random_forest", "iter_matched_cut"), _r(3),
+          documents=(PAPER, PAPER_PDF)),
+    Claim("tuned forest, inner folds by machine", "0.376",
+          lambda a: _tuned(a, "random_forest", "leave_one_machine_out_inner_machine"),
+          _r(3), documents=(PAPER, PAPER_PDF)),
+    Claim("tuned booster, inner folds by machine", "0.350",
+          lambda a: _tuned(a, "hist_gradient_boosting", "leave_one_machine_out_inner_machine"),
+          _r(3), documents=(PAPER, PAPER_PDF)),
 
     # -- Result 5: the ITER-matched size cut -------------------------------
     Claim("size ratio of the matched cut", "1.823",

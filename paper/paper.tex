@@ -638,10 +638,18 @@ the paper says a flexible model should help: cross-validation improves from
 0.128 to 0.126 and the leave-one-machine-out mean from 0.465 to 0.403. At the
 ITER-size-matched cut it makes the forest \emph{worse}, 0.938 to 1.121, against the
 power law's 0.278. The booster's search returned scikit-learn's defaults in all
-19 folds, so its numbers are unchanged. Tuning therefore widens the
-interpolation margin that later inverts and does not repair the extrapolation
-failure, which is what the training-target bound predicts: no setting of these
-hyperparameters moves a ceiling that comes from averaging training targets.
+19 folds, so its numbers are unchanged.
+
+The inner folds above group by discharge, which is how a practitioner would
+ordinarily tune. Grouping them by whole machine instead matches the way the
+model is deployed, and it helps both models: the forest falls to 0.376 and the
+booster to 0.350. Both remain well above the power law's 0.214, so the reversal
+survives either selection procedure.
+
+Tuning therefore widens the interpolation margin that later inverts and does
+not repair the extrapolation failure, which is what the training-target bound
+predicts: no setting of these hyperparameters moves a ceiling that comes from
+averaging training targets.
 
 The win counts support an exact test. Under a null that assigns each unit
 independently to either model with equal probability, losing 13 of 13 has
@@ -1599,7 +1607,7 @@ scripts that regenerate every number and figure in this paper are at
 \url{https://github.com/lsalcedo100/FusionFlux}. The analysis code is pinned as
 firmly as its inputs: every number and figure above was produced at commit
 \begin{center}\scriptsize
-\texttt{0e508f28a2edc174afe0a7c22fc7ac3956ab7e05}
+\texttt{d1bf9a08ebcef7568b5707de5d6f275aaf0c1e1e}
 \end{center}
 \noindent Each analysis script also writes the dataset fingerprint it verified
 into its own JSON output under \texttt{results/}, so a regenerated number
