@@ -28,21 +28,39 @@
     "random_forest": {
       "cv": 0.1259045664939706,
       "leave_one_machine_out": 0.4028998997082565,
+      "leave_one_machine_out_inner_machine": 0.37562415064969834,
       "iter_matched_cut": 1.1214312895962446,
       "per_machine": {
-        "JET": 0.5359123799318354,
-        "AUG": 0.27930960871770744,
-        "JETILW": 0.3304202855187637,
-        "AUGW": 0.2305314511361058,
-        "ASDEX": 0.5067383872546776,
-        "D3D": 0.32646708200767094,
-        "NSTX": 0.7568287054750835,
-        "JT60U": 0.2689758018863788,
-        "PDX": 0.3520172252090524,
-        "JFT2M": 0.45025392554319443,
-        "PBXM": 0.46567109682884184,
-        "CMOD": 0.5214357323031034,
-        "MAST": 0.21313701439491956
+        "discharge": {
+          "JET": 0.5359123799318354,
+          "AUG": 0.27930960871770744,
+          "JETILW": 0.3304202855187637,
+          "AUGW": 0.23053145113610576,
+          "ASDEX": 0.5067383872546776,
+          "D3D": 0.32646708200767094,
+          "NSTX": 0.7568287054750835,
+          "JT60U": 0.268975801886379,
+          "PDX": 0.35201722520905226,
+          "JFT2M": 0.4502539255431944,
+          "PBXM": 0.46567109682884195,
+          "CMOD": 0.5214357323031034,
+          "MAST": 0.21313701439491953
+        },
+        "machine": {
+          "JET": 0.5566906404835745,
+          "AUG": 0.3729771171692675,
+          "JETILW": 0.3487989774702926,
+          "AUGW": 0.23439548885505815,
+          "ASDEX": 0.27487960607164885,
+          "D3D": 0.3299482882625311,
+          "NSTX": 0.7110655838449892,
+          "JT60U": 0.2591273270451323,
+          "PDX": 0.33458468563457733,
+          "JFT2M": 0.35099845618030895,
+          "PBXM": 0.4656710968288422,
+          "CMOD": 0.40500823851682516,
+          "MAST": 0.23896845208303052
+        }
       },
       "chosen_configurations": [
         {
@@ -51,7 +69,7 @@
             "max_features": "1.0",
             "min_samples_leaf": "1"
           },
-          "inner_rmsle": 0.13654561231285764
+          "inner_rmsle": 0.1365456123128576
         },
         {
           "split": "cv",
@@ -59,7 +77,7 @@
             "max_features": "1.0",
             "min_samples_leaf": "1"
           },
-          "inner_rmsle": 0.13892036384225015
+          "inner_rmsle": 0.13892036384225018
         },
         {
           "split": "cv",
@@ -67,7 +85,7 @@
             "max_features": "0.5",
             "min_samples_leaf": "1"
           },
-          "inner_rmsle": 0.14183849683377336
+          "inner_rmsle": 0.14183849683377334
         },
         {
           "split": "cv",
@@ -83,10 +101,11 @@
             "max_features": "0.5",
             "min_samples_leaf": "1"
           },
-          "inner_rmsle": 0.1380169935566807
+          "inner_rmsle": 0.13801699355668068
         },
         {
           "split": "lomo:JET",
+          "inner": "discharge",
           "config": {
             "max_features": "0.5",
             "min_samples_leaf": "1"
@@ -95,6 +114,7 @@
         },
         {
           "split": "lomo:AUG",
+          "inner": "discharge",
           "config": {
             "max_features": "1.0",
             "min_samples_leaf": "1"
@@ -103,6 +123,7 @@
         },
         {
           "split": "lomo:JETILW",
+          "inner": "discharge",
           "config": {
             "max_features": "0.5",
             "min_samples_leaf": "1"
@@ -111,6 +132,7 @@
         },
         {
           "split": "lomo:AUGW",
+          "inner": "discharge",
           "config": {
             "max_features": "0.5",
             "min_samples_leaf": "1"
@@ -119,14 +141,16 @@
         },
         {
           "split": "lomo:ASDEX",
+          "inner": "discharge",
           "config": {
             "max_features": "1.0",
             "min_samples_leaf": "1"
           },
-          "inner_rmsle": 0.12686549087301668
+          "inner_rmsle": 0.12686549087301666
         },
         {
           "split": "lomo:D3D",
+          "inner": "discharge",
           "config": {
             "max_features": "0.5",
             "min_samples_leaf": "1"
@@ -135,22 +159,25 @@
         },
         {
           "split": "lomo:NSTX",
+          "inner": "discharge",
           "config": {
             "max_features": "0.5",
             "min_samples_leaf": "1"
           },
-          "inner_rmsle": 0.1340781206471394
+          "inner_rmsle": 0.13407812064713942
         },
         {
           "split": "lomo:JT60U",
+          "inner": "discharge",
           "config": {
             "max_features": "0.5",
             "min_samples_leaf": "1"
           },
-          "inner_rmsle": 0.13079096070566418
+          "inner_rmsle": 0.1307909607056642
         },
         {
           "split": "lomo:PDX",
+          "inner": "discharge",
           "config": {
             "max_features": "0.5",
             "min_samples_leaf": "1"
@@ -159,6 +186,7 @@
         },
         {
           "split": "lomo:JFT2M",
+          "inner": "discharge",
           "config": {
             "max_features": "1.0",
             "min_samples_leaf": "1"
@@ -167,6 +195,7 @@
         },
         {
           "split": "lomo:PBXM",
+          "inner": "discharge",
           "config": {
             "max_features": "0.5",
             "min_samples_leaf": "1"
@@ -175,6 +204,7 @@
         },
         {
           "split": "lomo:CMOD",
+          "inner": "discharge",
           "config": {
             "max_features": "1.0",
             "min_samples_leaf": "1"
@@ -183,11 +213,129 @@
         },
         {
           "split": "lomo:MAST",
+          "inner": "discharge",
           "config": {
             "max_features": "0.5",
             "min_samples_leaf": "1"
           },
-          "inner_rmsle": 0.1278951025977737
+          "inner_rmsle": 0.12789510259777373
+        },
+        {
+          "split": "lomo:JET",
+          "inner": "machine",
+          "config": {
+            "max_features": "sqrt",
+            "min_samples_leaf": "1"
+          },
+          "inner_rmsle": 0.37036063560832266
+        },
+        {
+          "split": "lomo:AUG",
+          "inner": "machine",
+          "config": {
+            "max_features": "sqrt",
+            "min_samples_leaf": "5"
+          },
+          "inner_rmsle": 0.3993289967879083
+        },
+        {
+          "split": "lomo:JETILW",
+          "inner": "machine",
+          "config": {
+            "max_features": "sqrt",
+            "min_samples_leaf": "1"
+          },
+          "inner_rmsle": 0.394159754362359
+        },
+        {
+          "split": "lomo:AUGW",
+          "inner": "machine",
+          "config": {
+            "max_features": "sqrt",
+            "min_samples_leaf": "1"
+          },
+          "inner_rmsle": 0.3824700963211833
+        },
+        {
+          "split": "lomo:ASDEX",
+          "inner": "machine",
+          "config": {
+            "max_features": "0.5",
+            "min_samples_leaf": "1"
+          },
+          "inner_rmsle": 0.3371336459627394
+        },
+        {
+          "split": "lomo:D3D",
+          "inner": "machine",
+          "config": {
+            "max_features": "sqrt",
+            "min_samples_leaf": "1"
+          },
+          "inner_rmsle": 0.372644117930603
+        },
+        {
+          "split": "lomo:NSTX",
+          "inner": "machine",
+          "config": {
+            "max_features": "sqrt",
+            "min_samples_leaf": "5"
+          },
+          "inner_rmsle": 0.3779243931119292
+        },
+        {
+          "split": "lomo:JT60U",
+          "inner": "machine",
+          "config": {
+            "max_features": "sqrt",
+            "min_samples_leaf": "1"
+          },
+          "inner_rmsle": 0.37589684897861814
+        },
+        {
+          "split": "lomo:PDX",
+          "inner": "machine",
+          "config": {
+            "max_features": "sqrt",
+            "min_samples_leaf": "5"
+          },
+          "inner_rmsle": 0.37888091655494377
+        },
+        {
+          "split": "lomo:JFT2M",
+          "inner": "machine",
+          "config": {
+            "max_features": "sqrt",
+            "min_samples_leaf": "1"
+          },
+          "inner_rmsle": 0.367169299493091
+        },
+        {
+          "split": "lomo:PBXM",
+          "inner": "machine",
+          "config": {
+            "max_features": "0.5",
+            "min_samples_leaf": "1"
+          },
+          "inner_rmsle": 0.3605811145751237
+        },
+        {
+          "split": "lomo:CMOD",
+          "inner": "machine",
+          "config": {
+            "max_features": "sqrt",
+            "min_samples_leaf": "1"
+          },
+          "inner_rmsle": 0.35931878576594634
+        },
+        {
+          "split": "lomo:MAST",
+          "inner": "machine",
+          "config": {
+            "max_features": "sqrt",
+            "min_samples_leaf": "1"
+          },
+          "inner_rmsle": 0.40008155941921525
         },
         {
           "split": "iter_matched_cut",
@@ -202,21 +350,39 @@
     "hist_gradient_boosting": {
       "cv": 0.12963313235633495,
       "leave_one_machine_out": 0.3592919101020166,
+      "leave_one_machine_out_inner_machine": 0.3497009255972812,
       "iter_matched_cut": 1.0717519585509527,
       "per_machine": {
-        "JET": 0.4867978709251852,
-        "AUG": 0.2812302860575839,
-        "JETILW": 0.2439381925302502,
-        "AUGW": 0.21219271101172096,
-        "ASDEX": 0.20697949141905117,
-        "D3D": 0.24573867969801805,
-        "NSTX": 0.6857023422989421,
-        "JT60U": 0.30701737969020504,
-        "PDX": 0.3227021134914512,
-        "JFT2M": 0.23418446081860614,
-        "PBXM": 0.5587897073538394,
-        "CMOD": 0.568711558029444,
-        "MAST": 0.3168100380019187
+        "discharge": {
+          "JET": 0.4867978709251852,
+          "AUG": 0.2812302860575839,
+          "JETILW": 0.2439381925302502,
+          "AUGW": 0.21219271101172096,
+          "ASDEX": 0.20697949141905117,
+          "D3D": 0.24573867969801805,
+          "NSTX": 0.6857023422989421,
+          "JT60U": 0.30701737969020504,
+          "PDX": 0.3227021134914512,
+          "JFT2M": 0.23418446081860614,
+          "PBXM": 0.5587897073538394,
+          "CMOD": 0.568711558029444,
+          "MAST": 0.3168100380019187
+        },
+        "machine": {
+          "JET": 0.5053966772155888,
+          "AUG": 0.2812302860575839,
+          "JETILW": 0.2439381925302502,
+          "AUGW": 0.21285549394101244,
+          "ASDEX": 0.24466806627402715,
+          "D3D": 0.2382416134880424,
+          "NSTX": 0.743105578860239,
+          "JT60U": 0.28548307768352865,
+          "PDX": 0.32712852156299477,
+          "JFT2M": 0.19856044761403763,
+          "PBXM": 0.5612581633597196,
+          "CMOD": 0.3636828261246102,
+          "MAST": 0.3405630880530217
+        }
       },
       "chosen_configurations": [
         {
@@ -261,6 +427,7 @@
         },
         {
           "split": "lomo:JET",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
@@ -269,6 +436,7 @@
         },
         {
           "split": "lomo:AUG",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
@@ -277,6 +445,7 @@
         },
         {
           "split": "lomo:JETILW",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
@@ -285,6 +454,7 @@
         },
         {
           "split": "lomo:AUGW",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
@@ -293,6 +463,7 @@
         },
         {
           "split": "lomo:ASDEX",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
@@ -301,6 +472,7 @@
         },
         {
           "split": "lomo:D3D",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
@@ -309,6 +481,7 @@
         },
         {
           "split": "lomo:NSTX",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
@@ -317,6 +490,7 @@
         },
         {
           "split": "lomo:JT60U",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
@@ -325,6 +499,7 @@
         },
         {
           "split": "lomo:PDX",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
@@ -333,6 +508,7 @@
         },
         {
           "split": "lomo:JFT2M",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
@@ -341,6 +517,7 @@
         },
         {
           "split": "lomo:PBXM",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
@@ -349,6 +526,7 @@
         },
         {
           "split": "lomo:CMOD",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
@@ -357,11 +535,129 @@
         },
         {
           "split": "lomo:MAST",
+          "inner": "discharge",
           "config": {
             "learning_rate": "0.1",
             "max_leaf_nodes": "31"
           },
           "inner_rmsle": 0.13174787962484538
+        },
+        {
+          "split": "lomo:JET",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "15"
+          },
+          "inner_rmsle": 0.36583181218626604
+        },
+        {
+          "split": "lomo:AUG",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "31"
+          },
+          "inner_rmsle": 0.37262122371079304
+        },
+        {
+          "split": "lomo:JETILW",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "31"
+          },
+          "inner_rmsle": 0.36962549273244916
+        },
+        {
+          "split": "lomo:AUGW",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "15"
+          },
+          "inner_rmsle": 0.35018446382065865
+        },
+        {
+          "split": "lomo:ASDEX",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "15"
+          },
+          "inner_rmsle": 0.32969199926360776
+        },
+        {
+          "split": "lomo:D3D",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "15"
+          },
+          "inner_rmsle": 0.3751445133519193
+        },
+        {
+          "split": "lomo:NSTX",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "15"
+          },
+          "inner_rmsle": 0.30179088272263205
+        },
+        {
+          "split": "lomo:JT60U",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "15"
+          },
+          "inner_rmsle": 0.34802681932392865
+        },
+        {
+          "split": "lomo:PDX",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "15"
+          },
+          "inner_rmsle": 0.36295132268752167
+        },
+        {
+          "split": "lomo:JFT2M",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "15"
+          },
+          "inner_rmsle": 0.32647364422453035
+        },
+        {
+          "split": "lomo:PBXM",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "15"
+          },
+          "inner_rmsle": 0.33872667215756397
+        },
+        {
+          "split": "lomo:CMOD",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "15"
+          },
+          "inner_rmsle": 0.34872394817555546
+        },
+        {
+          "split": "lomo:MAST",
+          "inner": "machine",
+          "config": {
+            "learning_rate": "0.1",
+            "max_leaf_nodes": "15"
+          },
+          "inner_rmsle": 0.3282211305495763
         },
         {
           "split": "iter_matched_cut",

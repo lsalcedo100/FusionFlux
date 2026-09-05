@@ -65,12 +65,20 @@ it asks for rather than in how it is built.
 `v0.1.0` exists and points at a commit that predates all of the current work, so
 it must not be the tag a DOI is minted on.
 
-The tag has to match `version` in `pyproject.toml`, which is `0.2.1`. The
-release workflow fails rather than publishing a mismatch.
+`v0.2.2` is the newest tag and is the state the Zenodo record currently
+archives. It is no longer the state worth archiving. Since it was cut the paper
+has had every figure restacked one panel per row, the terminology renamed to
+`log-RMSE` and `ITER-size-matched` throughout, and `results/tuned.json` added.
+The DOI is printed on the paper's title page, so a referee who follows it gets
+that older manuscript. Cut a new tag before submitting anywhere.
+
+The tag has to match `version` in `pyproject.toml`, which is `0.2.2` and so has
+to be bumped first, in `CITATION.cff` as well. The release workflow fails rather
+than publishing a mismatch.
 
 ```bash
-git tag -a v0.2.1 -m "All thirteen results, and a distribution that installs and runs"
-git push origin v0.2.1
+git tag -a vX.Y.Z -m "<what this release is>"
+git push origin vX.Y.Z
 ```
 
 Then publish a GitHub release on that tag and **attach `paper/paper.pdf`**, so

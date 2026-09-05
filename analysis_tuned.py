@@ -162,7 +162,7 @@ def analyze_tuned(dataset: pd.DataFrame) -> dict[str, Any]:
                     log_target,
                     groups,
                     np.flatnonzero(~held),
-                    inner_unit=labels,
+                    inner_unit=labels if mode == "machine" else None,
                     mode=mode,
                 )
                 with hdb5._suppress_benign_matmul_warnings():
