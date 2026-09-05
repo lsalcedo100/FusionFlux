@@ -18,6 +18,14 @@ Two classes of field are excluded outright rather than compared loosely:
 * absolute filesystem paths, which differ between a laptop and a CI runner;
 * wall-clock timings, which measure the machine rather than the analysis.
 
+A third class is named individually in ``NON_PORTABLE`` below: values whose last
+digits belong to the host's arithmetic rather than to the study, and which
+therefore do not survive a change of LAPACK. The tolerance here absorbs BLAS
+summation-order jitter; it does not absorb Accelerate against OpenBLAS. Those
+paths are listed one at a time, with the reason and with what still guards the
+finding underneath them, rather than being swept up by a looser global
+tolerance that would blind the gate everywhere else.
+
 Exit status is 0 when the two directories agree and 1 when they do not, with the
 disagreements printed most significant first.
 """
@@ -27,6 +35,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import sys
 from pathlib import Path
 from typing import Any, Union
@@ -55,8 +64,93 @@ def _is_volatile(key: str) -> bool:
     return key in VOLATILE_KEYS or key.endswith(VOLATILE_SUFFIXES)
 
 
-def _close(a: float, b: float) -> bool:
-    return math.isclose(a, b, rel_tol=REL_TOL, abs_tol=ABS_TOL)
+# Fields whose last digits are a property of the host's arithmetic rather than
+# of the study.
+#
+# REL_TOL absorbs BLAS summation-order jitter, which is order 1e-15. It does not
+# absorb a change of LAPACK. results/ was generated on macOS, which links
+# Accelerate; a Linux runner uses OpenBLAS, and on byte-identical seeded inputs
+# the two disagree by far more than 1e-6 in the places listed below. They are
+# named individually rather than accommodated by a looser global tolerance,
+# because a tolerance wide enough for them would stop this gate catching a real
+# change anywhere else.
+#
+# Keys are dotted paths into a results file with list indices written as ``[]``,
+# and each covers that path and everything under it. The value is the relative
+# tolerance to apply instead of REL_TOL, or None to exclude the path outright.
+NON_PORTABLE: dict[str, float | None] = {
+    # Result 2c measures where float64 breaks down: the forward error of three
+    # least-squares solvers against condition number, and the condition number
+    # at which Cholesky refuses to return an answer. Its output *is* the host's
+    # floating-point arithmetic, so comparing it across LAPACKs is a category
+    # error rather than a reproducibility check. On ubuntu-latest the sweep put
+    # the Cholesky breakdown at 1e10 against the committed 1e9 and recorded 11
+    # failures where the committed run recorded 12; even a second macOS machine
+    # moves the median errors by tens of percent.
+    #
+    # The finding is not left unguarded. tests/test_solver_conditioning.py
+    # asserts the portable claims -- that the Cholesky slope is twice the
+    # orthogonal solvers', that every curve matches the slope its theory
+    # predicts, and that Cholesky is least accurate at every condition number --
+    # by computing the sweep itself rather than by reading results/, so it runs
+    # on every platform CI covers rather than only where results/ was made.
+    #
+    # Only the measurements are excluded. The experimental design that produced
+    # them stays compared: solver, condition_numbers, n_trials, machine_epsilon
+    # and the slope-fit window are all still checked, so a sweep that silently
+    # started measuring something else still fails here.
+    "analysis.json.solver_conditioning.curves[].median_errors": None,
+    "analysis.json.solver_conditioning.curves[].n_failures": None,
+    "analysis.json.solver_conditioning.curves[].fitted_slope": None,
+    "analysis.json.solver_conditioning.breakdown_condition_number": None,
+    "solver_conditioning.csv[].relative_forward_error": None,
+    "solver_conditioning.csv[].failed": None,
+    # |cos| between a residual direction and a printed basis vector, taken from
+    # the SVD of a matrix that is rank deficient by 2. Inside a degenerate
+    # subspace the singular vectors are fixed only up to a rotation, so which
+    # direction LAPACK hands back is its choice and not a property of the data.
+    # What Result 1 actually reports -- rank and rank_deficiency -- are integers
+    # and stay compared.
+    "analysis.json.rank_audit.max_alignment_with_a_printed_basis_vector": None,
+    # A SHA-256 over the forecast rows at full float64 precision, so it moves on
+    # a one-ULP change in any row: exactly the jitter REL_TOL exists to absorb.
+    # It is a bit-exactness check embedded in a tolerance comparison and cannot
+    # pass one. Excluding it costs nothing, because every row it covers is
+    # compared here individually and to tolerance.
+    "forecast.json.content_digest_sha256": None,
+    # Orthogonal distance regression is fitted iteratively, and the point it
+    # converges to depends on the host's arithmetic. Only m_eff_amu moves --
+    # the smallest exponent in the vector and so the worst determined -- and by
+    # 4e-6, just past REL_TOL. Compared at 1e-4 rather than dropped: that is
+    # still two orders of magnitude tighter than the three significant figures
+    # these are reported at, so all eight exponents keep a real check. The two
+    # values Result 14 quotes, max_abs_exponent_shift and largest_shift_feature,
+    # are derived from these and stay at full REL_TOL.
+    "sensitivity.json.errors_in_variables.odr_exponents": 1e-4,
+}
+
+_LIST_INDEX = re.compile(r"\[\d+\]")
+
+
+def _tolerance_for(where: str) -> float | None:
+    """The relative tolerance for a path, or None if it is excluded.
+
+    Walks from the full path up to its root so that an entry covers everything
+    beneath it, and normalises list indices so one entry covers every element.
+    """
+    path = _LIST_INDEX.sub("[]", where)
+    while path:
+        if path in NON_PORTABLE:
+            return NON_PORTABLE[path]
+        cut = max(path.rfind("."), path.rfind("["))
+        if cut <= 0:
+            break
+        path = path[:cut]
+    return REL_TOL
+
+
+def _close(a: float, b: float, rel_tol: float = REL_TOL) -> bool:
+    return math.isclose(a, b, rel_tol=rel_tol, abs_tol=ABS_TOL)
 
 
 Number = Union[int, float]
@@ -64,16 +158,26 @@ Number = Union[int, float]
 
 def compare_json(baseline: Any, candidate: Any, where: str, out: list[str]) -> None:
     """Walk two decoded JSON documents in parallel, recording disagreements."""
+    tolerance = _tolerance_for(where)
+    if tolerance is None:
+        return
+
     if isinstance(baseline, dict) and isinstance(candidate, dict):
         for key in sorted(set(baseline) | set(candidate)):
             if _is_volatile(key):
                 continue
+            child = f"{where}.{key}"
+            # Tested here as well as on entry, so that a key that appears or
+            # vanishes under an excluded path is excluded too rather than
+            # reported as added or removed without ever being descended into.
+            if _tolerance_for(child) is None:
+                continue
             if key not in baseline:
-                out.append(f"{where}.{key}: added")
+                out.append(f"{child}: added")
             elif key not in candidate:
-                out.append(f"{where}.{key}: removed")
+                out.append(f"{child}: removed")
             else:
-                compare_json(baseline[key], candidate[key], f"{where}.{key}", out)
+                compare_json(baseline[key], candidate[key], child, out)
         return
 
     if isinstance(baseline, list) and isinstance(candidate, list):
@@ -97,7 +201,7 @@ def compare_json(baseline: Any, candidate: Any, where: str, out: list[str]) -> N
         return
 
     if isinstance(baseline, (int, float)) and isinstance(candidate, (int, float)):
-        if not _close(float(baseline), float(candidate)):
+        if not _close(float(baseline), float(candidate), tolerance):
             out.append(f"{where}: {baseline!r} -> {candidate!r}")
         return
 
@@ -118,12 +222,18 @@ def compare_csv(baseline: Path, candidate: Path, out: list[str]) -> None:
         return
 
     for column in left.columns:
+        # Resolved once per column rather than per row: every row of a column
+        # shares a path once list indices are normalised, so the answer cannot
+        # differ between them.
+        tolerance = _tolerance_for(f"{name}[].{column}")
+        if tolerance is None:
+            continue
         lc, rc = left[column], right[column]
         if pd.api.types.is_numeric_dtype(lc) and pd.api.types.is_numeric_dtype(rc):
             for i, (a, b) in enumerate(zip(lc, rc, strict=True)):
                 if pd.isna(a) and pd.isna(b):
                     continue
-                if pd.isna(a) or pd.isna(b) or not _close(float(a), float(b)):
+                if pd.isna(a) or pd.isna(b) or not _close(float(a), float(b), tolerance):
                     out.append(f"{name}[{i}].{column}: {a!r} -> {b!r}")
         else:
             for i, (a, b) in enumerate(zip(lc, rc, strict=True)):

@@ -19,6 +19,18 @@
 # third-party and not redistributable here (the study pins them by SHA-256 and
 # verifies on every load), so an image carrying them would be republishing
 # someone else's data.
+#
+# One thing this image cannot remove, and it will show up in the diff. results/
+# was generated on macOS, which links Accelerate for LAPACK; this image is Linux
+# and uses OpenBLAS. The analyses are deterministic per platform -- every random
+# draw is seeded, and rerunning them on the machine results/ came from
+# reproduces the committed values exactly -- but the two LAPACKs disagree on
+# identical seeded inputs. So the first command above reports roughly two
+# thousand moved values: third and fourth significant figures of fitted scores,
+# spread across every analysis in the study. That is a different LAPACK, not a
+# failure to reproduce. `make results` and the analyses themselves run correctly
+# here; it is only the comparison against macOS-generated numbers that cannot
+# pass. See docs/testing.md.
 
 FROM python:3.12-slim-bookworm
 

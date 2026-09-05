@@ -44,7 +44,23 @@ concurrency:
 
 jobs:
   reproduce:
-    runs-on: ubuntu-latest
+    # macOS, because that is the platform results/ was generated on, and the
+    # numbers depend on it. The analyses are deterministic -- every random draw
+    # is seeded, and rerunning them on the machine results/ came from reproduces
+    # the committed values exactly -- but they are deterministic *per platform*
+    # only. The solvers underneath are not: macOS links Accelerate for LAPACK
+    # and the Linux runners use OpenBLAS, and on byte-identical seeded inputs
+    # the two disagree. On ubuntu-latest this job failed on roughly two thousand
+    # values spread across every analysis in the study -- conformal coverage,
+    # robustness, replication, the allometry scores -- and it never passed once
+    # in sixteen attempts. That is a different LAPACK, not a failure to
+    # reproduce, and no exclusion list should paper over drift that broad.
+    #
+    # So it runs where the numbers were made. This narrows what the job claims,
+    # to what it was always for: that results/ still follows from the raw data
+    # on the platform it was generated on. It is not a cross-platform
+    # bit-reproducibility check -- see docs/testing.md.
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
 
@@ -105,6 +121,12 @@ jobs:
         # uses a 1e-6 relative tolerance, well inside the precision anything is
         # reported at. Figures are not compared at all, since matplotlib output
         # is not byte-reproducible across versions.
+        #
+        # A short list of paths is exempt even here, because running on macOS
+        # narrows the platform but does not pin the machine: the conditioning
+        # sweep exists to measure where float64 breaks down, and its numbers
+        # move between two Macs. Those paths, and what still guards the findings
+        # underneath them, are named one at a time in tools/compare_results.py.
         run: python3 tools/compare_results.py .reproduce_baseline results --max-report 200
 
       - name: Check the prose against the regenerated artifacts
