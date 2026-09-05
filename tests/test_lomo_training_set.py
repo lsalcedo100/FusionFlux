@@ -21,6 +21,13 @@ import hdb5
 
 @pytest.fixture(scope="module")
 def dataset():
+    # Skip rather than fail when the deposit is absent, the same rule
+    # tests/test_dataset_integrity.py follows. STD5 is third-party and not
+    # carried in the repository, so it is missing on a fresh clone and in CI,
+    # and a suite that errors there turns a known absence into a red build that
+    # says nothing about the code.
+    if not hdb5.default_hdb5_path().exists():
+        pytest.skip("HDB5 STD5 not downloaded; run `python3 hdb5.py download`.")
     return hdb5.prepare_dataset()
 
 
