@@ -379,19 +379,19 @@ CLAIMS: tuple[Claim, ...] = (
     # nothing bound its output to the prose that reports it.
     Claim("tuned forest, CV", "0.126",
           lambda a: _tuned(a, "random_forest", "cv"), _r(3),
-          documents=(PAPER, PAPER_PDF)),
+          documents=(RESULTS_MD, PAPER, PAPER_PDF)),
     Claim("tuned forest, leave-one-machine-out", "0.403",
           lambda a: _tuned(a, "random_forest", "leave_one_machine_out"), _r(3),
-          documents=(PAPER, PAPER_PDF)),
+          documents=(RESULTS_MD, PAPER, PAPER_PDF)),
     Claim("tuned forest, ITER-size-matched cut", "1.121",
           lambda a: _tuned(a, "random_forest", "iter_matched_cut"), _r(3),
-          documents=(PAPER, PAPER_PDF)),
+          documents=(RESULTS_MD, PAPER, PAPER_PDF)),
     Claim("tuned forest, inner folds by machine", "0.376",
           lambda a: _tuned(a, "random_forest", "leave_one_machine_out_inner_machine"),
-          _r(3), documents=(PAPER, PAPER_PDF)),
+          _r(3), documents=(RESULTS_MD, PAPER, PAPER_PDF)),
     Claim("tuned booster, inner folds by machine", "0.350",
           lambda a: _tuned(a, "hist_gradient_boosting", "leave_one_machine_out_inner_machine"),
-          _r(3), documents=(PAPER, PAPER_PDF)),
+          _r(3), documents=(RESULTS_MD, PAPER, PAPER_PDF)),
 
     # -- Result 5: the ITER-matched size cut -------------------------------
     # The five model scores at the cut are the paper's central comparison and

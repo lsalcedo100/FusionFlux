@@ -90,7 +90,14 @@ def save_figure(figure: Any, path: Path, **savefig_kwargs: Any) -> Path:
 
     Returns the PNG path, which is the one the analyses print and the one the
     README and the page link to.
+
+    The PDF is written without a ``CreationDate``. Matplotlib stamps the current
+    time into that field by default, so every regeneration produced a
+    byte-different file even when the plotted numbers were identical, and
+    `make reproduce` left the six committed figure PDFs dirty on every run. The
+    PNGs carry no such field and were already reproducible.
     """
     figure.savefig(path, dpi=FIGURE_DPI, **savefig_kwargs)
-    figure.savefig(path.with_suffix(".pdf"), **savefig_kwargs)
+    pdf_kwargs = {"metadata": {"CreationDate": None}, **savefig_kwargs}
+    figure.savefig(path.with_suffix(".pdf"), **pdf_kwargs)
     return path
