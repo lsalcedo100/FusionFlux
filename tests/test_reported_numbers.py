@@ -394,6 +394,19 @@ CLAIMS: tuple[Claim, ...] = (
           _r(3), documents=(PAPER, PAPER_PDF)),
 
     # -- Result 5: the ITER-matched size cut -------------------------------
+    # The five model scores at the cut are the paper's central comparison and
+    # are quoted throughout all three documents, but nothing bound them to the
+    # escalation table until now. Same gap that let tuned.json go stale.
+    Claim("IPB98(y,2) at the size cut", "0.194",
+          lambda a: _esc(a, "ipb98y2_analytic", "size_cut_rmsle"), _r(3)),
+    Claim("power law at the size cut", "0.278",
+          lambda a: _esc(a, "ridge_loglinear", "size_cut_rmsle"), _r(3)),
+    Claim("forest at the size cut", "0.938",
+          lambda a: _esc(a, "random_forest", "size_cut_rmsle"), _r(3)),
+    Claim("booster at the size cut", "1.072",
+          lambda a: _esc(a, "hist_gradient_boosting", "size_cut_rmsle"), _r(3)),
+    Claim("mean baseline at the size cut", "1.459",
+          lambda a: _esc(a, "mean_baseline", "size_cut_rmsle"), _r(3)),
     Claim("size ratio of the matched cut", "1.823",
           lambda a: a["size"]["iter_matched_split"]["size_ratio"], _r(3),
           documents=(RESULTS_MD, PAGE, PAPER, PAPER_PDF)),

@@ -40,10 +40,12 @@ pass. Then `make paper-fresh` again, and `make check`, since
 `tests/test_reported_numbers.py` reads the PDF back and checks the numbers in it
 against `results/`.
 
-`make reproduce` needs all four datasets and takes roughly half an hour now that
-Results 14 and 15 are in it. It is
-the one that matters here: a DOI is permanent, so archiving a state whose
-`results/` no longer follows from the data is not correctable by an edit.
+`make reproduce` needs all four datasets and takes over an hour. The nested
+tuning search in `analysis_tuned.py` is most of that: it refits a 300-tree
+forest across two selection procedures, and the discharge-grouped inner folds
+each train on about two thirds of the rows. It is the one that matters here: a
+DOI is permanent, so archiving a state whose `results/` no longer follows from
+the data is not correctable by an edit.
 
 Then confirm the release metadata describes the work as it now stands:
 
@@ -97,6 +99,9 @@ retroactively.** At <https://pypi.org/manage/account/publishing/>, add a pending
 publisher for the project name `fusionflux` with owner `lsalcedo100`, repository
 `FusionFlux`, workflow `release.yml`, environment `pypi`. Create a GitHub
 environment of the same name under Settings, Environments.
+
+Both projects are already configured this way and both are on PyPI, so this is
+here to describe what the release depends on rather than as a step to repeat.
 
 Rehearse on TestPyPI first. Run the workflow manually (Actions, Release, Run
 workflow) with `test_pypi` left checked; it goes to TestPyPI, which is
@@ -159,9 +164,9 @@ API that actually exists. That last check exists because the README's examples
 were wrong when first written: they named three parameters and a column that do
 not exist.
 
-After it lands, update the two places that currently say it is unpublished:
-the `scaling_audit.py` bullet in `README.md` and the Provenance section of
-`scaling-audit/README.md`.
+The `scaling_audit.py` bullet in `README.md` and the Provenance section of
+`scaling-audit/README.md` already name the published package, so neither needs
+touching after a later release.
 
 ## 2. Zenodo DOI
 
