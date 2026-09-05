@@ -277,6 +277,13 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
         "random_forest": ("#eb6834", "random forest"),
         "hist_gradient_boosting": ("#c8873a", "hist grad boosting"),
     }
+    # No panel here should depend on colour alone; see figures.MODEL_MARKERS.
+    shape = {
+        "kleiber": ("s", "-"),
+        "ols_loglinear": ("o", "-"),
+        "random_forest": ("D", ":"),
+        "hist_gradient_boosting": ("^", "--"),
+    }
 
     figure, axes = plt.subplots(3, 1, figsize=(PAPER_WIDTH_IN, 8.4))
     for axis in axes:
@@ -289,7 +296,9 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
     for name, (colour, label) in style.items():
         cv = payload["scores"][name]["cv_rmsle"]
         loo = payload["scores"][name]["loo_mean_rmsle"]
-        axes[0].plot([0, 1], [cv, loo], "o-", color=colour, linewidth=2.2, markersize=8, label=label)
+        marker, line = shape[name]
+        axes[0].plot([0, 1], [cv, loo], marker=marker, linestyle=line, color=colour,
+                     linewidth=2.2, markersize=7, label=label)
         axes[0].annotate(f"{cv:.3f}", xy=(0, cv), xytext=(-42, -3), textcoords="offset points",
                          fontsize=FONT_ANNOTATION, color=colour)
         axes[0].annotate(f"{loo:.3f}", xy=(1, loo), xytext=(10, -3), textcoords="offset points",
@@ -310,7 +319,7 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
     for name, (colour, label) in style.items():
         rows = report[report["estimator"] == name].sort_values("mahalanobis")
         rho = payload["scores"][name]["distance_spearman"]
-        axes[1].plot(rows["mahalanobis"], rows["score"], "o", color=colour, markersize=8,
+        axes[1].plot(rows["mahalanobis"], rows["score"], marker=shape[name][0], linestyle="none", color=colour, markersize=7,
                      label=f"{label}  (rho = {rho:+.2f})")
     axes[1].set_xlabel("distance of the held-out order from the rest", fontsize=FONT_LABEL, color=muted)
     axes[1].set_ylabel("log-RMSE on that order", fontsize=FONT_LABEL, color=muted)
@@ -322,12 +331,14 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
     # --- Right: the mass-ordered sweep, as in Result 5 ----------------------
     for name, (colour, label) in style.items():
         rows = sweep[sweep["model_name"] == name].sort_values("n_train_orders")
-        axes[2].plot(rows["n_train_orders"], rows["rmsle"], "o-", color=colour,
-                     linewidth=2.0, markersize=7, label=label)
+        marker, line = shape[name]
+        axes[2].plot(rows["n_train_orders"], rows["rmsle"], marker=marker, linestyle=line,
+                     color=colour, linewidth=2.0, markersize=6, label=label)
     bounded = sweep[(sweep["model_name"] == "random_forest") & sweep["prediction_bounded"]]
     for _, row in bounded.iterrows():
-        axes[2].plot(row["n_train_orders"], row["rmsle"], "o", markersize=15,
-                     markerfacecolor="none", markeredgecolor=ink, markeredgewidth=1.3)
+        axes[2].plot(row["n_train_orders"], row["rmsle"], marker="D", linestyle="none",
+                     markersize=13, markerfacecolor="none", markeredgecolor=ink,
+                     markeredgewidth=1.3)
     axes[2].set_xlabel("orders in the training half", fontsize=FONT_LABEL, color=muted)
     axes[2].set_ylabel("log-RMSE on every heavier order", fontsize=FONT_LABEL, color=muted)
     axes[2].set_yscale("log")

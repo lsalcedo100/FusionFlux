@@ -209,6 +209,15 @@ cross-validation by discharge (`python3 hdb5.py evaluate`):
 41% lower log-RMSE than the published scaling law, against a real physics baseline
 rather than against the mean.
 
+**This table is the ten-column variant, and it is not the headline.** It adds
+IPB98(y,2)'s own prediction to the nine engineering features, which is why the
+forest reads 0.118 here. Every extrapolation result below, the paper, and the
+README all drop that column and use the nine engineering features alone, where
+the same forest reads 0.128: a 29% margin over the blind refitted power law and
+36% over the published law. The ten-column run is kept as an auxiliary
+experiment because it is what a practitioner would build first, and because the
+rank audit in Result 3 is about exactly that column.
+
 **Read that table with Result 4 in hand.** Grouped CV holds out *discharges*,
 and every machine in the held-out fold also appears in the training fold. It
 therefore measures interpolation within machines the model has already seen. On

@@ -219,7 +219,7 @@ code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-sunk);
     </p>
     <h1>Confinement Scaling Reversal</h1>
     <p class="lede">
-      On the real ITPA database, a random forest beats the published 1998 scaling law by 41%.
+      On the real ITPA database, a random forest beats a blind refitted power law by 29%.
       Hold out an entire tokamak instead of a few shots and <strong>the ranking inverts completely</strong>:
       the best cross-validated model becomes the worst of the three, on every machine tested.
     </p>
@@ -242,7 +242,8 @@ code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-sunk);
         The obvious modern move is to replace it with something more flexible. Trained and scored on the
         ITPA H-mode database under grouped cross-validation, that works: a random forest reaches
         <span class="num">0.128</span> log-RMSE against the published law's <span class="num">0.199</span>,
-        a 41% improvement measured against real physics rather than against a mean predictor.
+        a 36% improvement measured against real physics rather than against a mean predictor,
+        and 29% against the same power law refitted blind on these rows.
       </p>
       <p>
         But cross-validation here holds out <em>discharges</em>. Every machine in the held-out fold also sits
@@ -385,7 +386,7 @@ code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-sunk);
     <p class="sub" style="margin-top:14px">
       Skill places each model between predicting a single constant (0.00) and the analytic power law (1.00).
       The power law keeps 93% of that distance. The trees keep 41% and 31%: asked the question a scaling law
-      exists to answer, <b>they land closer to a constant than to the law they beat by 41% under
+      exists to answer, <b>they land closer to a constant than to the published law they beat by 36% under
       cross-validation</b>.
     </p>
 
@@ -627,7 +628,7 @@ code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-sunk);
         <p>
           A tree ensemble averages training targets, so it cannot exceed the largest one, which here is
           <span class="num" id="c-max">&mdash;</span> s. <b>The random forest that wins cross-validation by
-          41% is arithmetically incapable of returning ITER's predicted confinement time</b>, and its 90%
+          29% is arithmetically incapable of returning ITER's predicted confinement time</b>, and its 90%
           interval does not contain the physics answer or anything near it.
         </p>
       </div>

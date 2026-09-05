@@ -6,6 +6,7 @@ authors:
   - given-names: Liam
     family-names: Salcedo
     alias: lsalcedo100
+    orcid: "https://orcid.org/0009-0001-5039-8147"
 repository-code: "https://github.com/lsalcedo100/FusionFlux"
 abstract: >-
   A study of energy confinement time scaling on the ITPA Global H-mode

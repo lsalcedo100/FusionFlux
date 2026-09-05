@@ -36,13 +36,9 @@
 
 \title{\vspace{-1.4cm}\textbf{Validation protocol reverses
 machine-learning\\ rankings in tokamak confinement scaling}}
-% The affiliation and ORCID are what a journal asks for that arXiv and Zenodo do
-% not. Both are placeholders until filled, and `tools/check_paper_submission.py`
-% refuses to pass while they read as written, so neither can reach a submission
-% by being forgotten.
 \author{Liam Salcedo\thanks{Independent researcher, Montclair, New Jersey, USA.
 \texttt{liamsalcedo100@gmail.com}.
-ORCID: \texttt{FILL-IN-ORCID}.}}
+ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}}.}}
 \date{4 September 2026}
 
 \begin{document}
@@ -55,27 +51,28 @@ Archived at \href{https://doi.org/10.5281/zenodo.22215142}{doi:10.5281/zenodo.22
 
 \begin{abstract}
 \noindent
-Confinement scaling laws set the size a tokamak must reach to ignite, and are
-fitted across the devices already built. On the ITPA
+Confinement scaling laws set the size a tokamak must reach to ignite and are
+fitted across existing devices. On the ITPA
 global H-mode database (HDB5, standard analysis set STD5; 6228 slices from 4471
 discharges across 18 tokamaks), under cross-validation grouped by discharge, a
-random forest reduces log error by 29\% relative to a blind refitted power law
-and by 36\% relative to the published IPB98(y,2) reference. That margin does not
-survive the question a scaling law exists to answer. Under leave-one-tokamak-out
-the ordering of the three primary fitted models reverses exactly: the random
-forest is worse than the same log-linear power law on all 13 held-out database
-labels and all 11 physical devices (sign test
-$p=9.8\times10^{-4}$). The reversal survives a hyperparameter
+random forest reduces log error by 29\% against a blind refitted power law and
+36\% against the published IPB98(y,2) reference. That margin does not survive
+the question a scaling law exists to answer. Under leave-one-tokamak-out the
+ordering of the three primary fitted models reverses exactly: the forest is
+worse than that same power law on all 13 held-out database labels and all 11
+physical devices (sign test $p=9.8\times10^{-4}$). The reversal survives a hyperparameter
 search nested inside every training fold. The forest's error tracks the held-out
 machine's distance from the training data ($\rho=+0.85$) where the power law's
-does not ($\rho=-0.06$), and it cannot predict outside its training target
-range. At a size-ordered cut reproducing ITER's $1.82\times$ jump in major
+does not ($\rho=-0.06$), and its predictions cannot exceed the range of its
+training targets. At a size-ordered cut reproducing ITER's $1.82\times$ jump in major
 radius, the tree ensembles score closer to a constant predictor than to the
 power law, and split-conformal intervals calibrated to 90\% fall to 3\%
-row-level coverage at unchanged width. Two repairs work, both adding long-range
-structure rather than flexibility: a Connor--Taylor constraint surface, and a
-Gaussian process whose linear component keeps trending. Across the families tested here, extrapolation failure tracks long-range saturation rather
-than flexibility alone. For ITER the surviving and failing models differ by a
+row-level coverage for the forest and 0\% for the booster, at unchanged width.
+Two exploratory repairs improve extrapolation, both adding long-range structure
+rather than flexibility: a Connor--Taylor constraint surface, and a Gaussian
+process whose linear component keeps trending. Across the families tested here,
+extrapolation failure tracks long-range saturation rather than flexibility
+alone. For ITER the surviving and failing models differ by a
 factor of 8.3.
 \end{abstract}
 
@@ -151,16 +148,17 @@ answers the question a scaling law exists for, measure what the honest answer
 costs, identify the property of a model that decides it, and test the repair
 that physics rather than flexibility supplies.
 
-That measurement is the wrong one, for a reason about the data rather than
-about the models. Cross-validation on this database holds out
+That measurement does not directly address the deployment problem of interest,
+for a reason about the data rather than about the models. Cross-validation on this database holds out
 \emph{discharges}, and every machine in a held-out fold also appears in the
 training fold, so a held-out row has hundreds of near neighbours recorded on
 the same device at nearby settings. What the score quantifies is how much of
 JET is predictable from the rest of JET. That a validation split should match
 the generalisation being claimed, and that grouped observations flatter a model
 when it does not, is well understood in fields whose data arrives in
-clusters~\cite{roberts}; it is not how a candidate confinement model is usually
-scored. A scaling law is not for the machines that exist.
+clusters~\cite{roberts}; it is not what a commonly reported comparison on this
+database measures. The quantity a scaling law is built to supply is a prediction for a
+machine that does not yet exist.
 
 This paper measures what the deployment-matched split costs. We escalate what is held out
 in three steps, a discharge, then a whole machine, then an entire size range,
@@ -212,8 +210,11 @@ forest~\cite{breiman} (300 trees), a histogram gradient booster, polynomial ridg
 3, and a mean baseline. IPB98(y,2) evaluated analytically is reported as a
 physics reference, and is marked throughout as \emph{not blind}.
 
-\paragraph{What is and is not tuned.} Every model predicts $\log\tau$ and is
-exponentiated to $\tau$ before scoring. None of the models in
+\paragraph{What is and is not tuned.} Every model is fitted and scored in
+$\log\tau$: the target is $\log\tau$ and the reported error is the
+root-mean-square residual in the same variable. Exponentiation to $\tau$ enters
+only where a quantity is quoted in seconds, such as the mean absolute error and
+the device forecasts of Sec.~\ref{sec:forecast}. None of the models in
 Table~\ref{tab:reversal} is hyperparameter-tuned, and ``library defaults'' is
 not a specification, so the consequential settings are given here in full.
 The power law is \texttt{StandardScaler} followed by \texttt{Ridge} with
@@ -252,7 +253,12 @@ every slice from one discharge falls in the same fold. It is constructed with
 \texttt{shuffle=False}, its default, so the partition is deterministic and no
 seed enters it. (ii)
 Leave-one-tokamak-out over the 13 machines with at least 30 rows: each is held
-out in turn and the model is trained on the other 12. (iii) A size-ordered cut:
+out in turn and the model is trained on every other machine in the database. The
+30-row threshold governs only which machines are scored, not which are trained
+on, so the five machines below it (COMPASS, TCV, START, TDEV and TFTR, 43 rows
+between them) stay in every training fold; each fold therefore trains on 17
+machines. Sec.~\ref{sec:robustness} reports what happens when those five are
+dropped from training as well. (iii) A size-ordered cut:
 machines are ordered by median major radius, the model is trained below a cut
 and scored on every machine above it, and the reported cut is the one whose size
 ratio is closest in log to the ratio between this database and ITER. That rung
@@ -405,10 +411,12 @@ Table~\ref{tab:reversal} is the central result. Among the three primary
 models, a power law, a random forest and a gradient booster, the order under
 one split is the exact reverse of the order under the other. The random forest
 is the best model in the study by cross-validation and the worst of the three
-on a machine it has not seen. Both columns compare the same models on the same
-rows and features, so the reversal is a like-for-like statement: the forest is
-29\% better than the blind power law in the CV column and 117\% worse than it in
-the LOMO column. The analytic IPB98(y,2) row is the published reference and is
+on a machine it has not seen. Both columns compare the same model
+specifications and the same features, but they differ in scoring population and
+in aggregation as well as in held-out unit;
+Sec.~\ref{sec:robustness} matches those choices and shows the reversal survives.
+Against the blind power law the forest is 29\% better in the CV column and
+117\% worse in the LOMO column. The analytic IPB98(y,2) row is the published reference and is
 marked not blind, since it was fitted on this database with every machine
 included. The two polynomial rungs are controls, scored in
 the same table but outside the ranking claim, and including them breaks the
@@ -546,6 +554,23 @@ every row, where JET and AUG dominate, while leave-one-out averages per-machine
 scores, where every machine counts once. And JET and JET-ILW are one physical
 tokamak either side of a wall change, as are AUG and AUGW, so holding out
 JET-ILW while training on JET does not hold out an unseen device.
+
+\paragraph{The machines too small to score.} A fourth choice is worth stating
+because it looks like a confound and is not. Five machines hold fewer than 30
+rows (COMPASS, TCV, START, TDEV and TFTR, 43 rows between them, under 1\% of the
+database) and none can carry a held-out score of its own. They are nonetheless
+in every training fold, since the threshold governs scoring rather than
+training. They are also among the most unusual points in the feature space, so
+whether a flexible model can exploit those few rows is a fair question to ask of
+the ranking.
+
+Dropping them from training as well answers it. Every blind model gets slightly
+worse without them, by 0.012 for the power law, 0.027 for the gradient booster
+and 0.007 for the random forest, and the ordering over the 13 held-out machines
+is unchanged: power law 0.214 to 0.226, gradient booster 0.359 to 0.387, random
+forest 0.465 to 0.472. The 43 rows help the tree ensembles slightly, as one
+would expect of rows in a sparse region, and nowhere near enough to recover the
+inversion. The analytic reference is unaffected, since it fits nothing.
 
 \begin{table}[t]
 \centering
@@ -1310,10 +1335,10 @@ nowhere near the answer. Width was never the problem.
 
 The practical consequence of Table~\ref{tab:reversal} is narrow and specific.
 It is not that machine learning has nothing to offer confinement scaling, and
-not that the models scored here are badly built. It is that the comparison the
-field runs by default answers a question nobody is asking. Cross-validation
-grouped by discharge, or by shot, or by time slice, holds out rows from machines
-that remain in the training set. It measures interpolation within known devices.
+not that the models scored here are badly built. It is that conventional
+within-database evaluations do not measure the quantity the law is used for.
+Cross-validation grouped by discharge, or by shot, or by time slice, holds out
+rows from machines that remain in the training set. It measures interpolation within known devices.
 A scaling law is used to size a device that does not exist, which is
 extrapolation to an unknown one, and on this database the two comparisons do not
 merely differ in magnitude: they order the candidate models in opposite
@@ -1532,7 +1557,9 @@ analysis, and wrote the manuscript.
 
 An AI assistant (Anthropic Claude) was used in developing the analysis code, in
 carrying out parts of the analysis, and in drafting and editing this manuscript.
-No AI system is an author. The author designed the study, verified every
+Additional AI assistants were used to review and critique drafts, and wording
+they proposed was in places adopted into the manuscript. No AI system is an
+author. The author designed the study, verified every
 reported number against the generated artifacts, and takes full responsibility
 for the content, the conclusions and any error in them.
 

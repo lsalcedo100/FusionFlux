@@ -39,6 +39,7 @@ from figures import (
     FONT_TICK,
     FONT_TITLE,
     PAPER_WIDTH_IN,
+    model_style,
     save_figure,
 )
 from storage import write_dataframe_csv_atomic, write_json_strict
@@ -608,10 +609,12 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
 
     for transfer in plotted:
         color, label = style[transfer.model_name]
+        marker, dashes = model_style(transfer.model_name)
         axes[0].plot(
             [0, 1],
             [transfer.cv_rmsle, transfer.lomo_mean_rmsle],
-            "o-",
+            marker=marker,
+            linestyle=dashes,
             color=color,
             linewidth=2.0,
             markersize=7,
@@ -675,9 +678,10 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
         axes[1].plot(
             rows["feature_mahalanobis"],
             rows["rmsle"],
-            "o",
+            marker=model_style(model_name)[0],
+            linestyle="none",
             color=color,
-            markersize=8,
+            markersize=7,
             label=f"{label}   (rho = {rho:+.2f})",
         )
     truncated = {finding.tokamak for finding in analysis.truncation}
@@ -688,8 +692,9 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             axes[1].plot(
                 row["feature_mahalanobis"],
                 row["rmsle"],
-                "o",
-                markersize=15,
+                marker=model_style("random_forest")[0],
+                linestyle="none",
+                markersize=14,
                 markerfacecolor="none",
                 markeredgecolor=ink,
                 markeredgewidth=1.4,
@@ -737,14 +742,14 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     # runs. Joining them would assert a continuum that does not exist, and the
     # step between them is the panel's point rather than part of a trend.
     split = bounded.index(True) if True in bounded else len(rungs)
-    for series, color, label in (
-        (medians, blue, "median of 13 machines"),
-        (worst, orange, "worst single machine"),
+    for series, color, label, marker, dashes in (
+        (medians, blue, "median of 13 machines", "o", "-"),
+        (worst, orange, "worst single machine", "^", "--"),
     ):
-        axes[2].plot(positions[:split], series[:split], "o-", color=color, linewidth=2.0,
-                     markersize=8, label=label)
-        axes[2].plot(positions[split:], series[split:], "o-", color=color, linewidth=2.0,
-                     markersize=8)
+        axes[2].plot(positions[:split], series[:split], marker=marker, linestyle=dashes,
+                     color=color, linewidth=2.0, markersize=7, label=label)
+        axes[2].plot(positions[split:], series[split:], marker=marker, linestyle=dashes,
+                     color=color, linewidth=2.0, markersize=7)
     if 0 < split < len(rungs):
         axes[2].axvline(split - 0.5, color=muted, linestyle=":", linewidth=1.0)
         axes[2].annotate("polynomial\n(unbounded)", xy=(split - 0.62, 0.02),
@@ -755,8 +760,9 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
                          fontsize=FONT_SMALL, color=muted)
     for index, is_bounded in enumerate(bounded):
         if is_bounded:
-            axes[2].plot(positions[index], worst[index], "o", markersize=15,
-                         markerfacecolor="none", markeredgecolor=ink, markeredgewidth=1.4)
+            axes[2].plot(positions[index], worst[index], marker="^", linestyle="none",
+                         markersize=14, markerfacecolor="none", markeredgecolor=ink,
+                         markeredgewidth=1.4)
     axes[2].set_yscale("log")
     # Headroom above the worst point so the two family labels sit in clear space.
     axes[2].set_ylim(min(medians) * 0.6, max(worst) * 3.0)

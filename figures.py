@@ -53,6 +53,37 @@ FONT_LEGEND = 8.5
 FONT_ANNOTATION = 8.0
 FONT_SMALL = 7.0
 
+# Marker and line style per model, so no figure carries its meaning in colour
+# alone. A reader printing the paper in grey, or one of the roughly one in twelve
+# men with a red-green deficiency, has to be able to tell the random forest from
+# the power law, and in Fig. 1 that distinction is the entire result. Colour
+# stays, because it is the fastest channel for readers who can use it; these
+# make it the second channel rather than the only one.
+#
+# The pairs are chosen to stay distinct at the printed size: a filled circle, a
+# square and an open triangle read apart at 4 pt in a way that, say, a circle and
+# an octagon do not.
+MODEL_MARKERS = {
+    "ipb98y2_analytic": "s",
+    "ridge_loglinear": "o",
+    "hist_gradient_boosting": "^",
+    "random_forest": "D",
+    "mean_baseline": "x",
+}
+
+MODEL_LINESTYLES = {
+    "ipb98y2_analytic": "-",
+    "ridge_loglinear": "-",
+    "hist_gradient_boosting": "--",
+    "random_forest": ":",
+    "mean_baseline": "-.",
+}
+
+
+def model_style(name: str) -> tuple[str, str]:
+    """Marker and line style for a model, falling back to a plain solid circle."""
+    return MODEL_MARKERS.get(name, "o"), MODEL_LINESTYLES.get(name, "-")
+
 
 def save_figure(figure: Any, path: Path, **savefig_kwargs: Any) -> Path:
     """Save `figure` as the PNG at `path` and as a PDF beside it.

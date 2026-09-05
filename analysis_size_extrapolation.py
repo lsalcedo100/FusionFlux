@@ -47,6 +47,7 @@ from figures import (
     FONT_TICK,
     FONT_TITLE,
     PAPER_WIDTH_IN,
+    model_style,
     save_figure,
 )
 from storage import write_dataframe_csv_atomic, write_json_strict
@@ -414,10 +415,12 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
             continue
         color, label = style[row.model_name]
         dashed = row.model_name == "mean_baseline"
+        marker, line = model_style(row.model_name)
         axes[0].plot(
             [0, 1, 2],
             [row.cv_rmsle, row.lomo_mean_rmsle, row.size_cut_rmsle],
-            "o--" if dashed else "o-",
+            marker=marker,
+            linestyle=line,
             color=color,
             linewidth=1.4 if dashed else 2.0,
             markersize=5 if dashed else 7,
@@ -480,10 +483,12 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
             continue
         dashed = name == "mean_baseline"
         powered = subset[subset["well_powered"]]
+        marker, line = model_style(name)
         axes[1].plot(
             powered["size_ratio"],
             powered["rmsle"],
-            "o--" if dashed else "o-",
+            marker=marker,
+            linestyle=line,
             color=color,
             linewidth=1.3 if dashed else 1.9,
             markersize=4 if dashed else 5.5,
@@ -494,7 +499,8 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
         axes[1].plot(
             thin["size_ratio"],
             thin["rmsle"],
-            "o",
+            marker=marker,
+            linestyle="none",
             color=color,
             markersize=4,
             alpha=0.3,

@@ -16,7 +16,7 @@ A tokamak holds a plasma hot enough to fuse inside a magnetic field, and the pla
 
 So it is worth asking whether machine learning does the job better. On this database it does, by a lot. **Then you ask it about a machine it has not seen, and the answer inverts.**
 
-> A random forest beats the published physics law by **41%** under the standard way these models are validated. Under a split that holds out an entire tokamak, it is **worse than the physics law on 13 of 13 machines**. The standard validation does not merely overstate the gain, it reverses the ranking, and the reason is measurable rather than a matter of tuning.
+> A random forest beats a blind refitted power law by **29%** under the standard way these models are validated. Under a split that holds out an entire tokamak, it is **worse than that same power law on 13 of 13 machines**. The standard validation does not merely overstate the gain, it reverses the ranking, and the reason is measurable rather than a matter of tuning.
 
 Everything here is measured on real experimental data: the ITPA Global H-mode Confinement Database, standard analysis set STD5, 6228 quasi-stationary time slices from 4471 discharges across 18 tokamaks. Every model is scored against the analytic IPB98(y,2) scaling law, the published physics baseline, rather than against a mean predictor. No synthetic data enters any reported result. The dataset is fetched from OSF rather than committed and is **pinned by SHA-256**, verified on every load, so each number below is tied to a specific set of bytes rather than to whatever the host is currently serving.
 
@@ -40,7 +40,7 @@ Then you ask whether that is a fact about this one database, and it is not: the 
 
 ![Interpolation against extrapolation](results/extrapolation.png)
 
-Under cross-validation grouped by discharge, a random forest cuts log-RMSE 41% below the analytic IPB98(y,2) law (0.118 against 0.199, on the full ten-feature set; the table below drops the IPB98 prior as a feature and so reads 0.128, a 36% margin, for the same model). But grouped CV holds out *shots*, so every machine in the held-out fold is also in the training fold. Hold out an entire tokamak instead, train on the other 12 and predict the 13th, and **the ranking of the three blind models reverses exactly**:
+Under cross-validation grouped by discharge, a random forest scores 0.128 in log-RMSE against 0.181 for a power law refitted blind on the same rows and features, a margin of **29%**, and against 0.199 for the published IPB98(y,2) law, a margin of 36%. The blind refit is the like-for-like comparator and the one the headline above quotes; IPB98(y,2) was fitted on this database with every machine included, so it is a reference rather than a competitor. But grouped CV holds out *shots*, so every machine in the held-out fold is also in the training fold. Hold out an entire tokamak instead, train on every other machine in the database and predict the held-out one, and **the ranking of the three blind models reverses exactly**:
 
 | model | CV, by discharge | leave-one-tokamak-out | 95% interval | ratio |
 |---|---|---|---|---|
@@ -49,7 +49,7 @@ Under cross-validation grouped by discharge, a random forest cuts log-RMSE 41% b
 | ridge, log-linear | 0.181 | 0.214 | [0.183, 0.241] | 1.2x worse |
 | IPB98(y,2), analytic (fitted on this database, not blind) | 0.199 | 0.188 | [0.158, 0.219] | unchanged |
 
-Both columns use the same nine features and the same models; only the split changes. The best model in this repository by cross-validation is the worst of the three on a machine it has not seen, and its 41% margin turns out to measure how much of JET is predictable from the rest of JET. Intervals are a 95% percentile bootstrap resampling **machines**, since that is the sampling unit the claim is about. They overlap, so the gaps are also tested paired by machine, which removes the enormous differences in how hard each machine is: **the random forest is worse than the power law on 13 of 13 machines**, gap +0.251 [+0.157, +0.342].
+Both columns use the same nine features and the same models; only the split changes. The best model in this repository by cross-validation is the worst of the three on a machine it has not seen, and its 29% margin turns out to measure how much of JET is predictable from the rest of JET. Intervals are a 95% percentile bootstrap resampling **machines**, since that is the sampling unit the claim is about. They overlap, so the gaps are also tested paired by machine, which removes the enormous differences in how hard each machine is: **the random forest is worse than the power law on 13 of 13 machines**, gap +0.251 [+0.157, +0.342].
 
 **The failure has a mechanism.** The random forest's per-machine error correlates with how far that machine sits outside the training data at rho = **+0.85**; the log-linear power law's does not, at rho = **-0.06**. And when JET is held out, 48% of its rows lie above the highest confinement time in the remaining 12 machines: a tree ensemble averages training targets, so **no tree in the forest can output those values at all**, whatever the features say. That bound is asserted directly in `tests/test_extrapolation.py`.
 
@@ -69,7 +69,7 @@ Leave-one-tokamak-out still leaves twelve machines spanning the held-out one's r
 | histogram gradient boosting | 0.130 | 0.359 | **1.072** | 0.31 |
 | mean baseline | 0.869 | 0.994 | 1.459 | 0.00 |
 
-`skill` places each model between predicting a constant (0.0) and the analytic power law (1.0). **The power law keeps 93% of that distance; the trees keep 31% and 41%.** The best cross-validated model families in this repository, asked the question a scaling law exists to answer, land closer to a constant than to the law they beat by 41% under cross-validation. It is size rather than plasma shape: dropping the spherical tokamaks moves the random forest from 0.938 to 0.936. See [Result 5](results/RESULTS.md#result-5-the-same-jump-iter-asks-for-measured-inside-the-database).
+`skill` places each model between predicting a constant (0.0) and the analytic power law (1.0). **The power law keeps 93% of that distance; the trees keep 31% and 41%.** The best cross-validated model families in this repository, asked the question a scaling law exists to answer, land closer to a constant than to the published law they beat by 36% under cross-validation. It is size rather than plasma shape: dropping the spherical tokamaks moves the random forest from 0.938 to 0.936. See [Result 5](results/RESULTS.md#result-5-the-same-jump-iter-asks-for-measured-inside-the-database).
 
 ### The cure the diagnosis implies: a power law with a bounded correction
 
@@ -146,7 +146,7 @@ Every number above rests on one file, which is the honest ceiling on all of it. 
 | power law, collisionless | 4 | **1** | 1.5x |
 | ITER89-P (not blind) | 5 | 2 | 1.0x |
 
-The column ordering inverts in both arms. On the disjoint H-mode rows the best cross-validated model beats the published law by **42%**, within a point of the 41% this README opens with, computed on rows that headline never saw. Counting machine-model pairs where a tree ensemble loses to the published law on an unseen machine: **19 of 24** and **10 of 10**.
+The column ordering inverts in both arms. On the disjoint H-mode rows the best cross-validated model beats the published law by **42%**, computed on rows the headline above never saw. Counting machine-model pairs where a tree ensemble loses to the published law on an unseen machine: **19 of 24** and **10 of 10**.
 
 So the reversal is not an artifact of the standard set's selection criteria, and not a property of ELMy H-mode or of IPB98(y,2) specifically. It is not an independent database either: both arms come from the same ITPA collection and the same devices, and the five-machine arm is too small to carry a claim alone. See [Result 11](results/RESULTS.md#result-11-the-reversal-reproduces-on-rows-this-database-never-contained).
 
@@ -165,7 +165,7 @@ Every result above rests on ITPA data. So the last thing to ask is whether any o
 
 **Two halves, and the second one is the more useful.** The extrapolation failure reproduces completely: the tree ensembles lose to both power laws at **all 8 mass cuts**, the forest loses to Kleiber on **9 of 11** held-out orders, and error tracks distance for the trees (+0.64) far more than for the laws (+0.39). The constraint result reproduces in direction: Kleiber's published exponent costs +0.023 under cross-validation and wins the widest cut by 25%. It is weaker than on HDB5, though, winning at **4 of 8** cuts rather than the 8 of 8 the collisionless constraint manages: decisively at the extremes, narrowly losing in the middle.
 
-**But the ranking reversal does not reproduce, and that is a limit on this repository's headline rather than a footnote.** The trees never win the easy split here either, so there is nothing to invert. With a single predictor and a relationship that is close to a straight line in logs, a tree has far less to exploit, and the 41% cross-validated margin this README opens with is simply not available here to be reversed. **The reversal needs enough feature dimensionality for the flexible model to win interpolation first.** Nothing in Results 4 to 12 could have shown that, because one database cannot. See [Result 13](results/RESULTS.md#result-13-the-same-audit-on-a-scaling-law-from-a-different-science).
+**But the ranking reversal does not reproduce, and that is a limit on this repository's headline rather than a footnote.** The trees never win the easy split here either, so there is nothing to invert. With a single predictor and a relationship that is close to a straight line in logs, a tree has far less to exploit, and the 29% cross-validated margin this README opens with is simply not available here to be reversed. **The reversal needs enough feature dimensionality for the flexible model to win interpolation first.** Nothing in Results 4 to 12 could have shown that, because one database cannot. See [Result 13](results/RESULTS.md#result-13-the-same-audit-on-a-scaling-law-from-a-different-science).
 
 ### The reversal has a precondition, and it can be measured by varying it
 
@@ -229,7 +229,7 @@ Everything above is retrospective. `results/forecast.json` records what each mod
 
 The parameter sets are published design values, and each reproduces the confinement time its own source quotes: SPARC to 0.6%, ITER to 2.9%. **This table is the whole argument in one place.** On JT-60SA, which sits inside the database's size range, all five models agree to within 15%. On ITER, 1.82x beyond it, they disagree by a factor of **8.3**.
 
-That gap cannot be closed by tuning. A tree ensemble averages training targets, so it cannot exceed the largest one, which here is 1.321 s. **The random forest that wins cross-validation by 41% is arithmetically incapable of returning ITER's predicted confinement time**, and its nominal 90% interval at ITER runs from 0.19 s to 0.98 s, which does not contain the physics answer or anything near it.
+That gap cannot be closed by tuning. A tree ensemble averages training targets, so it cannot exceed the largest one, which here is 1.321 s. **The random forest that wins cross-validation by 29% is arithmetically incapable of returning ITER's predicted confinement time**, and its nominal 90% interval at ITER runs from 0.19 s to 0.98 s, which does not contain the physics answer or anything near it.
 
 One thing nothing above anticipated: **SPARC sits further from the training data than ITER does**, 6.9 against 4.7, despite being smaller than JT-60U. Its 12.2 T field is far outside a database that tops out near 4 T. Size is not the only direction a next-step device leaves the data in. See [Result 12](results/RESULTS.md#result-12-a-locked-prediction-for-three-machines-that-have-no-data).
 
