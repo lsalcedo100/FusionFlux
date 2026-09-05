@@ -1,0 +1,307 @@
+% Bibliography for paper/paper.tex.
+%
+% paper.tex prints its references from a hand-written `thebibliography`, which
+% is what arXiv wants: a submission that carries no .bbl and needs no BibTeX
+% pass. Journals want the opposite, a .bib they can run through their own style
+% file, so both exist and `tests/test_paper_bibliography.py` binds them: same
+% keys, same DOIs, in both directions. Editing one without the other fails the
+% suite rather than shipping two reference lists that disagree.
+%
+% Every DOI here was resolved against Crossref rather than reconstructed from
+% the volume and page. That check found one error: the symbolic-regression paper
+% cited as Nucl. Fusion 55, 073009 is Plasma Phys. Control. Fusion 57, 014008.
+% Nucl. Fusion 55, 073009 is a different Murari paper.
+%
+% Four entries have no DOI and are not missing one: a 1975 Soviet journal,
+% two NeurIPS proceedings papers, and a laboratory research plan.
+
+@article{ipb98,
+  author  = {{ITER Physics Expert Groups on Confinement and Transport and
+             Confinement Modelling and Database} and {ITER Physics Basis Editors}},
+  title   = {Chapter 2: Plasma confinement and transport},
+  journal = {Nuclear Fusion},
+  volume  = {39},
+  number  = {12},
+  pages   = {2175--2249},
+  year    = {1999},
+  doi     = {10.1088/0029-5515/39/12/302},
+}
+
+@article{hdb5,
+  author  = {Verdoolaege, G. and Kaye, S. M. and Angioni, C. and Kardaun, O. J. W. F.
+             and Maslov, M. and Romanelli, M. and Ryter, F. and Thomsen, K.},
+  title   = {The updated {ITPA} global {H}-mode confinement database:
+             description and analysis},
+  journal = {Nuclear Fusion},
+  volume  = {61},
+  number  = {7},
+  pages   = {076006},
+  year    = {2021},
+  doi     = {10.1088/1741-4326/abdb91},
+}
+
+@book{conformal,
+  author    = {Vovk, Vladimir and Gammerman, Alexander and Shafer, Glenn},
+  title     = {Algorithmic Learning in a Random World},
+  publisher = {Springer},
+  year      = {2005},
+  doi       = {10.1007/b106715},
+}
+
+@article{kleiber,
+  author  = {Kleiber, Max},
+  title   = {Body size and metabolism},
+  journal = {Hilgardia},
+  volume  = {6},
+  number  = {11},
+  pages   = {315--353},
+  year    = {1932},
+  doi     = {10.3733/hilg.v06n11p315},
+}
+
+@article{connor,
+  author  = {Connor, J. W. and Taylor, J. B.},
+  title   = {Scaling laws for plasma confinement},
+  journal = {Nuclear Fusion},
+  volume  = {17},
+  number  = {5},
+  pages   = {1047--1055},
+  year    = {1977},
+  doi     = {10.1088/0029-5515/17/5/015},
+}
+
+@article{iter89p,
+  author  = {Yushmanov, P. N. and Takizuka, T. and Riedel, K. S. and Kardaun, O. J. W. F.
+             and Cordey, J. G. and Kaye, S. M. and Post, D. E.},
+  title   = {Scalings for tokamak energy confinement},
+  journal = {Nuclear Fusion},
+  volume  = {30},
+  number  = {10},
+  pages   = {1999--2006},
+  year    = {1990},
+  doi     = {10.1088/0029-5515/30/10/001},
+  note    = {ITER89-P},
+}
+
+@article{baad,
+  author  = {Falster, Daniel S. and Duursma, Remko A. and Ishihara, Masae I.
+             and Barneche, Diego R. and FitzJohn, Richard G. and others},
+  title   = {{BAAD}: a {B}iomass {A}nd {A}llometry {D}atabase for woody plants},
+  journal = {Ecology},
+  volume  = {96},
+  number  = {5},
+  pages   = {1445},
+  year    = {2015},
+  doi     = {10.1890/14-1889.1},
+  note    = {Released CC0},
+}
+
+@article{wbe,
+  author  = {West, Geoffrey B. and Brown, James H. and Enquist, Brian J.},
+  title   = {A general model for the structure and allometry of plant
+             vascular systems},
+  journal = {Nature},
+  volume  = {400},
+  pages   = {664--667},
+  year    = {1999},
+  doi     = {10.1038/23251},
+}
+
+@book{gpml,
+  author    = {Rasmussen, Carl Edward and Williams, Christopher K. I.},
+  title     = {Gaussian Processes for Machine Learning},
+  publisher = {MIT Press},
+  year      = {2006},
+  doi       = {10.7551/mitpress/3206.001.0001},
+}
+
+@article{creely,
+  author  = {Creely, A. J. and Greenwald, M. J. and Ballinger, S. B. and Brunner, D.
+             and Canik, J. and Doody, J. and others},
+  title   = {Overview of the {SPARC} tokamak},
+  journal = {Journal of Plasma Physics},
+  volume  = {86},
+  number  = {5},
+  pages   = {865860502},
+  year    = {2020},
+  doi     = {10.1017/S0022377820001257},
+}
+
+@article{kadomtsev,
+  author  = {Kadomtsev, B. B.},
+  title   = {Tokamaks and dimensional analysis},
+  journal = {Soviet Journal of Plasma Physics},
+  volume  = {1},
+  pages   = {295},
+  year    = {1975},
+}
+
+@article{katesharbeck,
+  author  = {Kates-Harbeck, Julian and Svyatkovskiy, Alexey and Tang, William},
+  title   = {Predicting disruptive instabilities in controlled fusion plasmas
+             through deep learning},
+  journal = {Nature},
+  volume  = {568},
+  pages   = {526--531},
+  year    = {2019},
+  doi     = {10.1038/s41586-019-1116-4},
+}
+
+@article{zhu,
+  author  = {Zhu, J. X. and Rea, C. and Montes, K. and Granetz, R. S.
+             and Sweeney, R. and Tinguely, R. A.},
+  title   = {Hybrid deep-learning architecture for general disruption
+             prediction across multiple tokamaks},
+  journal = {Nuclear Fusion},
+  volume  = {61},
+  number  = {2},
+  pages   = {026007},
+  year    = {2021},
+  doi     = {10.1088/1741-4326/abc664},
+}
+
+@article{degrave,
+  author  = {Degrave, Jonas and Felici, Federico and Buchli, Jonas and Neunert, Michael
+             and Tracey, Brendan and Carpanese, Francesco and others},
+  title   = {Magnetic control of tokamak plasmas through deep reinforcement learning},
+  journal = {Nature},
+  volume  = {602},
+  pages   = {414--419},
+  year    = {2022},
+  doi     = {10.1038/s41586-021-04301-9},
+}
+
+@article{murari,
+  author  = {Murari, A. and Peluso, E. and Gelfusa, M. and Lupelli, I.},
+  title   = {Symbolic regression via genetic programming for data driven
+             derivation of confinement scaling laws without any assumption on
+             their mathematical form},
+  journal = {Plasma Physics and Controlled Fusion},
+  volume  = {57},
+  number  = {1},
+  pages   = {014008},
+  year    = {2015},
+  doi     = {10.1088/0741-3335/57/1/014008},
+}
+
+@article{wang,
+  author  = {Wang, Zhaokun and Liu, Tianyuan and Chen, Jianguo and Shi, Guoyang
+             and Ding, Siqi and Shi, Yuejiang and Zhang, Xianmei},
+  title   = {Power-law-anchored residual learning for {H}-mode energy
+             confinement time in tokamaks: interpolation and
+             parameter-defined extrapolation},
+  journal = {arXiv preprint arXiv:2608.20684},
+  year    = {2026},
+  doi     = {10.48550/arXiv.2608.20684},
+}
+
+@article{roberts,
+  author  = {Roberts, David R. and Bahn, Volker and Ciuti, Simone and Boyce, Mark S.
+             and Elith, Jane and Guillera-Arroita, Gurutzeta and others},
+  title   = {Cross-validation strategies for data with temporal, spatial,
+             hierarchical, or phylogenetic structure},
+  journal = {Ecography},
+  volume  = {40},
+  number  = {8},
+  pages   = {913--929},
+  year    = {2017},
+  doi     = {10.1111/ecog.02881},
+}
+
+@inproceedings{shiftcp,
+  author    = {Tibshirani, Ryan J. and Foygel Barber, Rina and Cand\`{e}s, Emmanuel J.
+               and Ramdas, Aaditya},
+  title     = {Conformal prediction under covariate shift},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {32},
+  pages     = {2526--2536},
+  year      = {2019},
+}
+
+@inproceedings{ovadia,
+  author    = {Ovadia, Yaniv and Fertig, Emily and Ren, Jie and Nado, Zachary
+               and Sculley, D. and Nowozin, Sebastian and Dillon, Joshua V.
+               and Lakshminarayanan, Balaji and Snoek, Jasper},
+  title     = {Can you trust your model's uncertainty? {E}valuating predictive
+               uncertainty under dataset shift},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {32},
+  pages     = {13969--13980},
+  year      = {2019},
+}
+
+@article{breiman,
+  author  = {Breiman, Leo},
+  title   = {Random forests},
+  journal = {Machine Learning},
+  volume  = {45},
+  number  = {1},
+  pages   = {5--32},
+  year    = {2001},
+  doi     = {10.1023/A:1010933404324},
+}
+
+@article{felsenstein,
+  author  = {Felsenstein, Joseph},
+  title   = {Phylogenies and the comparative method},
+  journal = {The American Naturalist},
+  volume  = {125},
+  number  = {1},
+  pages   = {1--15},
+  year    = {1985},
+  doi     = {10.1086/284325},
+}
+
+@techreport{jt60saplan,
+  author      = {{JT-60SA Research Unit}},
+  title       = {{JT-60SA} Research Plan: Research Objectives and Strategy},
+  institution = {JT-60SA Research Unit},
+  url         = {https://www.jt60sa.org/},
+}
+
+@article{jt60saop1,
+  author  = {Yoshida, M. and others},
+  title   = {Overview of plasma operation and control studies in the first
+             plasma campaign of {JT-60SA}},
+  journal = {Plasma Physics and Controlled Fusion},
+  volume  = {67},
+  number  = {6},
+  pages   = {065010},
+  year    = {2025},
+  doi     = {10.1088/1361-6587/add563},
+}
+
+@article{namseo,
+  author  = {Nam, H. and Seo, J.},
+  title   = {Machine learning based energy confinement time extrapolation via
+             multi-tokamak database},
+  journal = {Fusion Engineering and Design},
+  volume  = {221},
+  pages   = {115369},
+  year    = {2025},
+  doi     = {10.1016/j.fusengdes.2025.115369},
+}
+
+@article{gao,
+  author  = {Gao, E. and others},
+  title   = {Bayesian neural networks for predicting tokamak energy confinement
+             time with uncertainty quantification},
+  journal = {Nuclear Fusion},
+  volume  = {65},
+  number  = {8},
+  pages   = {084001},
+  year    = {2025},
+  doi     = {10.1088/1741-4326/ade8fd},
+}
+
+@article{xiong,
+  author  = {Xiong, X. and Zhang, K. and Gao, Y. and Zhang, L. and Chen, X.
+             and Liu, S.},
+  title   = {Bayesian optimization based machine learning for predicting tokamak
+             energy confinement time with quantification of feature importance},
+  journal = {Fusion Engineering and Design},
+  volume  = {227},
+  pages   = {115740},
+  year    = {2026},
+  doi     = {10.1016/j.fusengdes.2026.115740},
+}

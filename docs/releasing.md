@@ -18,7 +18,8 @@ make check        # ruff, mypy, pytest
 make dist         # build the wheel and install it into a clean venv, then predict
 make reproduce    # regenerate results/ from the raw data and diff numerically
 make arxiv        # builds build/arxiv-submission.tar.gz and runs the submission gate
-make paper-fresh  # is paper/paper.pdf built from the current paper.tex?
+make paper-fresh  # is paper/paper.pdf built from the current paper.tex, and does
+                  # the commit the paper pins still match results/?
 ```
 
 `make paper-fresh` is the one that is easy to skip and expensive to get wrong.
@@ -49,7 +50,15 @@ Then confirm the release metadata describes the work as it now stands:
 - `.zenodo.json` description and keywords
 - `CITATION.cff` abstract and `version`
 - `version` in `pyproject.toml` (kept equal to the CITATION one)
-- the author line in `paper/paper.tex`
+- the author line in `paper/paper.tex`, which carries the affiliation and ORCID
+  a journal asks for and arXiv does not. Both are `FILL-IN` markers until
+  filled, and `make paper-fresh` fails while they are.
+- the commit `paper/paper.tex` pins as the one its numbers were produced at.
+  `--check-provenance` compares it against the last commit that touched
+  `results/`, so a regeneration cannot silently orphan it.
+
+`paper/README.md` covers the journal route, which differs from this one in what
+it asks for rather than in how it is built.
 
 ## 1. Tag and release
 

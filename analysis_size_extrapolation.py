@@ -39,6 +39,7 @@ import numpy as np
 import pandas as pd
 
 import hdb5
+from figures import save_figure
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -533,7 +534,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
 
     figure.tight_layout()
     path = RESULTS_DIR / "size_extrapolation.png"
-    figure.savefig(path, dpi=180, facecolor="#fcfcfb")
+    save_figure(figure, path, facecolor="#fcfcfb")
     plt.close(figure)
     return path
 

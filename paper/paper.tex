@@ -20,6 +20,10 @@
 \usepackage{graphicx}
 % Repository layout first, then the flat layout `make arxiv` produces.
 \graphicspath{{../results/}{./}}
+% Figures are named without an extension so the vector copy wins where there
+% is one. IOP asks for vector line art in preference to raster, and the PDF
+% of these axes is the smaller file as well.
+\DeclareGraphicsExtensions{.pdf,.png}
 \usepackage{caption}
 \usepackage{microtype}
 \usepackage[hidelinks]{hyperref}
@@ -32,11 +36,22 @@
 
 \title{\vspace{-1.4cm}\textbf{Deployment-matched validation reverses
 machine-learning\\ rankings in tokamak confinement scaling}}
-\author{Liam Salcedo\thanks{\texttt{liamsalcedo100@gmail.com}. Independent work.}}
+% The affiliation and ORCID are what a journal asks for that arXiv and Zenodo do
+% not. Both are placeholders until filled, and `tools/check_paper_submission.py`
+% refuses to pass while they read as written, so neither can reach a submission
+% by being forgotten.
+\author{Liam Salcedo\thanks{Independent researcher, FILL-IN-CITY,
+FILL-IN-COUNTRY. \texttt{liamsalcedo100@gmail.com}.
+ORCID: \texttt{FILL-IN-ORCID}.}}
 \date{4 September 2026}
 
 \begin{document}
 \maketitle
+
+\begin{center}\small
+Code and data: \url{https://github.com/lsalcedo100/FusionFlux}\\
+Archived at \href{https://doi.org/10.5281/zenodo.22215142}{doi:10.5281/zenodo.22215142}
+\end{center}
 
 \begin{abstract}
 \noindent
@@ -47,22 +62,22 @@ slices from 4471 discharges across 18 tokamaks) a random forest
 beats the published IPB98(y,2) scaling law by 36\% in RMSLE under grouped
 cross-validation by discharge. That margin does not survive the question a
 scaling law exists to answer. Under leave-one-tokamak-out the ordering of the
-three primary fitted models is exactly reversed: the random forest is worse than
-a log-linear power law on all 13 held-out database labels and on all 11 physical
-devices once the JET and ASDEX Upgrade variants are collapsed (sign test
-$p=9.8\times10^{-4}$), and the reversal survives a hyperparameter search nested
-inside every training fold. Its error tracks the held-out
+three primary fitted models reverses exactly: the random forest is worse than
+a log-linear power law on all 13 held-out database labels and, collapsing the
+JET and ASDEX Upgrade variants, on all 11 physical devices (sign test
+$p=9.8\times10^{-4}$). The reversal survives a hyperparameter search nested
+inside every training fold. The forest's error tracks the held-out
 machine's distance from the training data ($\rho=+0.85$) where the power law's
 does not ($\rho=-0.06$), and it cannot predict outside its training target range. At a size-ordered cut reproducing ITER's $1.82\times$ jump the tree
 ensembles score closer to a constant predictor than to the power law, and
 split-conformal intervals calibrated to 90\% fall to 3\%
-empirical row-level coverage at unchanged width. Two repairs work, both adding long-range
-structure rather than flexibility. Compared retrospectively across the
-Connor--Taylor constraint surfaces, the collisionless one scores 0.183 there
-with nothing to tune. A Gaussian process combining an RBF component with a
+row-level coverage at unchanged width. Two repairs work, both adding long-range
+structure rather than flexibility. Compared retrospectively, the collisionless
+Connor--Taylor surface scores 0.183 at that cut with nothing to tune. A
+Gaussian process combining an RBF component with a
 continuing linear trend gives the best cross-validated score here and holds up
-at the cut; changing only its mean-function specification moves the cut score by a factor of 7.0, isolating
-the role of the continuing trend. What fails out of distribution is not
+at the cut, where changing only its mean function moves the score by a factor
+of 7.0. What fails out of distribution is not
 flexibility but an inability to keep trending outside the data. For ITER the
 surviving and failing models differ by a factor of 8.3.
 \end{abstract}
@@ -101,7 +116,11 @@ magnetic control~\cite{degrave}. Confinement scaling itself has been revisited
 with symbolic regression, which abandons the power-law form rather than fitting
 it~\cite{murari}, and with a neural residual learned on top of a frozen power
 law~\cite{wang}. Measured conventionally the flexible models win, and on the
-rows used here the margin over the published law is 36\%.
+rows used here the margin over the published law is 36\%, 0.128 against 0.199
+in RMSLE. The repository accompanying this paper quotes 41\% for the same
+model, scored on the ten-column matrix of Sec.~\ref{sec:rank}, which adds
+IPB98(y,2)'s own prediction to the nine engineering features. Every number
+below uses the nine.
 
 \paragraph{Related work on this database.} Four recent studies apply machine
 learning to the same ITPA data and are the closest prior work. Nam and
@@ -344,7 +363,7 @@ gap widens to $+0.315$ with an interval of $[+0.221,+0.408]$.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{extrapolation.png}
+\includegraphics[width=\textwidth]{extrapolation}
 \caption{\textbf{Interpolation against extrapolation.} Left: each model under
 both splits, with bars giving the 95\% interval over the 13 held-out machines;
 the lines crossing is the result. Middle: per-machine error against Mahalanobis
@@ -719,7 +738,7 @@ conformal prediction. It is a measurement of an assumption being false.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{size_extrapolation.png}
+\includegraphics[width=\textwidth]{size_extrapolation}
 \caption{\textbf{Size-ordered extrapolation.} Left: the escalation across three
 splits of increasing difficulty, where the tree ensembles collapse toward the
 mean baseline. Middle: the per-machine breakdown at the ITER-matched cut.
@@ -846,7 +865,7 @@ a subspace, and approaches a hard constraint as its variance goes to zero.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{dimensional.png}
+\includegraphics[width=\textwidth]{dimensional}
 \caption{\textbf{Cost against benefit across the size sweep.} Left: the score at
 every size cut for the constrained and unconstrained fits, with underpowered
 cuts drawn faint and excluded from claims. Right: what each constraint costs in
@@ -1032,164 +1051,14 @@ field is far outside a database that tops out near \SI{4}{\tesla}. Size is not
 the only direction in which a next-step device leaves the data behind, and an
 extrapolation audit organised around size alone would have missed it.
 
-\section{The same audit on a scaling law from another science}
-\label{sec:allometry}
-
-Every result to this point rests on ITPA data, so the last question is whether
-any of it is about fusion. Mammalian basal metabolic rate against body mass is
-the same object and the older one: Kleiber~\cite{kleiber} found in 1932 that
-metabolic rate scales as mass to the 3/4. Whether the true exponent is 3/4 or
-2/3 has been argued for decades and we take no position; 3/4 is used here as the
-canonical historical reference law a fitted model has to beat. Taxonomic \emph{order} is the
-unit a species belongs to, as a tokamak is the unit a discharge belongs to, and
-\emph{body mass} is the axis a next instance lies beyond, as machine size is.
-The data is Supplement 1 of a metabolic-rate compilation deposited on Figshare
-(article 3549807), pinned by SHA-256 as the HDB5 files are, giving 541 species
-records across 11 orders whose median masses span 342x. The analysis runs
-through the domain-agnostic module released with this work rather than a copy
-of the fusion pipeline, so it is the procedure a reader would apply to their
-own data, and the problem has a \emph{single predictor}: no model can win by
-finding a better combination of features, so the only thing separating them is
-functional form. Refitting the exponent freely gives 0.687 against Kleiber's
-0.75, so the constraint is not free here either.
-
-\begin{table}[t]
-\centering
-\small
-\caption{Kleiber's law under the same three splits. Scores are RMSLE.}
-\label{tab:allometry}
-\begin{tabular}{lrrr}
-\toprule
-Model & CV, by species & leave-one-order-out & widest mass cut \\
-\midrule
-Kleiber, exponent 3/4 & 0.396 & 0.440 & \textbf{0.374} \\
-power law, free exponent & 0.374 & 0.432 & 0.496 \\
-hist grad.\ boosting & 0.418 & 0.487 & 0.889 \\
-random forest & 0.437 & 0.517 & 0.710 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\paragraph{The extrapolation failure reproduces.} Both tree ensembles are worse
-than both power laws at all 8 mass cuts, and the random forest loses to Kleiber
-on 9 of 11 held-out orders. Two signatures reproduce with it. Tree error rises
-with extrapolation distance, at $\rho=+0.64$ and $+0.65$ against $+0.39$ and
-$+0.45$ for the power laws, which is the same sign as
-Sec.~\ref{sec:mechanisms}'s but a much narrower contrast, since here the power
-laws rise with distance too. And the training-range bound binds at every cut.
-
-\paragraph{The ranking reversal does not, and that bounds the claim.} The
-trees never win the easy split either: under cross-validation by species they
-score 0.437 and 0.418 against
-the free power law's 0.374. With no
-inflated margin there is nothing available to invert. The 36\% gain on HDB5 came
-from a flexible model exploiting structure across nine features; with one
-predictor and a relationship close to a straight line in logs, a tree has far
-less to exploit and does not buy the interpolation win that later reverses.
-The reversal requires enough feature dimensionality for the flexible model to
-win interpolation first, which no single database could have shown.
-
-\paragraph{The constraint result reproduces in direction, not in strength.}
-Kleiber's published exponent costs
-+0.023 under
-cross-validation and wins the widest cut, 0.374 against 0.496, where the
-held-out order is 69x heavier than the training
-median: Sec.~\ref{sec:dimensional}'s trade exactly. But it is weaker, winning at
-4 of 8 cuts rather than 8 of 8, decisively at the extremes and narrowly losing in
-the middle. That a constraint helps out of distribution replicates; that it helps
-reliably does not.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{allometry.png}
-\caption{\textbf{Kleiber's law under the same three splits.} Left: no inversion,
-because the trees lose under both splits and so have no interpolation margin to
-give up. Middle: error against extrapolation distance, rising for the flexible
-models as it does on HDB5. Right: the mass-ordered sweep, with the circled
-points marking cuts where the random forest is held inside its training
-range.}
-\label{fig:allometry}
-\end{figure*}
-
-\section{The reversal's precondition, measured directly}
-\label{sec:ladder}
-
-Section~\ref{sec:allometry} leaves an asymmetry. The extrapolation failure
-reproduced in full on Kleiber's law; the ranking inversion did not, and the
-explanation offered there was a conjecture: with a single predictor a tree has
-little to exploit, never wins the interpolation split, and so has no advantage
-to lose. Two datasets cannot test that, because HDB5 and the mammalian
-compilation differ in feature count and also in science, group structure, sample
-size and noise.
-
-A third dataset can, if the feature count is varied inside it while everything
-else is held fixed. The Biomass And Allometry Database~\cite{baad} records, for
-individual plants, a nested set of measurements: basal diameter, height, leaf
-area and leaf mass. Taking the rows complete in all four gives 3599 plants
-across 53 species, 33 of them with the 30 individuals we require to hold a
-species out, spanning 36x in diameter across species medians and over seven
-orders of magnitude in mass. It is released CC0 and pinned by SHA-256 as the
-other deposits are. Species plays the part of tokamak, diameter the part of
-machine size, and the branching-network prediction that mass scales as diameter
-to the 8/3~\cite{wbe} the part of IPB98(y,2): an exponent derived from theory
-rather than fitted, which refits here to 2.512 and costs 0.5641 against 0.5780
-in sample when held.
-
-Each rung of the ladder is a prefix of the next and all four are scored on the
-same rows, so the only quantity that changes across them is how many predictors
-the models may see. The split structure matters and is easy to get wrong:
-grouped cross-validation by discharge keeps every machine on both sides, so its
-analogue keeps every species on both sides. Grouping the cross-validation by
-species instead would be a second leave-one-group-out, and against it no
-reversal can appear at any dimension.
-
-\begin{table}[t]
-\centering
-\small
-\begin{tabular}{lrrrr}
-\toprule
-predictors & interp.\ gain & held-out gain & reversal \\
-\midrule
-diameter & $-1.7\%$ & $-10.5\%$ & no \\
-$+$ height & $-0.6\%$ & $-10.8\%$ & no \\
-$+$ leaf area & $+1.8\%$ & $-13.1\%$ & yes \\
-$+$ leaf mass & $+6.8\%$ & $-13.4\%$ & yes \\
-\bottomrule
-\end{tabular}
-\caption{The best tree ensemble's margin over the log-linear power law, on 3599
-plants held fixed across the four rungs. Positive favours the trees. The
-interpolation column crosses zero; the extrapolation column does not, and grows
-slightly against them.}
-\label{tab:ladder}
-\end{table}
-
-Table~\ref{tab:ladder} separates two statements that had been travelling as one.
-The interpolation margin rises monotonically and crosses zero between two and
-three predictors. The extrapolation margin does not shrink as the trees improve;
-it widens, and the power law wins the held-out species at 4 of 4 rungs. The
-inversion therefore appears at 3 predictors and every rung above, which is
-exactly where the interpolation margin turns positive. What the ladder shows is
-that the inversion tracks the interpolation margin, not that three is a
-threshold: each new column adds real biological information as well as a
-dimension, and leaf mass in particular is closely related to the target, so the
-rungs differ in more than their count.
-
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{tree_allometry.png}
-\caption{\textbf{The reversal's precondition, on 3599 plants held fixed.} Left:
-the interpolation split, where every species appears on both sides. Right: an
-entire species held out. Only the number of predictors varies. The left curves
-cross; the right ones do not.}
-\label{fig:ladder}
-\end{figure*}
-
-So the extrapolation failure holds in tokamaks, mammals and trees alike, at
-every predictor count tested here. The \emph{inversion} is conditional,
-and its condition has nothing to do with the failure: it is only whether the
-flexible model had enough to work with to win the comparison a practitioner runs
-first. The inversion is the warning light rather than the disease. Below three
-predictors the hazard is identical and the light is off.
+% The two cross-domain replications moved to the appendices: they carry the
+% "not fusion-specific" claim and the predictor-count condition, but a reader
+% following the tokamak argument does not need them in line.
+Two replications outside fusion are reported in Appendix~\ref{sec:allometry}
+and Appendix~\ref{sec:ladder}: the same audit run on Kleiber's law for
+mammalian metabolic rate, and a predictor-count sweep on woody plants that
+isolates what the ranking inversion needs and the extrapolation failure does
+not. They are what rules out reading any of the above as a fact about tokamaks.
 
 \section{Flexibility, or long-range saturation?}
 \label{sec:gp}
@@ -1343,7 +1212,7 @@ power law on a held-out machine (0.218 against 0.214).
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{gp.png}
+\includegraphics[width=\textwidth]{gp}
 \caption{\textbf{One model family, three kernels.} Left: RMSLE on a held-out
 machine and at the ITER-matched cut. The kernels differ in whether they permit a
 trend that continues at long range; adding the linear component also enlarges
@@ -1395,13 +1264,13 @@ Sec.~\ref{sec:forecast} is a record, not a validation; only JT-60SA can be check
 measurement in the near term, that check requires an H-mode campaign rather than
 the completed L-mode one and we put no date on when that arrives, and it is the one device of
 the three that sits inside the database's size range. The replication of
-Sec.~\ref{sec:allometry} has one predictor and eleven groups, and those
+Appendix~\ref{sec:allometry} has one predictor and eleven groups, and those
 groups are phylogenetically related rather than independent, which the
 comparative-biology literature handles with phylogenetically controlled
 regression~\cite{felsenstein} and we do not; it suffices to show the extrapolation failure is
 not fusion-specific and that the reversal needs a condition that dataset
 lacks, not to establish a rate for either. The ladder of
-Sec.~\ref{sec:ladder} is one ordering of one set of predictors, so it
+Appendix~\ref{sec:ladder} is one ordering of one set of predictors, so it
 establishes that a crossing exists and that the inversion tracks it, not that
 three is a threshold; its rows are a selective intersection, cutting 21084
 plants to 3599 and favouring studies that measured leaves destructively, most of
@@ -1500,6 +1369,28 @@ because the flexible models that win the conventional interpolation comparison
 here are the saturating ones, while the non-saturating polynomial control
 becomes unstable in extrapolation instead.
 
+\section*{Acknowledgments}
+
+This work uses the ITPA Global H-mode Confinement Database, assembled and
+maintained by the ITPA Confinement Database and Modelling Topical Group and by
+the teams operating the contributing tokamaks. The author thanks them, and the
+authors of Ref.~\cite{hdb5}, for releasing the standard analysis set publicly:
+an independent recomputation of this kind is possible only because they did.
+The replications outside fusion use the BAAD compilation~\cite{baad}, released
+under CC0, and the metabolic-rate compilation deposited on Figshare that
+Appendix~\ref{sec:allometry} describes. Neither the ITPA group nor any
+contributing team has reviewed or endorsed this analysis, and its conclusions
+are the author's alone.
+
+\section*{Funding}
+
+This research received no specific grant from any funding agency in the public,
+commercial or not-for-profit sectors.
+
+\section*{Competing interests}
+
+The author declares no competing interests.
+
 \section*{Data and code availability}
 
 The HDB5 STD5 dataset is third-party data obtained from OSF
@@ -1536,58 +1427,239 @@ scripts that regenerate every number and figure in this paper are at
 \url{https://github.com/lsalcedo100/FusionFlux}. The analysis code is pinned as
 firmly as its inputs: every number and figure above was produced at commit
 \begin{center}\scriptsize
-\texttt{8edccdf6a694e7dd7a4e41d54348eeb785d34eb3}
+\texttt{187b49aacb3f8c15f993b4e3d69634d688114219}
 \end{center}
 \noindent Each analysis script also writes the dataset fingerprint it verified
 into its own JSON output under \texttt{results/}, so a regenerated number
 carries the provenance of the bytes it was computed from.
 
+\appendix
+
+\section{The same audit on a scaling law from another science}
+\label{sec:allometry}
+
+Every result to this point rests on ITPA data, so the last question is whether
+any of it is about fusion. Mammalian basal metabolic rate against body mass is
+the same object and the older one: Kleiber~\cite{kleiber} found in 1932 that
+metabolic rate scales as mass to the 3/4. Whether the true exponent is 3/4 or
+2/3 has been argued for decades and we take no position; 3/4 is used here as the
+canonical historical reference law a fitted model has to beat. Taxonomic \emph{order} is the
+unit a species belongs to, as a tokamak is the unit a discharge belongs to, and
+\emph{body mass} is the axis a next instance lies beyond, as machine size is.
+The data is Supplement 1 of a metabolic-rate compilation deposited on Figshare
+(article 3549807), pinned by SHA-256 as the HDB5 files are, giving 541 species
+records across 11 orders whose median masses span 342x. The analysis runs
+through the domain-agnostic module released with this work rather than a copy
+of the fusion pipeline, so it is the procedure a reader would apply to their
+own data, and the problem has a \emph{single predictor}: no model can win by
+finding a better combination of features, so the only thing separating them is
+functional form. Refitting the exponent freely gives 0.687 against Kleiber's
+0.75, so the constraint is not free here either.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Kleiber's law under the same three splits. Scores are RMSLE.}
+\label{tab:allometry}
+\begin{tabular}{lrrr}
+\toprule
+Model & CV, by species & leave-one-order-out & widest mass cut \\
+\midrule
+Kleiber, exponent 3/4 & 0.396 & 0.440 & \textbf{0.374} \\
+power law, free exponent & 0.374 & 0.432 & 0.496 \\
+hist grad.\ boosting & 0.418 & 0.487 & 0.889 \\
+random forest & 0.437 & 0.517 & 0.710 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{The extrapolation failure reproduces.} Both tree ensembles are worse
+than both power laws at all 8 mass cuts, and the random forest loses to Kleiber
+on 9 of 11 held-out orders. Two signatures reproduce with it. Tree error rises
+with extrapolation distance, at $\rho=+0.64$ and $+0.65$ against $+0.39$ and
+$+0.45$ for the power laws, which is the same sign as
+Sec.~\ref{sec:mechanisms}'s but a much narrower contrast, since here the power
+laws rise with distance too. And the training-range bound binds at every cut.
+
+\paragraph{The ranking reversal does not, and that bounds the claim.} The
+trees never win the easy split either: under cross-validation by species they
+score 0.437 and 0.418 against
+the free power law's 0.374. With no
+inflated margin there is nothing available to invert. The 36\% gain on HDB5 came
+from a flexible model exploiting structure across nine features; with one
+predictor and a relationship close to a straight line in logs, a tree has far
+less to exploit and does not buy the interpolation win that later reverses.
+The reversal requires enough feature dimensionality for the flexible model to
+win interpolation first, which no single database could have shown.
+
+\paragraph{The constraint result reproduces in direction, not in strength.}
+Kleiber's published exponent costs
++0.023 under
+cross-validation and wins the widest cut, 0.374 against 0.496, where the
+held-out order is 69x heavier than the training
+median: Sec.~\ref{sec:dimensional}'s trade exactly. But it is weaker, winning at
+4 of 8 cuts rather than 8 of 8, decisively at the extremes and narrowly losing in
+the middle. That a constraint helps out of distribution replicates; that it helps
+reliably does not.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{allometry}
+\caption{\textbf{Kleiber's law under the same three splits.} Left: no inversion,
+because the trees lose under both splits and so have no interpolation margin to
+give up. Middle: error against extrapolation distance, rising for the flexible
+models as it does on HDB5. Right: the mass-ordered sweep, with the circled
+points marking cuts where the random forest is held inside its training
+range.}
+\label{fig:allometry}
+\end{figure*}
+
+\section{The reversal's precondition, measured directly}
+\label{sec:ladder}
+
+Appendix~\ref{sec:allometry} leaves an asymmetry. The extrapolation failure
+reproduced in full on Kleiber's law; the ranking inversion did not, and the
+explanation offered there was a conjecture: with a single predictor a tree has
+little to exploit, never wins the interpolation split, and so has no advantage
+to lose. Two datasets cannot test that, because HDB5 and the mammalian
+compilation differ in feature count and also in science, group structure, sample
+size and noise.
+
+A third dataset can, if the feature count is varied inside it while everything
+else is held fixed. The Biomass And Allometry Database~\cite{baad} records, for
+individual plants, a nested set of measurements: basal diameter, height, leaf
+area and leaf mass. Taking the rows complete in all four gives 3599 plants
+across 53 species, 33 of them with the 30 individuals we require to hold a
+species out, spanning 36x in diameter across species medians and over seven
+orders of magnitude in mass. It is released CC0 and pinned by SHA-256 as the
+other deposits are. Species plays the part of tokamak, diameter the part of
+machine size, and the branching-network prediction that mass scales as diameter
+to the 8/3~\cite{wbe} the part of IPB98(y,2): an exponent derived from theory
+rather than fitted, which refits here to 2.512 and costs 0.5641 against 0.5780
+in sample when held.
+
+Each rung of the ladder is a prefix of the next and all four are scored on the
+same rows, so the only quantity that changes across them is how many predictors
+the models may see. The split structure matters and is easy to get wrong:
+grouped cross-validation by discharge keeps every machine on both sides, so its
+analogue keeps every species on both sides. Grouping the cross-validation by
+species instead would be a second leave-one-group-out, and against it no
+reversal can appear at any dimension.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+predictors & interp.\ gain & held-out gain & reversal \\
+\midrule
+diameter & $-1.7\%$ & $-10.5\%$ & no \\
+$+$ height & $-0.6\%$ & $-10.8\%$ & no \\
+$+$ leaf area & $+1.8\%$ & $-13.1\%$ & yes \\
+$+$ leaf mass & $+6.8\%$ & $-13.4\%$ & yes \\
+\bottomrule
+\end{tabular}
+\caption{The best tree ensemble's margin over the log-linear power law, on 3599
+plants held fixed across the four rungs. Positive favours the trees. The
+interpolation column crosses zero; the extrapolation column does not, and grows
+slightly against them.}
+\label{tab:ladder}
+\end{table}
+
+Table~\ref{tab:ladder} separates two statements that had been travelling as one.
+The interpolation margin rises monotonically and crosses zero between two and
+three predictors. The extrapolation margin does not shrink as the trees improve;
+it widens, and the power law wins the held-out species at 4 of 4 rungs. The
+inversion therefore appears at 3 predictors and every rung above, which is
+exactly where the interpolation margin turns positive. What the ladder shows is
+that the inversion tracks the interpolation margin, not that three is a
+threshold: each new column adds real biological information as well as a
+dimension, and leaf mass in particular is closely related to the target, so the
+rungs differ in more than their count.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{tree_allometry}
+\caption{\textbf{The reversal's precondition, on 3599 plants held fixed.} Left:
+the interpolation split, where every species appears on both sides. Right: an
+entire species held out. Only the number of predictors varies. The left curves
+cross; the right ones do not.}
+\label{fig:ladder}
+\end{figure*}
+
+So the extrapolation failure holds in tokamaks, mammals and trees alike, at
+every predictor count tested here. The \emph{inversion} is conditional,
+and its condition has nothing to do with the failure: it is only whether the
+flexible model had enough to work with to win the comparison a practitioner runs
+first. The inversion is the warning light rather than the disease. Below three
+predictors the hazard is identical and the light is off.
+
 \begin{thebibliography}{99}
 \small\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+% DOIs are single unbreakable words, so justifying around one leaves a line
+% stretched past what TeX will accept quietly. Reference lists are set ragged
+% right for exactly this reason.
+\raggedright
 \bibitem{ipb98} ITER Physics Expert Groups on Confinement and Transport, ITER
 Physics Basis Editors, \emph{Nucl.\ Fusion} \textbf{39}, 2175 (1999).
+\href{https://doi.org/10.1088/0029-5515/39/12/302}{doi:10.1088/0029-5515/39/12/302}
 \bibitem{hdb5} G. Verdoolaege \emph{et al.}, ``The updated ITPA global H-mode
 confinement database: description and analysis,'' \emph{Nucl.\ Fusion}
 \textbf{61}, 076006 (2021).
+\href{https://doi.org/10.1088/1741-4326/abdb91}{doi:10.1088/1741-4326/abdb91}
 \bibitem{conformal} V. Vovk, A. Gammerman and G. Shafer,
 \emph{Algorithmic Learning in a Random World}, Springer (2005).
+\href{https://doi.org/10.1007/b106715}{doi:10.1007/b106715}
 \bibitem{kleiber} M. Kleiber, ``Body size and metabolism,''
 \emph{Hilgardia} \textbf{6}, 315 (1932).
+\href{https://doi.org/10.3733/hilg.v06n11p315}{doi:10.3733/hilg.v06n11p315}
 \bibitem{connor} J.W. Connor and J.B. Taylor, ``Scaling laws for plasma
 confinement,'' \emph{Nucl.\ Fusion} \textbf{17}, 1047 (1977).
+\href{https://doi.org/10.1088/0029-5515/17/5/015}{doi:10.1088/0029-5515/17/5/015}
 \bibitem{iter89p} P.N. Yushmanov \emph{et al.}, ``Scalings for tokamak energy
 confinement,'' \emph{Nucl.\ Fusion} \textbf{30}, 1999 (1990). ITER89-P.
+\href{https://doi.org/10.1088/0029-5515/30/10/001}{doi:10.1088/0029-5515/30/10/001}
 \bibitem{baad} D.S. Falster \emph{et al.}, ``BAAD: a Biomass And Allometry
 Database for woody plants,'' \emph{Ecology} \textbf{96}, 1445 (2015).
 Released CC0.
+\href{https://doi.org/10.1890/14-1889.1}{doi:10.1890/14-1889.1}
 \bibitem{wbe} G.B. West, J.H. Brown and B.J. Enquist, ``A general model for the
 structure and allometry of plant vascular systems,'' \emph{Nature}
 \textbf{400}, 664 (1999).
+\href{https://doi.org/10.1038/23251}{doi:10.1038/23251}
 \bibitem{gpml} C.E. Rasmussen and C.K.I. Williams, \emph{Gaussian Processes for
 Machine Learning}, MIT Press (2006).
+\href{https://doi.org/10.7551/mitpress/3206.001.0001}{doi:10.7551/mitpress/3206.001.0001}
 \bibitem{creely} A.J. Creely \emph{et al.}, ``Overview of the SPARC tokamak,''
 \emph{J.\ Plasma Phys.} \textbf{86}, 865860502 (2020).
+\href{https://doi.org/10.1017/S0022377820001257}{doi:10.1017/S0022377820001257}
 \bibitem{kadomtsev} B.B. Kadomtsev, ``Tokamaks and dimensional analysis,''
 \emph{Sov.\ J.\ Plasma Phys.} \textbf{1}, 295 (1975).
 \bibitem{katesharbeck} J. Kates-Harbeck, A. Svyatkovskiy and W. Tang,
 ``Predicting disruptive instabilities in controlled fusion plasmas through deep
 learning,'' \emph{Nature} \textbf{568}, 526 (2019).
+\href{https://doi.org/10.1038/s41586-019-1116-4}{doi:10.1038/s41586-019-1116-4}
 \bibitem{zhu} J.X. Zhu \emph{et al.}, ``Hybrid deep-learning architecture for
 general disruption prediction across multiple tokamaks,'' \emph{Nucl.\ Fusion}
 \textbf{61}, 026007 (2021).
+\href{https://doi.org/10.1088/1741-4326/abc664}{doi:10.1088/1741-4326/abc664}
 \bibitem{degrave} J. Degrave \emph{et al.}, ``Magnetic control of tokamak
 plasmas through deep reinforcement learning,'' \emph{Nature} \textbf{602}, 414
 (2022).
-\bibitem{murari} A. Murari \emph{et al.}, ``Symbolic regression via genetic
-programming for data driven derivation of confinement scaling laws without any
-assumption on their mathematical form,'' \emph{Nucl.\ Fusion} \textbf{55},
-073009 (2015).
+\href{https://doi.org/10.1038/s41586-021-04301-9}{doi:10.1038/s41586-021-04301-9}
+\bibitem{murari} A. Murari, M. Peluso, M. Gelfusa and I. Lupelli, ``Symbolic
+regression via genetic programming for data driven derivation of confinement
+scaling laws without any assumption on their mathematical form,''
+\emph{Plasma Phys.\ Control.\ Fusion} \textbf{57}, 014008 (2015).
+\href{https://doi.org/10.1088/0741-3335/57/1/014008}{doi:10.1088/0741-3335/57/1/014008}
 \bibitem{wang} Z. Wang \emph{et al.}, ``Power-law-anchored residual learning
 for H-mode energy confinement time in tokamaks: interpolation and
 parameter-defined extrapolation,'' arXiv:2608.20684 (2026).
+\href{https://doi.org/10.48550/arXiv.2608.20684}{doi:10.48550/arXiv.2608.20684}
 \bibitem{roberts} D.R. Roberts \emph{et al.}, ``Cross-validation strategies for
 data with temporal, spatial, hierarchical, or phylogenetic structure,''
 \emph{Ecography} \textbf{40}, 913 (2017).
+\href{https://doi.org/10.1111/ecog.02881}{doi:10.1111/ecog.02881}
 \bibitem{shiftcp} R.J. Tibshirani, R. Foygel Barber, E.J. Cand\`es and
 A. Ramdas, ``Conformal prediction under covariate shift,'' \emph{Adv.\ Neural
 Inf.\ Process.\ Syst.} \textbf{32}, 2526 (2019).
@@ -1596,23 +1668,29 @@ uncertainty? Evaluating predictive uncertainty under dataset shift,''
 \emph{Adv.\ Neural Inf.\ Process.\ Syst.} \textbf{32}, 13969 (2019).
 \bibitem{breiman} L. Breiman, ``Random forests,'' \emph{Machine Learning}
 \textbf{45}, 5 (2001).
+\href{https://doi.org/10.1023/A:1010933404324}{doi:10.1023/A:1010933404324}
 \bibitem{felsenstein} J. Felsenstein, ``Phylogenies and the comparative
 method,'' \emph{Am.\ Nat.} \textbf{125}, 1 (1985).
+\href{https://doi.org/10.1086/284325}{doi:10.1086/284325}
 \bibitem{jt60saplan} JT-60SA Research Unit, \emph{JT-60SA Research Plan:
 Research Objectives and Strategy}, \url{https://www.jt60sa.org/}.
 \bibitem{jt60saop1} M. Yoshida \emph{et al.}, ``Overview of plasma operation and
 control studies in the first plasma campaign of JT-60SA,'' \emph{Plasma Phys.\
 Control.\ Fusion} \textbf{67}, 065010 (2025).
+\href{https://doi.org/10.1088/1361-6587/add563}{doi:10.1088/1361-6587/add563}
 \bibitem{namseo} H. Nam and J. Seo, ``Machine learning based energy confinement
 time extrapolation via multi-tokamak database,'' \emph{Fusion Eng.\ Des.}
 \textbf{221}, 115369 (2025).
+\href{https://doi.org/10.1016/j.fusengdes.2025.115369}{doi:10.1016/j.fusengdes.2025.115369}
 \bibitem{gao} E. Gao \emph{et al.}, ``Bayesian neural networks for predicting
 tokamak energy confinement time with uncertainty quantification,''
 \emph{Nucl.\ Fusion} \textbf{65}, 084001 (2025).
+\href{https://doi.org/10.1088/1741-4326/ade8fd}{doi:10.1088/1741-4326/ade8fd}
 \bibitem{xiong} X. Xiong, K. Zhang, Y. Gao, L. Zhang, X. Chen and S. Liu,
 ``Bayesian optimization based machine learning for predicting tokamak energy
 confinement time with quantification of feature importance,'' \emph{Fusion
 Eng.\ Des.} \textbf{227}, 115740 (2026).
+\href{https://doi.org/10.1016/j.fusengdes.2026.115740}{doi:10.1016/j.fusengdes.2026.115740}
 \end{thebibliography}
 
 \end{document}

@@ -31,11 +31,19 @@ tectonic paper/paper.tex     # single self-contained binary, downloads packages 
 pdflatex paper/paper.tex && pdflatex paper/paper.tex
 ```
 
-The two figures are named bare and resolved through `\graphicspath`, which
-lists `../results/` first and then the current directory. So the paper builds
-from `paper/` in a checkout where `results/` exists, and equally from the flat
-directory `make arxiv` assembles. `pdflatex` needs two passes to resolve the
-table and figure references.
+The six figures are named bare, without an extension, and resolved through
+`\graphicspath`, which lists `../results/` first and then the current directory.
+So the paper builds from `paper/` in a checkout where `results/` exists, and
+equally from the flat directory `make arxiv` assembles. `pdflatex` needs two
+passes to resolve the table and figure references.
+
+Dropping the extension is what lets `\DeclareGraphicsExtensions{.pdf,.png}`
+choose: `figures.py` writes every figure as both, and the paper takes the
+vector copy. IOP asks for vector line art in preference to raster, and for these
+axes the PDF is the smaller file as well, roughly 195 KB against 1.1 MB for a
+raster at matching effective resolution. The PNG stays because the README and
+the built page need something that renders inline, and it is the fallback for a
+figure that has not been regenerated since.
 
 ## Before publishing
 
@@ -47,13 +55,72 @@ placeholder author line. It runs in the ordinary test suite
 (`tests/test_paper_submission.py`) and again as the first step of `make arxiv`,
 which refuses to build the tarball if any of it fails.
 
+Two more run on request, since each needs something a plain checkout may not
+have. `--check-pdf-fresh` needs a LaTeX toolchain and answers whether the
+committed PDF was built from the current source. `--check-provenance` needs git
+and answers whether the commit the paper pins is still the one `results/` was
+last written at. `make paper-fresh` runs both.
+
+The provenance check exists because the pin went stale once already: the paper
+named a commit three commits behind `results/`. Nothing broke, since the three
+changed only benchmark timings and float64 tails, but the paper was making a
+claim about which tree produced its numbers and the claim had quietly stopped
+being true.
+
+It also fixes the order of two commits, since a commit cannot contain its own
+hash. When `results/` changes, commit it **first**, on its own, then put that
+hash in `paper.tex`, rebuild the PDF, and commit the paper. The check then sees
+the pin and the last commit that touched `results/` as the same thing. Doing it
+the other way round leaves the gate red and no hash that would satisfy it.
+
+## References
+
+`references.bib` holds the same 26 references as the `thebibliography` block in
+`paper.tex`. Both exist because their consumers want different things: arXiv
+builds a submission with no BibTeX pass and no `.bbl`, so the printed list has
+to be in the source, while a journal wants a `.bib` to run through its own style
+file. `tests/test_paper_bibliography.py` binds them, in both directions, keys
+and DOIs, so the two cannot drift into disagreeing.
+
+Every DOI was resolved against Crossref rather than reconstructed from the
+volume and page. That found one error already: the symbolic-regression paper was
+printed as *Nucl. Fusion* **55**, 073009, which is a different Murari paper. The
+right one is *Plasma Phys. Control. Fusion* **57**, 014008.
+
+## Submitting to a journal
+
+Nuclear Fusion is the home venue: IPB98, HDB5, Connor-Taylor and ITPA20 are all
+NF papers, and the readership is the one the result is aimed at.
+
+IOP is format-free at initial submission, so `article` is fine and `iopart.cls`
+is only needed if the paper is accepted. Their abstract guidance is 300 words
+and this one is 288. Submission goes through ScholarOne, which asks separately
+for the things now carried in the source: affiliation, ORCID, funding, competing
+interests, and a data availability statement.
+
+Two things to settle that are not in any file here:
+
+- **Talk to the database maintainers before submitting, not after.** This is a
+  negative result about how a community validates models on its own database.
+  Being able to say in the cover letter that the ITPA group has seen it is worth
+  more than any formatting, and it is how a misreading of STD5's selection
+  criteria surfaces before a referee finds it. `docs/outreach.md` has the drafts.
+- **The cover letter should lead with the constraint result**, not the critique.
+  The Connor-Taylor fit and the linear-plus-RBF process are what an editor can
+  send to referees as a contribution; the inversion is what makes them
+  necessary.
+
+A preprint is compatible with IOP policy either way, and journal submission
+needs no arXiv endorsement, so the endorsement problem in `docs/releasing.md`
+does not gate this.
+
 ## Submitting to arXiv
 
 ```bash
 make arxiv        # checks the paper, then writes build/arxiv-submission.tar.gz
 ```
 
-The tarball is flat and self-contained: `paper.tex` plus the two figures it
+The tarball is flat and self-contained: `paper.tex` plus the figures it
 includes, which is the shape arXiv unpacks and builds. Verify it compiles the
 way arXiv will, from that flat directory rather than from `paper/`:
 

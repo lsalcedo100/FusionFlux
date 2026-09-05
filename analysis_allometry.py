@@ -29,6 +29,7 @@ from sklearn.model_selection import GroupKFold
 
 import allometry as al
 import scaling_audit as sa
+from figures import save_figure
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -329,7 +330,7 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
 
     figure.tight_layout()
     path = RESULTS_DIR / "allometry.png"
-    figure.savefig(path, dpi=180, facecolor="#fcfcfb")
+    save_figure(figure, path, facecolor="#fcfcfb")
     plt.close(figure)
     return path
 

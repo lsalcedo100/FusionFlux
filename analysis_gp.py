@@ -48,6 +48,7 @@ import pandas as pd
 import gp
 import hdb5
 from analysis_extrapolation import spearman
+from figures import save_figure
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -420,7 +421,7 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
 
     figure.tight_layout()
     path = RESULTS_DIR / "gp.png"
-    figure.savefig(path, dpi=170)
+    save_figure(figure, path)
     plt.close(figure)
     return path
 

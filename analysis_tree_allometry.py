@@ -53,6 +53,7 @@ from sklearn.preprocessing import StandardScaler
 
 import scaling_audit as sa
 import tree_allometry as ta
+from figures import save_figure
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -337,7 +338,7 @@ def plot_tree_allometry(study: LadderStudy) -> Path | None:
 
     figure.tight_layout()
     path = RESULTS_DIR / "tree_allometry.png"
-    figure.savefig(path, dpi=170)
+    save_figure(figure, path)
     plt.close(figure)
     return path
 

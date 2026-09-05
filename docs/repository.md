@@ -58,7 +58,8 @@ FusionFlux/
 │
 ├── paper/
 │   ├── paper.tex                    # condensed writeup; build with `tectonic paper/paper.tex`
-│   └── README.md                    # how to build it, and the Zenodo DOI flow
+│   ├── references.bib               # same references as its thebibliography, for a journal's style file
+│   └── README.md                    # how to build it, the Zenodo DOI flow, and the journal route
 ├── site/
 │   ├── page.template.html           # the one-page interactive summary
 │   └── build_page.py                # fills it from results/; writes site/index.html
@@ -68,10 +69,12 @@ FusionFlux/
 │   ├── repository.md                # this file: layout, ownership, repo-level caveats
 │   └── neutron-yield-pipeline.md    # operating detail for the synthetic-data infrastructure
 ├── tools/
+│   ├── check_paper_submission.py    # the gate the paper has to pass before it leaves the repository
 │   └── compare_results.py           # numeric diff of a regenerated results/ against the committed one
 │
 │   # shared plumbing, used by both pipelines
 ├── config.py                        # paths, column config, physics constants and tolerances
+├── figures.py                       # writes every figure as PNG for the web and PDF for the paper
 ├── storage.py                       # atomic file writes and JSON/CSV helpers
 ├── validation.py                    # physics input validation primitives
 │
@@ -122,6 +125,7 @@ FusionFlux/
 │   ├── test_supported_python_versions.py  # the badge and CI matrix, bound to requires-python
 │   ├── test_compare_results.py      # the comparator behind the reproduce gate
 │   ├── test_release_metadata.py     # .zenodo.json, which nothing else consumes
+│   ├── test_paper_bibliography.py   # paper.tex and references.bib, bound key by key and DOI by DOI
 │   ├── test_lawson.py
 │   ├── test_preprocessing.py
 │   ├── test_training.py
@@ -176,6 +180,10 @@ Shared and entrypoints:
 
 - `config.py` owns paths, column configuration, physics constants, and tolerances.
 - `storage.py` owns atomic file writes and the JSON/CSV output helpers.
+- `figures.py` owns figure output. Every analysis writes its figure through it,
+  once as the PNG the README and the page render inline and once as the PDF the
+  paper loads, because a journal wants vector line art and GitHub wants a
+  raster.
 - `validation.py` owns the physics input validation primitives used by both pipelines and by `lawson.py`.
 
 Neutron-yield infrastructure, training side:

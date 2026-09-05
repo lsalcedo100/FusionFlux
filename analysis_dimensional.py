@@ -73,6 +73,7 @@ import scaling_law as sl
 import spectral as sp
 from analysis_extrapolation import bootstrap_paired_difference
 from analysis_size_extrapolation import MIN_WELL_POWERED_TRAIN_ROWS
+from figures import save_figure
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -532,7 +533,7 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
 
     figure.tight_layout()
     path = RESULTS_DIR / "dimensional.png"
-    figure.savefig(path, dpi=170)
+    save_figure(figure, path)
     plt.close(figure)
     return path
 

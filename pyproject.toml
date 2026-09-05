@@ -165,6 +165,7 @@ source = [
     "config",
     "conformal_shift",
     "dimensional",
+    "figures",
     "forecast",
     "fusionflux",
     "gp",
