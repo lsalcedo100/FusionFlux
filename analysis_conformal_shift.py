@@ -4,7 +4,7 @@ Run ``python3 analysis_conformal_shift.py`` to regenerate everything under
 ``results/`` for Result 10.
 
 Result 7 ends on a diagnosis: nominal 90% intervals cover 90% under grouped CV,
-35% on an unseen machine and 3% across the ITER-matched size cut, at essentially
+35% on an unseen machine and 3% across the ITER-size-matched size cut, at essentially
 unchanged width. The reading offered there is that this is not a defect in
 conformal prediction but an assumption being false, measured. That reading makes
 a prediction, and this script is the test of it.
@@ -16,7 +16,7 @@ should fix it, and should fix it *exactly as far as that unit extends*:
     held-out discharges should largely restore coverage. Calibration machines
     and the test machine are all drawn from the same database.
 
-    On the ITER-matched cut it should not, however carefully it is done, because
+    On the ITER-size-matched cut it should not, however carefully it is done, because
     every calibration machine is smaller than every test machine and no
     recalibration makes those exchangeable. Only scaling the interval by
     extrapolation distance can help there.
@@ -230,7 +230,7 @@ def plot_conformal_shift(analysis: ConformalShiftAnalysis) -> Path | None:
         axes,
         (
             ("lomo_coverage", "held-out machine"),
-            ("size_cut_coverage", f"ITER-matched cut ({analysis.iter_matched_size_ratio:.2f}x)"),
+            ("size_cut_coverage", f"ITER-size-matched cut ({analysis.iter_matched_size_ratio:.2f}x)"),
         ),
         strict=True,
     ):
@@ -297,7 +297,7 @@ def main() -> None:
     frame = pd.DataFrame([row.to_json() for row in analysis.repairs])
     for arm, coverage_column, width_column in (
         ("held-out machine", "lomo_coverage", "lomo_interval_factor"),
-        ("ITER-matched size cut", "size_cut_coverage", "size_cut_interval_factor"),
+        ("ITER-size-matched size cut", "size_cut_coverage", "size_cut_interval_factor"),
     ):
         print(f"\n  {arm}")
         print(f"  {'model':<28}", end="")
@@ -351,7 +351,7 @@ def main() -> None:
         f"{METHOD_LABELS.get(analysis.lomo_best_method, analysis.lomo_best_method)}"
     )
     print(
-        f"  closest to nominal at the ITER-matched cut: "
+        f"  closest to nominal at the ITER-size-matched cut: "
         f"{METHOD_LABELS.get(analysis.size_cut_best_method, analysis.size_cut_best_method)}"
     )
 

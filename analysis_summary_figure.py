@@ -116,7 +116,7 @@ def plot_summary() -> Path | None:
          "leave-one-tokamak-out\n(a machine it has not seen)"],
         fontsize=10.5, color=INK,
     )
-    axes[0].set_ylabel("RMSLE (lower is better)", fontsize=10, color=MUTED)
+    axes[0].set_ylabel("log-RMSE (lower is better)", fontsize=10, color=MUTED)
     axes[0].set_title(
         "The best model under one split is the worst under the other",
         fontsize=12.5, color=INK, pad=14,

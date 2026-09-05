@@ -1117,7 +1117,7 @@ def main() -> None:
         f"  fitted coefficient {refit.fitted_coefficient:.4f} vs published "
         f"{IPB98Y2_COEFFICIENT} (also quoted as {IPB98Y2_COEFFICIENT_ROUNDED})"
     )
-    print(f"  in-sample RMSLE: refit {refit.rmsle_refit:.4f}, published IPB98(y,2) {refit.rmsle_published:.4f}")
+    print(f"  in-sample log-RMSE: refit {refit.rmsle_refit:.4f}, published IPB98(y,2) {refit.rmsle_published:.4f}")
 
     resolution = refit.resolution
     if resolution is not None:

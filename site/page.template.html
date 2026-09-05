@@ -241,7 +241,7 @@ code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-sunk);
       <p>
         The obvious modern move is to replace it with something more flexible. Trained and scored on the
         ITPA H-mode database under grouped cross-validation, that works: a random forest reaches
-        <span class="num">0.128</span> RMSLE against the published law's <span class="num">0.199</span>,
+        <span class="num">0.128</span> log-RMSE against the published law's <span class="num">0.199</span>,
         a 41% improvement measured against real physics rather than against a mean predictor.
       </p>
       <p>
@@ -432,7 +432,7 @@ code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-sunk);
         <h3>Coverage of a 90% interval</h3>
         <p>
           Split-conformal intervals hit nominal 90% under cross-validation for every model, then cover
-          <b>3% of the rows</b> across the ITER-matched cut for the random forest and none at all for the
+          <b>3% of the rows</b> across the ITER-size-matched cut for the random forest and none at all for the
           gradient booster. Widths move by under 1.5% between the two: the intervals do not get vague out
           of distribution, they stay the same size and miss.
         </p>
@@ -471,13 +471,13 @@ code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-sunk);
     <div class="tablewrap">
       <table>
         <thead><tr><th>Model</th><th>In sample</th><th>CV, by discharge</th>
-          <th>Held-out machine</th><th>ITER-matched cut</th></tr></thead>
+          <th>Held-out machine</th><th>ITER-size-matched cut</th></tr></thead>
         <tbody id="tbl3"></tbody>
       </table>
     </div>
     <p class="sub" style="margin-top:14px;max-width:74ch">
       <b id="dim-best">&mdash;</b> is the best score any blind model on this page reaches at the
-      ITER-matched cut. It beats the hybrid above, and it beats the analytic law that was fitted with those
+      ITER-size-matched cut. It beats the hybrid above, and it beats the analytic law that was fitted with those
       machines included. It has no hyperparameter and nothing to tune: <b>the only difference from the
       unconstrained row is the constraint</b>.
     </p>
@@ -542,12 +542,12 @@ code{font-family:var(--f-mono);font-size:.88em;background:var(--surface-sunk);
       On a held-out machine every model returns to within two points of nominal, tree ensembles included.
       Across the size cut none does, because <b>every calibration machine is smaller than every test
       machine</b> and no recalibration makes those two exchangeable. The constrained power law is the single
-      exception: its intervals hold at the ITER-matched cut under every scheme, including the plain split
+      exception: its intervals hold at the ITER-size-matched cut under every scheme, including the plain split
       conformal that fails there for everything else.
     </p>
 
     <figure>
-      <div class="plate"><img src="__FIG4__" alt="Coverage under three calibration schemes, on a held-out machine and across the ITER-matched size cut."></div>
+      <div class="plate"><img src="__FIG4__" alt="Coverage under three calibration schemes, on a held-out machine and across the ITER-size-matched size cut."></div>
       <figcaption>
         <b>Coverage under three calibration schemes.</b> A repair that does not work everywhere is worth more
         than one that appears to: it tells you which assumption was actually doing the work.
@@ -893,7 +893,7 @@ document.getElementById('c-kad').textContent =
 document.getElementById('c-col').textContent =
   `${DM.collisionlessWins.won}/${DM.collisionlessWins.of}`;
 
-/* Ordered by the column the section is about, the ITER-matched cut, so the row
+/* Ordered by the column the section is about, the ITER-size-matched cut, so the row
    the prose calls the winner is the row at the top. */
 const dimOrder = ['powerlaw_collisionless','ipb98y2_analytic','hybrid_gbm_s1',
                   'powerlaw_kadomtsev','powerlaw_free'];

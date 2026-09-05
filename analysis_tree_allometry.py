@@ -331,7 +331,7 @@ def plot_tree_allometry(study: LadderStudy) -> Path | None:
             )
         axis.set_xticks(counts)
         axis.set_xlabel("number of predictors the models may see")
-        axis.set_ylabel("RMSLE")
+        axis.set_ylabel("log-RMSE")
         axis.set_title(title)
         axis.grid(alpha=0.15)
         axis.legend(fontsize=11)

@@ -30,7 +30,7 @@ That proviso is the whole result:
                Nothing guarantees anything, and the size of the shortfall is a
                measurement of how far the distribution moved.
     Result 7c  Coverage against Result 4b's Mahalanobis distance, per machine.
-    Result 7d  The ITER-matched size cut of Result 5, which is the split a
+    Result 7d  The ITER-size-matched size cut of Result 5, which is the split a
                next-step device actually faces.
 
 None of this is a defect in conformal prediction and none of it is fixed by
@@ -84,7 +84,7 @@ HYBRID_SHRINKAGE = 1.0
 SPLIT_LABELS = {
     "grouped_cv": "grouped CV, by discharge",
     "leave_one_tokamak_out": "leave one tokamak out",
-    "size_cut": "ITER-matched size cut",
+    "size_cut": "ITER-size-matched size cut",
 }
 
 

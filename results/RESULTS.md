@@ -18,7 +18,7 @@ and the answer is the sharpest number in the document.
 
 Results 8 to 12 answer the four objections that leaves standing. Result 8 puts
 physics into the fit as a *constraint* rather than as a feature or a penalty,
-which turns out to beat every model built here at the ITER-matched cut, for
+which turns out to beat every model built here at the ITER-size-matched cut, for
 free and with no hyperparameter. Result 9 tries the same physics as a prior
 aimed at the weak direction of Result 3 and finds it worth much less, which is
 the comparison that makes Result 8 mean something. Result 10 repairs Result 7's
@@ -194,11 +194,11 @@ inverse aspect ratio sits far outside the conventional range, and it applies no
 selection filters at all. A refit on a different population is a different
 regression. The comparison is still worth making, because of Result 3.
 
-Against the published law on the same rows, in-sample: RMSLE **0.181** for the
+Against the published law on the same rows, in-sample: log-RMSE **0.181** for the
 refit against **0.199** for IPB98(y,2). Out of sample, under grouped
 cross-validation by discharge (`python3 hdb5.py evaluate`):
 
-| model | CV RMSLE | CV R^2 (log) |
+| model | CV log-RMSE | CV R^2 (log) |
 |---|---|---|
 | random forest | 0.118 | 0.981 |
 | histogram gradient boosting | 0.119 | 0.981 |
@@ -206,7 +206,7 @@ cross-validation by discharge (`python3 hdb5.py evaluate`):
 | **IPB98(y,2), analytic, no training** | **0.199** | **0.947** |
 | mean baseline | 0.869 | 0.000 |
 
-41% lower RMSLE than the published scaling law, against a real physics baseline
+41% lower log-RMSE than the published scaling law, against a real physics baseline
 rather than against the mean.
 
 **Read that table with Result 4 in hand.** Grouped CV holds out *discharges*,
@@ -421,7 +421,7 @@ extrapolate` for the table alone.
 thing that changes is what the split holds out. That is also why the CV column
 here reads 0.128 for the random forest where Result 2 reported 0.118: Result 2
 scores the full ten-feature set, this scores the nine blind ones. Dropping the
-IPB98 prior costs the forest 0.010 RMSLE, which is the honest size of what that
+IPB98 prior costs the forest 0.010 log-RMSE, which is the honest size of what that
 feature was contributing and is an order of magnitude smaller than the effect
 being measured. That matters more than it might
 look: the model's default feature set includes the analytic IPB98 prior, whose
@@ -637,7 +637,7 @@ is the cross-check that the grid is the same family of models
 
 ![flexibility sweep](flexibility_sweep.png)
 
-Worst held-out machine, RMSLE. The `alpha = 1` column is Result 4d:
+Worst held-out machine, log-RMSE. The `alpha = 1` column is Result 4d:
 
 | degree | terms | a=1e-3 | a=1e-2 | a=0.1 | **a=1** | a=10 | a=100 | a=1e3 | a=1e4 | a=1e5 |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -666,7 +666,7 @@ degraded from 0.289 to 0.541 there. The flexible forms only become tolerable at
 a shrinkage that destroys the baseline.
 
 **The second objection is answered with a slope.** Fitting
-`log10(RMSLE)` against degree at each penalty gives the multiplicative cost per
+`log10(log-RMSE)` against degree at each penalty gives the multiplicative cost per
 degree of freedom added:
 
 | alpha | worst machine | mean | median | degree 1's own worst |
@@ -714,7 +714,7 @@ PBX-M in 3 and JET in 2**, and the split by degree is the informative part:
 **C-Mod defines the tail in 0 of the 9 degree-1 cells and 21 of the 27 cells
 above it.** It is not a machine that is hard for everything; it is the machine
 that a flexible model breaks on, and it starts breaking the moment curvature
-terms are introduced. Its own RMSLE rises monotonically from degree 1 to degree
+terms are introduced. Its own log-RMSE rises monotonically from degree 1 to degree
 3 at every one of the six penalties that leave degree 1 intact, from 0.17 to 4.9
 at the light end.
 
@@ -842,7 +842,7 @@ bites on one machine. Under a size cut it bites on the entire held-out set,
 because confinement time rises steeply with machine size and the held-out
 machines are by construction the large ones.
 
-At the ITER-matched cut, **930 of 2730 held-out rows (34%) lie above the highest
+At the ITER-size-matched cut, **930 of 2730 held-out rows (34%) lie above the highest
 confinement time in the training set**, and the best held-out shot is **3.9x
 above anything any tree in the forest is able to output**. That is why the trees
 land near the mean baseline rather than merely behind the power law: for a third
@@ -855,7 +855,7 @@ ceiling.
 
 ### Result 5d: the whole sweep, not one lucky cut
 
-The ITER-matched rung is one point of a sweep across every usable cut. The right
+The ITER-size-matched rung is one point of a sweep across every usable cut. The right
 panel of the figure shows all of them. Across the well-powered cuts, spanning
 size ratios from 1.13 to 2.03, the analytic power law stays flat near 0.20 and
 ridge between 0.23 and 0.28, while both tree ensembles sit between 0.9 and 1.7,
@@ -864,7 +864,7 @@ at or above the mean baseline, at every cut past the smallest.
 Beyond a ratio of about 2.4 the training set falls below 1000 rows, and a model
 failing there could be failing on sample size rather than on size extrapolation.
 Those cuts are plotted but not joined, and no claim rests on them. The
-ITER-matched cut trains on 3498 rows and is comfortably clear of that band.
+ITER-size-matched cut trains on 3498 rows and is comfortably clear of that band.
 
 
 ## Result 6: a model that is flexible in range and still extrapolates
@@ -900,7 +900,7 @@ Result 4c cares about:
 The boosted-tree family, every rung, same nine blind features and same splits as
 Result 4:
 
-| lambda | CV | LOMO mean | LOMO median | LOMO worst | ITER-matched cut | rho(distance) |
+| lambda | CV | LOMO mean | LOMO median | LOMO worst | ITER-size-matched cut | rho(distance) |
 |---|---|---|---|---|---|---|
 | 0 (plain ridge) | 0.181 | 0.214 | 0.216 | 0.289 | 0.278 | -0.06 |
 | 0.1 | 0.177 | 0.215 | 0.215 | 0.284 | 0.269 | -0.09 |
@@ -942,7 +942,7 @@ CV by discharge. Selecting on leave-one-out would be selecting on the test set.
 So the reported rung is whichever CV picks, and its out-of-distribution score is
 whatever it happens to be:
 
-| family | CV picks | CV | LOMO | ITER-matched cut |
+| family | CV picks | CV | LOMO | ITER-size-matched cut |
 |---|---|---|---|---|
 | boosted-tree correction | lambda = 1.0 | 0.151 (ridge 0.181) | 0.246 (ridge 0.214) | **0.206** (ridge 0.278) |
 | polynomial correction | lambda = 1.0 | 0.171 | 0.235 | 0.356 |
@@ -960,7 +960,7 @@ families separate completely. Both start at plain ridge's 0.278 at `lambda = 0`.
 The polynomial correction climbs to 0.356. The boosted-tree correction falls to
 **0.206**, and does so monotonically at every rung.
 
-Per held-out machine at the ITER-matched cut, trained on the 14 machines up to
+Per held-out machine at the ITER-size-matched cut, trained on the 14 machines up to
 DIII-D at R = 1.865 m:
 
 | held out | rows | IPB98* | ridge | **hybrid, lambda = 1** | polynomial, lambda = 1 | random forest |
@@ -974,7 +974,7 @@ DIII-D at R = 1.865 m:
 included, so it is the reference for what a power law achieves here rather than
 a competitor.
 
-**The hybrid is the best blind model at the ITER-matched cut**, 26% below plain
+**The hybrid is the best blind model at the ITER-size-matched cut**, 26% below plain
 ridge and 4.6x below the random forest, and it improves on ridge on all three
 machines individually. The improvement is largest on JT-60U, the largest and
 most distant machine, where ridge scores 0.440 and the hybrid 0.281. That
@@ -1061,13 +1061,13 @@ rows:
 | 11 | 2.03 | 1302 | **0.233** | 0.267 |
 | 12 | 2.01 | 2679 | 0.255 | **0.223** |
 | 13 | 2.00 | 3110 | 0.245 | **0.195** |
-| 14 (ITER-matched) | 1.82 | 3498 | 0.278 | **0.206** |
+| 14 (ITER-size-matched) | 1.82 | 3498 | 0.278 | **0.206** |
 | 15 | 1.38 | 3500 | 0.279 | **0.217** |
 | 16 | 1.14 | 4366 | **0.189** | 0.226 |
 | 17 | 1.13 | 6128 | 0.285 | **0.272** |
 
 **The hybrid wins at 5 of the 8 well-powered cuts, not at all of them.** It wins
-at the ITER-matched cut and at the two rungs demanding the largest ratios among
+at the ITER-size-matched cut and at the two rungs demanding the largest ratios among
 the well-powered set, and it loses at three, by up to 0.045.
 
 No rule separating the wins from the losses survives these eight points. The two
@@ -1132,7 +1132,7 @@ far coverage falls is a measurement of how far the distribution moved.
 
 ### Result 7a and 7b: nominal 90%, and what is actually delivered
 
-| model | grouped CV | leave one tokamak out | ITER-matched cut | drop | interval width |
+| model | grouped CV | leave one tokamak out | ITER-size-matched cut | drop | interval width |
 |---|---|---|---|---|---|
 | IPB98(y,2), analytic* | 90% | 89% | 88% | 1 pt | 1.40x |
 | ridge, log-linear | 90% | 83% | 70% | 7 pts | 1.33x |
@@ -1149,7 +1149,7 @@ rest of the table. A shortfall elsewhere cannot be blamed on the construction.
 
 **Out of distribution it does not.** The random forest's nominal 90% interval
 covers 35% of the rows on a machine it has not seen, and **3% of the rows across
-the ITER-matched size cut**. The histogram gradient booster manages 0%: not one
+the ITER-size-matched size cut**. The histogram gradient booster manages 0%: not one
 held-out row of the 2730 falls inside its 90% interval. These are the two best
 models in the repository by cross-validation.
 
@@ -1210,7 +1210,7 @@ most of what matters, because distance is the one thing you know in advance.
 
 ### Result 7d: the hybrid fixes the point error and not the interval
 
-Result 6's hybrid is the best blind model on the ITER-matched cut by point
+Result 6's hybrid is the best blind model on the ITER-size-matched cut by point
 error, and its coverage there is also the best of the blind models, 76% against
 ridge's 70%. Under leave-one-out it is the reverse: 64% against ridge's 83%,
 driven almost entirely by C-Mod at 2% and JFT2M at 38%, the same two machines
@@ -1303,7 +1303,7 @@ turn out to be worth.
 
 ### Result 8b: what the constraints cost, which is almost nothing
 
-| model | in-sample RMSLE | grouped CV |
+| model | in-sample log-RMSE | grouped CV |
 |---|---|---|
 | power law, unconstrained | 0.1808 | 0.181 |
 | power law, Kadomtsev | **0.1808** | 0.181 |
@@ -1316,9 +1316,9 @@ on that surface unaided. The collisionless constraint costs 0.001. The
 electrostatic one costs 0.044, which is a real amount, and it is the rung where
 the physics assumption is doing violence to the data rather than describing it.
 
-### Result 8c: at the ITER-matched cut, the constrained law is the best blind model here
+### Result 8c: at the ITER-size-matched cut, the constrained law is the best blind model here
 
-| model | CV | leave-one-machine-out | **ITER-matched cut** | skill |
+| model | CV | leave-one-machine-out | **ITER-size-matched cut** | skill |
 |---|---|---|---|---|
 | **power law, collisionless** | 0.182 | 0.206 | **0.183** | **1.01** |
 | IPB98(y,2), analytic (not blind) | 0.199 | 0.188 | 0.194 | 1.00 |
@@ -1331,7 +1331,7 @@ the physics assumption is doing violence to the data rather than describing it.
 | hist gradient boosting | 0.130 | 0.359 | 1.072 | 0.31 |
 
 **0.183 is the best score any blind model in this repository achieves at the
-ITER-matched cut.** It beats Result 6's hybrid, which held that position at
+ITER-size-matched cut.** It beats Result 6's hybrid, which held that position at
 0.206, and it beats the analytic IPB98(y,2) at 0.194, a law that was fitted with
 the held-out machines included and is therefore not blind. Its skill score
 passes 1.00, which is the first time anything here has.
@@ -1449,7 +1449,7 @@ to this database" rather than something undefined.
 
 ### Result 9a: targeting works, at every matched penalty strength
 
-RMSLE at the ITER-matched cut:
+log-RMSE at the ITER-size-matched cut:
 
 | alpha | isotropic | spectral | gain from targeting |
 |---|---|---|---|
@@ -1467,7 +1467,7 @@ nothing else. Result 3's diagnosis is actionable.
 
 ### Result 9b: and it is worth less than just taking the prior
 
-| k (directions taken from the data) | CV | leave-one-machine-out | ITER-matched cut |
+| k (directions taken from the data) | CV | leave-one-machine-out | ITER-size-matched cut |
 |---|---|---|---|
 | 8 (the unconstrained fit) | 0.181 | 0.214 | 0.279 |
 | 7 (drop only the weakest) | 0.184 | 0.204 | 0.247 |
@@ -1506,7 +1506,7 @@ the answer is the best it can do.
 
 Result 7 ends on a diagnosis and stops. Nominal 90% intervals cover 90% under
 grouped cross-validation, 35% on a machine the model has never seen, and 3%
-across the ITER-matched size cut, at essentially unchanged width. The reading
+across the ITER-size-matched size cut, at essentially unchanged width. The reading
 offered there is that this is not a defect in conformal prediction but an
 assumption being false, measured: split conformal guarantees coverage under
 *exchangeability* of the calibration and test scores, and those arms break
@@ -1521,7 +1521,7 @@ unit reaches, and no further**:
 > held-out discharges should largely restore coverage. Calibration machines and
 > the test machine are all just machines from this database.
 >
-> On the ITER-matched cut it should not, however carefully it is done, because
+> On the ITER-size-matched cut it should not, however carefully it is done, because
 > every calibration machine is smaller than every test machine and no
 > recalibration makes those two exchangeable. Only scaling the interval by
 > extrapolation distance can help there, and only as far as the calibration set
@@ -1586,11 +1586,11 @@ with the large ones. This is the predicted limit, and it holds.
 Distance scaling is the only thing that moves the needle at this cut, and it
 moves it by less than the size of the failure. **The honest summary is that
 there is no calibration scheme in this document that makes a tree ensemble's
-interval usable at the ITER-matched cut.** The model has to change, not the
+interval usable at the ITER-size-matched cut.** The model has to change, not the
 interval around it.
 
 Which is where Result 8 reappears. **The collisionless-constrained power law is
-the only blind model in either table whose intervals hold at the ITER-matched
+the only blind model in either table whose intervals hold at the ITER-size-matched
 cut**, and it holds them at 91% under plain split conformal, before any of this
 machinery is applied. It has the best point error at that cut (Result 8c) and
 the only approximately valid interval, and it gets both from the same one line
@@ -1967,7 +1967,7 @@ same splits, differing only in what the kernel does at long range:
 | linear (dot product) | no | yes | Bayesian linear regression in the log features: a power law |
 | linear + RBF | yes | yes | the power law carries it; the RBF correction decays to nothing |
 
-| model | CV, by discharge | held-out machine | ITER-matched cut | rho(error, distance) |
+| model | CV, by discharge | held-out machine | ITER-size-matched cut | rho(error, distance) |
 |---|---|---|---|---|
 | **GP, linear + RBF** | **0.112** | 0.218 | **0.191** | **-0.01** |
 | GP, RBF only | 0.142 | 0.541 | **1.948** | +0.65 |
@@ -1983,13 +1983,13 @@ same splits, differing only in what the kernel does at long range:
 A dot-product kernel is Bayesian linear regression in the log features, so
 `gp_linear` and `ridge_loglinear` are the same model reached two ways. They
 agree to **0.0000** under grouped CV, **0.0000** on a held-out machine and
-**0.0007** at the ITER-matched cut. That is what licenses reading the other two
+**0.0007** at the ITER-size-matched cut. That is what licenses reading the other two
 rungs as changes to the kernel rather than to anything else in the pipeline.
 
 ### Result 14b: a bounded kernel fails exactly like a tree, for the same reason
 
 `gp_rbf` wins cross-validation against the power law (0.142 against 0.181) and
-then scores **1.948 at the ITER-matched cut, worse than predicting a constant**
+then scores **1.948 at the ITER-size-matched cut, worse than predicting a constant**
 (1.459). Its error tracks distance from the training data at rho = **+0.65**,
 alongside the random forest's +0.85 and against the power law's -0.06.
 
@@ -2010,7 +2010,7 @@ that does not decay to zero. It is:
 
 - **the best cross-validated model in this repository, 0.112**, beating the
   random forest's 0.128 that the README's headline is about, by 12%;
-- **0.191 at the ITER-matched cut**, which is 31% better than the plain power
+- **0.191 at the ITER-size-matched cut**, which is 31% better than the plain power
   law's 0.278, better than the analytic IPB98(y,2)'s 0.194 that was fitted with
   those machines included, and second only to Result 8's constrained power law
   at 0.183;
@@ -2036,16 +2036,16 @@ targets" is the right one.
 
 Result 7 gives every model a nominal 90% split-conformal interval and finds that
 out of distribution they do not merely widen, they stay the same width and miss:
-across the ITER-matched cut the random forest covers 3% and the histogram
+across the ITER-size-matched cut the random forest covers 3% and the histogram
 gradient booster covers none of the 2730 rows. Result 10 repairs that by
 calibrating on held-out machines, and finds the repair stops exactly where the
 diagnosis says it should, with the constrained power law the single exception.
 
 A Gaussian process supplies an interval by construction rather than by
 calibration, so the same question can be put to a model that was never
-calibrated at all. At the ITER-matched cut, nominal 90%:
+calibrated at all. At the ITER-size-matched cut, nominal 90%:
 
-| model | coverage at the ITER-matched cut | median half-width (log) |
+| model | coverage at the ITER-size-matched cut | median half-width (log) |
 |---|---|---|
 | **GP, linear + RBF** | **92.5%** | 0.349 |
 | GP, linear only | 67.9% | 0.305 |
@@ -2078,7 +2078,7 @@ the power law are all untested. The last of those is the obvious next
 experiment, because Results 8 and 14 are the two things that work here and
 nothing has tried them together.
 
-And the ITER-matched cut is still three machines and 2730 rows, 1762 of them
+And the ITER-size-matched cut is still three machines and 2730 rows, 1762 of them
 JET, with every caveat Result 5 and Result 8 carry about that. The 92.5%
 coverage in particular is a proportion over those rows, not over machines.
 
@@ -2214,11 +2214,11 @@ holding out a species sometimes holds out a laboratory.
   that is uninformative about the solvers: 10.7 sits at the far left of a sweep
   where the three only separate above roughly 1e3. The agreement is evidence
   the implementations are consistent, not evidence the choice is free.
-- **In-sample RMSLE favors the refit by construction.** The 0.181 against 0.199
+- **In-sample log-RMSE favors the refit by construction.** The 0.181 against 0.199
   comparison fits and evaluates on the same rows. The grouped-CV table is the
   one to trust.
 - **13 of 18 machines are scored, not all 18.** START, TCV, COMPASS, TDEV and
-  TFTR have fewer than 30 rows each, too few for a held-out RMSLE to mean
+  TFTR have fewer than 30 rows each, too few for a held-out log-RMSE to mean
   anything, so they are excluded from Result 4 and remain in every training
   fold. They are also the machines most unlike the rest, so the extrapolation
   gap reported here is if anything the optimistic one.
@@ -2271,13 +2271,13 @@ holding out a species sometimes holds out a laboratory.
   not, and Result 6a says so in place of the stronger claim.
 - **The hybrid's size-cut gain holds at 5 of 8 well-powered cuts, not all.**
   Result 6e scores the same hybrid at every rung of the Result 5 sweep. It wins
-  at the ITER-matched cut and four others and loses at three, by up to 0.045,
+  at the ITER-size-matched cut and four others and loses at three, by up to 0.045,
   and no rule over those eight points separates the two groups. The mechanism
   of Result 6d is demonstrated where it is measured; the conditions under which
   it holds generally are not established.
 - **The hybrid's gain is along one axis and is measured on three machines.**
   Result 6c rests on JET, JET-ILW and JT-60U, the only machines above the
-  ITER-matched cut with enough rows to score. The improvement holds on all
+  ITER-size-matched cut with enough rows to score. The improvement holds on all
   three and grows with distance, which is what makes it more than a coincidence,
   but it is still three machines. Off the size axis the correction actively
   hurts: C-Mod goes from 0.173 under plain ridge to 0.401 under the hybrid.
@@ -2318,7 +2318,7 @@ holding out a species sometimes holds out a laboratory.
   here, which is the argument for it, but that expectation is an assumption
   about ITER rather than a result of this analysis. This is the same failure
   Result 6b reports for the hybrid's shrinkage and it is not fixed here.
-- **Result 8's headline rests on three machines.** The ITER-matched cut holds
+- **Result 8's headline rests on three machines.** The ITER-size-matched cut holds
   out JET, JET-ILW and JT-60U, and 1762 of the 2730 rows are JET. The
   constrained law beats every blind model on two of the three and loses JT-60U
   to the hybrid; against the non-blind analytic law it wins one, ties one and
@@ -2356,11 +2356,11 @@ holding out a species sometimes holds out a laboratory.
 - **Result 11's disjoint arm is partly the rows STD5 rejected.** Its absolute
   errors are worse than STD5's throughout (IPB98 scores 0.251 against 0.199),
   because quality criteria were applied there and not here. That does not affect
-  the within-arm ranking comparison, which is the claim, but the two arms' RMSLE
+  the within-arm ranking comparison, which is the claim, but the two arms' log-RMSE
   values are not comparable to the rest of this document's.
 - **Result 12 is a forecast, so it currently shows nothing.** Its intervals use
   Result 10's best out-of-distribution scheme, which Result 10 also shows is
-  well short of nominal at the ITER-matched cut. It is conditional on published
+  well short of nominal at the ITER-size-matched cut. It is conditional on published
   design operating points that the machines will not match exactly, and
   `p_loss_mw` in particular is a derived, scenario-dependent quantity. The
   falsifiable content is the ordering and the factor-of-8 disagreement at ITER,
@@ -2378,7 +2378,7 @@ holding out a species sometimes holds out a laboratory.
   experiment because Results 8 and 14 are the two things that work here and
   nothing has tried them together.
 - **Result 14 does not make the GP the recommended model.** It wins
-  cross-validation and comes second at the ITER-matched cut, but it does not
+  cross-validation and comes second at the ITER-size-matched cut, but it does not
   beat the power law on a held-out machine (0.218 against 0.214), and Result
   8's constrained fit still produces the best blind score at the ITER cut with
   no hyperparameters at all. `fusionflux predict` still recommends the

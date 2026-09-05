@@ -146,7 +146,7 @@ def main() -> None:
         "\n  These intervals use Result 10's machine-level calibration with distance\n"
         "  scaling. That is the best-calibrated scheme measured here out of distribution\n"
         "  and it still carries no guarantee at these distances; Result 10 reports what\n"
-        "  it does deliver, which is well short of nominal at the ITER-matched cut."
+        "  it does deliver, which is well short of nominal at the ITER-size-matched cut."
     )
 
 

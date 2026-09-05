@@ -380,18 +380,23 @@ CLAIMS: tuple[Claim, ...] = (
     Claim("largest held-out machine", "3.40",
           lambda a: a["size"]["iter_matched_split"]["test_r_max_m"], _r(2),
           documents=(RESULTS_MD, PAGE, PAPER, PAPER_PDF)),
+    # The skill score is a normalised metric this study defines rather than one a
+    # reader arrives with, so it was cut from the paper, where a custom metric
+    # invites a question the raw errors already answer. It stays in the README,
+    # RESULTS.md and the page, which have room to define it, and stays in the
+    # artifact either way.
     Claim("power law skill at the cut", "93%",
           lambda a: _esc(a, "ridge_loglinear", "skill_against_baseline"), _pct(),
-          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF),
+          documents=(README, RESULTS_MD, PAGE),
           phrases=lambda n: (f"keeps {n}", f"retains {n}")),
     Claim("forest skill at the cut", "41%",
           lambda a: _esc(a, "random_forest", "skill_against_baseline"), _pct(),
-          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF),
+          documents=(README, RESULTS_MD, PAGE),
           phrases=lambda n: (f"keep 31% and {n}", f"keep {n} and 31%", f"retain {n} and 31%",
                              f"keep 41% and {n}", f"keep {n} and 41%", f"retain 41% and {n}")),
     Claim("gradient booster skill at the cut", "31%",
           lambda a: _esc(a, "hist_gradient_boosting", "skill_against_baseline"), _pct(),
-          documents=(README, RESULTS_MD, PAGE, PAPER, PAPER_PDF),
+          documents=(README, RESULTS_MD, PAGE),
           phrases=lambda n: (f"keep 31% and {n}", f"keep {n} and 31%", f"retain {n} and 31%",
                              f"keep 41% and {n}", f"keep {n} and 41%", f"retain 41% and {n}")),
 

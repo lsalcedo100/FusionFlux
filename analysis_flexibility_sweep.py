@@ -18,7 +18,7 @@ leave-one-tokamak-out, which turns three assertions into three measurements:
 
     Result 4e-i    Whether degradation grows with degree at *every* penalty, or
                    only at the one that happened to be reported. The slope of
-                   log(worst-machine RMSLE) against degree is the number; a
+                   log(worst-machine log-RMSE) against degree is the number; a
                    single point cannot have a slope.
     Result 4e-ii   Whether regularization rescues a flexible form. If the
                    best-penalised degree 3 matches degree 1's tail, flexibility
@@ -81,7 +81,7 @@ FOCUS_MACHINE = "CMOD"
 # Any prediction of log(tau) is exponentiated before scoring, and a badly
 # unregularised high-degree polynomial can extrapolate far enough to overflow
 # the exponential outright. Clipping keeps a blown-up cell as a finite, very
-# large RMSLE instead of an inf or a nan that would drop out of every summary
+# large log-RMSE instead of an inf or a nan that would drop out of every summary
 # statistic and quietly flatter the model. The bound is ~e^30, about 1e13
 # seconds, which is eleven orders of magnitude above anything in the database:
 # nothing physical is being censored, only the arithmetic.
@@ -161,7 +161,7 @@ def _factor_fold(
 
 
 def _rmsle_from_log(log_true: np.ndarray, log_predicted: np.ndarray) -> tuple[float, int]:
-    """RMSLE in log space, plus how many predictions the clip had to catch.
+    """log-RMSE in log space, plus how many predictions the clip had to catch.
 
     The count is returned rather than swallowed. A cell scored on clipped
     predictions is reporting a censored error, and that is a different claim
@@ -197,12 +197,12 @@ class GridCell:
     lomo_worst_rmsle: float
     worst_machine: str
     degradation_factor: float
-    # Spearman rho between per-machine RMSLE and how far the machine sits
+    # Spearman rho between per-machine log-RMSE and how far the machine sits
     # outside the training data, as in Result 4b.
     distance_spearman: float
     focus_machine_rmsle: float
     # Predictions this cell pushed past ``LOG_PREDICTION_CLIP``. Nonzero means
-    # the RMSLE reported for it is a censored lower bound on the real error.
+    # the log-RMSE reported for it is a censored lower bound on the real error.
     n_clipped_predictions: int
 
     def to_json(self) -> dict[str, object]:
@@ -658,7 +658,7 @@ def plot_flexibility_sweep(sweep: FlexibilitySweep) -> Path | None:
     axes[0].set_yscale("log")
     axes[0].set_xticks(sweep.degrees)
     axes[0].set_xlabel("polynomial degree in the log features", fontsize=9, color=muted)
-    axes[0].set_ylabel("worst held-out machine, RMSLE (log scale)", fontsize=9, color=muted)
+    axes[0].set_ylabel("worst held-out machine, log-RMSE (log scale)", fontsize=9, color=muted)
     axes[0].set_title(
         "Every penalty that leaves degree 1 intact\nalso makes the tail grow with degree.",
         fontsize=11,
@@ -711,7 +711,7 @@ def plot_flexibility_sweep(sweep: FlexibilitySweep) -> Path | None:
     axes[1].set_xscale("log")
     axes[1].set_xlim(min(alphas) / 3, max(alphas) * 3)
     axes[1].set_xlabel("ridge alpha", fontsize=9, color=muted)
-    axes[1].set_ylabel("decades of RMSLE added per degree", fontsize=9, color=muted)
+    axes[1].set_ylabel("decades of log-RMSE added per degree", fontsize=9, color=muted)
     axes[1].set_title(
         "The slope Result 4d could not measure.\n"
         "It reaches zero only where the penalty has ruined every form.",
@@ -737,7 +737,7 @@ def plot_flexibility_sweep(sweep: FlexibilitySweep) -> Path | None:
     axes[2].set_yscale("log")
     axes[2].set_xticks(sweep.degrees)
     axes[2].set_xlabel("polynomial degree in the log features", fontsize=9, color=muted)
-    axes[2].set_ylabel(f"RMSLE on {sweep.focus_machine} (log scale)", fontsize=9, color=muted)
+    axes[2].set_ylabel(f"log-RMSE on {sweep.focus_machine} (log scale)", fontsize=9, color=muted)
     # The tally is the actual answer to "is this one machine misbehaving": it
     # says how often each machine is the one that defines the tail.
     tally = pd.Series([cell.worst_machine for cell in sweep.cells]).value_counts()
@@ -789,7 +789,7 @@ def main() -> None:
     )
     print(f"  {terms}\n")
 
-    print(f"--- worst held-out machine, RMSLE (alpha = {REFERENCE_ALPHA:g} is Result 4d's row) ---")
+    print(f"--- worst held-out machine, log-RMSE (alpha = {REFERENCE_ALPHA:g} is Result 4d's row) ---")
     header = "  " + "degree".ljust(8) + "".join(f"{f'a={alpha:g}':>10}" for alpha in sweep.alphas)
     print(header)
     for degree in sweep.degrees:
@@ -798,7 +798,7 @@ def main() -> None:
         )
         print(f"  {str(degree).ljust(8)}{row}")
 
-    print("\n--- Result 4e-i: slope of log10(RMSLE) against degree, per penalty ---")
+    print("\n--- Result 4e-i: slope of log10(log-RMSE) against degree, per penalty ---")
     print(
         f"  {'alpha':>8}{'worst':>10}{'mean':>10}{'median':>10}{'degree 1':>11}   (x per degree)"
     )

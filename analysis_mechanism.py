@@ -144,7 +144,7 @@ def _pipeline(estimator: Any) -> Pipeline:
 
 
 def score_everywhere(dataset: pd.DataFrame, models: dict[str, Any]) -> dict[str, Any]:
-    """Grouped CV, leave-one-machine-out and the ITER-matched cut, per model."""
+    """Grouped CV, leave-one-machine-out and the ITER-size-matched cut, per model."""
     columns = list(hdb5.BLIND_FEATURE_COLUMNS)
     features = dataset[columns]
     tau = dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float)

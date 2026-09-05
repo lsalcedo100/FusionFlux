@@ -10,7 +10,7 @@ a machine, or everything above the size cut, never takes part in choosing a
 hyperparameter.
 
     outer split     what the paper reports: grouped CV by discharge,
-                    leave-one-machine-out, and the ITER-matched size cut.
+                    leave-one-machine-out, and the ITER-size-matched size cut.
 
     inner search    two selection procedures, run over the *training* rows
                     only. ``discharge`` groups the inner folds by discharge,
@@ -170,7 +170,7 @@ def analyze_tuned(dataset: pd.DataFrame) -> dict[str, Any]:
                 per_machine[mode][str(machine)] = _rmsle_log(log_target[held], predicted)
                 chosen.append({"split": f"lomo:{machine}", "inner": mode, **record})
 
-        # The ITER-matched cut, tuning below the cut only.
+        # The ITER-size-matched cut, tuning below the cut only.
         model, record = _tune_and_fit(name, grid, features, log_target, groups, np.flatnonzero(~above_cut))
         with hdb5._suppress_benign_matmul_warnings():
             cut_predicted = model.predict(features.iloc[np.flatnonzero(above_cut)])

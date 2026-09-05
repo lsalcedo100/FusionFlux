@@ -154,7 +154,7 @@ def _midranks(values: np.ndarray) -> np.ndarray:
 
 @dataclass(frozen=True)
 class MachineBootstrap:
-    """A percentile interval for one model's mean RMSLE over held-out machines."""
+    """A percentile interval for one model's mean log-RMSE over held-out machines."""
 
     model_name: str
     mean_rmsle: float
@@ -203,7 +203,7 @@ class PairedDifference:
 
 
 def _machine_by_model(per_machine: pd.DataFrame) -> pd.DataFrame:
-    """RMSLE as a machines-by-models table, the unit the bootstrap resamples."""
+    """log-RMSE as a machines-by-models table, the unit the bootstrap resamples."""
     return per_machine.pivot_table(index="tokamak", columns="model_name", values="rmsle")
 
 
@@ -219,7 +219,7 @@ def bootstrap_over_machines(
     seed: int = BOOTSTRAP_SEED,
     alpha: float = 0.05,
 ) -> list[MachineBootstrap]:
-    """Percentile intervals for each model's mean RMSLE across held-out machines.
+    """Percentile intervals for each model's mean log-RMSE across held-out machines.
 
     Every model is resampled on the *same* machine draws, so the intervals are
     directly comparable and :func:`bootstrap_paired_difference` can reuse them.
@@ -249,7 +249,7 @@ def bootstrap_paired_difference(
     seed: int = BOOTSTRAP_SEED,
     alpha: float = 0.05,
 ) -> PairedDifference:
-    """Interval for ``mean(RMSLE_a - RMSLE_b)`` over machines, paired by machine."""
+    """Interval for ``mean(log-RMSE of a minus log-RMSE of b)`` over machines, paired by machine."""
     table = _machine_by_model(per_machine)
     for model in (model_a, model_b):
         if model not in table.columns:
@@ -286,7 +286,7 @@ class ModelTransfer:
     degradation_factor: float
     cv_rank: int
     lomo_rank: int
-    # Spearman rho between the model's per-machine RMSLE and how far that
+    # Spearman rho between the model's per-machine log-RMSE and how far that
     # machine sits outside the training data. High means the model's failures
     # are extrapolation failures specifically.
     distance_spearman: float
@@ -627,7 +627,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
         fontsize=14,
         color=ink,
     )
-    axes[0].set_ylabel("RMSLE (lower is better)", fontsize=13, color=muted)
+    axes[0].set_ylabel("log-RMSE (lower is better)", fontsize=13, color=muted)
     axes[0].set_title(
         "Interpolation against extrapolation",
         fontsize=15,
@@ -689,7 +689,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
         fontsize=13,
         color=muted,
     )
-    axes[1].set_ylabel("RMSLE on the held-out machine", fontsize=13, color=muted)
+    axes[1].set_ylabel("log-RMSE on the held-out machine", fontsize=13, color=muted)
     axes[1].set_title(
         "Error against extrapolation distance",
         fontsize=15,
@@ -735,7 +735,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     axes[2].set_xticks(positions)
     axes[2].set_xticklabels([label for _, label in rungs], rotation=28, ha="right",
                             fontsize=13, color=ink)
-    axes[2].set_ylabel("RMSLE (log scale)", fontsize=13, color=muted)
+    axes[2].set_ylabel("log-RMSE (log scale)", fontsize=13, color=muted)
     axes[2].set_title(
         "The flexibility ladder",
         fontsize=15,
@@ -789,7 +789,7 @@ def main() -> None:
         for transfer in controls:
             print(f"    {transfer.model_name} (flexible, but still extrapolates)")
     intervals = {interval.model_name: interval for interval in analysis.bootstrap}
-    print("\n--- mean LOMO RMSLE, 95% percentile interval over the 13 machines ---")
+    print("\n--- mean LOMO log-RMSE, 95% percentile interval over the 13 machines ---")
     for transfer in analysis.transfers:
         interval = intervals[transfer.model_name]
         print(

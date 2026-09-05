@@ -10,7 +10,7 @@ Result 4 shows a flexible model beating the published power law by 41% under
 cross-validation and losing to it on all 13 held-out machines. Result 5 shows
 that at the size jump ITER actually asks for, the tree ensembles land closer to
 a constant than to the law. Result 6 repairs some of that with a power law plus
-a heavily damped correction, reaching 0.206 at the ITER-matched cut.
+a heavily damped correction, reaching 0.206 at the ITER-size-matched cut.
 
 Every one of those models learns its functional form from the data and is held
 back, if at all, by a penalty chosen by cross-validation. None of them is told
@@ -45,7 +45,7 @@ What is reported
                0.001 and the collisionless surface to 0.005, which is inside the
                rounding of its own two-decimal exponents.
     Result 8b  What each constraint costs in sample and under grouped CV.
-    Result 8c  All three splits. The headline: at the ITER-matched cut the
+    Result 8c  All three splits. The headline: at the ITER-size-matched cut the
                collisionless-constrained power law is the best *blind* model in
                this repository.
     Result 8d  The whole size sweep, not one cut, with the underpowered rungs
@@ -132,7 +132,7 @@ class ConstraintDistance:
 
 @dataclass(frozen=True)
 class SplitScore:
-    """One model's RMSLE under all three splits."""
+    """One model's log-RMSE under all three splits."""
 
     model_name: str
     is_blind: bool
@@ -142,7 +142,7 @@ class SplitScore:
     lomo_worst_rmsle: float
     size_cut_rmsle: float
     # Placement between a constant predictor (0.0) and the analytic power law
-    # (1.0) at the ITER-matched cut, the same skill score Result 5 reports.
+    # (1.0) at the ITER-size-matched cut, the same skill score Result 5 reports.
     size_cut_skill: float
 
     def to_json(self) -> dict[str, object]:
@@ -219,7 +219,7 @@ def constraint_distance_table(dataset: pd.DataFrame) -> list[ConstraintDistance]
 
 
 def in_sample_cost(dataset: pd.DataFrame) -> dict[str, float]:
-    """Result 8b: RMSLE of each rung fitted and scored on all rows.
+    """Result 8b: log-RMSE of each rung fitted and scored on all rows.
 
     In sample deliberately. The question here is not how well a constrained law
     predicts, which the three splits answer, but how much fit the constraint
@@ -307,7 +307,7 @@ def score_all_splits(
 
 
 def size_sweep(dataset: pd.DataFrame, extra_models: dict[str, Any]) -> pd.DataFrame:
-    """Result 8d: every size cut, not only the ITER-matched one.
+    """Result 8d: every size cut, not only the ITER-size-matched one.
 
     Result 6e made the case for doing this: a model that wins at one rung of a
     sweep and loses at the others has not shown a mechanism, it has shown a
@@ -412,7 +412,7 @@ def analyze_dimensional(dataset: pd.DataFrame) -> DimensionalAnalysis:
 
     # Result 9's control. At each shared alpha, how much better is aiming the
     # penalty at the weak directions than spreading it evenly? Reported at the
-    # ITER-matched cut, which is where the two differ most.
+    # ITER-size-matched cut, which is where the two differ most.
     pivot = prior[prior["weighting"].isin(sp.WEIGHTINGS)].pivot_table(
         index="parameter", columns="weighting", values="size_cut_rmsle"
     )
@@ -489,7 +489,7 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
     # data limits end up being, rather than being placed at a data value that a
     # later ``set_ylim`` would move out from under it.
     left.annotate(
-        "ITER-matched",
+        "ITER-size-matched",
         xy=(analysis.iter_matched_size_ratio, 0.97),
         xycoords=("data", "axes fraction"),
         color="#c0392b",
@@ -500,7 +500,7 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
         textcoords="offset points",
     )
     left.set_xlabel("size ratio demanded by the cut (test R max / train R max)")
-    left.set_ylabel("RMSLE on the held-out machines")
+    left.set_ylabel("log-RMSE on the held-out machines")
     left.set_title("Score at every size cut")
     left.legend(fontsize=13, frameon=False)
     left.grid(alpha=0.15)
@@ -526,8 +526,8 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
             fontsize=13,
             color=colour,
         )
-    right.set_xlabel("in-sample RMSLE (what the constraint costs)")
-    right.set_ylabel("RMSLE at the ITER-matched cut (what it buys)")
+    right.set_xlabel("in-sample log-RMSE (what the constraint costs)")
+    right.set_ylabel("log-RMSE at the ITER-size-matched cut (what it buys)")
     right.set_title("What each constraint costs against what it buys")
     right.grid(alpha=0.15)
 
@@ -597,7 +597,7 @@ def main() -> None:
         )
     print("  * fitted on this database, held-out machines included; not a blind baseline")
     print(
-        f"\n  best blind model at the ITER-matched cut: "
+        f"\n  best blind model at the ITER-size-matched cut: "
         f"{MODEL_LABELS.get(analysis.best_blind_at_size_cut, analysis.best_blind_at_size_cut)}"
         f" at {analysis.best_blind_size_cut_rmsle:.3f}"
     )
@@ -618,7 +618,7 @@ def main() -> None:
     # The pooled ITER-cut number is dominated by JET and JET-ILW, so the
     # per-machine breakdown is not decoration: it is the check on whether the
     # pooled win is a win on machines or a win on row counts.
-    print("\n--- Result 8c: the ITER-matched cut, per held-out machine ---")
+    print("\n--- Result 8c: the ITER-size-matched cut, per held-out machine ---")
     cut_machines = analysis.size_cut_per_machine
     shown = [*CONSTRAINED_MODELS, "ipb98y2_analytic", "ridge_loglinear", HYBRID_REFERENCE]
     table = (
@@ -649,7 +649,7 @@ def main() -> None:
             f"{pivot.loc[alpha, 'spectral']:>11.3f}"
             f"{pivot.loc[alpha, 'isotropic'] - pivot.loc[alpha, 'spectral']:>+9.3f}"
         )
-    print("  RMSLE at the ITER-matched cut; positive gain means targeting won")
+    print("  log-RMSE at the ITER-size-matched cut; positive gain means targeting won")
 
     print("\n--- Result 9b: truncation rank, data in the k best-determined directions ---")
     truncated = prior[prior["weighting"] == "truncated"].sort_values("parameter", ascending=False)

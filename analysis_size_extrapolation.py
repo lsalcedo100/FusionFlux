@@ -1,7 +1,7 @@
 """How far outside the database can a confinement model be trusted?
 
 Run ``python3 analysis_size_extrapolation.py`` to regenerate everything under
-``results/`` for Result 5: the size sweep, the ITER-matched cut, the per-machine
+``results/`` for Result 5: the size sweep, the ITER-size-matched cut, the per-machine
 breakdown, the aspect-ratio control, and the figure.
 
 Result 4 holds out one tokamak at a time. That is the right question for "will
@@ -59,7 +59,7 @@ REPORTED_MODELS = (
 # a test of sample size: the smallest cuts here train on fewer than 500 rows, so
 # a model failing there has two possible explanations and the split cannot tell
 # them apart. Cuts below this are still computed and plotted, but they are
-# marked underpowered and no claim rests on them. The ITER-matched cut trains on
+# marked underpowered and no claim rests on them. The ITER-size-matched cut trains on
 # 3498 rows and is comfortably above it.
 MIN_WELL_POWERED_TRAIN_ROWS = 1000
 
@@ -293,7 +293,7 @@ def build_control(
 
 
 def build_truncation(dataset: pd.DataFrame, split: hdb5.SizeSplit) -> dict[str, Any]:
-    """How hard the Result 4c bound bites at the ITER-matched cut.
+    """How hard the Result 4c bound bites at the ITER-size-matched cut.
 
     A tree ensemble averages training targets, so no prediction can leave
     ``[min(y_train), max(y_train)]``. Under leave-one-tokamak-out that bound
@@ -435,7 +435,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
         fontsize=13.5,
         color=ink,
     )
-    axes[0].set_ylabel("RMSLE, log scale (lower is better)", fontsize=13, color=muted)
+    axes[0].set_ylabel("log-RMSE, log scale (lower is better)", fontsize=13, color=muted)
     axes[0].set_title(
         "Three questions of increasing difficulty",
         fontsize=15,
@@ -443,7 +443,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
     )
     axes[0].legend(frameon=False, fontsize=13, loc="upper left", labelcolor=muted)
 
-    # --- Right: the sweep, with the ITER-matched rung marked --------------
+    # --- Right: the sweep, with the ITER-size-matched rung marked --------------
     #
     # Only the well-powered cuts are joined into a line. Beyond them the
     # training set falls under MIN_WELL_POWERED_TRAIN_ROWS rows, so a model
@@ -521,7 +521,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
         fontsize=13,
         color=muted,
     )
-    axes[1].set_ylabel("RMSLE on every machine above the cut", fontsize=13, color=muted)
+    axes[1].set_ylabel("log-RMSE on every machine above the cut", fontsize=13, color=muted)
     axes[1].set_title(
         "The size-ordered sweep",
         fontsize=15,

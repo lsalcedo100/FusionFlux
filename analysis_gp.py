@@ -23,7 +23,7 @@ The four measurements:
                  split. A dot-product kernel is Bayesian linear regression in
                  the log features, so these are the same model reached two ways
                  and they should agree. If they do not, this module is wrong.
-    Result 14b   The bounded rung at the ITER-matched cut, against the tree
+    Result 14b   The bounded rung at the ITER-size-matched cut, against the tree
                  ensembles it is predicted to resemble and the mean baseline it
                  is predicted to approach.
     Result 14c   The rung that is flexible *and* unbounded, which is the one the
@@ -69,9 +69,9 @@ GP_MODELS: tuple[str, ...] = ("gp_rbf", "gp_linear", "gp_linear_rbf")
 # Result 14a's control tolerance. A dot-product-kernel GP and ridge on the same
 # log features are the same model, but not the same arithmetic: ridge penalises
 # with a fixed alpha while the GP learns its noise level, so they agree closely
-# rather than exactly. 0.02 RMSLE is far tighter than any gap this result
+# rather than exactly. 0.02 log-RMSE is far tighter than any gap this result
 # discusses and far looser than the numerical noise between two solvers.
-CONTROL_TOLERANCE_RMSLE = 0.02
+CONTROL_TOLERANCE_LOG_RMSE = 0.02
 
 # Nominal coverage for Result 14d, matching Result 7 so the two are comparable.
 NOMINAL_COVERAGE = 0.90
@@ -103,9 +103,9 @@ class GaussianProcessStudy:
 
 
 def _rmsle_by_model(frame: pd.DataFrame) -> pd.Series:
-    """RMSLE indexed by model, from whichever shape the split returned.
+    """log-RMSE indexed by model, from whichever shape the split returned.
 
-    ``evaluate_models`` and ``score_size_split`` report one RMSLE per model in a
+    ``evaluate_models`` and ``score_size_split`` report one log-RMSE per model in a
     column named ``rmsle``; ``summarize_leave_one_tokamak_out`` averages over
     machines and names it ``mean_rmsle``. Reading both here keeps the three
     splits in one table without a per-split special case at every call site.
@@ -288,7 +288,7 @@ def write_results(study: GaussianProcessStudy, results_dir: Path = RESULTS_DIR) 
         "nominal_coverage": NOMINAL_COVERAGE,
         "learned_kernels": study.learned_kernels,
         "control_gap_rmsle": control_gap(study),
-        "control_tolerance_rmsle": CONTROL_TOLERANCE_RMSLE,
+        "control_tolerance_rmsle": CONTROL_TOLERANCE_LOG_RMSE,
         "scores": {
             name: {
                 "cv": float(cv[name]) if name in cv.index else None,
@@ -373,9 +373,9 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
             color=colour,
         )
     left.set_xticks(positions)
-    left.set_xticklabels(["held-out machine", "ITER-matched size cut"])
+    left.set_xticklabels(["held-out machine", "ITER-size-matched size cut"])
     left.set_yscale("log")
-    left.set_ylabel("RMSLE (log scale)")
+    left.set_ylabel("log-RMSE (log scale)")
     left.set_title("One model family, three kernels")
     left.grid(alpha=0.15)
     left.legend(fontsize=11, loc="upper left")
@@ -437,7 +437,7 @@ def main() -> None:
 
     print("=== Result 14: flexibility against boundedness, on one model family ===")
     print(
-        f"ITER-matched cut holds out {', '.join(study.iter_split_machines)} "
+        f"ITER-size-matched cut holds out {', '.join(study.iter_split_machines)} "
         f"at a size ratio of {study.iter_size_ratio:.3f}"
     )
 
@@ -454,7 +454,7 @@ def main() -> None:
 
     print("\n--- Result 14a: the control ---")
     for split_name, gap in payload["control_gap_rmsle"].items():
-        verdict = "agrees" if gap <= CONTROL_TOLERANCE_RMSLE else "DISAGREES"
+        verdict = "agrees" if gap <= CONTROL_TOLERANCE_LOG_RMSE else "DISAGREES"
         print(f"  {split_name:<24}gap {gap:.4f}  {verdict}")
     print("  (a dot-product kernel is Bayesian linear regression in the log features)")
 

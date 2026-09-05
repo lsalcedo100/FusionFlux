@@ -7,7 +7,7 @@ figure.
 
 Results 4 and 5 diagnose a failure and stop. The trees win by 41% under grouped
 cross-validation and lose to a log-linear power law on all 13 held-out machines,
-and at the ITER-matched size cut they land closer to a constant predictor than
+and at the ITER-size-matched size cut they land closer to a constant predictor than
 to the power law. Result 4d attributes that to functional form rather than to
 flexibility as such: the power law is the only form on the ladder whose error
 stays bounded away from the data.
@@ -25,7 +25,7 @@ whatever trade-off actually exists.
                while keeping its leave-one-machine-out score.
     Result 6b  What a practitioner tuning on CV actually gets, since the damping
                factor has to be chosen without the held-out machines.
-    Result 6c  The same rungs at the ITER-matched size cut of Result 5.
+    Result 6c  The same rungs at the ITER-size-matched size cut of Result 5.
 
 Both outcomes are reportable. A rung that improves CV at no LOMO cost is a point
 neither pure model reaches. A sweep where every CV gain is paid for one-for-one
@@ -201,7 +201,7 @@ class CorrectionMechanism:
 class SizeCutRobustness:
     """The hybrid against its own base model at one size cut.
 
-    Result 6c reports the ITER-matched cut, which is one rung of the Result 5
+    Result 6c reports the ITER-size-matched cut, which is one rung of the Result 5
     sweep. A gain that appeared only there would be a property of that rung
     rather than of the method, so every usable cut is scored and the ones where
     the hybrid *loses* are reported alongside the ones where it wins.
@@ -225,7 +225,7 @@ class SizeCutRobustness:
 
 @dataclass(frozen=True)
 class CorrectionHyperparameter:
-    """One correction setting at the ITER-matched cut.
+    """One correction setting at the ITER-size-matched cut.
 
     The headline uses depth 2 and 200 rounds. Those were fixed before the
     result was known, but a reader has no way to tell that from the outside, so
@@ -767,9 +767,9 @@ def plot_hybrid(analysis: HybridAnalysis) -> Path | None:
     axes[0].axvline(
         baseline.cv_rmsle, color=MUTED, linewidth=0.9, linestyle=":", zorder=1
     )
-    axes[0].set_xlabel("cross-validated RMSLE (held-out discharge)", fontsize=10, color=INK)
+    axes[0].set_xlabel("cross-validated log-RMSE (held-out discharge)", fontsize=10, color=INK)
     axes[0].set_ylabel(
-        "leave-one-tokamak-out RMSLE (held-out machine)", fontsize=10, color=INK
+        "leave-one-tokamak-out log-RMSE (held-out machine)", fontsize=10, color=INK
     )
     axes[0].set_title(
         "Result 6a: what flexibility costs out of distribution",
@@ -829,7 +829,7 @@ def plot_hybrid(analysis: HybridAnalysis) -> Path | None:
         color=MUTED,
     )
     axes[1].set_xlabel("damping factor $\\lambda$ on the residual correction", fontsize=10, color=INK)
-    axes[1].set_ylabel("RMSLE", fontsize=10, color=INK)
+    axes[1].set_ylabel("log-RMSE", fontsize=10, color=INK)
     axes[1].set_title(
         "Result 6b: the two splits disagree about which rung is best",
         fontsize=11.5,
@@ -906,7 +906,7 @@ def plot_hybrid(analysis: HybridAnalysis) -> Path | None:
     axes[2].set_xlabel(
         "damping factor $\\lambda$ on the residual correction", fontsize=10, color=INK
     )
-    axes[2].set_ylabel("RMSLE across the ITER-matched size cut", fontsize=10, color=INK)
+    axes[2].set_ylabel("log-RMSE across the ITER-size-matched size cut", fontsize=10, color=INK)
     axes[2].set_title(
         f"Result 6c: predicting {analysis.size_cut_size_ratio:.2f}x beyond the training size",
         fontsize=11.5,
@@ -1031,7 +1031,7 @@ def main() -> None:
 
     print("\n--- does the size-cut gain survive the correction's own settings? ---")
     grid = analysis.hyperparameter_robustness
-    print(f"  {'depth':>6}{'rounds':>8}{'RMSLE':>9}  beats ridge")
+    print(f"  {'depth':>6}{'rounds':>8}{'log-RMSE':>9}  beats ridge")
     for setting in grid:
         print(
             f"  {setting.gbm_max_depth:>6}{setting.gbm_max_iter:>8}{setting.rmsle:>9.3f}"

@@ -42,11 +42,11 @@
     },
     "4": {
       "cv_gain_over_powerlaw": 0.06802197663938103,
-      "loo_gain_over_powerlaw": -0.13436646813764863,
+      "loo_gain_over_powerlaw": -0.13436646813764885,
       "cv_powerlaw": 0.33723204031636633,
       "cv_best_tree": 0.31429285034791565,
       "loo_powerlaw": 0.2648864393999988,
-      "loo_best_tree": 0.3004782947197339,
+      "loo_best_tree": 0.300478294719734,
       "reversal": true
     }
   }

@@ -30,7 +30,6 @@ from typing import Any
 # it is one value here rather than two spellings of "big enough for the README".
 FIGURE_DPI = 180
 
-
 def save_figure(figure: Any, path: Path, **savefig_kwargs: Any) -> Path:
     """Save `figure` as the PNG at `path` and as a PDF beside it.
 

@@ -40,7 +40,7 @@ Then you ask whether that is a fact about this one database, and it is not: the 
 
 ![Interpolation against extrapolation](results/extrapolation.png)
 
-Under cross-validation grouped by discharge, a random forest cuts RMSLE 41% below the analytic IPB98(y,2) law (0.118 against 0.199, on the full ten-feature set; the table below drops the IPB98 prior as a feature and so reads 0.128, a 36% margin, for the same model). But grouped CV holds out *shots*, so every machine in the held-out fold is also in the training fold. Hold out an entire tokamak instead, train on the other 12 and predict the 13th, and **the ranking of the three blind models reverses exactly**:
+Under cross-validation grouped by discharge, a random forest cuts log-RMSE 41% below the analytic IPB98(y,2) law (0.118 against 0.199, on the full ten-feature set; the table below drops the IPB98 prior as a feature and so reads 0.128, a 36% margin, for the same model). But grouped CV holds out *shots*, so every machine in the held-out fold is also in the training fold. Hold out an entire tokamak instead, train on the other 12 and predict the 13th, and **the ranking of the three blind models reverses exactly**:
 
 | model | CV, by discharge | leave-one-tokamak-out | 95% interval | ratio |
 |---|---|---|---|---|
@@ -75,7 +75,7 @@ Leave-one-tokamak-out still leaves twelve machines spanning the held-out one's r
 
 ![The hybrid frontier](results/hybrid.png)
 
-Everything above is a negative result, and it is specific enough to build against. Fit the power law, learn a correction on its **log residuals**, and damp that correction by a factor `lambda`. Across the ITER-matched size cut, a boosted-tree correction moves the power law from 0.278 to **0.206**, which makes it the best blind model at that cut and within 6% of IPB98(y,2), a law fitted with those machines included. **The same boundedness that makes a tree useless as a predictor on a larger machine makes it safe as a corrector**, because the quantity it is bounded on is now a residual centred on zero rather than a target that grows with size.
+Everything above is a negative result, and it is specific enough to build against. Fit the power law, learn a correction on its **log residuals**, and damp that correction by a factor `lambda`. Across the ITER-size-matched size cut, a boosted-tree correction moves the power law from 0.278 to **0.206**, which makes it the best blind model at that cut and within 6% of IPB98(y,2), a law fitted with those machines included. **The same boundedness that makes a tree useless as a predictor on a larger machine makes it safe as a corrector**, because the quantity it is bounded on is now a residual centred on zero rather than a target that grows with size.
 
 The limits are real and stated in full: the gain is along the size axis only, off it the correction hurts, the hybrid wins at 5 of 8 well-powered cuts rather than all, and cross-validation does not select the rung that turns out to be best. See [Result 6](results/RESULTS.md#result-6-a-model-that-is-flexible-in-range-and-still-extrapolates).
 
@@ -87,7 +87,7 @@ Every model above learns its form from the data. None is told any physics, which
 
 The constraints are derived in code from the definitions of rho*, beta and nu* rather than copied out of a paper. The check that the derivation is right is external and hard to fake: **IPB98(y,2), published in 1999, lands on the Kadomtsev surface at a distance of 0.00096 and on the collisionless surface at 0.0045**, both inside the rounding of its own two-decimal exponents.
 
-| model | in-sample | CV | held-out machine | ITER-matched cut |
+| model | in-sample | CV | held-out machine | ITER-size-matched cut |
 |---|---|---|---|---|
 | **power law, collisionless** | 0.1818 | 0.182 | 0.206 | **0.183** |
 | IPB98(y,2), analytic (not blind) | - | 0.199 | 0.188 | 0.194 |
@@ -95,7 +95,7 @@ The constraints are derived in code from the definitions of rho*, beta and nu* r
 | power law, Kadomtsev | 0.1808 | 0.181 | 0.211 | 0.254 |
 | ridge, log-linear | 0.1808 | 0.181 | 0.214 | 0.278 |
 
-**0.183 is the best score any blind model in this repository reaches at the ITER-matched cut.** It beats the hybrid above, and it beats the analytic law that was fitted with those machines included. It has no hyperparameter and nothing to tune: the only difference from the ridge row is the constraint.
+**0.183 is the best score any blind model in this repository reaches at the ITER-size-matched cut.** It beats the hybrid above, and it beats the analytic law that was fitted with those machines included. It has no hyperparameter and nothing to tune: the only difference from the ridge row is the constraint.
 
 Two findings, belonging to two different constraints. The **Kadomtsev constraint is free** (0.1808 in sample, identical to unconstrained, because the data already satisfies it unaided) and still beats the unconstrained fit at **15 of 15** size cuts, since a constraint the data satisfies on average still stops the fit wandering when the training set is small. The **collisionless constraint** costs 0.001 in sample and wins at **8 of 8** well-powered cuts. Push one rung further, to a beta-independent law, and it degrades again: there is an optimum in the middle of the hierarchy, and nothing here predicted where. Cross-validation cannot select any of it, exactly as with the hybrid. See [Result 8](results/RESULTS.md#result-8-one-line-of-physics-beats-every-model-built-so-far).
 
@@ -107,7 +107,7 @@ Handing the model the same physics as a *prior* instead, shrunk along the weak d
 
 For a next-step device the point error is not the deliverable; the interval is. Split-conformal prediction on the log residuals gives every model a nominal 90% interval.
 
-| model | grouped CV | held-out machine | ITER-matched cut |
+| model | grouped CV | held-out machine | ITER-size-matched cut |
 |---|---|---|---|
 | IPB98(y,2), analytic (not blind) | 90% | 89% | 88% |
 | ridge, log-linear | 90% | 83% | 70% |
@@ -115,7 +115,7 @@ For a next-step device the point error is not the deliverable; the interval is. 
 | hist gradient boosting | 91% | 45% | **0%** |
 | random forest | 91% | 35% | **3%** |
 
-The control arm works: every model lands within a point of nominal where the exchangeability the method assumes actually holds, which is what licenses reading the rest. Out of distribution it does not. **The random forest's 90% interval covers 3% of the rows across the ITER-matched cut, and the histogram gradient booster's covers none of the 2730.** And the widths do not move: no model's interval changes width by more than 1.5% between the two arms. The intervals do not become vague out of distribution. They stay the same size and miss. See [Result 7](results/RESULTS.md#result-7-the-intervals-are-not-merely-wrong-they-are-confident).
+The control arm works: every model lands within a point of nominal where the exchangeability the method assumes actually holds, which is what licenses reading the rest. Out of distribution it does not. **The random forest's 90% interval covers 3% of the rows across the ITER-size-matched cut, and the histogram gradient booster's covers none of the 2730.** And the widths do not move: no model's interval changes width by more than 1.5% between the two arms. The intervals do not become vague out of distribution. They stay the same size and miss. See [Result 7](results/RESULTS.md#result-7-the-intervals-are-not-merely-wrong-they-are-confident).
 
 ### The collapse is repairable, and the repair stops exactly where the diagnosis says
 
@@ -123,13 +123,13 @@ The control arm works: every model lands within a point of nominal where the exc
 
 That diagnosis makes a prediction. If the failure really is exchangeability, then calibrating on **held-out machines** rather than held-out discharges should repair it, and should repair it *only as far as that unit reaches*. Both halves land.
 
-| random forest, nominal 90% | held-out machine | ITER-matched cut |
+| random forest, nominal 90% | held-out machine | ITER-size-matched cut |
 |---|---|---|
 | split conformal (above) | 35% | 3% |
 | calibrated on machines | **88%** | 29% |
 | plus distance scaling | 88% | 40% |
 
-**A repair that does not work everywhere is the stronger result.** On a held-out machine every model returns to within two points of nominal, tree ensembles included. Across the size cut none does, because every calibration machine is smaller than every test machine and no recalibration makes those two exchangeable. The constrained power law above is the single exception in the table: its intervals hold at the ITER-matched cut under every scheme, including plain split conformal, which fails there for everything else. See [Result 10](results/RESULTS.md#result-10-repairing-the-interval-collapse-and-finding-the-limit-of-the-repair).
+**A repair that does not work everywhere is the stronger result.** On a held-out machine every model returns to within two points of nominal, tree ensembles included. Across the size cut none does, because every calibration machine is smaller than every test machine and no recalibration makes those two exchangeable. The constrained power law above is the single exception in the table: its intervals hold at the ITER-size-matched cut under every scheme, including plain split conformal, which fails there for everything else. See [Result 10](results/RESULTS.md#result-10-repairing-the-interval-collapse-and-finding-the-limit-of-the-repair).
 
 ### It reproduces on rows this database does not contain
 
@@ -196,7 +196,7 @@ Everything above says flexible models fail out of distribution. That conclusion 
 
 Every model scored so far confounds two properties. **Flexibility** is how much structure a model can learn beyond a power law. **Boundedness** is what it does far outside the training data. A random forest is both flexible and bounded; ridge is neither; a degree-3 polynomial is flexible and unbounded but diverges. Nothing here was flexible, unbounded and well behaved at once. A kernel choice supplies exactly that, changing one property and nothing else:
 
-| model | CV, by discharge | held-out machine | ITER-matched cut | rho(error, distance) |
+| model | CV, by discharge | held-out machine | ITER-size-matched cut | rho(error, distance) |
 |---|---|---|---|---|
 | **GP, linear + RBF** (flexible, unbounded) | **0.112** | 0.218 | **0.191** | **-0.01** |
 | GP, RBF only (flexible, bounded) | 0.142 | 0.541 | **1.948** | +0.65 |
@@ -204,15 +204,15 @@ Every model scored so far confounds two properties. **Flexibility** is how much 
 | random forest | 0.128 | 0.465 | 0.938 | +0.85 |
 | IPB98(y,2), analytic (not blind) | 0.199 | 0.188 | 0.194 | -0.49 |
 
-Same family, same optimizer, same rows, same splits. Only the kernel's long-range behaviour changes, and it spans a factor of **10** at the ITER-matched cut.
+Same family, same optimizer, same rows, same splits. Only the kernel's long-range behaviour changes, and it spans a factor of **10** at the ITER-size-matched cut.
 
 **The bounded rung fails exactly like a tree.** `gp_rbf` beats the power law under cross-validation and then scores 1.948 at the ITER cut, *worse than predicting a constant*, with error tracking distance at +0.65. The mechanism is Result 4c's reached by different machinery: a tree averages training targets, an RBF kernel decays to zero so the posterior returns to its prior mean. Far enough out, the prediction is the training mean whatever the features say.
 
-**The same flexibility on an unbounded kernel is the best model in this repository.** `gp_linear_rbf` wins cross-validation outright at 0.112, beating the random forest's 0.128 that this README opens with, *and* scores 0.191 at the ITER-matched cut: 31% better than the plain power law, better than the analytic law fitted with those machines included, second only to Result 8's constrained fit at 0.183. Its error is flat against distance at rho = -0.01.
+**The same flexibility on an unbounded kernel is the best model in this repository.** `gp_linear_rbf` wins cross-validation outright at 0.112, beating the random forest's 0.128 that this README opens with, *and* scores 0.191 at the ITER-size-matched cut: 31% better than the plain power law, better than the analytic law fitted with those machines included, second only to Result 8's constrained fit at 0.183. Its error is flat against distance at rho = -0.01.
 
 **So the reversal is not a fact about flexible models. It is a fact about bounded ones.** The best cross-validated model no longer has to be the worst on a new machine. Results 4 and 5 measure their zoo correctly; every flexible member of that zoo was bounded or divergent, and none separated the two properties. "Do not use a flexible model out of distribution" was the wrong lesson. "Do not use a model whose predictions are bounded by its training targets" is the right one.
 
-It does not overturn the rest: the GP does not beat the power law on a held-out machine (0.218 against 0.214), and one line of dimensional analysis still wins the ITER cut for no hyperparameters at all. **And its own intervals hold where every calibrated one fails**: nominal 90%, the GP covers **92.5%** across the ITER-matched cut without recalibration, where Result 7's conformal intervals give the random forest 3% and the gradient booster 0%. The bounded rung is the instructive failure, the one model here that *does* go vague out of distribution, with a half-width four times anyone else's, and it still covers 16.7%. See [Result 14](results/RESULTS.md#result-14-it-was-never-flexibility-it-was-boundedness).
+It does not overturn the rest: the GP does not beat the power law on a held-out machine (0.218 against 0.214), and one line of dimensional analysis still wins the ITER cut for no hyperparameters at all. **And its own intervals hold where every calibrated one fails**: nominal 90%, the GP covers **92.5%** across the ITER-size-matched cut without recalibration, where Result 7's conformal intervals give the random forest 3% and the gradient booster 0%. The bounded rung is the instructive failure, the one model here that *does* go vague out of distribution, with a half-width four times anyone else's, and it still covers 16.7%. See [Result 14](results/RESULTS.md#result-14-it-was-never-flexibility-it-was-boundedness).
 
 ### What it predicts for ITER, written down before the answer exists
 

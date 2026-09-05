@@ -27,14 +27,14 @@ Two arms, two different objections
 
 What replication means here
 ---------------------------
-Not the numbers. The row populations differ, so the RMSLE values differ and
+Not the numbers. The row populations differ, so the log-RMSE values differ and
 should. What is being replicated is the *structure*: that grouped CV by
 discharge ranks the trees far above the log-linear power law, that holding out
 an entire machine reverses that ranking, and that the degradation ratio between
 the two splits separates the model families in the same order.
 
 The script therefore reports the reversal as a rank comparison and a count of
-machines, not as a difference of RMSLE against STD5's numbers, which would be
+machines, not as a difference of log-RMSE against STD5's numbers, which would be
 comparing two different populations and meaning nothing.
 
 The narrative built on these numbers is in ``results/RESULTS.md``.
@@ -127,7 +127,7 @@ class ArmReplication:
 def _baseline_per_machine(
     dataset: pd.DataFrame, baseline_column: str, label: str, min_rows: int
 ) -> pd.DataFrame:
-    """Per-machine RMSLE of the analytic baseline, in leave-one-out's shape.
+    """Per-machine log-RMSE of the analytic baseline, in leave-one-out's shape.
 
     The analytic law needs no fitting, so "holding out a machine" does not
     change it. Its per-machine score is simply its error on that machine, which

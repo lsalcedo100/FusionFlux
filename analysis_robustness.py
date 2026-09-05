@@ -10,9 +10,9 @@ independent than the phrase "a machine it has not seen" suggests:
     population   Grouped CV scores all 6228 rows; leave-one-out scores only the
                  13 machines with enough rows to hold out. Different rows.
 
-    aggregation  Grouped CV pools out-of-fold predictions and takes one RMSLE
+    aggregation  Grouped CV pools out-of-fold predictions and takes one log-RMSE
                  over every row, so JET and AUG dominate it. Leave-one-out
-                 averages per-machine RMSLE, so every machine counts once.
+                 averages per-machine log-RMSE, so every machine counts once.
 
     unit         JET and JET-ILW are one physical tokamak before and after its
                  wall change, as are AUG and AUGW. Holding out JET-ILW while
@@ -100,7 +100,7 @@ def _leave_one_unit_out(dataset: pd.DataFrame, units: np.ndarray) -> dict[str, d
 def _both_aggregations(
     actual: np.ndarray, units: np.ndarray, predictions: dict[str, np.ndarray]
 ) -> dict[str, dict[str, Any]]:
-    """One RMSLE pooled over rows, and the mean of the per-unit RMSLEs."""
+    """One log-RMSE pooled over rows, and the mean of the per-unit log-RMSEs."""
     distinct = list(pd.unique(units))
     out: dict[str, dict[str, Any]] = {}
     for name, predicted in predictions.items():

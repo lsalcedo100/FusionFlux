@@ -94,9 +94,10 @@ NF papers, and the readership is the one the result is aimed at.
 
 IOP is format-free at initial submission, so `article` is fine and `iopart.cls`
 is only needed if the paper is accepted. Their abstract guidance is 300 words
-and this one is 288. Submission goes through ScholarOne, which asks separately
+and this one is 248. Submission goes through ScholarOne, which asks separately
 for the things now carried in the source: affiliation, ORCID, funding, competing
-interests, and a data availability statement.
+interests, author contributions, a data availability statement, and a statement
+on the use of AI tools.
 
 Two things to settle that are not in any file here:
 

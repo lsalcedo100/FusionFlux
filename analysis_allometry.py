@@ -71,7 +71,7 @@ def build_models() -> dict[str, Any]:
 
 
 def _rmsle(actual: np.ndarray, predicted: np.ndarray) -> float:
-    """RMSE in log space, which is RMSLE, matching every other result here."""
+    """RMSE in log space, which is log-RMSE, matching every other result here."""
     return float(np.sqrt(np.mean((np.asarray(actual) - np.asarray(predicted)) ** 2)))
 
 
@@ -290,7 +290,7 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
     axes[0].set_xticks([0, 1])
     axes[0].set_xticklabels(["held out:\nspecies", "held out:\norder"],
                             fontsize=14, color=ink)
-    axes[0].set_ylabel("RMSLE (lower is better)", fontsize=13, color=muted)
+    axes[0].set_ylabel("log-RMSE (lower is better)", fontsize=13, color=muted)
     # Deliberately not "the same inversion". There is none here, and that is the
     # finding: the trees lose under *both* splits, so no ranking can invert.
     axes[0].set_title("Kleiber's law under both splits",
@@ -304,7 +304,7 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
         axes[1].plot(rows["mahalanobis"], rows["score"], "o", color=colour, markersize=8,
                      label=f"{label}  (rho = {rho:+.2f})")
     axes[1].set_xlabel("distance of the held-out order from the rest", fontsize=13, color=muted)
-    axes[1].set_ylabel("RMSLE on that order", fontsize=13, color=muted)
+    axes[1].set_ylabel("log-RMSE on that order", fontsize=13, color=muted)
     axes[1].set_title("Error against extrapolation distance",
                       fontsize=15, color=ink)
     axes[1].legend(frameon=False, fontsize=13, loc="upper left", labelcolor=muted)
@@ -319,7 +319,7 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
         axes[2].plot(row["n_train_orders"], row["rmsle"], "o", markersize=15,
                      markerfacecolor="none", markeredgecolor=ink, markeredgewidth=1.3)
     axes[2].set_xlabel("orders in the training half", fontsize=13, color=muted)
-    axes[2].set_ylabel("RMSLE on every heavier order", fontsize=13, color=muted)
+    axes[2].set_ylabel("log-RMSE on every heavier order", fontsize=13, color=muted)
     axes[2].set_yscale("log")
     lowest = float(sweep[sweep["model_name"] != "mean_baseline"]["rmsle"].min())
     highest = float(sweep[sweep["model_name"] != "mean_baseline"]["rmsle"].max())
