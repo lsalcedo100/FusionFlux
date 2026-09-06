@@ -1,0 +1,239 @@
+{
+  "dataset_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b",
+  "n_rows": 6228,
+  "n_labels": 18,
+  "n_devices": 16,
+  "eligible_devices": [
+    "JET",
+    "AUG",
+    "ASDEX",
+    "D3D",
+    "NSTX",
+    "JT60U",
+    "PDX",
+    "JFT2M",
+    "PBXM",
+    "CMOD",
+    "MAST"
+  ],
+  "nominal_coverage": 0.9,
+  "size_cut": {
+    "n_train_units": 13,
+    "n_test_units": 3,
+    "size_ratio": 1.8230563002680964
+  },
+  "leave_one_device_out": [
+    {
+      "model_name": "ipb98y2_analytic",
+      "method": "split",
+      "empirical_coverage": 0.8995957962813258,
+      "median_interval_factor": 1.39039645733302,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "ridge_loglinear",
+      "method": "split",
+      "empirical_coverage": 0.8546483427647534,
+      "median_interval_factor": 1.3441200054491254,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "random_forest",
+      "method": "split",
+      "empirical_coverage": 0.31479385610347616,
+      "median_interval_factor": 1.2311596658866946,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "hist_gradient_boosting",
+      "method": "split",
+      "empirical_coverage": 0.3822150363783347,
+      "median_interval_factor": 1.2353346615733602,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "powerlaw_collisionless",
+      "method": "split",
+      "empirical_coverage": 0.880517380759903,
+      "median_interval_factor": 1.3429586740183985,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "ipb98y2_analytic",
+      "method": "machine_cv",
+      "empirical_coverage": 0.9010509296685529,
+      "median_interval_factor": 1.39222309509147,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "ridge_loglinear",
+      "method": "machine_cv",
+      "empirical_coverage": 0.9236863379143088,
+      "median_interval_factor": 1.3977482647175261,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "random_forest",
+      "method": "machine_cv",
+      "empirical_coverage": 0.8388035569927244,
+      "median_interval_factor": 2.463492408479188,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "hist_gradient_boosting",
+      "method": "machine_cv",
+      "empirical_coverage": 0.773322554567502,
+      "median_interval_factor": 2.288539119426797,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "powerlaw_collisionless",
+      "method": "machine_cv",
+      "empirical_coverage": 0.9223928860145514,
+      "median_interval_factor": 1.3911464866608232,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "ipb98y2_analytic",
+      "method": "machine_cv_distance",
+      "empirical_coverage": 0.8981406628940987,
+      "median_interval_factor": 1.3881300530984266,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "ridge_loglinear",
+      "method": "machine_cv_distance",
+      "empirical_coverage": 0.9296685529506872,
+      "median_interval_factor": 1.4291851725267495,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "random_forest",
+      "method": "machine_cv_distance",
+      "empirical_coverage": 0.8753435731608731,
+      "median_interval_factor": 2.7621809913112307,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "hist_gradient_boosting",
+      "method": "machine_cv_distance",
+      "empirical_coverage": 0.7954729183508489,
+      "median_interval_factor": 2.534104746655211,
+      "n_rows": 6185
+    },
+    {
+      "model_name": "powerlaw_collisionless",
+      "method": "machine_cv_distance",
+      "empirical_coverage": 0.9267582861762328,
+      "median_interval_factor": 1.4164035495834622,
+      "n_rows": 6185
+    }
+  ],
+  "size_cut_coverage": [
+    {
+      "model_name": "ipb98y2_analytic",
+      "method": "split",
+      "empirical_coverage": 0.8831501831501831,
+      "median_interval_factor": 1.3767225984697504,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "ridge_loglinear",
+      "method": "split",
+      "empirical_coverage": 0.7047619047619048,
+      "median_interval_factor": 1.3717631084928388,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "random_forest",
+      "method": "split",
+      "empirical_coverage": 0.02673992673992674,
+      "median_interval_factor": 1.2592460250656583,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "hist_gradient_boosting",
+      "method": "split",
+      "empirical_coverage": 0.0029304029304029304,
+      "median_interval_factor": 1.2478603852531214,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "powerlaw_collisionless",
+      "method": "split",
+      "empirical_coverage": 0.9142857142857143,
+      "median_interval_factor": 1.3632745222645404,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "ipb98y2_analytic",
+      "method": "machine_cv",
+      "empirical_coverage": 0.8879120879120879,
+      "median_interval_factor": 1.3843892923132015,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "ridge_loglinear",
+      "method": "machine_cv",
+      "empirical_coverage": 0.7827838827838828,
+      "median_interval_factor": 1.4382812281877542,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "random_forest",
+      "method": "machine_cv",
+      "empirical_coverage": 0.4139194139194139,
+      "median_interval_factor": 2.1519084195266927,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "hist_gradient_boosting",
+      "method": "machine_cv",
+      "empirical_coverage": 0.12014652014652015,
+      "median_interval_factor": 1.8400770865970795,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "powerlaw_collisionless",
+      "method": "machine_cv",
+      "empirical_coverage": 0.9509157509157509,
+      "median_interval_factor": 1.4336888256525953,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "ipb98y2_analytic",
+      "method": "machine_cv_distance",
+      "empirical_coverage": 0.8622710622710623,
+      "median_interval_factor": 1.3568084997392096,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "ridge_loglinear",
+      "method": "machine_cv_distance",
+      "empirical_coverage": 0.8351648351648352,
+      "median_interval_factor": 1.4763025796143605,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "random_forest",
+      "method": "machine_cv_distance",
+      "empirical_coverage": 0.5703296703296703,
+      "median_interval_factor": 2.4476018058517837,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "hist_gradient_boosting",
+      "method": "machine_cv_distance",
+      "empirical_coverage": 0.20622710622710622,
+      "median_interval_factor": 1.99529431857586,
+      "n_rows": 2730
+    },
+    {
+      "model_name": "powerlaw_collisionless",
+      "method": "machine_cv_distance",
+      "empirical_coverage": 0.9326007326007326,
+      "median_interval_factor": 1.4018066669533928,
+      "n_rows": 2730
+    }
+  ]
+}

@@ -58,6 +58,7 @@ results:
 	python3 analysis_conformal.py
 	python3 analysis_dimensional.py
 	python3 analysis_conformal_shift.py
+	python3 analysis_device_calibration.py
 	python3 analysis_replication.py
 	python3 analysis_forecast.py
 	python3 analysis_allometry.py
