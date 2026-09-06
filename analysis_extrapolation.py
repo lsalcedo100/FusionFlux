@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
@@ -542,6 +542,71 @@ def _truncation_findings(report: pd.DataFrame) -> list[TruncationFinding]:
     return findings
 
 
+def _place_labels_without_overlap(
+    axis: Any,
+    points: list[tuple[float, float, str]],
+    obstacles: list[tuple[float, float]],
+    *,
+    fontsize: float,
+) -> dict[str, tuple[float, float]]:
+    """Pick a label offset that clears the markers and the labels already placed.
+
+    Every label used to take the same up-and-right offset. That is fine where
+    the points are sparse and unreadable in the cluster of large machines near
+    the origin, where five labels and their markers landed on each other.
+
+    The candidate offsets are a fixed ladder tried in a fixed order, and the
+    points are visited in a fixed order, so the outcome is deterministic: the
+    same data gives the same figure, which is what lets the reproduction check
+    compare figures at all. This is not an optimiser. It takes the first
+    candidate that does not collide, and the least-bad one if every candidate
+    does.
+    """
+    renderer = axis.figure.canvas.get_renderer()
+    to_display = axis.transData.transform
+
+    def _box(centre, offset, text):
+        artist = axis.annotate(
+            text, xy=centre, xytext=offset, textcoords="offset points",
+            fontsize=fontsize, alpha=0.0,
+        )
+        window = artist.get_window_extent(renderer=renderer)
+        artist.remove()
+        return window.expanded(1.06, 1.14)
+
+    # Right first, so the uncrowded majority keeps the placement it had.
+    candidates = [
+        (7, 3), (-7, 3), (7, -10), (-7, -10), (0, 10), (0, -14),
+        (14, 9), (-14, 9), (14, -16), (-14, -16), (0, 18), (0, -22),
+    ]
+    marker_radius = 7.0
+    obstacle_display = [to_display(o) for o in obstacles]
+    placed: list[Any] = []
+    chosen: dict[str, tuple[float, float]] = {}
+
+    for x, y, text in points:
+        best, best_cost = candidates[0], None
+        for offset in candidates:
+            box = _box((x, y), offset, text)
+            cost = sum(1 for b in placed if box.overlaps(b))
+            half_w, half_h = box.width / 2, box.height / 2
+            cx, cy = box.x0 + half_w, box.y0 + half_h
+            cost += sum(
+                1
+                for ox, oy in obstacle_display
+                if abs(cx - ox) < half_w + marker_radius
+                and abs(cy - oy) < half_h + marker_radius
+            )
+            if cost == 0:
+                best, best_cost = offset, 0
+                break
+            if best_cost is None or cost < best_cost:
+                best, best_cost = offset, cost
+        chosen[text] = best
+        placed.append(_box((x, y), best, text))
+    return chosen
+
+
 def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     """Three panels: the claim, the mechanism, and what the constraint buys.
 
@@ -647,9 +712,19 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             color=color,
         )
     axes[0].set_xlim(-0.75, 1.95)
-    low = min(lomo_values + cv_values)
-    high = max(list(cv_label_y.values()) + lomo_values)
-    axes[0].set_ylim(low - 0.10 * y_span, high + 0.28 * y_span)
+    # The bootstrap bars have to be inside the axes as well. Taking the limit
+    # from the point values alone clipped the random forest's upper bound, so a
+    # bar that says the interval reaches 0.56 stopped at the frame instead.
+    bar_bounds = [
+        bound
+        for transfer in plotted
+        for interval in (intervals.get(transfer.model_name),)
+        if interval is not None
+        for bound in (interval.ci_low, interval.ci_high)
+    ]
+    low = min(lomo_values + cv_values + bar_bounds)
+    high = max(list(cv_label_y.values()) + lomo_values + bar_bounds)
+    axes[0].set_ylim(low - 0.10 * y_span, high + 0.16 * y_span)
     axes[0].set_xticks([0, 1])
     axes[0].set_xticklabels(
         ["held out: discharge", "held out: label"],
@@ -686,6 +761,26 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
         )
     truncated = {finding.tokamak for finding in analysis.truncation}
     forest_rows = per_machine[per_machine["model_name"] == "random_forest"]
+
+    # Both series are obstacles even though only the forest points are labelled:
+    # a label that clears its own marker can still land on a ridge point.
+    obstacles = [
+        (float(r["feature_mahalanobis"]), float(r["rmsle"]))
+        for _, r in per_machine[
+            per_machine["model_name"].isin(("random_forest", "ridge_loglinear"))
+        ].iterrows()
+    ]
+    # Densest first: the crowded cluster gets first choice of the free space,
+    # and the isolated points further out can take whatever is left.
+    ordered = forest_rows.sort_values("feature_mahalanobis")
+    label_points = [
+        (float(r["feature_mahalanobis"]), float(r["rmsle"]), str(r["tokamak"]))
+        for _, r in ordered.iterrows()
+    ]
+    offsets = _place_labels_without_overlap(
+        axes[1], label_points, obstacles, fontsize=FONT_SMALL
+    )
+
     for _, row in forest_rows.iterrows():
         machine = str(row["tokamak"])
         if machine in truncated:
@@ -702,7 +797,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
         axes[1].annotate(
             machine,
             xy=(row["feature_mahalanobis"], row["rmsle"]),
-            xytext=(6, 4),
+            xytext=offsets.get(machine, (7, 3)),
             textcoords="offset points",
             fontsize=FONT_SMALL,
             color=ink if machine in truncated else muted,
@@ -744,7 +839,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     split = bounded.index(True) if True in bounded else len(rungs)
     for series, color, label, marker, dashes in (
         (medians, blue, "median of 13 labels", "o", "-"),
-        (worst, orange, "worst single machine", "^", "--"),
+        (worst, orange, "worst single label", "^", "--"),
     ):
         axes[2].plot(positions[:split], series[:split], marker=marker, linestyle=dashes,
                      color=color, linewidth=2.0, markersize=7, label=label)

@@ -328,7 +328,7 @@ def plot_tree_allometry(study: LadderStudy) -> Path | None:
         if crossing is not None:
             axis.axvline(crossing, color="#2a78d6", linestyle=":", linewidth=1.5)
             axis.annotate(
-                f"reversal appears\nat {crossing} features",
+                f"crossing at {crossing}\nfeatures in this ladder",
                 (crossing, axis.get_ylim()[1]),
                 textcoords="offset points", xytext=(6, -28),
                 fontsize=FONT_SMALL, color="#2a78d6",

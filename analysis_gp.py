@@ -379,6 +379,12 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
         )
     top.set_xticks(positions)
     top.set_xticklabels(["held-out label", "ITER-size-matched cut"])
+    # The value labels sit to the right of the second point, which is the last
+    # x position. Without room past it they are drawn outside the axes and are
+    # clipped by the frame, so the limit is widened rather than the labels moved:
+    # the two tree rows differ by 0.13 in log-RMSE and stacking their labels
+    # above the markers would overlap them instead.
+    top.set_xlim(-0.08, 1.28)
     top.set_yscale("log")
     top.set_ylabel("log-RMSE (log scale)")
     top.set_title("One model family, three kernels")
@@ -419,15 +425,31 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
     if not spread.empty:
         limit = float(spread["actual_spread"].max()) * 1.15
         bottom.plot([0, limit], [0, limit], color="#444444", linewidth=1.0, linestyle=":")
-        bottom.annotate(
-            "predictions as spread as the truth",
-            (limit * 0.30, limit * 0.33),
-            fontsize=FONT_SMALL,
-            color="#444444",
-            rotation=38,
-        )
         bottom.set_xlim(0, limit)
         bottom.set_ylim(0, limit)
+        # The parity line is 45 degrees in data space but not on the page: this
+        # panel is wider than it is tall, so a hard-coded rotation sits at a
+        # visibly different angle from the line it labels. Ask the transform what
+        # 45 degrees of data actually becomes in display space. The limits must
+        # already be set for that answer to be right.
+        anchor = (limit * 0.30, limit * 0.30)
+        angle = float(
+            bottom.transData.transform_angles(
+                np.array([45.0]), np.array([anchor])
+            )[0]
+        )
+        bottom.annotate(
+            "predictions as spread as the truth",
+            anchor,
+            textcoords="offset points",
+            xytext=(0, 5),
+            fontsize=FONT_SMALL,
+            color="#444444",
+            rotation=angle,
+            rotation_mode="anchor",
+            ha="center",
+            va="bottom",
+        )
     bottom.set_xlabel("spread of the truth, held-out rows (std of log tau)")
     bottom.set_ylabel("spread of the predictions")
     bottom.set_title("Spread of predictions against spread of truth")

@@ -441,7 +441,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
     axes[0].set_xticklabels(
         [
             "held-out\nshot",
-            "held-out\nmachine",
+            "held-out\nlabel",
             "label larger than\nanything in training",
         ],
         fontsize=FONT_LABEL,
@@ -508,29 +508,37 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
 
     axes[1].axvline(matched_ratio, color=ink, linewidth=1.0, linestyle=":", alpha=0.8)
     axes[1].set_yscale("log")
-    top = axes[1].get_ylim()[1]
+    # Both annotations used to be dropped into the middle of the panel, where
+    # they landed on the mean-baseline line and on the faint underpowered
+    # markers. Open a strip of empty space above the data instead and put them
+    # there, so nothing is written over a plotted point.
+    low, high = axes[1].get_ylim()
+    axes[1].set_ylim(low, high * 2.1)
+    label_y = high * 1.12
+
+    # One number, not the same number twice: the cut is chosen to match the
+    # ITER ratio, so quoting both sides of that match reads as two facts.
     axes[1].annotate(
-        f"the ITER jump: {matched_ratio:.2f}x\n(ITER / this database = {analysis.iter_size_ratio:.2f}x)",
-        xy=(matched_ratio, top),
-        xytext=(6, -11),
+        f"ITER jump: {matched_ratio:.2f}x",
+        xy=(matched_ratio, label_y),
+        xytext=(5, 0),
         textcoords="offset points",
         fontsize=FONT_ANNOTATION,
         color=ink,
         ha="left",
-        va="top",
+        va="center",
     )
     band_centre = float(underpowered.min() + underpowered.max()) / 2 if len(underpowered) else None
     if band_centre is not None:
+        # The full explanation is in the caption. Here it only needs to name
+        # the band, in one line, clear of the markers inside it.
         axes[1].annotate(
-            f"fewer than {MIN_WELL_POWERED_TRAIN_ROWS} training rows: size\n"
-            "extrapolation and sample size are confounded.\nPlotted but not joined; no claim rests here.",
-            xy=(band_centre, axes[1].get_ylim()[0]),
-            xytext=(0, 14),
-            textcoords="offset points",
+            f"underpowered: fewer than {MIN_WELL_POWERED_TRAIN_ROWS} training rows",
+            xy=(band_centre, label_y),
             fontsize=FONT_SMALL,
             color=muted,
             ha="center",
-            va="bottom",
+            va="center",
         )
     axes[1].set_xlabel(
         "size extrapolation demanded\n(largest major radius asked about / largest one trained on)",
@@ -544,10 +552,11 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
         color=ink,
     )
     # The well-powered lines all bunch together at the left edge of this panel,
-    # so direct end-labels overlap; the legend goes in the empty mid-band of the
-    # underpowered region instead.
+    # so direct end-labels overlap. The legend sits over the underpowered band,
+    # which carries no claim, and is opaque so the faint markers behind it do
+    # not read as part of the text.
     axes[1].legend(frameon=True, facecolor="white", edgecolor="none",
-        framealpha=0.82, fontsize=FONT_SMALL, loc="center right", labelcolor=muted)
+        framealpha=0.95, fontsize=FONT_SMALL, loc="center right", labelcolor=muted)
 
     figure.tight_layout()
     path = RESULTS_DIR / "size_extrapolation.png"
