@@ -222,7 +222,9 @@ rank audit in Result 3 is about exactly that column.
 and every machine in the held-out fold also appears in the training fold. It
 therefore measures interpolation within machines the model has already seen. On
 the split that a scaling law actually exists for, holding out a whole device,
-this ranking reverses top to bottom and the 41% becomes a 2.2x loss.
+this ranking reverses top to bottom. On the nine engineering features every
+extrapolation result below uses, the forest's 36% margin over the published law
+becomes a 2.2x loss to the refitted power law.
 
 ---
 
@@ -482,8 +484,9 @@ from it.
 under the other** (rho = -1.00; with three contenders the reversal itself is the
 statistic worth quoting, not the correlation). The random forest is the best
 model in the repository by cross-validation and the worst of the three on a
-machine it has not seen. Its 41% margin over the published scaling law in Result
-2 is not a margin over the published scaling law. It is a measurement of how
+machine it has not seen. Its margin over the published scaling law under cross-validation, 36% on these
+nine features and 41% on the ten-column variant of Result 2, is not a margin
+over the published scaling law. It is a measurement of how
 much of JET is predictable from the rest of JET.
 
 ### Result 4b: the trees fail as a function of distance, and the power law does not
@@ -840,7 +843,8 @@ law. The trees keep 31% and 41%.** Read down the last column instead: the
 histogram gradient booster scores 1.072 where predicting a single constant
 scores 1.459. The best cross-validated models in this repository, asked the
 question a scaling law exists to answer, land closer to a constant than to the
-power law they beat by 41% in Result 2.
+published law they beat by 36% under cross-validation on these same nine
+features.
 
 The escalation is the point. Ridge degrades by 1.53x from shot to size cut and
 IPB98 by 0.98x, meaning it does not degrade at all. The trees degrade by 7.3x
@@ -1769,8 +1773,9 @@ do with this argument. Swapping the baseline is what makes the arm a test of the
 
 The CV column is **exactly reversed** against the leave-one-machine-out column
 in both arms. On the disjoint H-mode rows the best cross-validated model beats
-the published law by **42%**, within a point of the 41% headline this document
-opens with, computed on rows that headline never saw. On the L-mode rows it beats
+the published law by **42%**, a margin of the same size as the 36% over that
+law reported above on the same nine features, computed on rows that result never
+saw. On the L-mode rows it beats
 ITER89-P by **67%** and then loses to it on 5 of 5 machines.
 
 Counting machine-model pairs where a tree ensemble is worse than the published
@@ -1842,7 +1847,7 @@ says 3.591 s and the random forest says 0.435 s.
 That gap is not a tuning failure and cannot be closed. Result 4c is arithmetic:
 a tree ensemble predicts by averaging training targets, so its output cannot
 exceed the largest one, which here is **1.321 s**. The random forest that beats
-the published law by 41% under cross-validation is incapable of returning ITER's
+the published law by 36% under cross-validation is incapable of returning ITER's
 predicted confinement time whatever it is asked, and its nominal 90% interval at
 ITER runs from 0.19 s to 0.98 s, which does not contain the physics answer or
 anything close to it. Result 7's finding, that the intervals are confidently
@@ -2139,8 +2144,8 @@ extrapolation failure reproduced completely. The ranking reversal did not, and
 Result 13b offered an explanation as a conjecture rather than a measurement:
 
 > With a single predictor and a relationship that is close to a straight line in
-> logs, a tree has far less to exploit, and the 41% cross-validated margin this
-> README opens with is simply not available here to be reversed. **The reversal
+> logs, a tree has far less to exploit, and the cross-validated margin this
+> document opens with is simply not available here to be reversed. **The reversal
 > needs enough feature dimensionality for the flexible model to win
 > interpolation first.** Nothing in Results 4 to 12 could have shown that,
 > because one database cannot.
