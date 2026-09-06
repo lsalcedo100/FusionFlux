@@ -8,7 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fusionflux"
-version = "0.3.0"
+version = "0.3.1"
 description = "Confinement scaling as a linear algebra problem: machine learning against the IPB98(y,2) scaling law on the ITPA HDB5 tokamak database."
 readme = "README.md"
 requires-python = ">=3.10"
