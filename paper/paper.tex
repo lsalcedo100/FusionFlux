@@ -45,7 +45,7 @@ model\\ rankings in tokamak energy-confinement scaling}}
 \author{Liam Salcedo\thanks{Independent researcher, Montclair, New Jersey, USA.
 \texttt{liamsalcedo100@gmail.com}.
 ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}}.}}
-\date{5 September 2026}
+\date{6 September 2026}
 
 \begin{document}
 \maketitle
@@ -1456,8 +1456,9 @@ mean baseline & 0.869 & 0.994 & 1.459 & $+0.56$ \\
 error against extrapolation distance. The intended difference across the first
 three rows is whether the kernel admits a trend that continues at long range;
 adding the linear term also enlarges the function class. The three span a factor
-of ten at the ITER-size-matched cut. IPB98(y,2) was fitted with these machines included and is a
-reference point rather than a blind baseline.}
+of ten at the ITER-size-matched cut. IPB98(y,2) is a historical reference
+fitted to the DB2.8 predecessor of this database~\cite{hdb5} and is not
+refitted within these folds.}
 \label{tab:gp}
 \end{table}
 
@@ -1479,8 +1480,9 @@ is retained rather than held exactly fixed, since a linear kernel enlarges the
 function class as well as changing the asymptote; what the comparison isolates
 is the availability of a continuing trend. It gives the best
 cross-validated score in this work, 0.112 against the random forest's 0.128; it
-scores 0.191 at the ITER-size-matched cut, better than the analytic law fitted with
-those machines included and second only to the constrained fit of
+scores 0.191 at the ITER-size-matched cut, better than the analytic law, which
+is a historical reference fitted to the DB2.8 predecessor and not refitted
+within these folds, and second only to the constrained fit of
 Sec.~\ref{sec:dimensional} at 0.183; and its error is flat against distance at
 $\rho = -0.01$.
 
@@ -1652,7 +1654,8 @@ appear.
 
 The refit population is not IPB98's, and the refit exponents should not be read
 as a correction to it. Two machines (JET and ASDEX Upgrade with their variants)
-supply 77\% of rows. Only 13 of 18 machines are scored under leave-one-out; the
+supply 77\% of rows. Only 13 of the 18 database labels are scored under
+leave-one-label-out; the
 five excluded are the smallest and most unlike the rest, so the reported gap is
 if anything optimistic. Thirteen machines is a small bootstrap and the paired
 differences are the more reliable statistic. The training-target bound of
@@ -1726,8 +1729,9 @@ On real confinement data, the model that wins cross-validation by 29\% over a
 log-linear power law refitted inside the same folds loses to that same power law on all 13
 held-out database labels and on
 all 11 physical devices once the JET and ASDEX Upgrade variants are collapsed,
-and to the published IPB98(y,2) reference as well, though that reference was fitted with
-those machines included and is not a blind comparator. Three separate
+and to the published IPB98(y,2) law as well, though that law is a historical
+reference fitted to the DB2.8 predecessor of this database and was not refitted
+within these folds. Three separate
 diagnostics point at that failure and none of them is a tuning fix; the
 mechanism they converge on is long-range saturation. At the size extrapolation that
 separates this database from ITER, the best cross-validated models land closer
@@ -1864,7 +1868,7 @@ this paper is archived with a persistent identifier~\cite{zenodo}. The analysis
 code is pinned as firmly as its inputs: every number and figure above was
 produced at commit
 \begin{center}\scriptsize
-\texttt{37cadebb65e74ccd7173cfa17aae042857863c32}
+\texttt{dacc930555c325554cd76da2268a73e4157b00db}
 \end{center}
 \noindent Each analysis script also writes the dataset fingerprint it verified
 into its own JSON output under \texttt{results/}, so a regenerated number

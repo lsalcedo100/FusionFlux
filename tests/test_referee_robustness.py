@@ -18,6 +18,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 from sklearn.model_selection import GroupKFold
 
@@ -25,6 +26,18 @@ import analysis_referee_robustness as arr
 import hdb5
 
 RESULTS = Path(__file__).resolve().parents[1] / "results" / "referee_robustness.json"
+
+
+def _dataset_or_skip() -> pd.DataFrame:
+    """The real STD5 rows, or a skip.
+
+    CI does not have this deposit: it is third-party data that this repository
+    pins and verifies but does not redistribute. Every sibling test that needs
+    the real rows skips the same way.
+    """
+    if not hdb5.default_hdb5_path().exists():
+        pytest.skip("HDB5 STD5 not downloaded; run `python3 hdb5.py download`.")
+    return hdb5.prepare_dataset()
 
 
 @pytest.fixture(scope="module")
@@ -61,7 +74,7 @@ def test_threshold_changes_only_which_labels_are_scored() -> None:
     different experiments: if lowering the threshold also added training rows,
     the rows of the table would not be comparable.
     """
-    dataset = hdb5.prepare_dataset()
+    dataset = _dataset_or_skip()
     all_labels = set(dataset[hdb5.TOKAMAK_LABEL_COLUMN].astype(str))
     for threshold in arr.ROW_THRESHOLDS:
         scored = set(hdb5.eligible_tokamaks(dataset, min_rows=threshold))
@@ -75,7 +88,7 @@ def test_threshold_changes_only_which_labels_are_scored() -> None:
 
 
 def test_lower_threshold_scores_a_superset_of_labels() -> None:
-    dataset = hdb5.prepare_dataset()
+    dataset = _dataset_or_skip()
     previous: set[str] | None = None
     for threshold in sorted(arr.ROW_THRESHOLDS, reverse=True):
         scored = set(hdb5.eligible_tokamaks(dataset, min_rows=threshold))
@@ -89,7 +102,7 @@ def test_lower_threshold_scores_a_superset_of_labels() -> None:
 
 def test_shuffled_partitions_differ_from_each_other_and_from_the_default() -> None:
     """A seed that silently did nothing would make the control vacuous."""
-    dataset = hdb5.prepare_dataset()
+    dataset = _dataset_or_skip()
     groups = dataset[hdb5.GROUP_COLUMN].to_numpy()
     features = dataset[list(hdb5.BLIND_FEATURE_COLUMNS)]
     target = np.log(dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float))
@@ -112,7 +125,7 @@ def test_shuffled_partitions_differ_from_each_other_and_from_the_default() -> No
 
 def test_shuffling_never_splits_a_discharge_across_folds() -> None:
     """The whole point of grouping survives shuffling, or the control is invalid."""
-    dataset = hdb5.prepare_dataset()
+    dataset = _dataset_or_skip()
     groups = dataset[hdb5.GROUP_COLUMN].to_numpy()
     features = dataset[list(hdb5.BLIND_FEATURE_COLUMNS)]
     target = np.log(dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float))

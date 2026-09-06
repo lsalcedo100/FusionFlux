@@ -30,6 +30,43 @@ from typing import Any
 # it is one value here rather than two spellings of "big enough for the README".
 FIGURE_DPI = 180
 
+# IOP asks that vector figures use a standard font family (Times, Helvetica,
+# Courier, Symbol) and, in practice, that they not arrive as Type 3. Matplotlib
+# defaults to DejaVu Sans embedded as Type 3, which is what a preflight flags:
+# a Type 3 font is a bundle of drawing procedures rather than a real font
+# program, so it does not hint, does not always extract as text, and is what
+# most print pipelines complain about first.
+#
+# `pdf.fonttype = 42` embeds a subset TrueType program instead, which is the
+# fix for the Type 3 part on its own. The family is set to Helvetica with Arial
+# and DejaVu Sans behind it, so a machine without Helvetica still renders rather
+# than failing. Mathtext keeps its own stix fonts: the figures set rho, lambda
+# and similar in math mode, and the Base-14 route (`pdf.use14corefonts`) cannot
+# carry those glyphs.
+FONT_STACK = ("Helvetica", "Arial", "DejaVu Sans")
+
+
+def apply_font_policy() -> None:
+    """Set the font rcParams every figure in this project is drawn under."""
+    import matplotlib
+
+    matplotlib.rcParams.update(
+        {
+            "pdf.fonttype": 42,
+            "ps.fonttype": 42,
+            "font.family": "sans-serif",
+            "font.sans-serif": list(FONT_STACK),
+            "mathtext.fontset": "stix",
+        }
+    )
+
+
+# Applied on import rather than at save time. Matplotlib resolves a font when a
+# text artist is created, not when the figure is written, so setting these in
+# `save_figure` would leave every label already drawn under the old defaults.
+# Every analysis script imports this module for its styling before it plots.
+apply_font_policy()
+
 # Paper figures are authored at the width they are printed at.
 #
 # The figures used to be drawn 12.5 to 13.5 in wide and placed across the
