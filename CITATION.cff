@@ -11,14 +11,16 @@ repository-code: "https://github.com/lsalcedo100/FusionFlux"
 abstract: >-
   A study of energy confinement time scaling on the ITPA Global H-mode
   Confinement Database (HDB5, standard analysis set STD5). Under
-  cross-validation grouped by discharge a random forest improves on the
-  published IPB98(y,2) scaling law by 41% in RMSLE. Holding out an entire
-  tokamak instead reverses the ranking of the three blind models exactly,
-  and the failure is shown to be a measurable function of extrapolation
-  distance and of the training-range bound inherent to tree ensembles.
-  Imposing the Connor-Taylor dimensional constraints as linear equalities on
-  the exponents repairs it and is the best blind model at a size cut matched
-  to ITER's, with no hyperparameter. The reversal replicates on rows the
+  cross-validation grouped by discharge a random forest improves on a power
+  law refitted inside the same folds by 29% in log-RMSE, and on the published
+  IPB98(y,2) scaling law by 36%. Holding out an entire tokamak instead
+  reverses the ranking of the three fitted models exactly, and the failure is
+  shown to be a measurable function of extrapolation distance and of the
+  training-range bound inherent to tree ensembles. Imposing the Connor-Taylor
+  dimensional constraints as linear equalities on the exponents repairs it
+  and gives the lowest error of any fold-fitted model at a size cut matched
+  to ITER's, with no hyperparameter, on a constraint rung selected after
+  those size-cut scores had been seen. The reversal replicates on rows the
   standard set does not contain and in a second confinement regime, and a
   locked prediction is recorded for SPARC, JT-60SA and ITER. Two results
   qualify the diagnosis. Varying only the number of predictors on a fixed

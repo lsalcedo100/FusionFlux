@@ -42,6 +42,12 @@ RESULTS_MD = "results/RESULTS.md"
 PAGE = "site/page.template.html"
 PAPER = "paper/paper.tex"
 PAPER_PDF = "paper/paper.pdf"
+# The two replications outside fusion live in the Supplementary Material rather
+# than in the main text, so the claims they own are bound here instead of to
+# PAPER. Both are checked: the source, and the built PDF that is what a reader
+# actually receives.
+SUPPLEMENTARY = "paper/supplementary.tex"
+SUPPLEMENTARY_PDF = "paper/supplementary.pdf"
 ZENODO = ".zenodo.json"
 # The standalone package's README is the whole of what a reader outside this
 # repository sees, and it quotes the study's headline numbers as evidence that
@@ -94,21 +100,22 @@ def documents() -> dict[str, str]:
     than the way it happens to be wrapped today.
     """
     out = {}
-    for name in (README, RESULTS_MD, PAGE, PAPER, ZENODO, SA_README):
+    for name in (README, RESULTS_MD, PAGE, PAPER, SUPPLEMENTARY, ZENODO, SA_README):
         path = ROOT / name
         if not path.exists():
             continue
         text = re.sub(r"\s+", " ", path.read_text())
-        if name == PAPER:
+        if name in (PAPER, SUPPLEMENTARY):
             # LaTeX starts a comment at a bare %, so every percentage in the
             # paper is written \%. Unescape it so one claim can cover the paper
             # and the prose documents without carrying two spellings.
             text = text.replace(r"\%", "%")
         out[name] = text
 
-    pdf = _extract_pdf_text(ROOT / PAPER_PDF)
-    if pdf is not None:
-        out[PAPER_PDF] = pdf
+    for name in (PAPER_PDF, SUPPLEMENTARY_PDF):
+        pdf = _extract_pdf_text(ROOT / name)
+        if pdf is not None:
+            out[name] = pdf
     return out
 
 
@@ -301,10 +308,11 @@ def _paired(a: dict, model_a: str, model_b: str) -> dict:
 # rather than literals and there is nothing there to go stale.
 LATE_RESULTS = (README, RESULTS_MD, PAPER, PAPER_PDF)
 
-# Result 13's numbers. The paper carries a condensed version of it, so these are
-# bound to the same four documents; where the paper words something differently
-# the claim carries both spellings rather than being dropped.
-ALLOMETRY = (README, RESULTS_MD, PAPER, PAPER_PDF)
+# Result 13's numbers. The replication itself is in the Supplementary Material,
+# not the main text, so these are bound to it rather than to the paper; where a
+# document words something differently the claim carries both spellings rather
+# than being dropped.
+ALLOMETRY = (README, RESULTS_MD, SUPPLEMENTARY, SUPPLEMENTARY_PDF)
 
 # Result 14 is carried by the README and the full writeup. The paper is a
 # nine-page condensation that predates it and has no section for it yet.
@@ -315,8 +323,9 @@ ALLOMETRY = (README, RESULTS_MD, PAPER, PAPER_PDF)
 # that rebuild instead, via `tools/check_paper_submission.py --check-pdf-fresh`.
 GP = (README, RESULTS_MD, PAPER)
 
-# Result 15, the same.
-TREE = (README, RESULTS_MD, PAPER)
+# Result 15 is likewise reported in the Supplementary Material rather than the
+# main text.
+TREE = (README, RESULTS_MD, SUPPLEMENTARY)
 
 CLAIMS: tuple[Claim, ...] = (
     # -- dataset scale -----------------------------------------------------

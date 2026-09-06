@@ -48,6 +48,7 @@ results:
 	python3 analysis_extrapolation.py
 	python3 analysis_boundedness.py
 	python3 analysis_robustness.py
+	python3 analysis_referee_robustness.py
 	python3 analysis_sensitivity.py
 	python3 analysis_mechanism.py
 	python3 analysis_tuned.py
@@ -126,15 +127,20 @@ reproduce:
 # figure added to the paper without being added here fails the build on arXiv
 # rather than silently shipping without it. `tools/check_paper_submission.py`
 # guards that: it is the same check the test suite runs.
-arxiv: paper/paper.tex
+# The Supplementary Material is a second standalone document with its own
+# reference list, and it carries the two replications outside fusion. It ships
+# in the same tarball: leaving it out would drop those results entirely rather
+# than merely moving them.
+arxiv: paper/paper.tex paper/supplementary.tex
 	@python3 tools/check_paper_submission.py --check-provenance
 	@rm -rf build/arxiv && mkdir -p build/arxiv
-	@cp paper/paper.tex build/arxiv/
+	@cp paper/paper.tex paper/supplementary.tex build/arxiv/
 	@cp results/extrapolation.pdf results/size_extrapolation.pdf results/dimensional.pdf results/allometry.pdf results/tree_allometry.pdf results/gp.pdf results/extrapolation.png results/size_extrapolation.png results/dimensional.png results/allometry.png results/tree_allometry.png results/gp.png build/arxiv/
-	@cd build/arxiv && tar czf ../arxiv-submission.tar.gz paper.tex *.pdf *.png
+	@cd build/arxiv && tar czf ../arxiv-submission.tar.gz paper.tex supplementary.tex *.pdf *.png
 	@echo "wrote build/arxiv-submission.tar.gz"
 	@echo "Build it exactly as arXiv will, from the flat directory:"
 	@echo "    cd build/arxiv && pdflatex paper.tex && pdflatex paper.tex"
+	@echo "    cd build/arxiv && pdflatex supplementary.tex && pdflatex supplementary.tex"
 
 # Build the distribution and prove it works, which are different claims.
 #

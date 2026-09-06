@@ -215,6 +215,16 @@ def stale_pdf_sections(paper: Path = PAPER, pdf: Path = PDF) -> list[str]:
     for glyph, plain in TYPESET_SUBSTITUTIONS.items():
         text = text.replace(glyph, plain)
     normalized = re.sub(r"\s+", " ", text)
+    # A long heading can be broken with a discretionary hyphen, which arrives
+    # here as "ex- cludes". Two repairs cover both cases: dropping the hyphen
+    # rejoins a word TeX split, and keeping it rejoins a compound that happened
+    # to break at its own hyphen ("size- matched"). A title is present if it
+    # matches any of the three readings.
+    candidates = (
+        normalized,
+        normalized.replace("- ", ""),
+        normalized.replace("- ", "-"),
+    )
 
     latex = _strip_comments(paper.read_text())
     missing = []
@@ -222,8 +232,14 @@ def stale_pdf_sections(paper: Path = PAPER, pdf: Path = PDF) -> list[str]:
         # Section titles are plain prose here; strip the little LaTeX that does
         # appear so the comparison is against what a reader sees.
         plain = re.sub(r"\\[a-zA-Z]+\s*", "", title).replace("{", "").replace("}", "")
+        # LaTeX dashes reach the PDF as en/em dash glyphs, which the table above
+        # has already folded back to "-" and "--". Fold the source the same way
+        # so "Connor--Taylor" matches the "Connor-Taylor" a reader sees.
+        plain = plain.replace("---", "\u2014").replace("--", "\u2013")
+        for glyph, replacement in TYPESET_SUBSTITUTIONS.items():
+            plain = plain.replace(glyph, replacement)
         plain = re.sub(r"\s+", " ", plain).strip()
-        if plain and plain not in normalized:
+        if plain and not any(plain in candidate for candidate in candidates):
             missing.append(plain)
     return missing
 
