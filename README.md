@@ -366,7 +366,6 @@ It is here as engineering rather than as a result: a complete training and infer
 | [docs/neutron-yield-pipeline.md](docs/neutron-yield-pipeline.md) | Operating detail for the synthetic-data infrastructure above. |
 | [paper/README.md](paper/README.md) | How to build the paper, and the Zenodo DOI flow. |
 | [docs/releasing.md](docs/releasing.md) | The ordered checklist for the DOI, the arXiv preprint, and who to send it to. |
-| [docs/outreach.md](docs/outreach.md) | Drafts of the three emails that checklist ends in. |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to change an analysis without breaking the prose that quotes it, and what is most useful to contribute. |
 | [scaling-audit/README.md](scaling-audit/README.md) | The extracted method as a standalone package, with the three domains it has been run on. |
 

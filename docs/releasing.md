@@ -192,15 +192,14 @@ referees can check the physics claims.
 **Budget time for endorsement.** arXiv requires an endorsement for a first
 submission to most archives, and it is not automatic for someone without an
 institutional affiliation or a `.edu` address. The endorser has to be an
-established submitter in that archive. This is the practical reason step 4 is
-worth doing first rather than last: the people most likely to endorse this are
-the people it is most useful to.
+established submitter in that archive, so budget real time for it.
 
 ## 4. Tell the people whose data this is
 
-This is the highest-variance step and the cheapest. The finding is a negative
-result about how confinement models are validated, computed on the ITPA's own
-database, and it is directly useful to the group that maintains it.
+The finding is a negative result about how confinement models are validated,
+computed on the ITPA's own database, and it is directly useful to the group
+that maintains it. Do it before submitting anywhere, so that a misreading of
+STD5's selection criteria surfaces here rather than in a referee report.
 
 Worth contacting:
 
@@ -211,18 +210,14 @@ Worth contacting:
 
 Keep it to a few sentences and lead with the result rather than with the
 request. The three things worth stating are the reversal (13 of 13 machines),
-the constraint result (0.183 at the ITER-matched cut, better than the analytic
+the constraint result (0.183 at the ITER-size-matched cut, better than the analytic
 law fitted with those machines included), and that the whole thing regenerates
 from their published file by SHA-256. A link to the repository and the paper is
 enough; do not attach anything.
 
-Three drafts, ready to fill in and send, are in [`outreach.md`](outreach.md).
-They are drafts rather than sent messages on purpose: they go to named
-researchers under your name, and the wording of a first approach to the people
-whose data you have just published a negative result about is yours to own.
-
-A reply from someone in that group is worth more than any further work on the
-repository, and an endorsement for step 3 is a plausible side effect.
+Write it yourself. It goes to named researchers under your name, and the
+wording of a first approach to the people whose data you have just published a
+negative result about is not something to delegate to a template.
 
 ## 5. A workshop, if the timing works
 

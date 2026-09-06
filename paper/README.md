@@ -126,7 +126,7 @@ Two things to settle that are not in any file here:
   negative result about how a community validates models on its own database.
   Being able to say in the cover letter that the ITPA group has seen it is worth
   more than any formatting, and it is how a misreading of STD5's selection
-  criteria surfaces before a referee finds it. `docs/outreach.md` has the drafts.
+  criteria surfaces before a referee finds it.
 - **The cover letter should lead with the constraint result**, not the critique.
   The Connor-Taylor fit and the linear-plus-RBF process are what an editor can
   send to referees as a contribution; the inversion is what makes them

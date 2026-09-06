@@ -65,3 +65,9 @@ scaling-audit/scaling_audit.py
 # Local Claude Code configuration and skills. Personal tooling rather than
 # part of the study, and this repository is public.
 .claude/
+
+# Submission material: outreach drafts and cover letters. These name
+# individual researchers or are private correspondence with an editor, which is
+# planning rather than science, and this repository is public and linked from
+# the emails themselves.
+docs/*.local.md
