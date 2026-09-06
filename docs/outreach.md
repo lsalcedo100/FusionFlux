@@ -30,7 +30,7 @@ from an older paper.
 > the group that maintains it.
 >
 > Under grouped cross-validation by discharge, a random forest beats IPB98(y,2)
-> by 41% in RMSLE. Under leave-one-tokamak-out on the same features and the same
+> by 36% in log-RMSE. Under leave-one-tokamak-out on the same features and the same
 > models, the ranking inverts: the forest is worse than a log-linear power law on
 > 13 of 13 machines, paired gap +0.251 [+0.157, +0.342]. The mechanism is
 > measurable rather than a matter of tuning. Per-machine error correlates with
@@ -39,9 +39,13 @@ from an older paper.
 > confinement time in the remaining machines, which a tree ensemble cannot output
 > at all.
 >
+> Tuning does not close it. A grid search nested inside each training fold
+> leaves the forest at 0.403, or 0.376 if the inner folds are grouped by whole
+> machine to match deployment, against the power law's 0.214.
+>
 > The result I would most value your view on is the positive one. Imposing the
 > Connor-Taylor constraints as linear equality constraints on the exponents gives
-> 0.183 RMSLE at a size cut matched to ITER's 1.82x jump, which beats every
+> 0.183 log-RMSE at the ITER-size-matched cut, a 1.82x jump, which beats every
 > blind model I built and also beats the analytic law fitted with those machines
 > included. It has no hyperparameter. As a check on the derivation, IPB98(y,2)
 > itself lands on the Kadomtsev surface at a distance of 0.00096.
@@ -77,7 +81,7 @@ for his reply.
 >
 > Cross-validation grouped by discharge leaves every machine in the training
 > fold, so it measures interpolation within known devices. Scored that way, a
-> random forest beats IPB98(y,2) by 41%. Scored by holding out an entire
+> random forest beats IPB98(y,2) by 36%. Scored by holding out an entire
 > tokamak, the same forest loses to a plain log-linear power law on 13 of 13
 > machines. The standard comparison does not merely overstate the gain; it
 > reverses the ordering, and it does so for a reason that is visible in advance
@@ -87,7 +91,7 @@ for his reply.
 > mine. It reproduces on 5358 rows the standard set does not contain and in a
 > different confinement regime against a different published law. And it points
 > at a cheap fix: constraining the exponents to satisfy Connor-Taylor gives the
-> best blind score I obtained at an ITER-matched size cut, with nothing to tune.
+> best blind score I obtained at the ITER-size-matched cut, with nothing to tune.
 >
 > The work is independent and not affiliated with any laboratory. Everything
 > regenerates from the published OSF file:
