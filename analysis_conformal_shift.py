@@ -229,7 +229,7 @@ def plot_conformal_shift(analysis: ConformalShiftAnalysis) -> Path | None:
     for axis, (column, title) in zip(
         axes,
         (
-            ("lomo_coverage", "held-out machine"),
+            ("lomo_coverage", "held-out label"),
             ("size_cut_coverage", f"ITER-size-matched cut ({analysis.iter_matched_size_ratio:.2f}x)"),
         ),
         strict=True,
@@ -296,7 +296,7 @@ def main() -> None:
 
     frame = pd.DataFrame([row.to_json() for row in analysis.repairs])
     for arm, coverage_column, width_column in (
-        ("held-out machine", "lomo_coverage", "lomo_interval_factor"),
+        ("held-out label", "lomo_coverage", "lomo_interval_factor"),
         ("ITER-size-matched cut", "size_cut_coverage", "size_cut_interval_factor"),
     ):
         print(f"\n  {arm}")

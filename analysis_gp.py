@@ -378,7 +378,7 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
             color=colour,
         )
     top.set_xticks(positions)
-    top.set_xticklabels(["held-out machine", "ITER-size-matched cut"])
+    top.set_xticklabels(["held-out label", "ITER-size-matched cut"])
     top.set_yscale("log")
     top.set_ylabel("log-RMSE (log scale)")
     top.set_title("One model family, three kernels")

@@ -442,7 +442,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
         [
             "held-out\nshot",
             "held-out\nmachine",
-            "machine larger than\nanything in training",
+            "label larger than\nanything in training",
         ],
         fontsize=FONT_LABEL,
         color=ink,
@@ -537,7 +537,7 @@ def plot_size_extrapolation(analysis: SizeExtrapolationAnalysis) -> Path | None:
         fontsize=FONT_LABEL,
         color=muted,
     )
-    axes[1].set_ylabel("log-RMSE on every machine above the cut", fontsize=FONT_LABEL, color=muted)
+    axes[1].set_ylabel("log-RMSE on every label above the cut", fontsize=FONT_LABEL, color=muted)
     axes[1].set_title(
         "The size-ordered sweep",
         fontsize=FONT_TITLE,

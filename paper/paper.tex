@@ -81,8 +81,9 @@ row-level coverage, at unchanged width.
 Two repairs improve extrapolation, both supplying long-range structure: a
 Connor--Taylor constraint surface, selected post hoc and so the lowest observed
 error among those tested rather than a prediction, and a Gaussian process whose
-linear component keeps trending. Extrapolation
-failure tracks long-range saturation rather than flexibility alone. For ITER the
+linear component keeps trending. Across the model families tested,
+extrapolation failure tracks long-range saturation rather than flexibility
+alone. For ITER the
 surviving and failing models differ by a factor of 8.3.
 \end{abstract}
 
@@ -184,7 +185,8 @@ database measures. The quantity a scaling law is built to supply is a prediction
 machine that does not yet exist.
 
 This paper measures what the deployment-matched split costs. We escalate what is held out
-in three steps, a discharge, then a whole machine, then an entire size range,
+in four steps, a discharge, then a database label, then a physical device, then
+an entire size range,
 and score the same models under each. The results are: (i) under
 leave-one-label-out the ranking of the three primary fitted models is the
 exact reverse of their ranking under grouped cross-validation, and the best
@@ -294,7 +296,7 @@ an unseen device, and this paper's own argument is that the held-out unit has to
 match the deployment being claimed. Leave-one-label-out is the default reported
 column because it is the finer partition and the one a practitioner would reach
 for first; every claim that turns on a device being genuinely unseen is stated
-against leave-one-device-out and labelled as such. The 30-row threshold governs only which machines are scored, not which
+against leave-one-device-out and labelled as such. The 30-row threshold governs only which labels are scored, not which
 are trained on, so the five labels below it (COMPASS, TCV, START, TDEV and TFTR,
 43 rows between them) stay in every training fold; each fold therefore trains on
 17 labels. It was fixed before any held-out score was computed, as the smallest
@@ -317,11 +319,16 @@ $\mathrm{RMSE}_{\log\tau}=\sqrt{\overline{(\log\hat\tau-\log\tau)^2}}$,
 written log-RMSE here and in the figures. It is the plain log residual, not the
 $\log(1+y)$ quantity usually called RMSLE; confinement times are strictly
 positive, so no offset is needed, and the name is avoided here to keep the two
-distinct. Intervals are percentile bootstraps resampling whole \emph{machines},
+distinct. Intervals are percentile bootstraps resampling whole \emph{units},
 since the claim concerns behaviour on an unseen machine: 2000 resamples drawn
 with replacement over the 13 labels, seeded at 20240617, reported as the 2.5th
 and 97.5th percentiles. Paired intervals resample the per-label difference
-rather than the two error levels, which removes the shared machine difficulty.
+rather than the two error levels, which removes the shared unit difficulty.
+These intervals are bootstrap summaries over held-out units rather than
+confidence intervals under independent replication: any two folds share almost
+all of their training rows, so the units they score are not independent
+experiments. The descriptive win counts carry the claim; the intervals describe
+its spread.
 
 \paragraph{Preprocessing.} Rows are dropped only for non-finiteness or
 non-positivity in a used column, which on this file removes none of the 6228
@@ -482,7 +489,7 @@ Table~\ref{tab:reversal} is the central result. Among the three primary
 models, a power law, a random forest and a gradient booster, the order under
 one split is the exact reverse of the order under the other. The random forest
 is the best model in the study by cross-validation and the worst of the three
-on a machine it has not seen. Both columns compare the same model
+on a label it has not seen. Both columns compare the same model
 specifications and the same features, but they differ in scoring population and
 in aggregation as well as in held-out unit;
 Sec.~\ref{sec:robustness} matches those choices and shows the reversal survives.
@@ -542,9 +549,12 @@ devices contribute two wall-era labels each, so these $p$-values are descriptive
 in the same way the sign test of Sec.~\ref{sec:robustness} is. The same caveat
 applies to the coverage-against-distance correlations of
 Sec.~\ref{sec:conformal}. Recomputed over the 11 physical devices, which
-removes that non-independence, the forest's correlation weakens slightly to
+removes the duplicated wall-era labels, the forest's correlation weakens slightly to
 $+0.77$ ($p=0.005$) and the power law's is unchanged at $-0.06$ ($p=0.85$),
-so the contrast the section rests on survives the collapse. The booster's falls
+so the contrast the section rests on survives the collapse. That permutation
+$p$-value remains descriptive for the same reason the sign test's does: the 11
+leave-one-device-out fits share almost all of their training rows, so they are
+not 11 independent experiments. The booster's falls
 from $+0.54$ to $+0.38$ ($p=0.25$). Neither figure clears a conventional
 threshold, and the booster's correlation is read throughout as suggestive rather
 than established. Dropping each label in turn moves the forest's $\rho$ only
@@ -702,7 +712,7 @@ most recent scaling fitted to this database family. ITPA20 and
 ITPA20-IL~\cite{hdb5} were derived from DB5.2.3 and weaken the size dependence
 considerably, so they are
 the obvious second reference. Evaluated analytically on the rows analysed here,
-ITPA20 scores 0.265 over all rows, 0.267 per machine and \textbf{0.272} across
+ITPA20 scores 0.265 over all rows, 0.267 per label and \textbf{0.272} across
 the ITER-size-matched cut; ITPA20-IL scores 0.393, 0.446 and 0.363. Both are worse
 than IPB98(y,2) on this cleaning, and two caveats belong with that: each was
 fitted to a different selection out of DB5.2.3, and each specifies an elongation
@@ -791,8 +801,9 @@ predicts: no setting of these hyperparameters moves a ceiling that comes from
 averaging training targets.
 
 The win counts support an exact test, under a null that is worth naming
-precisely. Call it the independent-device-sign null: each unit is assigned to
-either model independently with equal probability. Under it, losing 13 of 13 has
+precisely. Call it the independent-unit-sign null: each unit, label or device
+as the case may be, is assigned to either model independently with equal
+probability. Under it, losing 13 of 13 has
 two-sided $p=2.4\times10^{-4}$ and losing 11 of 11 has $p=9.8\times10^{-4}$. The
 device-collapsed count is the one to quote, since the 13 database labels are not
 13 independent devices, and the same non-independence is a reason to prefer
@@ -831,7 +842,7 @@ than to the power law in absolute error.}
 \label{tab:escalation}
 \begin{tabular}{lrrr}
 \toprule
-Model & shot & machine & larger machine \\
+Model & discharge CV & LOLO & size cut \\
 \midrule
 IPB98(y,2) & 0.199 & 0.188 & \textbf{0.194} \\
 ridge, log-linear & 0.181 & 0.214 & \textbf{0.278} \\
@@ -1223,7 +1234,8 @@ $\log\lvert r \rvert$ and divides the scores by it.
 \centering
 \small
 \caption{Empirical coverage of nominal 90\% intervals under three calibration
-schemes, on a held-out label and across the ITER-size-matched cut.}
+schemes, on a held-out database label (LOLO) and across the ITER-size-matched
+cut. The device-level counterpart is Table~\ref{tab:device}.}
 \label{tab:shift}
 \begin{tabular}{lrrrrrr}
 \toprule
@@ -1403,10 +1415,17 @@ interval already known to fail in exactly this situation. Each row instead uses
 the distance-scaled label-level scheme of Sec.~\ref{sec:shift}, which gives the
 best size-cut calibration for the models that fail most severely there, applied
 with the whole
-database as the training set. That scheme was chosen after comparing the three
-in Table~\ref{tab:shift}, so these intervals are exploratory rather than
-prospectively selected, in the same sense as the constraint rung of
-Sec.~\ref{sec:dimensional}. For a given model, each eligible machine $k$ is
+database as the training set. Two disclosures belong with that. The scheme was
+chosen after comparing the three in Table~\ref{tab:shift}, so these intervals
+are exploratory rather than prospectively selected, in the same sense as the
+constraint rung of Sec.~\ref{sec:dimensional}. And it calibrates over database
+labels rather than physical devices, so these are not device-level conformal
+intervals: Table~\ref{tab:device} measures what that distinction costs, and for
+the tree ensembles it is not negligible. The label-level scheme is retained here
+because it is the one the forecast was locked under on 31 August 2026, and
+re-deriving the intervals afterwards would make the lock meaningless. A reader
+who prefers the device-level calibration should read the tree rows of
+Table~\ref{tab:forecast} as correspondingly optimistic in width. For a given model, each eligible machine $k$ is
 held out in turn, the model is refitted on the remaining machines, and the
 absolute log residuals on $k$ are recorded together with each of its rows'
 Mahalanobis distance $d$ from that inner fit set. A scale
@@ -1782,7 +1801,7 @@ as a correction to it. Two machines (JET and ASDEX Upgrade with their variants)
 supply 77\% of rows. Only 13 of the 18 database labels are scored under
 leave-one-label-out; the
 five excluded are the smallest and most unlike the rest, so the reported gap is
-if anything optimistic. Thirteen machines is a small bootstrap and the paired
+if anything optimistic. Thirteen labels is a small bootstrap and the paired
 differences are the more reliable statistic. The training-target bound of
 Sec.~\ref{sec:mechanisms} is a theorem for the random forest and an observation
 for the gradient booster: boosting sums tree outputs rather than averaging
@@ -1927,21 +1946,29 @@ author's alone.
 
 \paragraph{Use of generative AI.} Two generative AI systems were used in
 preparing this work, and each is named with its version and its role.
-Anthropic Claude Opus 5 (model \texttt{claude-opus-5}) was used to assist with
-developing, debugging and executing author-specified analysis code in the
-accompanying repository, and to draft and edit passages of this manuscript. It
-did not choose what to analyse: every experiment, split and comparison reported
-here was specified by the author. OpenAI GPT-5.6 Sol was used
-to review and critique complete drafts against journal policy and for
-scientific and historical accuracy; corrections and wording it proposed were in
-places adopted, including the corrected description of how IPB98(y,2) was
-fitted in Sec.~\ref{sec:reversal} and Sec.~\ref{sec:dimensional}. No generative
-AI system contributed the research design, selected the experiments, or is an
-author, and no text was incorporated without the author reading and verifying
-it. The author designed the study, verified every reported number against the
-generated artifacts, checked every reference against its published record, and
-takes full responsibility for the content, the conclusions and any error in
-them.
+
+Anthropic Claude Opus 5 (model \texttt{claude-opus-5}) assisted with developing,
+debugging and executing author-specified analysis code in the accompanying
+repository, and with drafting and editing passages of this manuscript.
+
+OpenAI GPT-5.6 Sol was used to critique complete drafts against journal policy
+and for scientific and historical accuracy, to support the literature review,
+and to identify methodological issues and propose robustness checks. Several of
+its suggestions were adopted after the author judged them worth pursuing. They
+include the corrected account of how IPB98(y,2) was fitted, in
+Sec.~\ref{sec:reversal} and Sec.~\ref{sec:dimensional}; the recomputation of the
+distance correlation over the 11 physical devices in
+Sec.~\ref{sec:mechanisms}; the device-level calibration of
+Sec.~\ref{sec:shift}; and several of the references in Sec.~\ref{sec:refit} and
+Sec.~\ref{sec:forecast}, which the author then located and checked against their
+published records.
+
+Neither system is an author. The author designed the study, decided which
+suggestions to pursue, specified and implemented every analysis reported here,
+verified every reported number against the generated artifacts, checked every
+reference against its published record, and takes full responsibility for the
+content, the conclusions and any error in them. No text was incorporated
+without the author reading and verifying it.
 
 \section*{Funding}
 
@@ -2142,8 +2169,9 @@ data on basal metabolic rate with experimental animal body mass'' [dataset],
 Figshare (2016).
 \href{https://doi.org/10.6084/m9.figshare.3549807.v1}{doi:10.6084/m9.figshare.3549807.v1}
 \bibitem{baadrelease} D.S. Falster \emph{et al.}, \emph{BAAD: a Biomass And
-Allometry Database for woody plants}, release v1.0.1 [dataset] (2015).
-\url{https://github.com/dfalster/baad/releases/tag/v1.0.1}
+Allometry Database for woody plants} [dataset], Figshare (2015).
+\href{https://doi.org/10.6084/m9.figshare.c.3307692}{doi:10.6084/m9.figshare.c.3307692}.
+Release v1.0.1, \url{https://github.com/dfalster/baad/releases/tag/v1.0.1}
 \bibitem{zenodo} L. Salcedo, \emph{FusionFlux: the model that wins on
 cross-validation loses on a new machine}, version v0.4.0, Zenodo (2026).
 \href{https://doi.org/10.5281/zenodo.22545928}{doi:10.5281/zenodo.22545928}

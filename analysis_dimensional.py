@@ -505,7 +505,7 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
         textcoords="offset points",
     )
     top.set_xlabel("size ratio demanded by the cut (test R max / train R max)")
-    top.set_ylabel("log-RMSE on held-out machines")
+    top.set_ylabel("log-RMSE on held-out labels")
     top.set_title("Score at every size cut")
     top.legend(fontsize=FONT_LEGEND, frameon=True, facecolor="white", edgecolor="none",
         framealpha=0.82)

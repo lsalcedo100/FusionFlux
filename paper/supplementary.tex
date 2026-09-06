@@ -173,8 +173,8 @@ to lose. Two datasets cannot test that, because HDB5 and the mammalian
 compilation differ in feature count and also in science, group structure, sample
 size and noise.
 
-A third dataset can, if the feature count is varied inside it while everything
-else is held fixed. The Biomass And Allometry Database~\cite{baad} records, for
+A third dataset can probe that with a nested predictor ladder on the same rows
+and splits. The Biomass And Allometry Database~\cite{baad} records, for
 individual plants, a nested set of measurements: basal diameter, height, leaf
 area and leaf mass. Taking the rows complete in all four gives 3599 plants
 across 53 species, 33 of them with the 30 individuals we require to hold a
@@ -244,9 +244,8 @@ every predictor count tested here. The \emph{inversion} is conditional,
 and its condition has nothing to do with the failure: it is only whether the
 flexible model had enough to work with to win the comparison a practitioner runs
 first. The inversion is therefore a symptom of the extrapolation failure rather
-than the failure itself. Below three
-predictors the hazard is identical, and no interpolation margin exists whose
-loss would signal it.
+than the failure itself. At the one- and two-predictor rungs tested here the hazard is identical, and no
+interpolation margin exists whose loss would signal it.
 
 
 \begin{thebibliography}{99}

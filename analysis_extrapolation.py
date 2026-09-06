@@ -652,7 +652,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     axes[0].set_ylim(low - 0.10 * y_span, high + 0.28 * y_span)
     axes[0].set_xticks([0, 1])
     axes[0].set_xticklabels(
-        ["held out: discharge", "held out: machine"],
+        ["held out: discharge", "held out: label"],
         fontsize=FONT_LABEL,
         color=ink,
     )
@@ -721,7 +721,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
         fontsize=FONT_LABEL,
         color=muted,
     )
-    axes[1].set_ylabel("log-RMSE on the held-out machine", fontsize=FONT_LABEL, color=muted)
+    axes[1].set_ylabel("log-RMSE on the held-out label", fontsize=FONT_LABEL, color=muted)
     axes[1].set_title(
         "Error against extrapolation distance",
         fontsize=FONT_TITLE,
@@ -743,7 +743,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     # step between them is the panel's point rather than part of a trend.
     split = bounded.index(True) if True in bounded else len(rungs)
     for series, color, label, marker, dashes in (
-        (medians, blue, "median of 13 machines", "o", "-"),
+        (medians, blue, "median of 13 labels", "o", "-"),
         (worst, orange, "worst single machine", "^", "--"),
     ):
         axes[2].plot(positions[:split], series[:split], marker=marker, linestyle=dashes,

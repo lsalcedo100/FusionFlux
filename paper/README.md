@@ -107,7 +107,9 @@ the other way round leaves the gate red and no hash that would satisfy it.
 builds a submission with no BibTeX pass and no `.bbl`, so the printed list has
 to be in the source, while a journal wants a `.bib` to run through its own style
 file. `tests/test_paper_bibliography.py` binds them, in both directions, keys
-and DOIs, so the two cannot drift into disagreeing.
+and DOIs, so the two cannot drift into disagreeing on those. It does not check titles or
+author fields, which can still differ while key and DOI match; those are
+verified by hand against the published record.
 
 Every DOI was resolved against Crossref rather than reconstructed from the
 volume and page. That found one error already: the symbolic-regression paper was
@@ -120,7 +122,8 @@ Nuclear Fusion is the home venue: IPB98, HDB5, Connor-Taylor and ITPA20 are all
 NF papers, and the readership is the one the result is aimed at.
 
 IOP is format-free at initial submission, so `article` is fine and `iopart.cls`
-is only needed if the paper is accepted. Their abstract limit is 300 words, and
+is optional: IOP accepts common TeX formats for submission, and production
+handles journal styling after acceptance. Their abstract limit is 300 words, and
 IOP warns that a manuscript may be returned for rewriting above it, so
 `tests/test_paper_submission.py` counts the rendered abstract and fails past
 290. The count is not written down here, because a number in prose goes stale

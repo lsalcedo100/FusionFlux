@@ -37,7 +37,7 @@ BIB = ROOT / "paper" / "references.bib"
 # OSF API) and its GUID is the persistent identifier, and the BAAD archive is a
 # tagged software release whose data paper carries the DOI instead.
 NO_DOI = {"kadomtsev", "shiftcp", "ovadia", "jt60saplan", "hall", "hall26",
-          "osfdb", "baadrelease"}
+          "osfdb"}
 
 
 def _strip_comments(text: str) -> str:
