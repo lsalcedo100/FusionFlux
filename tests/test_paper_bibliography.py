@@ -29,8 +29,15 @@ PAPER = ROOT / "paper" / "paper.tex"
 BIB = ROOT / "paper" / "references.bib"
 
 # Entries that legitimately have no DOI: a 1975 Soviet journal that predates
-# them, two NeurIPS proceedings papers, and a laboratory research plan.
-NO_DOI = {"kadomtsev", "shiftcp", "ovadia", "jt60saplan"}
+# them, two NeurIPS proceedings papers, a laboratory research plan, and an EPS
+# conference contribution. Europhysics Conference Abstracts are not registered
+# with Crossref, and a search there for the Hall title returns nothing, so the
+# volume and paper number are the citable identifier. The two dataset entries
+# have no DOI either: the OSF deposit has none registered (checked against the
+# OSF API) and its GUID is the persistent identifier, and the BAAD archive is a
+# tagged software release whose data paper carries the DOI instead.
+NO_DOI = {"kadomtsev", "shiftcp", "ovadia", "jt60saplan", "hall", "hall26",
+          "osfdb", "baadrelease"}
 
 
 def _strip_comments(text: str) -> str:

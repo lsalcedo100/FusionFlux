@@ -12,8 +12,12 @@
 % cited as Nucl. Fusion 55, 073009 is Plasma Phys. Control. Fusion 57, 014008.
 % Nucl. Fusion 55, 073009 is a different Murari paper.
 %
-% Four entries have no DOI and are not missing one: a 1975 Soviet journal,
-% two NeurIPS proceedings papers, and a laboratory research plan.
+% Eight entries have no DOI and are not missing one: a 1975 Soviet journal, two
+% NeurIPS proceedings papers, a laboratory research plan, the two EPS conference
+% contributions (Europhysics Conference Abstracts are not registered with
+% Crossref), the OSF deposit (no DOI registered, checked against the OSF API;
+% its GUID is the identifier) and the BAAD release, whose data paper carries the
+% DOI instead. tests/test_paper_bibliography.py holds that list.
 
 @article{ipb98,
   author  = {{ITER Physics Expert Groups on Confinement and Transport and
@@ -316,4 +320,64 @@
   publisher = {Zenodo},
   year      = {2026},
   doi       = {10.5281/zenodo.22545928},
+}
+
+@inproceedings{hall,
+  author    = {Hall, J. and Zhang, P. and Verdoolaege, G.},
+  title     = {Confinement scaling with machine size in the updated {ITPA}
+               global {H}-mode energy confinement database},
+  booktitle = {Proceedings of the 49th EPS Conference on Plasma Physics},
+  series    = {Europhysics Conference Abstracts},
+  volume    = {47A},
+  pages     = {P1.024},
+  address   = {Bordeaux, France},
+  year      = {2023},
+}
+
+@article{jt60saop2,
+  author  = {Garcia, J. and others},
+  title   = {Overview of first {JT-60SA} plasma operation and plans in view of
+             {ITER} and {DEMO}},
+  journal = {Nuclear Fusion},
+  volume  = {66},
+  pages   = {116011},
+  year    = {2026},
+  doi     = {10.1088/1741-4326/ae74e1},
+}
+
+@inproceedings{hall26,
+  author    = {Hall, J. and Zhang, P. and Zhang, Y. and Angioni, C. and
+               Verdoolaege, G.},
+  title     = {Confinement scaling with machine size in the updated {ITPA}
+               global {H}-mode energy confinement database},
+  booktitle = {52nd EPS Conference on Plasma Physics},
+  note      = {Poster P2.1097},
+  address   = {Edinburgh, UK},
+  year      = {2026},
+}
+
+@misc{osfdb,
+  author       = {{ITPA Confinement Database and Modelling Topical Group}},
+  title        = {International Global {H}-Mode Confinement Database, version 5.2.3},
+  howpublished = {Dataset, Open Science Framework},
+  url          = {https://osf.io/drwcq},
+  year         = {2021},
+}
+
+@misc{capellini,
+  author = {Capellini, I. and Venditti, C. and Barton, R. A.},
+  title  = {Supplement 1: data on basal metabolic rate with experimental animal
+            body mass},
+  howpublished = {Dataset, Figshare},
+  year   = {2016},
+  doi    = {10.6084/m9.figshare.3549807.v1},
+}
+
+@misc{baadrelease,
+  author       = {Falster, D. S. and others},
+  title        = {{BAAD}: a Biomass And Allometry Database for woody plants,
+                  release v1.0.1},
+  howpublished = {Dataset},
+  url          = {https://github.com/dfalster/baad/releases/tag/v1.0.1},
+  year         = {2015},
 }

@@ -37,9 +37,11 @@
 \renewcommand{\thetable}{S\arabic{table}}
 \renewcommand{\thefigure}{S\arabic{figure}}
 
-\title{\vspace{-1.4cm}\textbf{Supplementary Material:\\ Validation protocol
-reverses machine-learning model rankings in tokamak energy-confinement
-scaling}}
+% IOP asks each supplementary file for a title of at most 30 characters and a
+% description of at most 30 words. Those are the two lines directly below; the
+% article title follows underneath, where it orients a reader without being
+% mistaken for the formal supplementary title.
+\title{\vspace{-1.4cm}\textbf{Supplementary material}}
 \author{Liam Salcedo\thanks{Independent researcher, Montclair, New Jersey, USA.
 \texttt{liamsalcedo100@gmail.com}.
 ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}}.}}
@@ -48,10 +50,22 @@ ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}
 \begin{document}
 \maketitle
 
+\begin{center}\small
+\textbf{Description.} Replications on mammalian and plant allometry testing
+whether extrapolation failure and model-ranking inversion persist outside
+tokamak confinement data.
+\end{center}
+
+\vspace{0.4em}
+\noindent\textbf{For:} ``Validation protocol reverses machine-learning model
+rankings in tokamak energy-confinement scaling'' (L. Salcedo).
+
+\vspace{0.6em}
 \noindent This document reports the two replications outside fusion referred to
-in the Discussion of the main text. They establish that the extrapolation
-failure measured on the ITPA database is not specific to tokamaks, and they
-isolate the condition the ranking inversion needs and the extrapolation failure
+in the Discussion of the main text. They are supporting replications rather than
+evidence the main confinement result depends on: they show that the
+extrapolation failure measured on the ITPA database is not specific to tokamaks,
+and they probe what the ranking inversion needs and the extrapolation failure
 does not. Section and equation numbers prefixed S refer to this document;
 unprefixed section numbers refer to the main text.
 
@@ -93,6 +107,9 @@ random forest & 0.437 & 0.517 & 0.710 \\
 \end{tabular}
 \end{table}
 
+Table~\ref{tab:allometry} reports the three splits and Figure~\ref{fig:allometry}
+shows them.
+
 \paragraph{The extrapolation failure reproduces.} Both tree ensembles are worse
 than both power laws at all 8 mass cuts, and the random forest loses to Kleiber
 on 9 of 11 held-out orders. Two signatures reproduce with it. Tree error rises
@@ -109,8 +126,18 @@ inflated margin there is nothing available to invert. The HDB5 gain came
 from a flexible model exploiting structure across nine features; with one
 predictor and a relationship close to a straight line in logs, a tree has far
 less to exploit and does not buy the interpolation win that later reverses.
-The reversal requires enough feature dimensionality for the flexible model to
-win interpolation first, which no single database could have shown.
+So the inversion tracks whether the flexible model wins interpolation first,
+which no single database could have shown. Whether predictor count is itself the
+operative variable is a separate question this comparison does not settle.
+
+\paragraph{A limitation of this replication.} The 11 taxonomic orders are not
+statistically independent: they share phylogeny, so two orders that diverged
+recently are more alike than two that did not, and the held-out group is
+therefore not a draw from a pool of independent units. Comparative biology
+normally handles this with phylogenetically controlled regression~\cite{felsenstein};
+this audit does not. It treats orders only as held-out groups, and models no
+phylogenetic covariance. What that costs is any rate quoted here: the counts
+below establish a direction, not a frequency with which a constraint helps.
 
 \paragraph{The constraint result reproduces in direction, not in strength.}
 Kleiber's published exponent costs
@@ -129,7 +156,7 @@ reliably does not.
 \caption{\textbf{Kleiber's law under the same three splits.} Top: no inversion,
 because the trees lose under both splits and so have no interpolation margin to
 give up. Middle: error against extrapolation distance, rising for the flexible
-models as it does on HDB5. Bottom: the mass-ordered sweep, with the circled
+models as it does on the ITPA H-mode database. Bottom: the mass-ordered sweep, with the circled
 points marking cuts where the random forest is held inside its training
 range.}
 \label{fig:allometry}
@@ -160,8 +187,10 @@ rather than fitted, which refits here to 2.512 and costs 0.5641 against 0.5780
 in sample when held.
 
 Each rung of the ladder is a prefix of the next and all four are scored on the
-same rows, so the only quantity that changes across them is how many predictors
-the models may see. The split structure matters and is easy to get wrong:
+same rows. The rows, the splits and the model specifications are held fixed;
+each rung adds one named predictor to the nested feature set. Predictor count is
+therefore what is varied, but not the only thing that changes with it, since
+each added column carries its own biological information. The split structure matters and is easy to get wrong:
 grouped cross-validation by discharge keeps every machine on both sides, so its
 analogue keeps every species on both sides. Grouping the cross-validation by
 species instead would be a second leave-one-group-out, and against it no
@@ -187,7 +216,8 @@ slightly against them.}
 \label{tab:ladder}
 \end{table}
 
-Table~\ref{tab:ladder} separates two statements that had been travelling as one.
+Table~\ref{tab:ladder} and Figure~\ref{fig:ladder} separate two statements that
+had been travelling as one.
 The interpolation margin rises monotonically and crosses zero between two and
 three predictors. The extrapolation margin does not shrink as the trees improve;
 it widens, and the power law wins the held-out species at 4 of 4 rungs. The
@@ -203,7 +233,8 @@ rungs differ in more than their count.
 \includegraphics[width=\linewidth]{tree_allometry}
 \caption{\textbf{The reversal's precondition, on 3599 plants held fixed.} Top:
 the interpolation split, where every species appears on both sides. Bottom: an
-entire species held out. Only the number of predictors varies. The top curves
+entire species held out. The rows, splits and model specifications are held
+fixed; each rung adds one named predictor to the nested set. The top curves
 cross; the bottom ones do not.}
 \label{fig:ladder}
 \end{figure}

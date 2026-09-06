@@ -80,7 +80,7 @@ def test_threshold_changes_only_which_labels_are_scored() -> None:
         scored = set(hdb5.eligible_tokamaks(dataset, min_rows=threshold))
         assert scored <= all_labels
         # Every label the threshold excludes from scoring is still trainable:
-        # leave-one-machine-out trains on "every other machine in the database",
+        # leave-one-label-out trains on every other row in the database,
         # so the complement of the held-out label is the training set.
         for label in scored:
             trained_on = all_labels - {label}

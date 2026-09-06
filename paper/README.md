@@ -5,10 +5,16 @@
 evaluate at a glance. Every number in it is taken from the generated artifacts
 under `../results/`, so regenerate those first if anything has changed.
 
-**Scope: the paper covers all twelve results.** It builds to the reversal and
-its three mechanisms, then to the two things that repair it: the bounded hybrid
-correction, and the Connor-Taylor constraint hierarchy that beats it. It closes
-on the replication over STD5-disjoint rows and the locked device forecast.
+**Scope.** It builds to the ranking reversal and its three diagnostics, then to
+what repairs it: the bounded hybrid correction, the Connor-Taylor constraint
+hierarchy that beats it, and the Gaussian-process experiments that reinterpret
+both. The GP ladder separates flexibility from long-range saturation and supports
+the long-range-saturation diagnosis, and the mean-function ablation is the controlled version of that
+test, holding the nonlinear covariance family and its fitting procedure fixed
+while only the long-range mean changes. It closes on the replication over
+STD5-disjoint rows and the locked device forecast. The two replications outside
+fusion are in `supplementary.tex`, a standalone document with its own reference
+list, rather than in the main text.
 Result 9's prior-shrinkage control is reported as a paragraph rather than a
 section, since its finding is a negative one about an alternative to Result 8
 rather than a result in its own right.
@@ -96,7 +102,7 @@ the other way round leaves the gate red and no hash that would satisfy it.
 
 ## References
 
-`references.bib` holds the same 26 references as the `thebibliography` block in
+`references.bib` holds the same 33 references as the `thebibliography` block in
 `paper.tex`. Both exist because their consumers want different things: arXiv
 builds a submission with no BibTeX pass and no `.bbl`, so the printed list has
 to be in the source, while a journal wants a `.bib` to run through its own style
@@ -114,8 +120,11 @@ Nuclear Fusion is the home venue: IPB98, HDB5, Connor-Taylor and ITPA20 are all
 NF papers, and the readership is the one the result is aimed at.
 
 IOP is format-free at initial submission, so `article` is fine and `iopart.cls`
-is only needed if the paper is accepted. Their abstract guidance is 300 words
-and this one is 265. Submission goes through ScholarOne, which asks separately
+is only needed if the paper is accepted. Their abstract limit is 300 words, and
+IOP warns that a manuscript may be returned for rewriting above it, so
+`tests/test_paper_submission.py` counts the rendered abstract and fails past
+290. The count is not written down here, because a number in prose goes stale
+and a test does not. Submission goes through ScholarOne, which asks separately
 for the things now carried in the source: affiliation, ORCID, funding, competing
 interests, author contributions, a data availability statement, and a statement
 on the use of AI tools.
@@ -177,10 +186,15 @@ branch:
 1. Sign in to <https://zenodo.org> with the GitHub account that owns the repo.
 2. Under **Settings to GitHub**, toggle the repository on.
 3. Push a tag and publish a GitHub release, then Zenodo archives it and mints
-   the DOI. **Tag the state you actually want archived.** `v0.1.0` is already
-   pushed and points at a commit that predates the current work, so a DOI
-   minted on it would permanently archive the older version; cut a new tag
-   instead.
+   the DOI. **Publishing the release, not pushing the tag, is what Zenodo
+   watches**: `v0.3.1` was tagged without a release and has no Zenodo record
+   because of it. **Tag the state you actually want archived**, since a DOI is
+   permanent.
+
+   As released: `v0.4.0` is the current archive, and the paper cites its version
+   DOI `10.5281/zenodo.22545928`. The concept DOI `10.5281/zenodo.22215142`
+   resolves to whatever the latest version is and is the one the main README
+   badge uses.
 4. Zenodo issues two DOIs: a **concept DOI** that always resolves to the latest
    version, and a **version DOI** fixed to that release. Cite the concept DOI in
    the README and the version DOI in anything that quotes specific numbers.

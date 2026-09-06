@@ -15,6 +15,7 @@ exercised against a paper that violates it.
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -182,3 +183,45 @@ def test_the_freshness_check_still_catches_a_genuinely_absent_section(tmp_path: 
     paper.write_text("\\section{Ligatures, quotes and a section never written}\n")
     missing = checker.stale_pdf_sections(paper=paper, pdf=ROOT / "paper" / "paper.pdf")
     assert missing == ["Ligatures, quotes and a section never written"]
+
+
+# --- the abstract fits the journal's limit ---------------------------------
+#
+# IOP asks for abstracts of no more than 300 words and warns that a manuscript
+# may be returned for rewriting above it. That is a hard submission gate, and a
+# word count written into prose goes stale the first time the abstract is
+# edited, so it is computed here instead. The ceiling is 290 rather than 300 so
+# that no disagreement between counting methods, and no later one-sentence
+# addition, can push the submitted version over the real limit unnoticed.
+
+ABSTRACT_WORD_CEILING = 290
+
+
+def abstract_words(paper: Path | None = None) -> list[str]:
+    """The abstract as a reader counts it, with LaTeX markup removed.
+
+    Maths is collapsed to a single token rather than dropped, because a reader
+    counts "rho = +0.85" as something; commands and braces disappear because
+    nobody counts a backslash.
+    """
+    source = (paper or ROOT / "paper" / "paper.tex").read_text()
+    body = source.split(r"\begin{abstract}")[1].split(r"\end{abstract}")[0]
+    body = re.sub(r"\\cite\{[^}]*\}", "", body)
+    body = re.sub(r"\$[^$]*\$", "X", body)
+    body = re.sub(r"\\[a-zA-Z]+", "", body)
+    body = re.sub(r"[{}~\\]", " ", body)
+    return [w for w in body.split() if re.search(r"[A-Za-z0-9]", w)]
+
+
+def test_abstract_is_within_the_journal_word_limit() -> None:
+    words = abstract_words()
+    assert len(words) <= ABSTRACT_WORD_CEILING, (
+        f"the abstract is {len(words)} words, above the {ABSTRACT_WORD_CEILING} "
+        "this repository holds itself to and close to IOP's hard limit of 300. "
+        "Shorten it rather than raising the ceiling."
+    )
+
+
+def test_the_abstract_word_count_is_measuring_something() -> None:
+    """A counter that returned nothing would pass the limit check silently."""
+    assert len(abstract_words()) > 150

@@ -194,7 +194,7 @@ def main() -> None:
     )
     write_json_strict(RESULTS_DIR / "referee_robustness.json", report)
 
-    print("--- leave-one-machine-out at four row thresholds ---")
+    print("--- leave-one-label-out at four row thresholds ---")
     print(f"  {'min rows':>9}{'scored':>8}{'forest worse':>14}{'mean gap':>11}{'p':>10}")
     for row in report["threshold_sweep"]:
         print(
