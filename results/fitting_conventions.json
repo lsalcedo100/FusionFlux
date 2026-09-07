@@ -1,0 +1,994 @@
+{
+  "dataset_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b",
+  "n_rows": 6228,
+  "max_conventional_inverse_aspect_ratio": 0.5,
+  "spherical_labels_dropped": [
+    "MAST",
+    "NSTX",
+    "START"
+  ],
+  "n_rows_conventional": 5996,
+  "summaries": {
+    "baseline": {
+      "arm": "baseline",
+      "n_labels_scored": 13,
+      "labels": [
+        "ASDEX",
+        "AUG",
+        "AUGW",
+        "CMOD",
+        "D3D",
+        "JET",
+        "JETILW",
+        "JFT2M",
+        "JT60U",
+        "MAST",
+        "NSTX",
+        "PBXM",
+        "PDX"
+      ],
+      "mean_rmsle": {
+        "hist_gradient_boosting": 0.35929191010201667,
+        "ipb98y2_analytic": 0.18844349163138224,
+        "random_forest": 0.46489304181310953,
+        "ridge_loglinear": 0.21407599766914132
+      },
+      "n_forest_worse_than_power_law": 13,
+      "mean_gap_forest_minus_power_law": 0.25081704414396827,
+      "exact_two_sided_p": 0.000244140625,
+      "reversal_holds": true
+    },
+    "conventional_aspect_ratio": {
+      "arm": "conventional_aspect_ratio",
+      "n_labels_scored": 11,
+      "labels": [
+        "ASDEX",
+        "AUG",
+        "AUGW",
+        "CMOD",
+        "D3D",
+        "JET",
+        "JETILW",
+        "JFT2M",
+        "JT60U",
+        "PBXM",
+        "PDX"
+      ],
+      "mean_rmsle": {
+        "hist_gradient_boosting": 0.30382676091294103,
+        "ipb98y2_analytic": 0.19010045260340275,
+        "random_forest": 0.3945237506789921,
+        "ridge_loglinear": 0.212450731264233
+      },
+      "n_forest_worse_than_power_law": 11,
+      "mean_gap_forest_minus_power_law": 0.18207301941475917,
+      "exact_two_sided_p": 0.0009765625,
+      "reversal_holds": true
+    },
+    "equal_label_weights": {
+      "arm": "equal_label_weights",
+      "n_labels_scored": 13,
+      "labels": [
+        "ASDEX",
+        "AUG",
+        "AUGW",
+        "CMOD",
+        "D3D",
+        "JET",
+        "JETILW",
+        "JFT2M",
+        "JT60U",
+        "MAST",
+        "NSTX",
+        "PBXM",
+        "PDX"
+      ],
+      "mean_rmsle": {
+        "hist_gradient_boosting": 0.3710245137100232,
+        "ipb98y2_analytic": 0.18844349163138224,
+        "random_forest": 0.4470237441279706,
+        "ridge_loglinear": 0.25867323160478395
+      },
+      "n_forest_worse_than_power_law": 12,
+      "mean_gap_forest_minus_power_law": 0.18835051252318655,
+      "exact_two_sided_p": 0.00341796875,
+      "reversal_holds": false
+    }
+  },
+  "per_label": {
+    "baseline": [
+      {
+        "tokamak": "JET",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 1762,
+        "rmsle": 0.14786640407873294
+      },
+      {
+        "tokamak": "JET",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 1762,
+        "rmsle": 0.1979097980970751
+      },
+      {
+        "tokamak": "JET",
+        "model_name": "random_forest",
+        "n_held_out_rows": 1762,
+        "rmsle": 0.4779851207032848
+      },
+      {
+        "tokamak": "JET",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 1762,
+        "rmsle": 0.4867978709251852
+      },
+      {
+        "tokamak": "AUG",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 1377,
+        "rmsle": 0.1973676563878414
+      },
+      {
+        "tokamak": "AUG",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 1377,
+        "rmsle": 0.21552600328195384
+      },
+      {
+        "tokamak": "AUG",
+        "model_name": "random_forest",
+        "n_held_out_rows": 1377,
+        "rmsle": 0.27930960871770744
+      },
+      {
+        "tokamak": "AUG",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 1377,
+        "rmsle": 0.2812302860575839
+      },
+      {
+        "tokamak": "JETILW",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 866,
+        "rmsle": 0.256629652478898
+      },
+      {
+        "tokamak": "JETILW",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 866,
+        "rmsle": 0.21586955727909324
+      },
+      {
+        "tokamak": "JETILW",
+        "model_name": "random_forest",
+        "n_held_out_rows": 866,
+        "rmsle": 0.31834579995994233
+      },
+      {
+        "tokamak": "JETILW",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 866,
+        "rmsle": 0.2439381925302502
+      },
+      {
+        "tokamak": "AUGW",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 767,
+        "rmsle": 0.21832511500257962
+      },
+      {
+        "tokamak": "AUGW",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 767,
+        "rmsle": 0.2074398929329735
+      },
+      {
+        "tokamak": "AUGW",
+        "model_name": "random_forest",
+        "n_held_out_rows": 767,
+        "rmsle": 0.21949249274400942
+      },
+      {
+        "tokamak": "AUGW",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 767,
+        "rmsle": 0.21219271101172096
+      },
+      {
+        "tokamak": "ASDEX",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 431,
+        "rmsle": 0.13144904229087115
+      },
+      {
+        "tokamak": "ASDEX",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 431,
+        "rmsle": 0.1935999461699966
+      },
+      {
+        "tokamak": "ASDEX",
+        "model_name": "random_forest",
+        "n_held_out_rows": 431,
+        "rmsle": 0.5067383872546776
+      },
+      {
+        "tokamak": "ASDEX",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 431,
+        "rmsle": 0.20697949141905117
+      },
+      {
+        "tokamak": "D3D",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 388,
+        "rmsle": 0.25193607071646484
+      },
+      {
+        "tokamak": "D3D",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 388,
+        "rmsle": 0.2512433460586729
+      },
+      {
+        "tokamak": "D3D",
+        "model_name": "random_forest",
+        "n_held_out_rows": 388,
+        "rmsle": 0.4059948133516858
+      },
+      {
+        "tokamak": "D3D",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 388,
+        "rmsle": 0.24573867969801805
+      },
+      {
+        "tokamak": "NSTX",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 185,
+        "rmsle": 0.22222938608255652
+      },
+      {
+        "tokamak": "NSTX",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 185,
+        "rmsle": 0.28907712742060465
+      },
+      {
+        "tokamak": "NSTX",
+        "model_name": "random_forest",
+        "n_held_out_rows": 185,
+        "rmsle": 0.8573763614997421
+      },
+      {
+        "tokamak": "NSTX",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 185,
+        "rmsle": 0.6857023422989421
+      },
+      {
+        "tokamak": "JT60U",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 100,
+        "rmsle": 0.2748479842757165
+      },
+      {
+        "tokamak": "JT60U",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 100,
+        "rmsle": 0.2853670935561867
+      },
+      {
+        "tokamak": "JT60U",
+        "model_name": "random_forest",
+        "n_held_out_rows": 100,
+        "rmsle": 0.29120318766011555
+      },
+      {
+        "tokamak": "JT60U",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 100,
+        "rmsle": 0.30701737969020504
+      },
+      {
+        "tokamak": "PDX",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 97,
+        "rmsle": 0.2270798419649088
+      },
+      {
+        "tokamak": "PDX",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 97,
+        "rmsle": 0.23277730351044704
+      },
+      {
+        "tokamak": "PDX",
+        "model_name": "random_forest",
+        "n_held_out_rows": 97,
+        "rmsle": 0.40722559027110555
+      },
+      {
+        "tokamak": "PDX",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 97,
+        "rmsle": 0.3227021134914512
+      },
+      {
+        "tokamak": "JFT2M",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 69,
+        "rmsle": 0.0945692941473851
+      },
+      {
+        "tokamak": "JFT2M",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 69,
+        "rmsle": 0.09362793859749098
+      },
+      {
+        "tokamak": "JFT2M",
+        "model_name": "random_forest",
+        "n_held_out_rows": 69,
+        "rmsle": 0.4502539255431946
+      },
+      {
+        "tokamak": "JFT2M",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 69,
+        "rmsle": 0.23418446081860614
+      },
+      {
+        "tokamak": "PBXM",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 59,
+        "rmsle": 0.17167843282810225
+      },
+      {
+        "tokamak": "PBXM",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 59,
+        "rmsle": 0.27410976868517906
+      },
+      {
+        "tokamak": "PBXM",
+        "model_name": "random_forest",
+        "n_held_out_rows": 59,
+        "rmsle": 0.7273766020265495
+      },
+      {
+        "tokamak": "PBXM",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 59,
+        "rmsle": 0.5587897073538394
+      },
+      {
+        "tokamak": "CMOD",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 45,
+        "rmsle": 0.1193554844659295
+      },
+      {
+        "tokamak": "CMOD",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 45,
+        "rmsle": 0.17281698025423575
+      },
+      {
+        "tokamak": "CMOD",
+        "model_name": "random_forest",
+        "n_held_out_rows": 45,
+        "rmsle": 0.5214357323031032
+      },
+      {
+        "tokamak": "CMOD",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 45,
+        "rmsle": 0.568711558029444
+      },
+      {
+        "tokamak": "MAST",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 39,
+        "rmsle": 0.1364310264879828
+      },
+      {
+        "tokamak": "MAST",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 39,
+        "rmsle": 0.15362321385492766
+      },
+      {
+        "tokamak": "MAST",
+        "model_name": "random_forest",
+        "n_held_out_rows": 39,
+        "rmsle": 0.5808719215353065
+      },
+      {
+        "tokamak": "MAST",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 39,
+        "rmsle": 0.3168100380019187
+      }
+    ],
+    "conventional_aspect_ratio": [
+      {
+        "tokamak": "JET",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 1762,
+        "rmsle": 0.14786640407873294
+      },
+      {
+        "tokamak": "JET",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 1762,
+        "rmsle": 0.21162773022324716
+      },
+      {
+        "tokamak": "JET",
+        "model_name": "random_forest",
+        "n_held_out_rows": 1762,
+        "rmsle": 0.47389588416674955
+      },
+      {
+        "tokamak": "JET",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 1762,
+        "rmsle": 0.45959754237258593
+      },
+      {
+        "tokamak": "AUG",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 1377,
+        "rmsle": 0.1973676563878414
+      },
+      {
+        "tokamak": "AUG",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 1377,
+        "rmsle": 0.206748771956278
+      },
+      {
+        "tokamak": "AUG",
+        "model_name": "random_forest",
+        "n_held_out_rows": 1377,
+        "rmsle": 0.2805576161619292
+      },
+      {
+        "tokamak": "AUG",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 1377,
+        "rmsle": 0.3084682776269563
+      },
+      {
+        "tokamak": "JETILW",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 866,
+        "rmsle": 0.256629652478898
+      },
+      {
+        "tokamak": "JETILW",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 866,
+        "rmsle": 0.20987345039313282
+      },
+      {
+        "tokamak": "JETILW",
+        "model_name": "random_forest",
+        "n_held_out_rows": 866,
+        "rmsle": 0.31764857596629803
+      },
+      {
+        "tokamak": "JETILW",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 866,
+        "rmsle": 0.22935865281110393
+      },
+      {
+        "tokamak": "AUGW",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 767,
+        "rmsle": 0.21832511500257962
+      },
+      {
+        "tokamak": "AUGW",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 767,
+        "rmsle": 0.2022737679790901
+      },
+      {
+        "tokamak": "AUGW",
+        "model_name": "random_forest",
+        "n_held_out_rows": 767,
+        "rmsle": 0.21413285450814254
+      },
+      {
+        "tokamak": "AUGW",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 767,
+        "rmsle": 0.19212981866368345
+      },
+      {
+        "tokamak": "ASDEX",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 431,
+        "rmsle": 0.13144904229087115
+      },
+      {
+        "tokamak": "ASDEX",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 431,
+        "rmsle": 0.28831851253531837
+      },
+      {
+        "tokamak": "ASDEX",
+        "model_name": "random_forest",
+        "n_held_out_rows": 431,
+        "rmsle": 0.31159164989627
+      },
+      {
+        "tokamak": "ASDEX",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 431,
+        "rmsle": 0.20353584080938578
+      },
+      {
+        "tokamak": "D3D",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 388,
+        "rmsle": 0.25193607071646484
+      },
+      {
+        "tokamak": "D3D",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 388,
+        "rmsle": 0.22244623924900847
+      },
+      {
+        "tokamak": "D3D",
+        "model_name": "random_forest",
+        "n_held_out_rows": 388,
+        "rmsle": 0.30012345535907514
+      },
+      {
+        "tokamak": "D3D",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 388,
+        "rmsle": 0.26922879670608757
+      },
+      {
+        "tokamak": "JT60U",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 100,
+        "rmsle": 0.2748479842757165
+      },
+      {
+        "tokamak": "JT60U",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 100,
+        "rmsle": 0.23859630316029934
+      },
+      {
+        "tokamak": "JT60U",
+        "model_name": "random_forest",
+        "n_held_out_rows": 100,
+        "rmsle": 0.2857756361044416
+      },
+      {
+        "tokamak": "JT60U",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 100,
+        "rmsle": 0.2771467749625896
+      },
+      {
+        "tokamak": "PDX",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 97,
+        "rmsle": 0.2270798419649088
+      },
+      {
+        "tokamak": "PDX",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 97,
+        "rmsle": 0.32125362749249686
+      },
+      {
+        "tokamak": "PDX",
+        "model_name": "random_forest",
+        "n_held_out_rows": 97,
+        "rmsle": 0.40336461996673556
+      },
+      {
+        "tokamak": "PDX",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 97,
+        "rmsle": 0.39610797589132885
+      },
+      {
+        "tokamak": "JFT2M",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 69,
+        "rmsle": 0.0945692941473851
+      },
+      {
+        "tokamak": "JFT2M",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 69,
+        "rmsle": 0.09702793823753691
+      },
+      {
+        "tokamak": "JFT2M",
+        "model_name": "random_forest",
+        "n_held_out_rows": 69,
+        "rmsle": 0.3416029279635604
+      },
+      {
+        "tokamak": "JFT2M",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 69,
+        "rmsle": 0.23116938386712446
+      },
+      {
+        "tokamak": "PBXM",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 59,
+        "rmsle": 0.17167843282810225
+      },
+      {
+        "tokamak": "PBXM",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 59,
+        "rmsle": 0.17013114055674938
+      },
+      {
+        "tokamak": "PBXM",
+        "model_name": "random_forest",
+        "n_held_out_rows": 59,
+        "rmsle": 0.6538711654343153
+      },
+      {
+        "tokamak": "PBXM",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 59,
+        "rmsle": 0.4935486830487834
+      },
+      {
+        "tokamak": "CMOD",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 45,
+        "rmsle": 0.1193554844659295
+      },
+      {
+        "tokamak": "CMOD",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 45,
+        "rmsle": 0.16866056212340536
+      },
+      {
+        "tokamak": "CMOD",
+        "model_name": "random_forest",
+        "n_held_out_rows": 45,
+        "rmsle": 0.7571968719413962
+      },
+      {
+        "tokamak": "CMOD",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 45,
+        "rmsle": 0.2818026232827218
+      }
+    ],
+    "equal_label_weights": [
+      {
+        "tokamak": "JET",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 1762,
+        "rmsle": 0.14786640407873294
+      },
+      {
+        "tokamak": "JET",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 1762,
+        "rmsle": 0.2127899729871416
+      },
+      {
+        "tokamak": "JET",
+        "model_name": "random_forest",
+        "n_held_out_rows": 1762,
+        "rmsle": 0.47204173327013377
+      },
+      {
+        "tokamak": "JET",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 1762,
+        "rmsle": 0.5157206869027021
+      },
+      {
+        "tokamak": "AUG",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 1377,
+        "rmsle": 0.1973676563878414
+      },
+      {
+        "tokamak": "AUG",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 1377,
+        "rmsle": 0.2168678329498827
+      },
+      {
+        "tokamak": "AUG",
+        "model_name": "random_forest",
+        "n_held_out_rows": 1377,
+        "rmsle": 0.30159032310725553
+      },
+      {
+        "tokamak": "AUG",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 1377,
+        "rmsle": 0.30408735223854183
+      },
+      {
+        "tokamak": "JETILW",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 866,
+        "rmsle": 0.256629652478898
+      },
+      {
+        "tokamak": "JETILW",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 866,
+        "rmsle": 0.25444405971785106
+      },
+      {
+        "tokamak": "JETILW",
+        "model_name": "random_forest",
+        "n_held_out_rows": 866,
+        "rmsle": 0.30583919663368014
+      },
+      {
+        "tokamak": "JETILW",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 866,
+        "rmsle": 0.2593261457312423
+      },
+      {
+        "tokamak": "AUGW",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 767,
+        "rmsle": 0.21832511500257962
+      },
+      {
+        "tokamak": "AUGW",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 767,
+        "rmsle": 0.28834962929562696
+      },
+      {
+        "tokamak": "AUGW",
+        "model_name": "random_forest",
+        "n_held_out_rows": 767,
+        "rmsle": 0.22181913872433504
+      },
+      {
+        "tokamak": "AUGW",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 767,
+        "rmsle": 0.2111690699113193
+      },
+      {
+        "tokamak": "ASDEX",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 431,
+        "rmsle": 0.13144904229087115
+      },
+      {
+        "tokamak": "ASDEX",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 431,
+        "rmsle": 0.1303517415743956
+      },
+      {
+        "tokamak": "ASDEX",
+        "model_name": "random_forest",
+        "n_held_out_rows": 431,
+        "rmsle": 0.4727755836495771
+      },
+      {
+        "tokamak": "ASDEX",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 431,
+        "rmsle": 0.22399820793799521
+      },
+      {
+        "tokamak": "D3D",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 388,
+        "rmsle": 0.25193607071646484
+      },
+      {
+        "tokamak": "D3D",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 388,
+        "rmsle": 0.29878606769985283
+      },
+      {
+        "tokamak": "D3D",
+        "model_name": "random_forest",
+        "n_held_out_rows": 388,
+        "rmsle": 0.38548448542116526
+      },
+      {
+        "tokamak": "D3D",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 388,
+        "rmsle": 0.30452873509087114
+      },
+      {
+        "tokamak": "NSTX",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 185,
+        "rmsle": 0.22222938608255652
+      },
+      {
+        "tokamak": "NSTX",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 185,
+        "rmsle": 0.19539647451267345
+      },
+      {
+        "tokamak": "NSTX",
+        "model_name": "random_forest",
+        "n_held_out_rows": 185,
+        "rmsle": 1.0047263293963524
+      },
+      {
+        "tokamak": "NSTX",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 185,
+        "rmsle": 0.6681087295376837
+      },
+      {
+        "tokamak": "JT60U",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 100,
+        "rmsle": 0.2748479842757165
+      },
+      {
+        "tokamak": "JT60U",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 100,
+        "rmsle": 0.252822824297884
+      },
+      {
+        "tokamak": "JT60U",
+        "model_name": "random_forest",
+        "n_held_out_rows": 100,
+        "rmsle": 0.2633983843703685
+      },
+      {
+        "tokamak": "JT60U",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 100,
+        "rmsle": 0.22707112736676804
+      },
+      {
+        "tokamak": "PDX",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 97,
+        "rmsle": 0.2270798419649088
+      },
+      {
+        "tokamak": "PDX",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 97,
+        "rmsle": 0.20932206608533385
+      },
+      {
+        "tokamak": "PDX",
+        "model_name": "random_forest",
+        "n_held_out_rows": 97,
+        "rmsle": 0.41592546013401455
+      },
+      {
+        "tokamak": "PDX",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 97,
+        "rmsle": 0.3270966607258616
+      },
+      {
+        "tokamak": "JFT2M",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 69,
+        "rmsle": 0.0945692941473851
+      },
+      {
+        "tokamak": "JFT2M",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 69,
+        "rmsle": 0.24940641392907456
+      },
+      {
+        "tokamak": "JFT2M",
+        "model_name": "random_forest",
+        "n_held_out_rows": 69,
+        "rmsle": 0.3236972449027844
+      },
+      {
+        "tokamak": "JFT2M",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 69,
+        "rmsle": 0.3967678134943826
+      },
+      {
+        "tokamak": "PBXM",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 59,
+        "rmsle": 0.17167843282810225
+      },
+      {
+        "tokamak": "PBXM",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 59,
+        "rmsle": 0.4151656488677766
+      },
+      {
+        "tokamak": "PBXM",
+        "model_name": "random_forest",
+        "n_held_out_rows": 59,
+        "rmsle": 0.5541417094802249
+      },
+      {
+        "tokamak": "PBXM",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 59,
+        "rmsle": 0.5278485065072684
+      },
+      {
+        "tokamak": "CMOD",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 45,
+        "rmsle": 0.1193554844659295
+      },
+      {
+        "tokamak": "CMOD",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 45,
+        "rmsle": 0.42139843698365104
+      },
+      {
+        "tokamak": "CMOD",
+        "model_name": "random_forest",
+        "n_held_out_rows": 45,
+        "rmsle": 0.6514899797539886
+      },
+      {
+        "tokamak": "CMOD",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 45,
+        "rmsle": 0.41342288821893325
+      },
+      {
+        "tokamak": "MAST",
+        "model_name": "ipb98y2_analytic",
+        "n_held_out_rows": 39,
+        "rmsle": 0.1364310264879828
+      },
+      {
+        "tokamak": "MAST",
+        "model_name": "ridge_loglinear",
+        "n_held_out_rows": 39,
+        "rmsle": 0.2176508419610476
+      },
+      {
+        "tokamak": "MAST",
+        "model_name": "random_forest",
+        "n_held_out_rows": 39,
+        "rmsle": 0.4383791048197369
+      },
+      {
+        "tokamak": "MAST",
+        "model_name": "hist_gradient_boosting",
+        "n_held_out_rows": 39,
+        "rmsle": 0.4441727545667316
+      }
+    ]
+  }
+}

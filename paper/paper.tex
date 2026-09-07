@@ -60,31 +60,29 @@ Archived at \href{https://doi.org/10.5281/zenodo.22562235}{doi:10.5281/zenodo.22
 
 \begin{abstract}
 \noindent
-Confinement scaling laws set the size a next-step tokamak has to reach. On the International Tokamak Physics Activity (ITPA) Global H-mode Confinement
-Database (HDB5, standard analysis set STD5; 6228 slices, 18 device/wall labels),
+Confinement scaling laws set the size a next-step tokamak has to reach. On the
+International Tokamak Physics Activity (ITPA) Global H-mode Confinement Database
+(HDB5, standard set STD5; 6228 slices, 18 device/wall labels),
 under cross-validation grouped by discharge, a random forest reduces log error
 by 29\% against a power law refitted within the same folds and 36\% against the
-published IPB98(y,2) reference. That margin
-does not survive the question a scaling law exists to answer. Under
-leave-one-label-out the ordering of the three primary models reverses
-exactly: the forest is worse than that same power law on all 13 held-out
-database labels and all 11 physical devices they reduce to. It survives a nested hyperparameter search, a row-count threshold sweep and
-shuffled fold assignments. The forest's error tracks the Mahalanobis
+published IPB98(y,2) reference. That margin does not survive the question a scaling law exists to answer.
+Under
+leave-one-label-out the ordering of the three primary models reverses: the
+forest is worse than that same power law on all 13 held-out
+database labels and all 11 physical devices they reduce to. It survives nested tuning, threshold and fold-assignment sweeps, and dropping
+the spherical tokamaks; equal label weighting leaves it at 12 of 13. The forest's error tracks the Mahalanobis
 distance of the held-out label from the training distribution ($\rho=+0.85$)
-where the power law's does not ($\rho=-0.06$), and its predictions cannot
-exceed the range of its training targets. At a cut reproducing ITER's $1.82\times$ jump in major
-radius, the tree ensembles score closer to a constant predictor than to the
-power law, and split-conformal intervals calibrated to 90\% fall to 3\% and 0\%
-coverage at unchanged width.
+where the power law's does not ($\rho=-0.06$), and it cannot predict outside
+the range of its training targets. At a cut reproducing ITER's $1.82\times$ jump in major radius, the tree
+ensembles score closer to a constant predictor than to the power law, and 90\% split-conformal intervals fall to 3\% and 0\% coverage at
+unchanged width.
 Two repairs improve extrapolation, both supplying long-range structure.
-Connor--Taylor similarity constraints on the exponents help prospectively: the
-Kadomtsev rung, fixed by the literature in 1975, costs nothing in sample and
-beats the unconstrained fit at all 15 cuts of a size sweep. The collisionless
-rung scores lowest at the size-matched cut but was selected post hoc. The second
-is a Gaussian process whose linear component keeps trending. Across the
-families tested, extrapolation failure tracks long-range saturation, not
-flexibility alone. For ITER the IPB98(y,2) and random-forest predictions differ
-by a factor of 8.3.
+Connor--Taylor constraints on the exponents help prospectively: the
+Kadomtsev rung, fixed in 1975, is free in sample and beats the unconstrained
+fit at all 8 well-powered cuts of a size sweep. The collisionless rung scores lowest at the size-matched cut but was selected
+post hoc. The second repair is a Gaussian process whose linear component keeps
+trending. Across the families tested, extrapolation failure tracks long-range
+saturation rather than flexibility. For ITER the IPB98(y,2) and forest predictions differ by 8.3$\times$.
 \end{abstract}
 
 \begin{center}\small
@@ -160,17 +158,29 @@ conventional tokamaks. Wang \emph{et al.}~\cite{wang} freeze a power law and
 learn its residual, reporting improved stability under shifts defined by
 parameter ranges.
 
-This paper asks a different question, and the difference is the protocol rather
-than the model. None of these works is the target of a criticism here; what any
-of them reports is what its split measures. That is the point. Where a score on
-this database is computed without holding out a whole device, it describes
-discharges from machines the model has already seen, and
-Sec.~\ref{sec:reversal} shows that the ranking such a split produces can invert
-completely once the held-out unit becomes a whole device. We do
-not propose a better predictor. We ask whether the validation that selects one
-answers the question a scaling law exists for, measure what the honest answer
-costs, identify the property of a model that decides it, and test the repair
-that physics rather than flexibility supplies.
+Nam and Seo~\cite{namseo} in particular already validate on unseen conditions
+and report that cross-machine transfer is harder, so it is worth saying plainly
+what is different here rather than leaving it to the Discussion. Their claim,
+and the one that literature generally supports, is that accuracy
+\emph{degrades} out of distribution. This paper makes two claims that do not
+follow from that one and have different consequences. The first is that the
+\emph{ranking} reverses: the model a practitioner would select on the
+conventional split is not merely worse on an unseen device but worse than the
+baseline it was selected over, so the selection procedure returns the wrong
+model rather than an optimistic score for the right one. The second is that the
+calibrated intervals fail \emph{at unchanged width}: 90\% intervals covering 3\%
+and 0\% of held-out rows, having become confidently wrong rather than usefully
+vague, which is the failure mode a design study cannot detect from the interval
+itself. Degradation is a matter of degree and can be absorbed by a margin.
+Neither of these can.
+
+None of these works is the target of a criticism here; what any of them reports
+is what its split measures. Where a score on this database is computed without
+holding out a whole device, it describes discharges from machines the model has
+already seen. We do not propose a better predictor. We ask whether the
+validation that selects one answers the question a scaling law exists for,
+measure what the honest answer costs, identify the property of a model that
+decides it, and test the repair that physics rather than flexibility supplies.
 
 That measurement does not directly address the deployment problem of interest,
 for a reason about the data rather than about the models. Cross-validation on this database holds out
@@ -757,6 +767,31 @@ not repair the extrapolation failure, which is what the training-target bound
 predicts: no setting of these hyperparameters moves a ceiling that comes from
 averaging training targets.
 
+\paragraph{Two conventions this paper does not follow.} Neither the population
+nor the weighting used above matches how the ITPA scalings were produced, and
+both are choices rather than findings, so both are measured.
+
+IPB98(y,2) was fitted on a selection that excluded spherical tokamaks; this
+database does not, and MAST and NSTX are two of the 13 scored labels and two of
+the four most distant. Sec.~\ref{sec:size} controls for this only at the size
+cut. Dropping every label whose median inverse aspect ratio exceeds 0.5, which
+removes MAST, NSTX and START and 232 rows, from training and scoring alike,
+leaves the reversal intact: the forest is worse than the power law on all 11
+remaining labels, mean gap $+0.182$, exact $p=9.8\times10^{-4}$, at 0.395
+against the power law's 0.212. The inversion is not an artifact of including
+the spherical devices.
+
+The weighting arm is the one that qualifies the headline. Every fit above
+weights rows equally, so JET and ASDEX Upgrade, which supply 77\% of them, set
+most of what each model learns. Refitting every model with each label weighted
+equally hurts the power law more than the forest, 0.214 to 0.259 against 0.465
+to 0.447, and the win count falls from 13 of 13 to \textbf{12 of 13}
+($p=3.4\times10^{-3}$, mean gap $+0.188$). The label that changes hands is
+AUG-W, whose unweighted margin was the narrowest of the thirteen at $+0.012$ and
+which moves to $-0.067$. The direction and its significance survive the
+reweighting; unanimity does not, and the 13 of 13 quoted throughout is the
+unweighted count.
+
 The win counts support an exact test, under a null that is worth naming
 precisely. Call it the independent-unit-sign null: each unit, label or device
 as the case may be, is assigned to either model independently with equal
@@ -787,6 +822,20 @@ smallest database labels (up to DIII-D, \SI{1.865}{\meter}, 3498 rows) and predi
 the 4 largest labels (up to JT-60U, \SI{3.40}{\meter}, 2730 rows) demands a ratio of
 1.823 against ITER's 1.824. The cut is selected by proximity to that ratio
 rather than by eye, so it is a property of the data.
+
+Two things bound what this cut can carry, and they are why it is a supporting
+stress test here rather than the result the paper rests on. Its held-out side is
+96\% JET: of 2730 rows, 1762 are JET and 866 JET-ILW, with JT-60U contributing
+100 and TFTR 2. So it is close to a single-device holdout at a size ratio, not a
+survey of large machines, and the per-label scores below matter more than the
+pooled one because of it. And the boundary is drawn on major radius alone. Hall
+\emph{et al.}~\cite{hall26} argue that the weak size dependence in this database
+comes from a subset localised in dimensionless space rather than from size as
+such, which is a different place to cut; a reader persuaded by that should read
+this section as measuring transfer across one particular boundary rather than
+across size in general. The claim the paper rests on is the leave-one-device-out
+result of Sec.~\ref{sec:reversal}, which holds out 11 physical devices one at a
+time and does not depend on where a size boundary is drawn.
 
 \begin{table}[t]
 \centering
@@ -1555,19 +1604,12 @@ rung selected after those scores had been seen costs 0.001 and was the
 best-scoring option at the size cut.
 
 Nothing in the argument so far rules out reading all of it as a fact about
-tokamaks, so the same audit was run on two scaling laws from biology, reported
-in full in the Supplementary Material. On Kleiber's law for mammalian metabolic
-rate against body mass~\cite{kleiber}, with taxonomic order in the part played
-by the tokamak, both tree ensembles lose to both power laws at all 8 mass cuts
-and the training-range bound binds at every one; the ranking inversion does not
-reproduce, because with a single predictor the trees never win the
-interpolation split and so have no margin to give up. A predictor-count ladder
-on the Biomass And Allometry Database for woody plants~\cite{baad}, holding
-3599 plants fixed and varying only how many of four measurements the models
-see, tests that explanation directly: the interpolation margin crosses zero
-between two and three predictors, the inversion appears at exactly that
-crossing and at every rung above it, and the power law wins the held-out
-species at all four rungs regardless~\cite{wbe}.
+tokamaks. The same audit run on two scaling laws outside fusion, Kleiber's law
+for mammalian metabolic rate~\cite{kleiber} and a predictor-count ladder on
+woody plants~\cite{baad,wbe}, reproduces the extrapolation failure in both and
+the ranking inversion only where the flexible model first wins the
+interpolation split. Both are reported in the Supplementary Material; they
+support the reading of the fusion result rather than carrying it.
 
 None of this is settled by one database. In that nested predictor ladder the
 inversion appears exactly where the flexible model first gains an interpolation
@@ -1632,11 +1674,12 @@ away along exactly that direction. The honest statement is that these are
 least-squares exponents, that an EIV fit would differ, and that this database
 does not supply what computing a credible one would need. Every fit also weights
 rows equally, so JET and ASDEX Upgrade set most of what each model learns even
-though the target is transfer to a device neither resembles; refitting the power
-law with each training label weighted equally does not help, moving its
-leave-one-label-out score from 0.214 to 0.259, so the row imbalance is not an
-easy source of its advantage, though that is one weighting of one model and does
-not settle the question. The Gaussian-process intervals of Sec.~\ref{sec:gp} are
+though the target is transfer to a device neither resembles. Refitting every
+model with each label weighted equally, reported in Sec.~\ref{sec:robustness},
+costs the power law more than the forest and takes the win count to 12 of 13.
+The row imbalance is therefore not the source of the power law's advantage, but
+it is not irrelevant to its size either, and one weighting is not a
+characterisation of how the result behaves under reweighting in general. The Gaussian-process intervals of Sec.~\ref{sec:gp} are
 equal-tailed posterior intervals on $\log\tau$ that include the fitted
 observation-noise term and are exponentiated to $\tau$; that is the closest
 available analogue of a conformal interval, which is also a statement about a

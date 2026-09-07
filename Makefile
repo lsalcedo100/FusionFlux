@@ -49,6 +49,7 @@ results:
 	python3 analysis_boundedness.py
 	python3 analysis_robustness.py
 	python3 analysis_referee_robustness.py
+	python3 analysis_fitting_conventions.py
 	python3 analysis_sensitivity.py
 	python3 analysis_mechanism.py
 	python3 analysis_tuned.py
