@@ -66,23 +66,22 @@ International Tokamak Physics Activity (ITPA) Global H-mode Confinement Database
 under cross-validation grouped by discharge, a random forest reduces log error
 by 29\% against a power law refitted within the same folds and 36\% against the
 published IPB98(y,2) reference. That margin does not survive the question a scaling law exists to answer.
-Under
-leave-one-label-out the ordering of the three primary models reverses: the
-forest is worse than that same power law on all 13 held-out
-database labels and all 11 physical devices they reduce to. It survives nested tuning, threshold and fold-assignment sweeps, and dropping
-the spherical tokamaks; equal label weighting leaves it at 12 of 13. The forest's error tracks the Mahalanobis
-distance of the held-out label from the training distribution ($\rho=+0.85$)
-where the power law's does not ($\rho=-0.06$), and it cannot predict outside
-the range of its training targets. At a cut reproducing ITER's $1.82\times$ jump in major radius, the tree
-ensembles score closer to a constant predictor than to the power law, and 90\% split-conformal intervals fall to 3\% and 0\% coverage at
+Under leave-one-label-out the ordering of the three primary models reverses:
+the forest is worse than that power law on all 13 held-out labels and all 11
+physical devices they reduce to. It survives nested tuning, threshold and fold-assignment sweeps and dropping
+the spherical tokamaks; equal label weighting leaves it at 12 of 13. The forest's error tracks the held-out label's Mahalanobis distance from the
+training distribution ($\rho=+0.85$) where the power law's does not
+($\rho=-0.06$), and it cannot predict outside its training range. At a cut reproducing ITER's $1.82\times$ jump in major radius, the trees score
+closer to a constant predictor than to the power law, and 90\% split-conformal intervals fall to 3\% and 0\% coverage at
 unchanged width.
-Two repairs improve extrapolation, both supplying long-range structure.
-Connor--Taylor constraints on the exponents help prospectively: the
+Two repairs help, both supplying long-range structure. Connor--Taylor
+constraints on the exponents work prospectively: the
 Kadomtsev rung, fixed in 1975, is free in sample and beats the unconstrained
 fit at all 8 well-powered cuts of a size sweep. The collisionless rung scores lowest at the size-matched cut but was selected
 post hoc. The second repair is a Gaussian process whose linear component keeps
 trending. Across the families tested, extrapolation failure tracks long-range
-saturation rather than flexibility. For ITER the IPB98(y,2) and forest predictions differ by 8.3$\times$.
+saturation rather than flexibility. For ITER the IPB98(y,2) and forest predictions differ by 8.3$\times$, the
+forest's being its training ceiling rather than an estimate.
 \end{abstract}
 
 \begin{center}\small
@@ -116,6 +115,20 @@ radius is 1.82 times the largest machine in the database, and
 SPARC~\cite{creely} is designed for a toroidal field 2.1 times the largest
 recorded in it. The law is asked for a number at a point no row occupies, and
 that is the regime in which a fitted regression carries no guarantee at all.
+
+This paper reports two things about that regime, and both are worth separating
+from the expectation that accuracy simply degrades outside the data. The first
+is that the \emph{ranking} of candidate models reverses. Under cross-validation
+grouped by discharge a random forest beats a power law refitted in the same
+folds by 29\%; held out one whole device at a time, it is worse than that same
+power law on every device scored. A practitioner following the conventional
+procedure does not merely get an optimistic score for the right model, they get
+the wrong model. The second is that the calibrated intervals fail \emph{without
+widening}. Split-conformal intervals set to 90\% cover 3\% and 0\% of held-out
+rows at a size cut matched to ITER's, at essentially unchanged width: they are
+confidently wrong rather than usefully vague, which is the failure a design
+study cannot detect by inspecting the interval it is handed. Degradation is a
+matter of degree and can be absorbed by a margin. Neither of these can.
 
 Replacing Eq.~\eqref{eq:powerlaw} with a flexible regressor is an obvious move,
 and machine learning has been productive elsewhere in this field: disruption
@@ -159,20 +172,10 @@ learn its residual, reporting improved stability under shifts defined by
 parameter ranges.
 
 Nam and Seo~\cite{namseo} in particular already validate on unseen conditions
-and report that cross-machine transfer is harder, so it is worth saying plainly
-what is different here rather than leaving it to the Discussion. Their claim,
-and the one that literature generally supports, is that accuracy
-\emph{degrades} out of distribution. This paper makes two claims that do not
-follow from that one and have different consequences. The first is that the
-\emph{ranking} reverses: the model a practitioner would select on the
-conventional split is not merely worse on an unseen device but worse than the
-baseline it was selected over, so the selection procedure returns the wrong
-model rather than an optimistic score for the right one. The second is that the
-calibrated intervals fail \emph{at unchanged width}: 90\% intervals covering 3\%
-and 0\% of held-out rows, having become confidently wrong rather than usefully
-vague, which is the failure mode a design study cannot detect from the interval
-itself. Degradation is a matter of degree and can be absorbed by a margin.
-Neither of these can.
+and report that cross-machine transfer is harder. That is the claim this
+literature generally supports, and it is not the claim made above: accuracy
+degrading out of distribution is a matter of degree, and a margin can absorb it,
+where a reversed ranking and an interval that misses without widening cannot.
 
 None of these works is the target of a criticism here; what any of them reports
 is what its split measures. Where a score on this database is computed without
@@ -210,7 +213,7 @@ Connor--Taylor dimensional constraints imposed on the exponents, and a
 Gaussian-process experiment that separates flexibility from long-range
 saturation and corrects the diagnosis the earlier sections leave open. The
 result is replicated on rows the standard analysis set does not contain, in a
-second confinement regime, and on two scaling laws from biology.
+second confinement regime, and, in the Supplementary Material, outside fusion.
 Section~\ref{sec:rank} begins with a property of the design matrix itself: it is
 rank deficient by two, and one of the two dependencies is that a published
 scaling law added as a model feature contributes nothing a log-linear fit can
@@ -1603,24 +1606,13 @@ sample and beats the unconstrained fit at all 15 cuts of the size sweep; the
 rung selected after those scores had been seen costs 0.001 and was the
 best-scoring option at the size cut.
 
-Nothing in the argument so far rules out reading all of it as a fact about
-tokamaks. The same audit run on two scaling laws outside fusion, Kleiber's law
-for mammalian metabolic rate~\cite{kleiber} and a predictor-count ladder on
-woody plants~\cite{baad,wbe}, reproduces the extrapolation failure in both and
-the ranking inversion only where the flexible model first wins the
-interpolation split. Both are reported in the Supplementary Material; they
-support the reading of the fusion result rather than carrying it.
-
-None of this is settled by one database. In that nested predictor ladder the
-inversion appears exactly where the flexible model first gains an interpolation
-advantage, and not before. The experiment does not establish predictor count
-itself as the causal variable or identify a universal threshold, since each
-added column carries biological information as well as a dimension. What it does
-support is the weaker and more useful reading: where a flexible model has no
-interpolation advantage to lose, the extrapolation hazard is present with no
-warning sign at all. The extrapolation failure itself reproduced everywhere it was
-tested; it is the inversion, not the failure, that requires a condition to
-appear.
+None of this is settled by one database. Running the same audit on two scaling
+laws outside fusion, reported in the Supplementary Material, reproduces the
+extrapolation failure in both while the ranking inversion appears only where the
+flexible model first wins the interpolation split~\cite{kleiber,baad}. The
+practical reading is the weaker one: where a flexible model has no interpolation
+advantage to lose, the extrapolation hazard is still present, with no warning
+sign at all.
 
 \section{Limitations}
 
