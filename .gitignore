@@ -29,6 +29,9 @@ htmlcov/
 # Build and packaging artifacts
 build/
 dist/
+# The ScholarOne upload, assembled by `make submission`. Not under build/,
+# because the packaging tests remove that directory on every full test run.
+submission/
 *.egg-info/
 
 # Model and training outputs

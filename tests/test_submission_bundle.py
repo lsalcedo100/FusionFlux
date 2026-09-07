@@ -152,3 +152,19 @@ def test_the_author_line_is_readable(sheet: str) -> None:
     assert "ORCID: 0009-0001-5039-8147" in sheet
     # The link text, not the URL spelled out beside it.
     assert "https://orcid.org" not in sheet
+
+
+def test_the_bundle_is_not_written_under_build() -> None:
+    """tests/test_packaging.py removes build/, so a bundle there is temporary.
+
+    That is not theoretical: an assembled upload disappeared partway through a
+    session because a full test run had swept the directory it was sitting in.
+    """
+    assert make_submission.OUT.name == "submission"
+    assert "build" not in make_submission.OUT.relative_to(ROOT).parts
+
+
+def test_the_bundle_directory_is_ignored_by_git() -> None:
+    """It is a build product, and one of its PDFs is 270 KB."""
+    ignored = (ROOT / ".gitignore").read_text().split("\n")
+    assert f"{make_submission.OUT.name}/" in ignored

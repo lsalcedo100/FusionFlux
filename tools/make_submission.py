@@ -2,8 +2,8 @@
 
 Nuclear Fusion takes the manuscript as a PDF plus its sources, and offers
 single- or double-anonymous review. Which one the author picks is not known
-until upload, so this writes both: `build/submission/` carries the identified
-manuscript, and `build/submission/anonymous/` the same paper with the author
+until upload, so this writes both: `submission/` carries the identified manuscript,
+and `submission/anonymous/` the same paper with the author
 block, the repository and archive links, and the acknowledgments removed.
 
 The anonymous variant is the reason this is a script rather than a sequence of
@@ -30,7 +30,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PAPER = ROOT / "paper"
-OUT = ROOT / "build" / "submission"
+# Not under build/: tests/test_packaging.py and tests/test_wheel_smoke.py
+# remove that directory, so an assembled bundle disappears on the next full
+# test run, which is a bad surprise between assembling an upload and making it.
+OUT = ROOT / "submission"
 
 # Every string that identifies the author, checked against the rendered text of
 # the anonymous PDFs. Kept as literals rather than derived from the source, so

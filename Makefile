@@ -177,9 +177,10 @@ paper-fresh:
 
 # The ScholarOne upload, in both review variants.
 #
-# Run it after `dist`, never before: `dist` starts with `rm -rf build`, which
-# takes build/submission with it. The anonymous variant is verified by reading
-# the rendered text of the built PDFs back against a list of identifying
-# strings, because an incomplete strip produces a PDF that looks anonymous.
+# Writes to submission/, not build/: `dist` opens with `rm -rf build`, and so do
+# the packaging tests, so a bundle under build/ vanishes on the next `make
+# check`. The anonymous variant is verified by reading the rendered text of the
+# built PDFs back against a list of identifying strings, because an incomplete
+# strip produces a PDF that looks anonymous.
 submission: paper-fresh
 	python3 tools/make_submission.py
