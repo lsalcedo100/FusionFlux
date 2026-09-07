@@ -214,7 +214,7 @@ def scholarone_metadata(paper: str, manuscript_pages: int, supplement_pages: int
     return filled
 
 
-def _compile(source: Path, workdir: Path) -> Path:
+def _compile(source: Path, workdir: Path) -> Path:  # pragma: no cover - needs tectonic
     subprocess.run(
         ["tectonic", "-X", "compile", source.name, "--outdir", str(workdir)],
         cwd=workdir,
@@ -247,7 +247,7 @@ def verify_anonymous(pdfs: list[Path]) -> None:
         raise SystemExit("anonymised build is not anonymous:\n  " + "\n  ".join(failures))
 
 
-def main() -> int:
+def main() -> int:  # pragma: no cover - builds PDFs and writes the bundle
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--skip-fresh-check",

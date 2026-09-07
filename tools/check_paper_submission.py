@@ -53,6 +53,13 @@ ROOT = Path(__file__).resolve().parents[1]
 PAPER = ROOT / "paper" / "paper.tex"
 MAKEFILE = ROOT / "Makefile"
 PDF = ROOT / "paper" / "paper.pdf"
+# Both documents are committed as PDFs and both are uploaded, so both can go
+# stale. Only the main one was checked, which left a supplement rebuild
+# optional in practice: a numeric drift would still be caught by
+# tests/test_reported_numbers.py, but a prose edit like renaming a section
+# would not be caught anywhere.
+SUPPLEMENT = ROOT / "paper" / "supplementary.tex"
+SUPPLEMENT_PDF = ROOT / "paper" / "supplementary.pdf"
 FIGURE_DIR = ROOT / "results"
 
 # Characters LaTeX substitutes on the way to the PDF. Comparing section titles
@@ -358,15 +365,15 @@ def main(argv: list[str] | None = None) -> int:
         problems.extend(stale_archive())
 
     if "--check-pdf-fresh" in arguments:
-        missing = stale_pdf_sections()
-        if missing:
-            problems.append(
-                "paper/paper.pdf does not contain "
-                + ", ".join(f"{title!r}" for title in missing)
-                + ". The committed PDF is stale: rebuild it with "
-                "`make arxiv && cd build/arxiv && pdflatex paper.tex && pdflatex paper.tex` "
-                "and copy the result over paper/paper.pdf."
-            )
+        for source, pdf in ((PAPER, PDF), (SUPPLEMENT, SUPPLEMENT_PDF)):
+            missing = stale_pdf_sections(source, pdf)
+            if missing:
+                problems.append(
+                    f"{pdf.relative_to(ROOT)} does not contain "
+                    + ", ".join(f"{title!r}" for title in missing)
+                    + f". The committed PDF is stale: rebuild it from {source.name} "
+                    "and copy the result over it."
+                )
 
     if problems:
         print(f"{PAPER.relative_to(ROOT)} is not ready to submit:", file=sys.stderr)

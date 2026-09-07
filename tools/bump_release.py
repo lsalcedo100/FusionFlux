@@ -58,10 +58,10 @@ DOI_SITES = (
 )
 
 
-def _apply(sites, value: str, field: str) -> int:
+def _apply(sites, value: str, field: str, root: Path = ROOT) -> int:
     edits = 0
     for relative, pattern, template in sites:
-        path = ROOT / relative
+        path = root / relative
         text = path.read_text()
         replacement = template.format(v=value, d=value)
 
@@ -80,11 +80,11 @@ def _apply(sites, value: str, field: str) -> int:
     return edits
 
 
-def main() -> int:
+def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--version", help="the release version, without a leading v")
     parser.add_argument("--doi", help="the version DOI Zenodo minted, e.g. 10.5281/zenodo.22562235")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if not args.version and not args.doi:
         parser.error("give --version, --doi, or both")
@@ -93,7 +93,7 @@ def main() -> int:
         if not re.fullmatch(r"\d+\.\d+\.\d+", args.version):
             parser.error(f"expected X.Y.Z, got {args.version!r}")
         print(f"version -> {args.version}")
-        _apply(VERSION_SITES, args.version, "version")
+        _apply(VERSION_SITES, args.version, "version", root)
 
     if args.doi:
         if not re.fullmatch(r"10\.5281/zenodo\.\d+", args.doi):
@@ -101,7 +101,7 @@ def main() -> int:
         if args.doi == CONCEPT_DOI:
             parser.error("that is the concept DOI, which addresses all versions and never moves")
         print(f"version DOI -> {args.doi}")
-        _apply(DOI_SITES, args.doi, "DOI")
+        _apply(DOI_SITES, args.doi, "DOI", root)
 
     print("\nRebuild the PDFs and re-run `make paper-fresh`, or the committed PDF")
     print("still carries the old version.")

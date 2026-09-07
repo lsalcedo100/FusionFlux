@@ -168,3 +168,87 @@ def test_the_bundle_directory_is_ignored_by_git() -> None:
     """It is a build product, and one of its PDFs is 270 KB."""
     ignored = (ROOT / ".gitignore").read_text().split("\n")
     assert f"{make_submission.OUT.name}/" in ignored
+
+
+# --- the check that the whole anonymisation rests on ------------------------
+#
+# `verify_anonymous` reads the rendered text of the built PDFs back against the
+# identifying strings, and it is the only check that sees what a referee sees.
+# Nothing tested that it actually catches a leak, which is the one failure that
+# would matter: a strip that silently stopped working would produce PDFs this
+# function waves through.
+
+IDENTIFIED = ROOT / "paper" / "paper.pdf"
+ANONYMOUS = ROOT / "submission" / "anonymous" / "manuscript.pdf"
+
+
+def test_it_rejects_the_identified_manuscript() -> None:
+    if not IDENTIFIED.exists():
+        pytest.skip("paper/paper.pdf not built")
+    with pytest.raises(SystemExit) as refused:
+        make_submission.verify_anonymous([IDENTIFIED])
+    assert "not anonymous" in str(refused.value)
+    assert "Salcedo" in str(refused.value)
+
+
+def test_it_passes_the_anonymous_one() -> None:
+    if not ANONYMOUS.exists():
+        pytest.skip("no assembled bundle; run `make submission`")
+    make_submission.verify_anonymous([ANONYMOUS])
+
+
+def test_it_names_every_string_it_found(tmp_path: Path) -> None:
+    """One report listing all of them, not the first and a rerun for the rest."""
+    if not IDENTIFIED.exists():
+        pytest.skip("paper/paper.pdf not built")
+    with pytest.raises(SystemExit) as refused:
+        make_submission.verify_anonymous([IDENTIFIED])
+    reported = {token for token in make_submission.IDENTIFYING if repr(token) in str(refused.value)}
+    assert len(reported) > 1
+
+
+def test_the_page_count_is_read_from_the_pdf() -> None:
+    if not IDENTIFIED.exists():
+        pytest.skip("paper/paper.pdf not built")
+    assert make_submission._page_count(IDENTIFIED) > 20
+
+
+def test_a_template_missing_a_placeholder_is_refused(tmp_path: Path) -> None:
+    """Half a field sheet would go to ScholarOne looking complete."""
+    stand_in = tmp_path / "template.txt"
+    stand_in.write_text("TITLE\n{{TITLE}}\n")
+    original = make_submission.TEMPLATE
+    make_submission.TEMPLATE = stand_in
+    try:
+        with pytest.raises(SystemExit) as refused:
+            make_submission.scholarone_metadata(PAPER.read_text(), 31, 16)
+        assert "ABSTRACT" in str(refused.value)
+    finally:
+        make_submission.TEMPLATE = original
+
+
+def test_an_unfilled_placeholder_is_refused(tmp_path: Path) -> None:
+    stand_in = tmp_path / "template.txt"
+    stand_in.write_text(
+        "\n".join(
+            f"{{{{{key}}}}}"
+            for key in (
+                "TITLE",
+                "ABSTRACT",
+                "ABSTRACT_WORDS",
+                "KEYWORDS",
+                "AUTHOR",
+                "MANUSCRIPT_PAGES",
+                "SUPPLEMENT_PAGES",
+            )
+        )
+        + "\n{{INVENTED}}\n"
+    )
+    original = make_submission.TEMPLATE
+    make_submission.TEMPLATE = stand_in
+    try:
+        with pytest.raises(SystemExit) as refused:
+            make_submission.scholarone_metadata(PAPER.read_text(), 31, 16)
+        assert "unfilled placeholder" in str(refused.value)
+    finally:
+        make_submission.TEMPLATE = original

@@ -332,3 +332,43 @@ def test_every_pointer_in_the_paper_is_covered_here() -> None:
     assert used == set(EXPECTED_POINTERS), (
         f"paper.tex points at S{sorted(used)}; EXPECTED_POINTERS covers S{sorted(EXPECTED_POINTERS)}"
     )
+
+
+# --- both PDFs are gated, not just the main one ------------------------------
+#
+# Both documents are committed and both are uploaded, so both can go stale, but
+# only paper.pdf was ever checked. tests/test_reported_numbers.py would have
+# caught a number drifting in the supplement; a prose edit that moved no number,
+# such as renaming a section, would have reached ScholarOne unnoticed.
+
+
+def test_the_supplement_is_checked_for_freshness() -> None:
+    source = ROOT / "paper" / "supplementary.tex"
+    pdf = ROOT / "paper" / "supplementary.pdf"
+    if not pdf.exists():
+        pytest.skip("paper/supplementary.pdf not built")
+    assert checker.stale_pdf_sections(source, pdf) == []
+
+
+def test_a_renamed_supplement_section_is_caught(tmp_path: Path) -> None:
+    """The exact edit the missing gate would have let through."""
+    pdf = ROOT / "paper" / "supplementary.pdf"
+    if not pdf.exists():
+        pytest.skip("paper/supplementary.pdf not built")
+    renamed = tmp_path / "supplementary.tex"
+    renamed.write_text(
+        (ROOT / "paper" / "supplementary.tex")
+        .read_text()
+        .replace(
+            "\\section{The three-kernel Gaussian-process ladder}",
+            "\\section{A title the committed supplement cannot contain}",
+        )
+    )
+    assert checker.stale_pdf_sections(renamed, pdf) == [
+        "A title the committed supplement cannot contain"
+    ]
+
+
+def test_the_checker_knows_where_the_supplement_lives() -> None:
+    assert checker.SUPPLEMENT.name == "supplementary.tex"
+    assert checker.SUPPLEMENT_PDF.name == "supplementary.pdf"

@@ -12,11 +12,12 @@ repository holding whatever version it last asserted.
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
+import io
 import re
 import shutil
-import subprocess
-import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -43,13 +44,36 @@ def sandbox(tmp_path: Path) -> Path:
     return tmp_path
 
 
-def _run(sandbox: Path, *args: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        [sys.executable, "tools/bump_release.py", *args],
-        cwd=sandbox,
-        capture_output=True,
-        text=True,
-    )
+@dataclass
+class Outcome:
+    """What the tests need from a run: the exit status and what it complained about."""
+
+    returncode: int
+    stderr: str
+
+
+def _run(sandbox: Path, *args: str) -> Outcome:
+    """Drive the module in process, against the sandbox rather than the repository.
+
+    A subprocess would test the same behaviour and report none of it as covered,
+    and the sites this edits are the whole point of the module. argparse exits
+    through SystemExit, so a refusal arrives here as an exception with the
+    message on stderr.
+    """
+    stderr = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            code = bump_release.main(list(args), root=sandbox)
+    except SystemExit as exit_:
+        # argparse exits with a status; `raise SystemExit("...")` exits with the
+        # message itself, which Python prints to stderr on the way out.
+        if isinstance(exit_.code, int):
+            code = exit_.code
+        else:
+            code = 1
+            if exit_.code is not None:
+                print(exit_.code, file=stderr)
+    return Outcome(returncode=code, stderr=stderr.getvalue())
 
 
 def test_the_version_moves_everywhere_at_once(sandbox: Path) -> None:
