@@ -266,7 +266,7 @@ only where a quantity is quoted in seconds, such as the mean absolute error and
 the device forecasts of Sec.~\ref{sec:forecast}. None of the models in
 Table~\ref{tab:reversal} is hyperparameter-tuned, and ``library defaults'' is
 not a specification, so the consequential settings of every model, and of the
-polynomial and Gaussian-process rungs, are written out in full in Sec.~S6 of the
+polynomial and Gaussian-process rungs, are written out in full in Sec.~S7 of the
 Supplementary Material rather than left to a default a later release may
 change.
 
@@ -833,10 +833,9 @@ mean baseline & 0.869 & 0.994 & 1.459 \\
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:escalation} places that cut beside the two easier splits, and
-At the cut the power
-law scores 0.278 against the analytic law's 0.194 and a constant predictor's
-1.459. The random forest scores 0.938 and the gradient
+Table~\ref{tab:escalation} places that cut beside the two easier splits. At
+the cut the power law scores 0.278 against the analytic law's 0.194 and a
+constant predictor's 1.459. The random forest scores 0.938 and the gradient
 booster 1.072, so both sit nearer the constant than the power law in absolute
 error. Asked the question a scaling law exists to answer, the two tree ensembles
 that lead the conventional cross-validation comparison land closer to a constant
@@ -1121,7 +1120,11 @@ power law, unconstrained & 0.1808 & 0.181 & 0.214 & 0.279 \\
 \end{tabular}
 \\[2pt]
 {\footnotesize $^{*}$historical reference, fitted to the DB2.8 predecessor of
-this database~\cite{hdb5} and not refitted within these folds.}
+this database~\cite{hdb5} and not refitted within these folds. The
+unconstrained row is the closed-form least-squares fit this section's solver
+produces, at 0.2790 across the size cut; the ridge spelling of the same power
+law reported elsewhere gives 0.2778, and Sec.~\ref{sec:rank} shows the choice
+between them carries nothing.}
 \end{table}
 
 Take the prospective rung first. The Kadomtsev constraint is \emph{free}: at
@@ -1327,6 +1330,7 @@ That ladder suggests the mechanism without isolating it, because a dot-product
 term enlarges the function class as well as changing the asymptote. The rest of
 this section removes that objection.
 
+\subsection{The same experiment with the nonlinear component specified identically}
 \label{sec:meanfunction}
 
 Write the model as a mean function plus a residual process,

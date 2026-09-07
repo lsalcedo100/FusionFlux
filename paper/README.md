@@ -15,14 +15,22 @@ while only the long-range mean changes. It closes on the replication over
 STD5-disjoint rows and the locked device forecast.
 
 `supplementary.tex` is a standalone document with its own reference list and
-carries six sections. S1 to S3 are fusion analyses whose headline numbers stay
+carries eight sections. S1 to S3 are fusion analyses whose headline numbers stay
 in the main text while their construction, tables and caveats moved here when
 the paper was shortened: the interval repair, the STD5-disjoint replication and
 the locked forecast. S4 and S5 are the two replications outside fusion. S6 is
-the full model, kernel and split specification.
+the three-kernel Gaussian-process ladder, S7 the full model, kernel and split
+specification, and S8 the per-label scores and the eligibility-threshold sweep.
 Result 9's prior-shrinkage control is reported as a paragraph rather than a
 section, since its finding is a negative one about an alternative to Result 8
 rather than a result in its own right.
+
+The main text points at these by hardcoded number, as `Sec.~S6` and the like,
+rather than by `\ref`, because they are separate documents. Reordering
+`supplementary.tex` therefore breaks those pointers with no warning from LaTeX
+and nothing in the test suite. Grep `Sec.~S[0-9]` in `paper.tex` after any such
+move and check each one by hand.
+
 
 `tests/test_reported_numbers.py` binds every headline number to the artifact it
 came from. Its `LATE_RESULTS` tuple includes `PAPER` and `PAPER_PDF`, so the
