@@ -44,11 +44,29 @@ GENERATIVE AI
   reference against its published record, and takes full responsibility.
 
 REFEREES
-  Nominate people whose work the paper engages with seriously: the confinement
-  database and scaling community, and the machine-learning-on-HDB5 authors
-  discussed in the related work. Do not oppose anyone. The paper criticises no
-  individual study and says so explicitly, and an opposed-reviewer entry would
-  contradict that in front of the editor who has just read it.
+  NOMINATIONS: FILL-IN
+
+  Do not oppose anyone. The paper criticises no individual study and says so
+  explicitly, and an opposed-reviewer entry would contradict that in front of
+  the editor who has just read it.
+
+  Candidates, taken from the works the manuscript engages with rather than from
+  a general list of the field. Pick three or four and write them above with
+  affiliation and email.
+
+  - J. Hall, on machine-size confinement scaling in the updated database. The
+    closest existing work to this one and the most likely to find an error.
+  - O. J. W. Kardaun, on the statistical analysis of confinement databases,
+    which is the methodological ground the argument stands on.
+  - C. Angioni, on the confinement database and modelling side.
+  - S. M. Kaye, likewise, and a co-author of the database paper.
+  - A. Murari, on machine-learning approaches to confinement scaling.
+  - C. Rea or R. S. Granetz, on machine learning applied to tokamak data more
+    broadly, for a reader who is not a scaling-law specialist.
+
+  G. Verdoolaege led the database paper and is the obvious first name, but he
+  was emailed about this work on 6 September 2026. Declare that correspondence
+  if you nominate him, or leave him off and let the editor find him.
 
 FILES
   manuscript.pdf ({{MANUSCRIPT_PAGES}} pp) and supplementary_material.pdf ({{SUPPLEMENT_PAGES}} pp), each submitted

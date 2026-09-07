@@ -298,6 +298,12 @@ def main() -> int:
         shutil.copy2(built[1], OUT / "anonymous" / "supplementary_material.pdf")
 
     print(f"wrote {OUT.relative_to(ROOT)}/ (identified) and anonymous/ (verified clean)")
+    # Not fatal: the bundle is worth having while the nominations are still being
+    # decided. But this is the one ScholarOne field that changes who reads the
+    # paper, and an unfilled one is easy to click past at upload.
+    if "FILL-IN" in (OUT / "scholarone_metadata.txt").read_text():
+        print("\nNOTE: referee nominations are still FILL-IN in scholarone_metadata.txt.")
+        print("Candidates and the one conflict to declare are listed under REFEREES.")
     return 0
 
 
