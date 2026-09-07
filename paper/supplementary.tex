@@ -51,9 +51,9 @@ ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}
 \maketitle
 
 \begin{center}\small
-\textbf{Description.} Replications on mammalian and plant allometry testing
-whether extrapolation failure and model-ranking inversion persist outside
-tokamak confinement data.
+\textbf{Description.} Supporting analyses for the main text: interval
+recalibration, rows outside the standard analysis set, a locked device forecast,
+and two replications on allometric scaling laws outside fusion.
 \end{center}
 
 \vspace{0.4em}
@@ -61,13 +61,329 @@ tokamak confinement data.
 rankings in tokamak energy-confinement scaling'' (L. Salcedo).
 
 \vspace{0.6em}
-\noindent This document reports the two replications outside fusion referred to
-in the Discussion of the main text. They are supporting replications rather than
+\noindent This document holds the supporting analyses referred to in the main
+text. Sections~S1 to~S3 are fusion analyses whose headline numbers are stated in
+the main text and whose construction, tables and caveats are given here in full:
+repairing the interval collapse and finding the limit of the repair, replicating
+the ranking inversion on rows the standard analysis set excludes, and a locked
+forecast at three device operating points. Sections~S4 and~S5 are the two
+replications outside fusion. Those two are supporting replications rather than
 evidence the main confinement result depends on: they show that the
 extrapolation failure measured on the ITPA database is not specific to tokamaks,
 and they probe what the ranking inversion needs and the extrapolation failure
 does not. Section and equation numbers prefixed S refer to this document;
-unprefixed section numbers refer to the main text.
+unprefixed section names refer to the main text.
+
+Each section here is a result the main text states and relies on. What moved is
+the construction, the tables and the caveats, not the finding.
+
+\section{Repairing the intervals, and the limit of the repair}
+\label{supp:shift}
+
+The diagnosis in the calibrated-intervals section of the main text makes a testable prediction. If the interval collapse
+is really about exchangeability rather than about the models, then calibrating
+on held-out \emph{labels} instead of held-out discharges should repair it, and
+should repair it only as far as that unit reaches. Both halves are tested below.
+
+The label-level scheme uses an inner leave-one-label-out loop, and nothing in
+it touches the target label. It is called label-level rather than machine-level
+deliberately: the calibration unit is the database device/wall label, so for a
+target of JET-ILW the calibration set still contains JET. The device-level
+variant that removes that overlap is reported at the end of this section. For
+each target $m$: remove $m$; the remaining labels are the training set. Inside
+that training set, hold out each label $k$ with at least 30 rows in turn, fit on the others, and record
+$\lvert \log\hat\tau - \log\tau \rvert$ on $k$ together with each of its rows'
+Mahalanobis distance from that inner fit set. Pool those residuals into the
+calibration quantile. Then fit the final model on all the training labels and
+score $m$ once. Every conformity score therefore comes from a label its own
+model had not seen, which is the unit the test rows differ by, and no row from
+$m$ enters any fit or any quantile. The distance-scaled variant fits
+$\sigma(d)=\exp(c_0 + c_1 d)$ to those calibration residuals by least squares on
+$\log\lvert r \rvert$ and divides the scores by it.
+
+Neither scheme is a finite-sample-valid group-conformal procedure, and they are
+not claimed as one. Two things stand in the way. The conformity score is still a
+row, not a label, and rows arrive in correlated clusters, so the exchangeability
+the split-conformal proof needs is no more available here than in
+the calibrated-intervals section of the main text. And in the distance-scaled arm the scale function
+$\sigma(d)$ is estimated from the same calibration residuals it then normalises,
+which the standard argument does not cover. What these are is empirical
+held-out-label residual calibration: the quantile is the finite-sample
+conformal rank applied to those scores, and the coverage reported for it is
+measured rather than guaranteed. Recovering a guarantee would need
+label-level conformity scores and a scale model fitted on separate rows or
+cross-fitted, and neither is done here.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Empirical coverage of nominal 90\% intervals under three calibration
+schemes, on a held-out database label (LOLO) and across the ITER-size-matched
+cut. The device-level counterpart is Table~\ref{tab:supdevice}.}
+\label{tab:supshift}
+\begin{tabular}{lrrrrrr}
+\toprule
+& \multicolumn{2}{c}{split conformal} & \multicolumn{2}{c}{by label}
+& \multicolumn{2}{c}{$+$ distance} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+Model & LOLO & cut & LOLO & cut & LOLO & cut \\
+\midrule
+random forest & 35\% & 3\% & \textbf{88\%} & 29\% & 88\% & 40\% \\
+hist grad.\ boosting & 45\% & 0\% & \textbf{90\%} & 4\% & 89\% & 13\% \\
+ridge, log-linear & 83\% & 70\% & 91\% & 77\% & 92\% & 82\% \\
+power law, collisionless & 85\% & 91\% & 91\% & \textbf{95\%} & 92\% & 92\% \\
+IPB98(y,2)$^{*}$ & 89\% & 88\% & 89\% & 89\% & 89\% & 87\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Both arms behave as the diagnosis predicts. On a held-out label, empirical
+row-level coverage returns close to nominal: every model lands within two points
+of it, tree ensembles included, and the random forest goes from 35\% to 88\%.
+Across the size cut none does. Neither recalibration procedure tested restores
+near-nominal coverage there, because every calibration unit is smaller than
+every test unit, and scaling the interval by extrapolation distance recovers
+only part of the gap (3\% to 40\% for the forest). A repair that stops exactly where the diagnosis says it should is
+stronger evidence for the diagnosis than one that worked everywhere would be.
+
+\paragraph{The same calibration over physical devices.} The scheme above
+calibrates on database labels, so for a target of JET-ILW the calibration set
+still contains JET. Collapsing the wall variants and repeating the whole
+procedure over the 11 physical devices removes that overlap: training,
+calibration and scoring then all use the device as the unit.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{The same three schemes with wall variants collapsed, so every
+calibration unit is a physical device and the held-out device is genuinely
+unseen. Pooled row-level coverage of nominal 90\% intervals, with the median
+multiplicative half-width in brackets.}
+\label{tab:supdevice}
+\begin{tabular}{lrrr}
+\toprule
+Model & split conformal & by device & $+$ distance \\
+\midrule
+random forest            & 31\% (1.23$\times$) & 84\% (2.46$\times$) & 88\% (2.76$\times$) \\
+hist grad.\ boosting     & 38\% (1.24$\times$) & 77\% (2.29$\times$) & 80\% (2.53$\times$) \\
+ridge, log-linear        & 85\% (1.34$\times$) & 92\% (1.40$\times$) & 93\% (1.43$\times$) \\
+power law, collisionless & 88\% (1.34$\times$) & 92\% (1.39$\times$) & 93\% (1.42$\times$) \\
+IPB98(y,2)$^{*}$         & 90\% (1.39$\times$) & 90\% (1.39$\times$) & 90\% (1.39$\times$) \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\footnotesize $^{*}$historical reference, not refitted within these folds.}
+\end{table}
+
+Table~\ref{tab:supdevice} says the diagnosis holds and the repair is less complete
+than the label-level numbers suggest. Plain split conformal is worse on a
+genuinely unseen device than on an unseen label, 31\% against 35\% for the
+forest and 38\% against 45\% for the booster, which is what removing the
+within-device overlap should do. Calibrating by device then recovers most of
+the shortfall for the forest (84\%, and 88\% with distance scaling, against
+88\% either way at label level) but noticeably less for the booster, which
+reaches 77\% and 80\% where the label-level scheme reported 90\% and 89\%. The
+label-level number therefore overstates how well this repair calibrates the
+booster on a device it has never seen. Both linear models are unaffected within
+a point or two. The cost is visible in the widths: the trees buy that coverage
+at roughly $2.3$ to $2.8\times$ multiplicative half-width against $1.23\times$
+under plain split conformal, where the linear models stay near $1.4\times$.
+
+Across the size cut with the same device grouping the picture is unchanged in
+kind. The forest and booster remain far from nominal at 41\% and 12\% by device
+and 57\% and 21\% with distance scaling, better than the label-level 29\% and
+4\% but nowhere near 90\%, while the constrained power law holds at 95\% and
+93\%. Changing the calibration unit cannot repair a shift the calibration set
+does not contain, which is the point of the section.
+
+Among the models refitted within folds, the constrained power law of
+the constraint section of the main text is the only one in Table~\ref{tab:supshift} whose plain
+split-conformal coverage stays near nominal at the ITER-size-matched cut, and its
+intervals hold there under every scheme. IPB98(y,2) also holds at 88\%, but it
+is a historical reference rather than a fold-fitted competitor.
+
+\section{Robustness on rows the standard analysis set excludes}
+\label{supp:replication}
+
+Everything above rests on one file, which is a central limitation of the preceding analysis.
+The same OSF project publishes the full database revision, DB5.2.3, with 14153
+rows against STD5's 6228, and we pin it by its own SHA-256. Matching on
+(tokamak, shot, time) shows STD5 is an ELMy-H-mode quality selection out of it
+and leaves two populations this study had not analysed: \textbf{5358 H-mode rows
+STD5 does not contain} (12 labels, zero row overlap) and \textbf{3860 ohmic
+and L-mode rows} in a different confinement regime, which we score against
+ITER89-P~\cite{iter89p} because an H-mode law is the wrong baseline for an
+L-mode plasma.
+
+This replication has one failure mode that would not announce itself. If the
+row match against STD5 fails, every STD5 row stays in the ``disjoint'' arm, that
+arm becomes a superset of the data the ranking-inversion section of the main text was computed on, and
+it reproduces the ranking-inversion section of the main text by construction. The matcher is therefore
+checked positively as well as negatively: STD5 matched against itself must
+overlap completely, and the disjoint arm must share zero rows.
+
+The ranking inverts in both arms. On the disjoint H-mode rows the best
+cross-validated model beats the published law by 42\%, a margin of the same
+size as the 36\% over that law reported above and computed on rows it never
+saw, and the best model on an unseen label is IPB98(y,2). On the ohmic and L-mode rows the
+cross-validation gain over ITER89-P is 67\% and the best model on an unseen
+label is the collisionless power law of the constraint section of the main text. Counting label--model pairs
+where a tree ensemble loses to the published law on an unseen label: 19 of 24
+and 10 of 10.
+
+Row disjointness is not discharge disjointness, and the paper's own argument
+says the discharge is the unit that matters. Of the 5358 H-mode rows, 425
+(7.9\%) are slices of one of 336 discharges that STD5 samples at a different
+time. Dropping those discharges outright leaves 4933 rows across 2864
+discharges that share no shot with STD5 at all, and the arm survives: the best
+cross-validated model still beats the published law, by 39\% against 41\% on the
+full arm, and the best model on an unseen label is still IPB98(y,2), with the
+tree ensembles at 0.526 and 0.552 against the power law's 0.332. The reversal
+does not depend on the shared discharges.
+
+So the reversal is not an artifact of the standard set's selection criteria, and
+not a property of ELMy H-mode or of IPB98(y,2) specifically. It is emphatically
+\emph{not} an independent database: both arms come from the same ITPA collection
+and the same devices, and the five-machine arm is too small to carry a claim
+alone.
+
+\section{Locked predictions at three device operating points without matching
+H-mode observations}
+\label{supp:forecast}
+
+Everything above is retrospective. To make the disagreement checkable rather
+than merely described, we record what each model predicts for three real
+devices, with intervals, a date, and a digest over the input rows so that a
+later edit leaves a mark. The parameter sets are published design values, and
+for SPARC and ITER, evaluating IPB98(y,2) on the adopted design vector
+reproduces the reference confinement time its own source quotes, to 0.6\% and
+2.9\% respectively; the JT-60SA source supplies operating parameters rather than
+a quoted confinement time. Those are checks that the right machine is being
+described. None of the three has a \emph{measured} H-mode thermal confinement
+time at the operating point tabulated here, which is what makes these
+predictions rather than retrodictions.
+
+\begin{table}[!ht]
+\centering
+\small
+\caption{Predicted energy confinement time, in seconds, with nominal 90\%
+intervals. Locked 31 August 2026 against a fixed dataset digest. Operating
+points are published design values: SPARC from~\cite{creely} (V2 primary
+reference discharge), ITER from~\cite{ipb98} ($Q=10$ inductive baseline), and
+JT-60SA from its Research Plan~\cite{jt60saplan} (full-current inductive
+scenario). Intervals are distance-scaled held-out-label calibration intervals, not
+the plain split-conformal intervals of the main text's coverage table, and are
+pointwise intervals for a new observation; their construction is specified in
+the text below. The complete input vector for each device is recorded in
+\texttt{results/forecast.json} under the content digest quoted below.}
+\label{tab:supforecast}
+\begin{tabular}{lccc}
+\toprule
+& SPARC & JT-60SA & ITER \\
+& \SI{1.85}{\metre} & \SI{2.96}{\metre} (operating) & \SI{6.2}{\metre} \\
+\midrule
+IPB98(y,2)$^{*}$ & 0.765 [0.58, 1.00] & 0.479 [0.35, 0.66] & \textbf{3.591 [2.66, 4.85]} \\
+power law, collisionless & 0.724 [0.55, 0.96] & 0.428 [0.31, 0.59] & 2.837 [2.09, 3.84] \\
+ridge, log-linear & 0.720 [0.53, 0.98] & 0.444 [0.32, 0.62] & 2.858 [2.07, 3.95] \\
+random forest & 0.136 [0.03, 0.53] & 0.449 [0.23, 0.87] & \textbf{0.435 [0.19, 0.98]} \\
+hist grad.\ boosting & 0.305 [0.14, 0.69] & 0.418 [0.24, 0.74] & 0.444 [0.24, 0.84] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{How these intervals are built.} They are not the plain
+split-conformal intervals of the calibrated-intervals section of the main text, and deliberately so:
+the main text's coverage table measures those covering 3\% of rows across the
+ITER-size-matched cut, so quoting them for a next-step device would publish an
+interval already known to fail in exactly this situation. Each row instead uses
+the distance-scaled label-level scheme of Sec.~\ref{supp:shift}, which gives the
+best size-cut calibration for the models that fail most severely there, applied
+with the whole
+database as the training set. Two disclosures belong with that. The scheme was
+chosen after comparing the three in Table~\ref{tab:supshift}, so these intervals
+are exploratory rather than prospectively selected, in the same sense as the
+constraint rung of the constraint section of the main text. And it calibrates over database
+labels rather than physical devices, so these are not device-level conformal
+intervals: Table~\ref{tab:supdevice} measures what that distinction costs, and for
+the tree ensembles it is not negligible. The label-level scheme is retained here
+because it is the one the forecast was locked under on 31 August 2026, and
+re-deriving the intervals afterwards would make the lock meaningless. A reader
+who prefers the device-level calibration should read the tree rows of
+Table~\ref{tab:supforecast} as correspondingly optimistic in width. For a given model, each eligible label $k$ is
+held out in turn, the model is refitted on the remaining labels, and the
+absolute log residuals on $k$ are recorded together with each of its rows'
+Mahalanobis distance $d$ from that inner fit set. A scale
+$\sigma(d)=\exp(c_0+c_1 d)$ is fitted to those pairs by least squares on
+$\log\lvert r\rvert$, dropping exactly-zero residuals; the conformity scores are
+the residuals divided by $\sigma(d)$; and the half-width is the
+$\lceil (n+1)(1-\alpha)\rceil$-th smallest such score at $\alpha=0.10$, the same
+finite-sample rank used in the calibrated-intervals section of the main text. The interval reported for a
+device is that quantile multiplied by $\sigma(d)$ evaluated at the device's own
+distance, applied symmetrically in $\log\tau$ and exponentiated. The model whose
+point prediction is tabulated is then fitted once on all 6228 rows. For
+IPB98(y,2) the same construction is used on its analytic residuals, so its
+interval is comparable to the others rather than merely coexisting with them.
+Every interval is therefore an empirical pointwise calibration interval for a
+new observation rather than a finite-sample-valid conformal interval. Three
+things stand in the way, and only the last is about ITER: the conformity scores
+remain clustered row-level scores, the distance scale is estimated from the
+calibration residuals it normalises, and every calibration unit is smaller than
+ITER along the size direction, which is the limitation
+Sec.~\ref{supp:shift} measures directly.
+
+Table~\ref{tab:supforecast} illustrates the practical consequence of the
+disagreement in one place. On JT-60SA,
+which sits inside the database's size range and is already operating, all five
+models agree to within 15\%. On ITER, $1.82\times$ beyond it, they disagree by a
+factor of \textbf{8.3}.
+
+For the random forest that gap cannot be closed by tuning the standard
+estimator, and the ranking-inversion section of the main text says why: it predicts by averaging
+training targets, so its output cannot exceed the largest one, which here is
+\SI{1.321}{\second}, and no hyperparameter moves that ceiling. The gradient
+booster carries no corresponding arithmetic bound but produces a similarly low
+point prediction. Because its prediction cannot exceed the largest training
+target, \SI{1.321}{\second}, the random forest cannot reach the
+\SIrange{2.84}{3.59}{\second} range the linear and physics-informed models
+predict for this ITER operating point, and its nominal 90\% interval there runs
+from \SI{0.19}{\second} to \SI{0.98}{\second}, containing none of those
+predictions.
+
+The JT-60SA column becomes checkable first, though not against any measurement
+published as of the 31 August 2026 forecast lock: the first campaign ran L-mode
+divertor plasmas, and its published power balance reports the energy confinement
+time following L-mode scaling~\cite{jt60saop1}, whereas the row above is an
+H-mode prediction scored against IPB98(y,2). Checking it needs H-mode operation
+at a comparable design point, which the research plan~\cite{jt60saplan} places
+in a later campaign and which the overview of first operation and forward
+plans~\cite{jt60saop2} discusses in view of ITER and DEMO; we deliberately do not put a date on that here, because the
+schedule is not ours to assert and the prediction is locked against a parameter
+vector rather than against a calendar.
+
+Each row of Table~\ref{tab:supforecast} carries its own interval and is assessed
+separately against it, so the range quoted here names one model rather than the
+set. A stationary JT-60SA H-mode near this design point reporting a thermal
+confinement time outside \SIrange{0.349}{0.657}{\second} would fall outside the
+IPB98(y,2) reference row's stated 90\% predictive interval. The fitted rows are
+assessed at their own bounds, which are narrower for the constrained power law
+(\SIrange{0.313}{0.587}{\second}) and wider for the random forest
+(\SIrange{0.232}{0.867}{\second}). A single observation outside a nominal 90\%
+interval is evidence against that forecast rather than a refutation of it: a
+perfectly calibrated model still places about one observation in ten outside
+such an interval, so a single miss is inconsistent with the prediction at the
+stated interval level and no more. Because all five intervals overlap across
+roughly this range, a measurement inside it separates none of them: this row
+tests whether any model is right, not which, and that is why the ITER column
+carries the argument.
+
+Nothing above anticipated one feature of this table: SPARC sits further from
+the training data than ITER does, at a Mahalanobis distance of 6.9 against 4.7,
+despite being the smaller machine. Its \SI{12.2}{\tesla} field is 2.1 times the
+largest toroidal field anywhere in the cleaned STD5 rows, \SI{5.82}{\tesla} on
+Alcator C-Mod, and every other label in the database tops out at or below
+\SI{4.80}{\tesla}. Size is not the only direction in which a next-step device
+leaves the data behind, and an extrapolation audit organised around size alone
+would have missed it.
 
 \section{The same audit on a scaling law from another science}
 \label{sec:allometry}
@@ -249,9 +565,98 @@ qualitative extrapolation hazard is present without an interpolation advantage
 whose loss would signal it.
 
 
+
+\section{Full model, kernel and split specification}
+\label{supp:spec}
+
+This section carries the settings the main text points at. ``Library
+defaults'' is not a specification, and a default may differ in a later
+release, so the consequential settings are written out rather than
+referenced. Library versions are pinned in the repository's
+\texttt{constraints.txt} and named in the main text.
+
+\subsection{The models of the headline comparison}
+
+The power law is \texttt{StandardScaler} followed by \texttt{Ridge} with
+$\alpha=1$ and the SVD solver, chosen before any held-out score was computed and
+never varied. The random forest is \texttt{RandomForestRegressor} with 300 trees,
+\texttt{criterion="squared\_error"}, unlimited depth,
+\texttt{min\_samples\_split}~$=2$, \texttt{min\_samples\_leaf}~$=1$,
+\texttt{max\_features}~$=1.0$ and bootstrap resampling. The gradient booster is
+\texttt{HistGradientBoostingRegressor} with squared-error loss, learning rate
+0.1, at most 100 boosting iterations, 31 leaves, no depth limit,
+\texttt{min\_samples\_leaf}~$=20$, no $L_2$ penalty and 255 bins. Its
+\texttt{early\_stopping="auto"} resolves to \emph{off} at every sample size
+here, since that setting enables early stopping only above 10\,000 rows and no
+training fold reaches that. The polynomial controls are
+\texttt{PolynomialFeatures} of degree 2 and 3 without a bias column, then the
+same scaler and ridge. Neither tree ensemble is standardised, which is
+immaterial to both.
+
+\subsection{The Gaussian-process kernels}
+
+The three kernels are
+\begin{align}
+k_{\text{RBF}}(x,x') &= \sigma_r^{2}\,
+  \exp\!\left(-\tfrac{1}{2}\lVert x-x'\rVert^{2}/\ell^{2}\right) + \sigma_n^{2}\delta_{xx'},
+  \nonumber\\
+k_{\text{lin}}(x,x') &= \sigma_l^{2}\,(x^{\!\top}\!x' + \sigma_0^{2})
+  + \sigma_n^{2}\delta_{xx'},
+  \nonumber\\
+k_{\text{lin+RBF}}(x,x') &= k_{\text{lin}} + k_{\text{RBF}} - \sigma_n^{2}\delta_{xx'},
+\label{eq:kernels}
+\end{align}
+with a single isotropic length scale $\ell$ shared across the standardised log
+features, so the RBF component is isotropic rather than
+automatic-relevance-determining. Features are standardised inside the pipeline,
+so each fold's scaler is fitted on that fold's training rows alone and $\ell$ is
+in those units. The prior mean is constant and \texttt{normalize\_y} is on, which
+puts it at the training mean of $\log\tau$: this is what makes ``reverts to the
+prior'' and ``returns the average training target'' the same statement, and the
+parallel with a tree ensemble exact. Observation noise enters as an additive
+\texttt{WhiteKernel} rather than through a fixed jitter. Hyperparameters are
+fitted by maximising the log marginal likelihood with scikit-learn's default
+L-BFGS-B optimizer, \texttt{n\_restarts\_optimizer}~$=0$, from the shared
+initialisation $\sigma_l^{2}=1$, $\sigma_0=1$, $\sigma_r^{2}=0.5$, $\ell=1$,
+$\sigma_n^{2}=0.05$, under the bounds $\sigma_l^{2},\sigma_0 \in [10^{-3},
+10^{3}]$, $\sigma_r^{2}\in[10^{-3},10^{3}]$, $\ell\in[10^{-2},10^{3}]$ and
+$\sigma_n^{2}\in[10^{-6},1]$. Every rung starts from the same values for every
+term it has, so the three fits differ only in which terms exist. The
+optimisation runs on a subsample of exactly 1000 training rows drawn without
+replacement by \texttt{numpy.random.default\_rng(42)}, or on the whole fold when
+it holds fewer; the kernel is then frozen and the exact GP is conditioned on
+\emph{every} training row of that fold, which is one Cholesky factorisation. No
+held-out row enters either stage. Hand-chosen hyperparameters are not adequate
+here, since a length scale an order of magnitude from the one the data supports
+makes the third rung look like a failure. Intervals quoted for these models are
+equal-tailed posterior intervals on $\log\tau$ that include the fitted
+observation-noise term, exponentiated to $\tau$.
+
 \begin{thebibliography}{99}
 \small\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
 \raggedright
+\bibitem{ipb98} ITER Physics Expert Group on Confinement and Transport, ITER
+Physics Expert Group on Confinement Modelling and Database and ITER Physics
+Basis Editors, ``Chapter 2: Plasma confinement and transport,'' \emph{Nucl.\
+Fusion} \textbf{39}, 2175 (1999).
+\href{https://doi.org/10.1088/0029-5515/39/12/302}{doi:10.1088/0029-5515/39/12/302}
+\bibitem{creely} A.J. Creely \emph{et al.}, ``Overview of the SPARC tokamak,''
+\emph{J.\ Plasma Phys.} \textbf{86}, 865860502 (2020).
+\href{https://doi.org/10.1017/S0022377820001257}{doi:10.1017/S0022377820001257}
+\bibitem{iter89p} P.N. Yushmanov \emph{et al.}, ``Scalings for tokamak energy
+confinement,'' \emph{Nucl.\ Fusion} \textbf{30}, 1999 (1990). ITER89-P.
+\href{https://doi.org/10.1088/0029-5515/30/10/001}{doi:10.1088/0029-5515/30/10/001}
+\bibitem{jt60saplan} JT-60SA Research Unit, \emph{JT-60SA Research Plan:
+Research Objectives and Strategy}, Version 5.0 (2021).
+\url{https://www.jt60sa.org/wp/wp-content/uploads/2021/02/JT-60SA_Res_Plan-5.pdf}
+\bibitem{jt60saop1} M. Yoshida \emph{et al.}, ``Overview of plasma operation and
+control studies in the first plasma campaign of JT-60SA,'' \emph{Plasma Phys.\
+Control.\ Fusion} \textbf{67}, 065010 (2025).
+\href{https://doi.org/10.1088/1361-6587/add563}{doi:10.1088/1361-6587/add563}
+\bibitem{jt60saop2} J. Garcia \emph{et al.}, ``Overview of first JT-60SA plasma
+operation and plans in view of ITER and DEMO,'' \emph{Nucl.\ Fusion} \textbf{66},
+116011 (2026).
+\href{https://doi.org/10.1088/1741-4326/ae74e1}{doi:10.1088/1741-4326/ae74e1}
 \bibitem{kleiber} M. Kleiber, ``Body size and metabolism,''
 \emph{Hilgardia} \textbf{6}, 315 (1932).
 \href{https://doi.org/10.3733/hilg.v06n11p315}{doi:10.3733/hilg.v06n11p315}

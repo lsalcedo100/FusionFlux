@@ -60,35 +60,31 @@ Archived at \href{https://doi.org/10.5281/zenodo.22562235}{doi:10.5281/zenodo.22
 
 \begin{abstract}
 \noindent
-Empirical confinement scaling laws are a principal input to the size a
-next-step tokamak has to reach. On the International Tokamak Physics Activity (ITPA) Global H-mode Confinement
-Database (HDB5, standard analysis set STD5; 6228 slices from 4471 discharges across 18 database
-device/wall labels), under cross-validation grouped by discharge, a random
-forest reduces log error by 29\% against a power-law baseline refitted within
-the same folds and 36\% against the published IPB98(y,2) reference. That margin
+Confinement scaling laws set the size a next-step tokamak has to reach. On the International Tokamak Physics Activity (ITPA) Global H-mode Confinement
+Database (HDB5, standard analysis set STD5; 6228 slices, 18 device/wall labels),
+under cross-validation grouped by discharge, a random forest reduces log error
+by 29\% against a power law refitted within the same folds and 36\% against the
+published IPB98(y,2) reference. That margin
 does not survive the question a scaling law exists to answer. Under
-leave-one-label-out the ordering of the three primary fitted models reverses
+leave-one-label-out the ordering of the three primary models reverses
 exactly: the forest is worse than that same power law on all 13 held-out
-database labels and on all 11 physical devices they reduce to. The reversal survives a nested hyperparameter search, a sweep of the row-count
-threshold, and repeated cross-validation over shuffled fold assignments. The forest's error tracks the
-Mahalanobis distance of the held-out label's mean log-feature vector from the
-training distribution ($\rho=+0.85$) where the power law's does not
-($\rho=-0.06$), and its predictions cannot exceed the range of its training
-targets. At a size-ordered cut reproducing ITER's $1.82\times$ jump in major
+database labels and all 11 physical devices they reduce to. It survives a nested hyperparameter search, a row-count threshold sweep and
+shuffled fold assignments. The forest's error tracks the Mahalanobis
+distance of the held-out label from the training distribution ($\rho=+0.85$)
+where the power law's does not ($\rho=-0.06$), and its predictions cannot
+exceed the range of its training targets. At a cut reproducing ITER's $1.82\times$ jump in major
 radius, the tree ensembles score closer to a constant predictor than to the
 power law, and split-conformal intervals calibrated to 90\% fall to 3\% and 0\%
-row-level coverage, at unchanged width.
+coverage at unchanged width.
 Two repairs improve extrapolation, both supplying long-range structure.
-Constraining the exponents to a Connor--Taylor similarity surface helps
-prospectively: the Kadomtsev rung, fixed by the literature in 1975 and
-independent of anything measured here, costs nothing in sample and beats the
-unconstrained fit at all 15 cuts of a size sweep. The collisionless rung scores
-lowest of any fit at the size-matched cut but was selected post hoc, so it is
-the best of three surfaces tested rather than a prediction. The second repair is
-a Gaussian process whose linear component keeps trending. Across the model families tested,
-extrapolation failure tracks long-range saturation rather than flexibility
-alone. For ITER the
-IPB98(y,2) and random-forest point predictions differ by a factor of 8.3.
+Connor--Taylor similarity constraints on the exponents help prospectively: the
+Kadomtsev rung, fixed by the literature in 1975, costs nothing in sample and
+beats the unconstrained fit at all 15 cuts of a size sweep. The collisionless
+rung scores lowest at the size-matched cut but was selected post hoc. The second
+is a Gaussian process whose linear component keeps trending. Across the
+families tested, extrapolation failure tracks long-range saturation, not
+flexibility alone. For ITER the IPB98(y,2) and random-forest predictions differ
+by a factor of 8.3.
 \end{abstract}
 
 \begin{center}\small
@@ -188,36 +184,27 @@ clusters~\cite{roberts}; it is not what a commonly reported comparison on this
 database measures. The quantity a scaling law is built to supply is a prediction for a
 machine that does not yet exist.
 
-This paper measures what the deployment-matched split costs. We escalate what is held out
-in four steps, a discharge, then a database label, then a physical device, then
-an entire size range,
-and score the same models under each. The results are: (i) under
-leave-one-label-out the ranking of the three primary fitted models is the
-exact reverse of their ranking under grouped cross-validation, and the best
+This paper measures what the deployment-matched split costs. We escalate what is
+held out in four steps, a discharge, then a database label, then a physical
+device, then an entire size range, and score the same models under each. Under
+the second step the ranking of the three primary fitted models is the exact
+reverse of their ranking under grouped cross-validation, and the best
 cross-validated model loses to a log-linear power law on all 13 held-out
-database labels and all 11 physical devices;
-(ii) three measurements of why, covering extrapolation distance, the
-training-target bound of a random forest, and what polynomial flexibility costs
-in the tail; (iii) a
-size-ordered split inside the database that reproduces ITER's extrapolation
-factor, at which conformal intervals calibrated to 90\% cover 3\% of rows
-without becoming any wider; (iv) the Connor--Taylor dimensional constraints,
-imposed as linear equality constraints on the exponents, where the rung fixed by
-the literature in advance beats the unconstrained fit at all 15 cuts of a size
-sweep at no cost in sample, and the rung selected after those scores were seen
-gives the lowest observed error of any fit tested here at that cut; (v) a Gaussian-process experiment
-that separates flexibility from long-range saturation, holding the nonlinear
-component's specification fixed and varying only the mean-function
-specification, and corrects the diagnosis
-the earlier sections leave open; (vi) replication on rows the standard analysis set
-does not contain, in a second confinement regime, and on two scaling laws from
-biology, with a predictor-count ladder that separates the extrapolation
-failure, which persists at every predictor count tested, from the ranking
-inversion, which appears only once the flexible model wins the interpolation
-split; and (vii) a locked forecast for SPARC, JT-60SA and ITER. Section~\ref{sec:rank}
-begins with a property of the design matrix itself: it is rank deficient by
-two, and one of the two dependencies is that a published scaling law added as a
-model feature contributes nothing a log-linear fit can use.
+database labels and all 11 physical devices. Three measurements say why, and
+they cover extrapolation distance, the training-target bound of a random
+forest, and what polynomial flexibility costs in the tail. At the fourth step,
+which reproduces ITER's extrapolation factor inside the database, conformal
+intervals calibrated to 90\% cover 3\% of rows without becoming any wider. Two
+repairs then supply the long-range structure the diagnosis implicates: the
+Connor--Taylor dimensional constraints imposed on the exponents, and a
+Gaussian-process experiment that separates flexibility from long-range
+saturation and corrects the diagnosis the earlier sections leave open. The
+result is replicated on rows the standard analysis set does not contain, in a
+second confinement regime, and on two scaling laws from biology.
+Section~\ref{sec:rank} begins with a property of the design matrix itself: it is
+rank deficient by two, and one of the two dependencies is that a published
+scaling law added as a model feature contributes nothing a log-linear fit can
+use.
 
 \section{Data and methods}
 \label{sec:data}
@@ -254,22 +241,10 @@ root-mean-square residual in the same variable. Exponentiation to $\tau$ enters
 only where a quantity is quoted in seconds, such as the mean absolute error and
 the device forecasts of Sec.~\ref{sec:forecast}. None of the models in
 Table~\ref{tab:reversal} is hyperparameter-tuned, and ``library defaults'' is
-not a specification, so the consequential settings are given here in full.
-The power law is \texttt{StandardScaler} followed by \texttt{Ridge} with
-$\alpha=1$ and the SVD solver, chosen before any held-out score was computed and
-never varied. The random forest is \texttt{RandomForestRegressor} with 300 trees,
-\texttt{criterion="squared\_error"}, unlimited depth,
-\texttt{min\_samples\_split}~$=2$, \texttt{min\_samples\_leaf}~$=1$,
-\texttt{max\_features}~$=1.0$ and bootstrap resampling. The gradient booster is
-\texttt{HistGradientBoostingRegressor} with squared-error loss, learning rate
-0.1, at most 100 boosting iterations, 31 leaves, no depth limit,
-\texttt{min\_samples\_leaf}~$=20$, no $L_2$ penalty and 255 bins. Its
-\texttt{early\_stopping="auto"} resolves to \emph{off} at every sample size
-here, since that setting enables early stopping only above 10\,000 rows and no
-training fold reaches that. The polynomial controls are
-\texttt{PolynomialFeatures} of degree 2 and 3 without a bias column, then the
-same scaler and ridge. Neither tree ensemble is standardised, which is
-immaterial to both.
+not a specification, so the consequential settings of every model, and of the
+polynomial and Gaussian-process rungs, are written out in full in Sec.~S6 of the
+Supplementary Material rather than left to a default a later release may
+change.
 
 Every estimator carries the seed 42, and the forest is fitted in parallel but
 predicts single-threaded so that reruns are bit-identical. Standardisation sits
@@ -353,107 +328,80 @@ therefore resolves to those versions' default; the consequential settings are
 written out above rather than referenced, because a default may differ in a
 later release.
 
-\section{The design matrix is rank deficient by two}
+\section{The design matrix, and what a refit can identify}
 \label{sec:rank}
 
 Three column counts appear in this paper and they are not the same set. The
-models see nine log engineering features. Adding the analytic IPB98 prior to
-those nine gives the ten-column matrix examined here. The refit of
-Eq.~\eqref{eq:powerlaw} in Sec.~\ref{sec:refit} drops both redundant columns and
-uses nine, eight independent variables plus an intercept, which is why its
+models see nine log engineering features. Adding the analytic IPB98 prediction
+to those nine gives the ten-column matrix examined in this paragraph. The refit
+of Eq.~\eqref{eq:powerlaw} in Sec.~\ref{sec:refit} drops both redundant columns
+and uses nine, eight independent variables plus an intercept, which is why its
 condition number is a healthy 10.7.
 
 Standardised, the ten-feature matrix has rank 8, with the last two singular
-values at $4.9\times10^{-14}$ and $2.4\times10^{-14}$. The models keep the
-redundant nine-column representation, which is free for least squares but not
-obviously so for ridge, since a penalty is applied in the coordinates it is
-handed. Minor radius is a parameter a practitioner building this model would
-naturally supply, so nine columns is the set a reader would arrive at
-unprompted; promoting the eight-column variant because it turns out cleaner
-would be a selection on held-out scores of the kind
-Sec.~\ref{sec:dimensional} flags in its own result. The eight-column fit is
-therefore reported as a control rather than as the headline. Dropping
-\texttt{log\_a\_m} and refitting on eight independent columns leaves the
-log-linear scores unchanged to four decimals under all three splits, 0.181,
-0.214 and 0.278, moves the tree ensembles by at most 0.035, and changes no
-ordering anywhere.
-
-The estimator is not load-bearing either. Ordinary least squares on those same
-eight independent columns, carrying no penalty at all, scores 0.1812, 0.2141
-and 0.2790 against the reported ridge's 0.1812, 0.2141 and 0.2778: identical to
-six decimals under cross-validation, apart by 0.0001 under
-leave-one-label-out, and by 0.0012 at the size cut. At $\alpha=1$ on standardised columns with
-thousands of rows the penalty does almost nothing, so the ridge here is a
-numerically stable spelling of the least-squares power law rather than a
-regularised alternative to it. Neither the choice of estimator nor the
-redundant column carries any of the results below. Projecting candidate
+values at $4.9\times10^{-14}$ and $2.4\times10^{-14}$. Projecting candidate
 vectors onto the null space confirms two exact dependencies at relative
 residuals of order $10^{-16}$: minor radius is derived as $a=\epsilon R$ during
-cleaning, and the IPB98 prior is a fixed log-linear combination of the other
-eight features.
+cleaning, and the IPB98 prediction is a fixed log-linear combination of the
+other eight features. The second is the substantive one. Adding a published
+physics scaling as a model feature feels like adding knowledge; in log space it
+provably is not, and it contributes exactly nothing to a log-linear fit. The
+deficiency raises no error, because \texttt{scipy.linalg.lstsq} inverts through
+the SVD pseudoinverse and returns the minimum-norm member of a two-parameter
+family of coefficient vectors that fit identically well.
 
-The second is the substantive one. Adding a published physics scaling as a
-model feature feels like adding knowledge; in log space it provably is not, and
-it contributes exactly nothing to a log-linear fit. The deficiency raises no
-error, because \texttt{scipy.linalg.lstsq} inverts through the SVD
-pseudoinverse and returns the minimum-norm member of a two-parameter family of
-coefficient vectors that fit identically well.
+Neither the redundant column nor the estimator is load-bearing. Dropping
+\texttt{log\_a\_m} and refitting on eight independent columns leaves the
+log-linear scores unchanged to four decimals under all three splits, moves the
+tree ensembles by at most 0.035, and changes no ordering anywhere. Ordinary
+least squares on those same eight columns, carrying no penalty at all,
+reproduces the reported ridge to six decimals under cross-validation and to
+0.0012 at the size cut, so the ridge here is a numerically stable spelling of
+the least-squares power law rather than a regularised alternative to it. The
+models keep the redundant nine-column representation because minor radius is a
+parameter a practitioner would naturally supply, and promoting the cleaner
+eight-column variant on the strength of its scores would be exactly the
+selection Sec.~\ref{sec:dimensional} flags in its own result.
 
-Two aspects of the test for such a dependency are worth recording, since both
-give false negatives. The null space is a \emph{subspace}, so when the
-deficiency exceeds one the basis vectors returned by the SVD generally do not
-resemble the dependency sought even when that dependency is exactly right; the
-correct test is $\lVert v - N^{\!\top}\!Nv\rVert$. And standardisation rescales
-the null space, so a raw dependency must be mapped into standardised
-coordinates before comparison. Omitting either gives residuals of 0.41 and 0.96
-for dependencies that are exactly true.
-
-\section{Refitted power-law exponents and weakly identified directions}
+\subsection{Refitted exponents and a weakly identified direction}
 \label{sec:refit}
 
 Refitting Eq.~\eqref{eq:powerlaw} on all STD5 rows (design matrix
 $6228\times9$, condition number 10.7) gives $I_p$ 1.08 against the published
-0.93 and $R$ 1.58 against 1.97, while $P$ and $B_t$ return almost exactly.
-This disagreement is expected: IPB98 was fitted to a selected ITER-relevant
-subset, whereas this fit applies no selection criteria and includes the
-spherical tokamaks. A refit on a different population is a different regression.
+0.93 and $R$ 1.58 against 1.97, while $P$ and $B_t$ return almost exactly. The
+disagreement is expected: IPB98 was fitted to a selected ITER-relevant subset,
+whereas this fit applies no selection criteria and includes the spherical
+tokamaks, and a refit on a different population is a different regression. It is
+not a solver artefact either; independent implementations by the normal
+equations, by QR and by the SVD pseudoinverse agree to $7.6\times10^{-13}$.
 
-The exponents are not sensitive to how the least-squares problem is solved.
-Independent implementations by the normal equations, by QR and by the SVD
-pseudoinverse agree to $7.6\times10^{-13}$; a Cholesky solve of the normal
-equations is three orders of magnitude less accurate, since it forms
-$X^{\!\top}\!X$ and so works at the square of the condition number, which at
-$\kappa=10.7$ is still far below anything that affects a reported digit.
-
-Where the two differ matters more than by how much. Decomposing the
-difference between the exponent vectors along the singular directions of the
-design matrix, 77\% of it lies in the single weakest direction, which carries
-0.3\% of the matrix's variance, while the three strongest directions carry 82\%
-of the variance and account for 0.75\% of the disagreement. That weak direction
-is plasma current traded against machine size, which is weak for a structural
+Where the two differ matters more than by how much. Decomposing the difference
+between the exponent vectors along the singular directions of the design matrix,
+77\% of it lies in the single weakest direction, which carries 0.3\% of the
+matrix's variance, while the three strongest directions carry 82\% of the
+variance and account for 0.75\% of the disagreement. That weak direction is
+plasma current traded against machine size, and it is weak for a structural
 reason: tokamaks are not designed to vary the two independently, so the existing
-multi-machine design leaves that direction weakly identified. More shots at the
+multi-machine design leaves the direction weakly identified. More shots at the
 operating points these machines already run would not separate it; shots
 deliberately placed to break the correlation could.
 
 Why the size dependence in this database is weaker than IPB98(y,2)'s is itself
 an active question, and Hall \emph{et al.}~\cite{hall} attack it directly on
-DB5.2.3: they treat the multicollinearity among the predictors explicitly, and
-search for the smallest subset of points that most reduces the fitted
-major-radius exponent, reporting that the subset so identified is delineated in
-dimensionless space. A continuation of that work~\cite{hall26} sharpens the
-finding: the weak size dependence is attributed predominantly to a subset of
-discharges localised in dimensionless space, distinguished by normalised
-pressure, collisionality, normalised gyroradius and safety factor rather than by
-any single device or by metallic walls, and excluding it recovers a
-major-radius dependence broadly consistent with IPB98(y,2). That is a different
-question from the one asked here. They ask where the changing size dependence
-comes from; this paper takes the fitted exponents as given and asks how the
-choice of validation split changes which model is preferred and how far it can
-be trusted outside the data. The two bear on each other: if the size direction
-is partly an artefact of a localised subset, then the size-ordered cut of
-Sec.~\ref{sec:size} is measuring transfer across a boundary those authors would
-draw differently, which is a caveat on how much weight that one axis can carry
+DB5.2.3, treating the multicollinearity among the predictors explicitly and
+searching for the smallest subset of points that most reduces the fitted
+major-radius exponent. A continuation~\cite{hall26} attributes the weak size
+dependence predominantly to a subset of discharges localised in dimensionless
+space, distinguished by normalised pressure, collisionality, normalised
+gyroradius and safety factor rather than by any single device or by metallic
+walls, and reports that excluding it recovers a major-radius dependence broadly
+consistent with IPB98(y,2). That is a different question from the one asked
+here. They ask where the changing size dependence comes from; this paper takes
+the fitted exponents as given and asks how the choice of validation split
+changes which model is preferred. The two bear on each other: if the size
+direction is partly an artefact of a localised subset, then the size-ordered cut
+of Sec.~\ref{sec:size} measures transfer across a boundary those authors would
+draw differently. That is a caveat on how much weight that one axis can carry,
 and not on the ranking reversal, which is measured per unit rather than per
 size.
 
@@ -885,8 +833,8 @@ confirmations of it. What this cut establishes is that the tree ensembles
 collapse across an ITER-sized jump on the rows this database has above one, and
 what would settle it is a second large device at comparable weight, which this
 database does not contain. That is a limitation of the question as much as of
-the split: large machines are few, and their scarcity is the same fact that
-makes the extrapolation hard in the first place. The
+the split: large machines are few, and their scarcity is what makes the
+extrapolation hard. The
 leave-one-label-out result of Sec.~\ref{sec:reversal}, which holds on all 13
 labels and all 11 devices, is the one that rests on many machines; this
 one rests on a large jump. Dropping the spherical tokamaks moves the
@@ -905,84 +853,48 @@ power law, learn a correction on its log residuals, and damp it by $\lambda$:
 \end{equation}
 At $\lambda=0$ this is exactly the ridge row of Table~\ref{tab:reversal}.
 Anchoring a learned correction on a frozen power law is also the design used in
-concurrent work on this database~\cite{wang}, which reports improved stability
-under parameter-defined distribution shift. This section makes no claim on that
-idea. What is varied here is the one property the diagnosis of
-Sec.~\ref{sec:mechanisms} points at, the long-range behaviour of the correction,
-and the surrounding contribution is the device-level validation reversal, its
-mechanism, the size-matched stress test, the constrained-exponent comparison and
-the interval collapse, none of which is a residual-learning result. The two
-correction families are chosen to contrast the long-range behaviour the
-diagnosis implicates. They differ in other ways as well, and the controlled
-version of this comparison is Sec.~\ref{sec:meanfunction}. One is a degree-2 log
-polynomial, which is unbounded; the other is depth-2 boosted trees, which as
-measured below never leave the residual range they were trained on. The second is an
-\emph{empirically} bounded corrector rather than a provably bounded one, for the
-reason given in Sec.~\ref{sec:mechanisms}. Clipping $g$ to the range of training
-residuals closes that gap at no cost: the clipped variant replaces $g(x)$ by
-$\min(\max(g(x), \min_i r_i), \max_i r_i)$, where $r_i$ are the base model's
-training residuals on that fold. Built standalone with and without the clip, the
-two score identically under all three splits, 0.150, 0.249 and 0.189, and the
-clip binds on none of the held-out rows across the size cut. Those absolute
-levels are not the swept hybrid's, since the standalone build fixes $\lambda=1$
-and rebuilds the pipeline rather than reusing the sweep; the claim is the paired
-comparison, and it is that the empirical bound and the provable one pick out the
-same model here. The mechanism below can be read either way.
+concurrent work on this database~\cite{wang}, and this section makes no claim on
+that idea. What is varied is the one property the diagnosis points at, the
+long-range behaviour of the correction: one corrector is a degree-2 log
+polynomial, which is unbounded, and the other is depth-2 boosted trees, which
+never left the residual range they were trained on here. The two families differ
+in more than that, and the controlled version of the comparison is
+Sec.~\ref{sec:meanfunction}. The damping factor is swept over nine values from 0
+to 1, both correctors carry deliberately strong penalties so that $\lambda$
+rather than their own regularisation does the damping, neither corrector's
+hyperparameters are tuned, and the whole estimator is refitted from scratch
+inside every training fold; the exact specification is in
+\texttt{analysis\_hybrid.py} in the archived code.
 
-\paragraph{Specification of the sweep.} The damping factor is swept over nine
-values, $\lambda \in \{0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0\}$, chosen so
-that both endpoints are interpretable models rather than arbitrary rungs: at
-$\lambda=0$ the hybrid is exactly the ridge row of Table~\ref{tab:reversal}, and
-at $\lambda=1$ the correction is undamped. The base term is
-\texttt{StandardScaler} followed by \texttt{Ridge} with $\alpha=1$ and the SVD
-solver, identical to that row. The polynomial corrector is
-\texttt{PolynomialFeatures} of degree 2 without a bias column, then the same
-scaler and \texttt{Ridge} with $\alpha=1000$; the boosted corrector is
-\texttt{HistGradientBoostingRegressor} with \texttt{max\_depth}~$=2$, learning
-rate 0.05, 200 boosting iterations, $L_2$ penalty 10.0, early stopping off, and
-seed 42. Both correction families carry deliberately strong penalties so that
-$\lambda$ rather than the corrector's own regularisation does the damping, and
-neither corrector's hyperparameters are tuned. The whole estimator, base and
-correction together, is refitted from scratch inside every training fold of
-every split, and both stages are fitted on that fold's training rows. No rung is
-selected on a held-out score for the reported comparison: the sweep is reported
-in full, and where a single rung has to be picked, Sec.~\ref{sec:hybrid} states
-which criterion picked it and what the alternative would have given.
-
-Across the ITER-size-matched cut the two go opposite ways. Both start at 0.278; the
-polynomial correction climbs to 0.356 and the bounded correction falls
-monotonically to \textbf{0.206}, better than plain ridge on all three held-out
-labels and by the widest margin on JT-60U, the most distant (0.440 to 0.281).
-Among the models scored at that cut it has the lowest held-out error of
-anything fitted without the held-out rows, 26\% below plain ridge and
-$4.6\times$ below the random forest, and within 6\% of IPB98, which is a
-historical reference rather than a fold-fitted competitor. The constrained fit of
-Sec.~\ref{sec:dimensional}, introduced later, is lower still.
+Across the ITER-size-matched cut the two correctors go opposite ways. Both start
+at 0.278; the polynomial correction climbs to 0.356 and the bounded correction
+falls monotonically to \textbf{0.206}, better than plain ridge on all three
+held-out labels and by the widest margin on the most distant of them, JT-60U
+(0.440 to 0.281).
 
 The mechanism is measurable. Fitted on the 14 small labels, the base power law
-is \emph{biased} on the held-out ones: mean log residual $-0.218$, so it
+is \emph{biased} on the held-out ones, at a mean log residual of $-0.218$, so it
 over-predicts by about 20\%, while its scatter (0.172) is no worse than
-in-sample (0.187). The tree correction never leaves the range it was trained on,
-on any held-out row, and inside that bound it points the right way and is
-largest where the bias is largest. The same bounded range that makes these
-ensembles useless as predictors of $\tau$ on a larger machine limits how much
-extrapolation error the correction can contribute, because the quantity they are
-bounded on is no longer a target that grows with machine size but a residual
-centred on zero. Bounded is not the same as right: a correction confined to that
-range can still point the wrong way, and what is measured here is that on these
-rows it does not.
+in-sample (0.187). The tree correction never leaves its training range on any
+held-out row, and inside that bound it points the right way and is largest where
+the bias is largest. The same bounded range that makes these ensembles useless
+as predictors of $\tau$ on a larger machine limits how much extrapolation error
+the correction can contribute, because the quantity they are bounded on is no
+longer a target that grows with machine size but a residual centred on zero.
+Bounded is not the same as right: a correction confined to that range can still
+point the wrong way, and what is measured here is that on these rows it does
+not.
 
-Two limits should be stated, and they qualify every later summary of this
-section. Cross-validation selects $\lambda=1$ in both families, while the rung
-best on a held-out label is $\lambda=0$; nothing in the CV signal points at
-it, so a practitioner tuning on the split they would ordinarily use does not
-arrive at the rung that transfers. And scored at every rung of the size sweep
-rather than only the matched one, the bounded hybrid wins at 5 of 8
-well-powered cuts, not all, with no rule over those eight points separating
-wins from losses. The claim that survives is narrow: at the cut matching the
-jump to ITER, the bounded hybrid equals the power law at $\lambda=0$, where it
-is that model, and beats it at all eight non-zero damping settings swept there,
-with the mechanism measurable.
+Two limits qualify every later summary of this section. Cross-validation selects
+$\lambda=1$ in both families while the rung best on a held-out label is
+$\lambda=0$, so a practitioner tuning on the split they would ordinarily use
+does not arrive at the rung that transfers. And scored at every rung of the size
+sweep rather than only the matched one, the bounded hybrid wins at 5 of 8
+well-powered cuts, not all, with no rule over those eight points separating wins
+from losses. The claim that survives is narrow: at the cut matching the jump to
+ITER, the bounded hybrid equals the power law at $\lambda=0$, where it is that
+model, and beats it at all eight non-zero damping settings swept there, with the
+mechanism measurable.
 
 \section{Calibrated intervals and their collapse}
 \label{sec:conformal}
@@ -1060,7 +972,26 @@ ITER-size-matched cut; the gradient booster covers none of the 2730 rows at all.
 The widths barely move: no model's interval changes width by more than
 1.5\% between the two arms, because the half-width is set by calibration rows
 drawn the same way in both. The intervals do not become vague out of
-distribution. They stay the same size and miss.
+distribution. They stay the same size and miss. Figure~\ref{fig:conformal} shows
+both halves of that: the coverage of every model under each split against the
+nominal line, and the per-label coverage against extrapolation distance.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{conformal}
+\caption{\textbf{The interval collapse.} Left: empirical coverage of nominal
+90\% split-conformal intervals for each model under the three splits, against
+the nominal line. Every model is calibrated under grouped cross-validation, and
+only the linear and constrained fits stay near it once the held-out unit becomes
+a whole label and then a size range. Right: per-label coverage against the
+Mahalanobis distance of the label from the training data. Under grouped
+cross-validation coverage is flat on the nominal line at every distance; under
+leave-one-label-out the tree ensembles fall away with distance and the power law
+does not. Interval widths behind both panels move by under 1.5\% between the
+splits, so what is drawn is intervals that keep their size and lose their
+coverage.}
+\label{fig:conformal}
+\end{figure}
 
 Coverage collapses along the same axis the errors grow, but only for the trees:
 $\rho=-0.77$ for the random forest and $-0.54$ for the gradient booster against
@@ -1151,15 +1082,17 @@ matters more than ranking them does. The Kadomtsev rung is
 1998~\cite{hdb5}, both without reference to anything measured here; imposing it
 is a prediction this analysis inherited rather than a surface it selected. The
 collisionless rung is the best of the three at the size cut and was chosen after
-those scores were seen. Both results are reported below, in that order, and they
-should be weighed differently.
+those scores were seen. The prospective one comes first below.
 
 \begin{table}[t]
 \centering
 \small
-\caption{Fitting under the Connor--Taylor constraint hierarchy. The only
-difference between the first and last rows is the constraint: same features,
-same solver, no hyperparameter.}
+\caption{Fitting under the Connor--Taylor constraint hierarchy, ordered by
+score at the ITER-size-matched cut. The only difference between the first and
+last rows is the constraint: same features, same solver, no hyperparameter. The
+Kadomtsev row is the prospective one, fixed by the literature before this
+analysis; the collisionless row is the best of the three and was selected after
+these scores were seen.}
 \label{tab:dimensional}
 \begin{tabular}{lrrrr}
 \toprule
@@ -1183,25 +1116,23 @@ Take the prospective rung first. The Kadomtsev constraint is \emph{free}: at
 data already satisfies it unaided. It nonetheless beats that unconstrained fit
 at every one of the 15 cuts in the size sweep, including all 8 well-powered
 ones, where a cut is called well-powered when it trains on at least 1000 rows.
-A constraint the data satisfies on average is not thereby idle: satisfying a
-constraint on average is not the same as being unable to violate it, and what
-the constraint buys is refusal to wander along that direction when the training
-half is small or shifted. The underpowered rungs show the mechanism directly. At
-six training machines the unconstrained fit scores 0.971 and the Kadomtsev fit
-0.274. Nothing about that comparison was selected after the fact, and it is the
-result in this section a reader should weigh most heavily.
+Satisfying a constraint on average is not the same as being unable to violate
+it, and what the constraint buys is a fit that cannot wander along that
+direction when the training half is small or shifted. The underpowered rungs
+show it directly: at six training machines the unconstrained fit scores 0.971
+and the Kadomtsev fit 0.274. Nothing in that comparison was selected after the
+fact, which is why it is the result in this section to weigh most heavily.
 
 The collisionless rung is the stronger assumption and the better score, and it
-was chosen post hoc. Two things can still be said for it before any score is
-consulted, and they are worth separating from the selection. It is a physics
-judgement about the machine being extrapolated \emph{to} rather than a
-hyperparameter: one adopts it because one expects the target plasma to be
-collisionless, and ITER is expected to sit at lower normalised collisionality
-than the devices in this database rather than higher, which points at this rung
-in advance and for a reason external to the data. And it has no
-within-surface quantity to tune, so there is nothing for a validation split to
-fit even in principle. Neither of those makes the result prospective, and the
-disclosure stands as written.
+was chosen post hoc. Something can still be said for it that does not depend on
+the score. It is a physics judgement about the machine being extrapolated
+\emph{to} rather than a hyperparameter: one adopts it because one expects the
+target plasma to be collisionless, and ITER is expected to sit at lower
+normalised collisionality than the devices in this database rather than higher.
+That points at this rung in advance, for a reason external to the data. The rung
+also has no within-surface quantity to tune, so there is nothing for a
+validation split to fit even in principle. Neither observation makes the result
+prospective, and the disclosure stands as written.
 
 At the ITER-size-matched cut the collisionless power law scores \textbf{0.183}, the
 lowest held-out error of any model fitted here without using the held-out rows
@@ -1213,9 +1144,7 @@ therefore the lowest error among the surfaces examined, not a prospective
 demonstration that the collisionless surface is the right one. It beats the
 bounded hybrid of Sec.~\ref{sec:hybrid}, which was built specifically for that
 cut, and it beats the analytic law, which was fitted under a Kadomtsev
-constraint of its own on a predecessor database. It has no hyperparameter and
-no within-surface hyperparameter to tune, though the surface itself was
-selected post hoc from the three tested. Figure~\ref{fig:dimensional} shows the trade between what each
+constraint of its own on a predecessor database. Figure~\ref{fig:dimensional} shows the trade between what each
 constraint costs in sample and what it buys at the size cut.
 
 The collisionless constraint costs 0.001 in sample against the unconstrained
@@ -1266,310 +1195,86 @@ prospective prediction.}
 \section{Repairing the intervals, and the limit of the repair}
 \label{sec:shift}
 
-The diagnosis in Sec.~\ref{sec:conformal} makes a testable prediction. If the interval collapse
-is really about exchangeability rather than about the models, then calibrating
+The diagnosis in Sec.~\ref{sec:conformal} makes a testable prediction. If the
+collapse is about exchangeability rather than about the models, then calibrating
 on held-out \emph{labels} instead of held-out discharges should repair it, and
-should repair it only as far as that unit reaches. Both halves are tested below.
-
-The label-level scheme uses an inner leave-one-label-out loop, and nothing in
-it touches the target label. It is called label-level rather than machine-level
-deliberately: the calibration unit is the database device/wall label, so for a
-target of JET-ILW the calibration set still contains JET. The device-level
-variant that removes that overlap is reported at the end of this section. For
-each target $m$: remove $m$; the remaining labels are the training set. Inside
-that training set, hold out each label $k$ with at least 30 rows in turn, fit on the others, and record
-$\lvert \log\hat\tau - \log\tau \rvert$ on $k$ together with each of its rows'
-Mahalanobis distance from that inner fit set. Pool those residuals into the
-calibration quantile. Then fit the final model on all the training labels and
-score $m$ once. Every conformity score therefore comes from a label its own
-model had not seen, which is the unit the test rows differ by, and no row from
-$m$ enters any fit or any quantile. The distance-scaled variant fits
-$\sigma(d)=\exp(c_0 + c_1 d)$ to those calibration residuals by least squares on
-$\log\lvert r \rvert$ and divides the scores by it.
-
-Neither scheme is a finite-sample-valid group-conformal procedure, and they are
-not claimed as one. Two things stand in the way. The conformity score is still a
-row, not a label, and rows arrive in correlated clusters, so the exchangeability
-the split-conformal proof needs is no more available here than in
-Sec.~\ref{sec:conformal}. And in the distance-scaled arm the scale function
-$\sigma(d)$ is estimated from the same calibration residuals it then normalises,
-which the standard argument does not cover. What these are is empirical
-held-out-label residual calibration: the quantile is the finite-sample
-conformal rank applied to those scores, and the coverage reported for it is
-measured rather than guaranteed. Recovering a guarantee would need
-label-level conformity scores and a scale model fitted on separate rows or
-cross-fitted, and neither is done here.
-
-\begin{table}[t]
-\centering
-\small
-\caption{Empirical coverage of nominal 90\% intervals under three calibration
-schemes, on a held-out database label (LOLO) and across the ITER-size-matched
-cut. The device-level counterpart is Table~\ref{tab:device}.}
-\label{tab:shift}
-\begin{tabular}{lrrrrrr}
-\toprule
-& \multicolumn{2}{c}{split conformal} & \multicolumn{2}{c}{by label}
-& \multicolumn{2}{c}{$+$ distance} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
-Model & LOLO & cut & LOLO & cut & LOLO & cut \\
-\midrule
-random forest & 35\% & 3\% & \textbf{88\%} & 29\% & 88\% & 40\% \\
-hist grad.\ boosting & 45\% & 0\% & \textbf{90\%} & 4\% & 89\% & 13\% \\
-ridge, log-linear & 83\% & 70\% & 91\% & 77\% & 92\% & 82\% \\
-power law, collisionless & 85\% & 91\% & 91\% & \textbf{95\%} & 92\% & 92\% \\
-IPB98(y,2)$^{*}$ & 89\% & 88\% & 89\% & 89\% & 89\% & 87\% \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Both arms behave as the diagnosis predicts. On a held-out label, empirical
-row-level coverage returns close to nominal: every model lands within two points
-of it, tree ensembles included, and the random forest goes from 35\% to 88\%.
-Across the size cut none does. Neither recalibration procedure tested restores
-near-nominal coverage there, because every calibration unit is smaller than
-every test unit, and scaling the interval by extrapolation distance recovers
-only part of the gap (3\% to 40\% for the forest). A repair that stops exactly where the diagnosis says it should is
+should repair it only as far as that unit reaches. Both halves hold. On a
+held-out label, empirical row-level coverage returns to within two points of
+nominal for every model, the random forest going from 35\% to 88\%. Across the
+ITER-size-matched cut none of the schemes tested restores it, because every
+calibration unit is smaller than every test unit, and scaling the interval by
+extrapolation distance recovers only part of the gap, 3\% to 40\% for the
+forest. A repair that stops exactly where the diagnosis says it should is
 stronger evidence for the diagnosis than one that worked everywhere would be.
 
-\paragraph{The same calibration over physical devices.} The scheme above
-calibrates on database labels, so for a target of JET-ILW the calibration set
-still contains JET. Collapsing the wall variants and repeating the whole
-procedure over the 11 physical devices removes that overlap: training,
-calibration and scoring then all use the device as the unit.
+Repeating the whole procedure over the 11 physical devices, which removes the
+overlap that leaves JET in the calibration set when JET-ILW is the target, shows
+the repair is less complete than the label-level numbers suggest: the booster
+reaches 77\% by device against 90\% by label, and the trees buy their coverage
+at 2.3 to 2.8$\times$ multiplicative half-width where the linear models stay
+near 1.4$\times$. Among the models refitted within folds, the constrained power
+law of Sec.~\ref{sec:dimensional} is the only one whose plain split-conformal
+coverage stays near nominal at the size cut, at 91\%, and its intervals hold
+there under every scheme.
 
-\begin{table}[!htbp]
-\centering
-\small
-\caption{The same three schemes with wall variants collapsed, so every
-calibration unit is a physical device and the held-out device is genuinely
-unseen. Pooled row-level coverage of nominal 90\% intervals, with the median
-multiplicative half-width in brackets.}
-\label{tab:device}
-\begin{tabular}{lrrr}
-\toprule
-Model & split conformal & by device & $+$ distance \\
-\midrule
-random forest            & 31\% (1.23$\times$) & 84\% (2.46$\times$) & 88\% (2.76$\times$) \\
-hist grad.\ boosting     & 38\% (1.24$\times$) & 77\% (2.29$\times$) & 80\% (2.53$\times$) \\
-ridge, log-linear        & 85\% (1.34$\times$) & 92\% (1.40$\times$) & 93\% (1.43$\times$) \\
-power law, collisionless & 88\% (1.34$\times$) & 92\% (1.39$\times$) & 93\% (1.42$\times$) \\
-IPB98(y,2)$^{*}$         & 90\% (1.39$\times$) & 90\% (1.39$\times$) & 90\% (1.39$\times$) \\
-\bottomrule
-\end{tabular}
-\\[2pt]
-{\footnotesize $^{*}$historical reference, not refitted within these folds.}
-\end{table}
-
-Table~\ref{tab:device} says the diagnosis holds and the repair is less complete
-than the label-level numbers suggest. Plain split conformal is worse on a
-genuinely unseen device than on an unseen label, 31\% against 35\% for the
-forest and 38\% against 45\% for the booster, which is what removing the
-within-device overlap should do. Calibrating by device then recovers most of
-the shortfall for the forest (84\%, and 88\% with distance scaling, against
-88\% either way at label level) but noticeably less for the booster, which
-reaches 77\% and 80\% where the label-level scheme reported 90\% and 89\%. The
-label-level number therefore overstates how well this repair calibrates the
-booster on a device it has never seen. Both linear models are unaffected within
-a point or two. The cost is visible in the widths: the trees buy that coverage
-at roughly $2.3$ to $2.8\times$ multiplicative half-width against $1.23\times$
-under plain split conformal, where the linear models stay near $1.4\times$.
-
-Across the size cut with the same device grouping the picture is unchanged in
-kind. The forest and booster remain far from nominal at 41\% and 12\% by device
-and 57\% and 21\% with distance scaling, better than the label-level 29\% and
-4\% but nowhere near 90\%, while the constrained power law holds at 95\% and
-93\%. Changing the calibration unit cannot repair a shift the calibration set
-does not contain, which is the point of the section.
-
-Among the models refitted within folds, the constrained power law of
-Sec.~\ref{sec:dimensional} is the only one in Table~\ref{tab:shift} whose plain
-split-conformal coverage stays near nominal at the ITER-size-matched cut, and its
-intervals hold there under every scheme. IPB98(y,2) also holds at 88\%, but it
-is a historical reference rather than a fold-fitted competitor.
+Section~S1 of the Supplementary Material gives both calibration schemes in full,
+the two coverage tables, and the reasons neither scheme is a
+finite-sample-valid group-conformal procedure.
 
 \section{Robustness on rows the standard analysis set excludes}
 \label{sec:replication}
 
-Everything above rests on one file, which is a central limitation of the preceding analysis.
-The same OSF project publishes the full database revision, DB5.2.3, with 14153
-rows against STD5's 6228, and we pin it by its own SHA-256. Matching on
-(tokamak, shot, time) shows STD5 is an ELMy-H-mode quality selection out of it
-and leaves two populations this study had not analysed: \textbf{5358 H-mode rows
-STD5 does not contain} (12 labels, zero row overlap) and \textbf{3860 ohmic
-and L-mode rows} in a different confinement regime, which we score against
+Everything above rests on one file, which is a central limitation of the
+preceding analysis. The same OSF project publishes the full DB5.2.3 revision,
+14153 rows against STD5's 6228, pinned by its own SHA-256. Matching on
+(tokamak, shot, time) shows STD5 is an ELMy-H-mode quality selection out of it,
+and leaves two populations this study had not analysed: 5358 H-mode rows STD5
+does not contain, across 12 labels with zero row overlap, and 3860 ohmic and
+L-mode rows in a different confinement regime, which we score against
 ITER89-P~\cite{iter89p} because an H-mode law is the wrong baseline for an
 L-mode plasma.
 
-This replication has one failure mode that would not announce itself. If the
-row match against STD5 fails, every STD5 row stays in the ``disjoint'' arm, that
-arm becomes a superset of the data Sec.~\ref{sec:reversal} was computed on, and
-it reproduces Sec.~\ref{sec:reversal} by construction. The matcher is therefore
-checked positively as well as negatively: STD5 matched against itself must
-overlap completely, and the disjoint arm must share zero rows.
+The ranking inverts in both arms, and it survives dropping the 336 discharges
+the disjoint H-mode arm shares with STD5 at different time slices. Counting
+label--model pairs where a tree ensemble loses to the published law on an unseen
+label gives 19 of 24 and 10 of 10. Section~S2 of the Supplementary Material
+reports both arms in full, with the positive and negative checks on the row
+matcher, whose silent failure would otherwise reproduce
+Sec.~\ref{sec:reversal} by construction. This is emphatically \emph{not} an
+independent database: both arms come from the same ITPA collection and the same
+devices, and the five-machine arm is too small to carry a claim alone.
 
-The ranking inverts in both arms. On the disjoint H-mode rows the best
-cross-validated model beats the published law by 42\%, a margin of the same
-size as the 36\% over that law reported above and computed on rows it never
-saw, and the best model on an unseen label is IPB98(y,2). On the ohmic and L-mode rows the
-cross-validation gain over ITER89-P is 67\% and the best model on an unseen
-label is the collisionless power law of Sec.~\ref{sec:dimensional}. Counting label--model pairs
-where a tree ensemble loses to the published law on an unseen label: 19 of 24
-and 10 of 10.
-
-Row disjointness is not discharge disjointness, and the paper's own argument
-says the discharge is the unit that matters. Of the 5358 H-mode rows, 425
-(7.9\%) are slices of one of 336 discharges that STD5 samples at a different
-time. Dropping those discharges outright leaves 4933 rows across 2864
-discharges that share no shot with STD5 at all, and the arm survives: the best
-cross-validated model still beats the published law, by 39\% against 41\% on the
-full arm, and the best model on an unseen label is still IPB98(y,2), with the
-tree ensembles at 0.526 and 0.552 against the power law's 0.332. The reversal
-does not depend on the shared discharges.
-
-So the reversal is not an artifact of the standard set's selection criteria, and
-not a property of ELMy H-mode or of IPB98(y,2) specifically. It is emphatically
-\emph{not} an independent database: both arms come from the same ITPA collection
-and the same devices, and the five-machine arm is too small to carry a claim
-alone.
-
-\section{Locked predictions at three device operating points without matching
-H-mode observations}
+\section{A locked forecast, and a direction that is not size}
 \label{sec:forecast}
 
 Everything above is retrospective. To make the disagreement checkable rather
-than merely described, we record what each model predicts for three real
-devices, with intervals, a date, and a digest over the input rows so that a
-later edit leaves a mark. The parameter sets are published design values, and
-for SPARC and ITER, evaluating IPB98(y,2) on the adopted design vector
-reproduces the reference confinement time its own source quotes, to 0.6\% and
-2.9\% respectively; the JT-60SA source supplies operating parameters rather than
-a quoted confinement time. Those are checks that the right machine is being
-described. None of the three has a \emph{measured} H-mode thermal confinement
-time at the operating point tabulated here, which is what makes these
-predictions rather than retrodictions.
+than merely described, what each model predicts for three real devices, SPARC,
+JT-60SA and ITER, is recorded with intervals, a lock date of 31 August 2026 and
+a content digest over the input rows, so that a later edit leaves a mark. The
+parameter sets are published design values, and none of the three has a
+\emph{measured} H-mode thermal confinement time at the operating point
+tabulated, which is what makes these predictions rather than retrodictions.
+Section~S3 of the Supplementary Material gives the table, the interval
+construction, the disclosures attaching to it and the falsification conditions;
+the locked values are in \texttt{results/forecast.json}. It is a record rather
+than a validation, and only JT-60SA is checkable in the near term.
 
-\begin{table}[!ht]
-\centering
-\small
-\caption{Predicted energy confinement time, in seconds, with nominal 90\%
-intervals. Locked 31 August 2026 against a fixed dataset digest. Operating
-points are published design values: SPARC from~\cite{creely} (V2 primary
-reference discharge), ITER from~\cite{ipb98} ($Q=10$ inductive baseline), and
-JT-60SA from its Research Plan~\cite{jt60saplan} (full-current inductive
-scenario). Intervals are distance-scaled held-out-label calibration intervals, not
-the plain split-conformal intervals of Table~\ref{tab:coverage}, and are
-pointwise intervals for a new observation; their construction is specified in
-the text below. The complete input vector for each device is recorded in
-\texttt{results/forecast.json} under the content digest quoted below.}
-\label{tab:forecast}
-\begin{tabular}{lccc}
-\toprule
-& SPARC & JT-60SA & ITER \\
-& \SI{1.85}{\metre} & \SI{2.96}{\metre} (operating) & \SI{6.2}{\metre} \\
-\midrule
-IPB98(y,2)$^{*}$ & 0.765 [0.58, 1.00] & 0.479 [0.35, 0.66] & \textbf{3.591 [2.66, 4.85]} \\
-power law, collisionless & 0.724 [0.55, 0.96] & 0.428 [0.31, 0.59] & 2.837 [2.09, 3.84] \\
-ridge, log-linear & 0.720 [0.53, 0.98] & 0.444 [0.32, 0.62] & 2.858 [2.07, 3.95] \\
-random forest & 0.136 [0.03, 0.53] & 0.449 [0.23, 0.87] & \textbf{0.435 [0.19, 0.98]} \\
-hist grad.\ boosting & 0.305 [0.14, 0.69] & 0.418 [0.24, 0.74] & 0.444 [0.24, 0.84] \\
-\bottomrule
-\end{tabular}
-\end{table}
+On JT-60SA, which sits inside the
+database's size range and is already operating, all five models agree to within
+15\%. On ITER, $1.82\times$ beyond it, they disagree by a factor of
+\textbf{8.3}, and for the random forest that gap cannot be closed by tuning:
+its prediction cannot exceed the largest training target, \SI{1.321}{\second},
+where the linear and constrained models predict
+\SIrange{2.84}{3.59}{\second}.
 
-\paragraph{How these intervals are built.} They are not the plain
-split-conformal intervals of Sec.~\ref{sec:conformal}, and deliberately so:
-Table~\ref{tab:coverage} measures those covering 3\% of rows across the
-ITER-size-matched cut, so quoting them for a next-step device would publish an
-interval already known to fail in exactly this situation. Each row instead uses
-the distance-scaled label-level scheme of Sec.~\ref{sec:shift}, which gives the
-best size-cut calibration for the models that fail most severely there, applied
-with the whole
-database as the training set. Two disclosures belong with that. The scheme was
-chosen after comparing the three in Table~\ref{tab:shift}, so these intervals
-are exploratory rather than prospectively selected, in the same sense as the
-constraint rung of Sec.~\ref{sec:dimensional}. And it calibrates over database
-labels rather than physical devices, so these are not device-level conformal
-intervals: Table~\ref{tab:device} measures what that distinction costs, and for
-the tree ensembles it is not negligible. The label-level scheme is retained here
-because it is the one the forecast was locked under on 31 August 2026, and
-re-deriving the intervals afterwards would make the lock meaningless. A reader
-who prefers the device-level calibration should read the tree rows of
-Table~\ref{tab:forecast} as correspondingly optimistic in width. For a given model, each eligible label $k$ is
-held out in turn, the model is refitted on the remaining labels, and the
-absolute log residuals on $k$ are recorded together with each of its rows'
-Mahalanobis distance $d$ from that inner fit set. A scale
-$\sigma(d)=\exp(c_0+c_1 d)$ is fitted to those pairs by least squares on
-$\log\lvert r\rvert$, dropping exactly-zero residuals; the conformity scores are
-the residuals divided by $\sigma(d)$; and the half-width is the
-$\lceil (n+1)(1-\alpha)\rceil$-th smallest such score at $\alpha=0.10$, the same
-finite-sample rank used in Sec.~\ref{sec:conformal}. The interval reported for a
-device is that quantile multiplied by $\sigma(d)$ evaluated at the device's own
-distance, applied symmetrically in $\log\tau$ and exponentiated. The model whose
-point prediction is tabulated is then fitted once on all 6228 rows. For
-IPB98(y,2) the same construction is used on its analytic residuals, so its
-interval is comparable to the others rather than merely coexisting with them.
-Every interval is therefore an empirical pointwise calibration interval for a
-new observation rather than a finite-sample-valid conformal interval. Three
-things stand in the way, and only the last is about ITER: the conformity scores
-remain clustered row-level scores, the distance scale is estimated from the
-calibration residuals it normalises, and every calibration unit is smaller than
-ITER along the size direction, which is the limitation
-Sec.~\ref{sec:shift} measures directly.
-
-Table~\ref{tab:forecast} illustrates the practical consequence of the
-disagreement in one place. On JT-60SA,
-which sits inside the database's size range and is already operating, all five
-models agree to within 15\%. On ITER, $1.82\times$ beyond it, they disagree by a
-factor of \textbf{8.3}.
-
-For the random forest that gap cannot be closed by tuning the standard
-estimator, and Sec.~\ref{sec:reversal} says why: it predicts by averaging
-training targets, so its output cannot exceed the largest one, which here is
-\SI{1.321}{\second}, and no hyperparameter moves that ceiling. The gradient
-booster carries no corresponding arithmetic bound but produces a similarly low
-point prediction. Because its prediction cannot exceed the largest training
-target, \SI{1.321}{\second}, the random forest cannot reach the
-\SIrange{2.84}{3.59}{\second} range the linear and physics-informed models
-predict for this ITER operating point, and its nominal 90\% interval there runs
-from \SI{0.19}{\second} to \SI{0.98}{\second}, containing none of those
-predictions.
-
-The JT-60SA column becomes checkable first, though not against any measurement
-published as of the 31 August 2026 forecast lock: the first campaign ran L-mode
-divertor plasmas, and its published power balance reports the energy confinement
-time following L-mode scaling~\cite{jt60saop1}, whereas the row above is an
-H-mode prediction scored against IPB98(y,2). Checking it needs H-mode operation
-at a comparable design point, which the research plan~\cite{jt60saplan} places
-in a later campaign and which the overview of first operation and forward
-plans~\cite{jt60saop2} discusses in view of ITER and DEMO; we deliberately do not put a date on that here, because the
-schedule is not ours to assert and the prediction is locked against a parameter
-vector rather than against a calendar.
-
-Each row of Table~\ref{tab:forecast} carries its own interval and is assessed
-separately against it, so the range quoted here names one model rather than the
-set. A stationary JT-60SA H-mode near this design point reporting a thermal
-confinement time outside \SIrange{0.349}{0.657}{\second} would fall outside the
-IPB98(y,2) reference row's stated 90\% predictive interval. The fitted rows are
-assessed at their own bounds, which are narrower for the constrained power law
-(\SIrange{0.313}{0.587}{\second}) and wider for the random forest
-(\SIrange{0.232}{0.867}{\second}). A single observation outside a nominal 90\%
-interval is evidence against that forecast rather than a refutation of it: a
-perfectly calibrated model still places about one observation in ten outside
-such an interval, so a single miss is inconsistent with the prediction at the
-stated interval level and no more. Because all five intervals overlap across
-roughly this range, a measurement inside it separates none of them: this row
-tests whether any model is right, not which, and that is why the ITER column
-carries the argument.
-
-Nothing above anticipated one feature of this table: SPARC sits further from
+One feature of the exercise was not anticipated by anything above. SPARC sits \emph{further} from
 the training data than ITER does, at a Mahalanobis distance of 6.9 against 4.7,
-despite being the smaller machine. Its \SI{12.2}{\tesla} field is 2.1 times the
+despite being the smaller machine: its \SI{12.2}{\tesla} field is 2.1 times the
 largest toroidal field anywhere in the cleaned STD5 rows, \SI{5.82}{\tesla} on
-Alcator C-Mod, and every other label in the database tops out at or below
-\SI{4.80}{\tesla}. Size is not the only direction in which a next-step device
-leaves the data behind, and an extrapolation audit organised around size alone
-would have missed it.
+Alcator C-Mod, and every other label tops out at or below \SI{4.80}{\tesla}.
+Size is not the only direction in which a next-step device leaves the data
+behind, and an extrapolation audit organised around size alone would have missed
+it.
 
 \section{Flexibility, or long-range saturation?}
 \label{sec:gp}
@@ -1605,42 +1310,23 @@ its prior mean, which centring places at the training mean: bounded. A
 dot-product kernel is Bayesian linear regression in the log features, which is a
 power law: unbounded and inflexible. Their sum is both.
 
-\paragraph{Specification.} The three kernels are
-\begin{align}
-k_{\text{RBF}}(x,x') &= \sigma_r^{2}\,
-  \exp\!\left(-\tfrac{1}{2}\lVert x-x'\rVert^{2}/\ell^{2}\right) + \sigma_n^{2}\delta_{xx'},
-  \nonumber\\
-k_{\text{lin}}(x,x') &= \sigma_l^{2}\,(x^{\!\top}\!x' + \sigma_0^{2})
-  + \sigma_n^{2}\delta_{xx'},
-  \nonumber\\
-k_{\text{lin+RBF}}(x,x') &= k_{\text{lin}} + k_{\text{RBF}} - \sigma_n^{2}\delta_{xx'},
-\label{eq:kernels}
-\end{align}
-with a single isotropic length scale $\ell$ shared across the standardised log
-features, so the RBF component is isotropic rather than
-automatic-relevance-determining. Features are standardised inside the pipeline,
-so each fold's scaler is fitted on that fold's training rows alone and $\ell$ is
-in those units. The prior mean is constant and \texttt{normalize\_y} is on, which
-puts it at the training mean of $\log\tau$: this is what makes ``reverts to the
-prior'' and ``returns the average training target'' the same statement, and the
-parallel with a tree ensemble exact. Observation noise enters as an additive
-\texttt{WhiteKernel} rather than through a fixed jitter. Hyperparameters are
-fitted by maximising the log marginal likelihood with scikit-learn's default
-L-BFGS-B optimizer, \texttt{n\_restarts\_optimizer}~$=0$, from the shared
-initialisation $\sigma_l^{2}=1$, $\sigma_0=1$, $\sigma_r^{2}=0.5$, $\ell=1$,
-$\sigma_n^{2}=0.05$, under the bounds $\sigma_l^{2},\sigma_0 \in [10^{-3},
-10^{3}]$, $\sigma_r^{2}\in[10^{-3},10^{3}]$, $\ell\in[10^{-2},10^{3}]$ and
-$\sigma_n^{2}\in[10^{-6},1]$. Every rung starts from the same values for every
-term it has, so the three fits differ only in which terms exist. The
-optimisation runs on a subsample of exactly 1000 training rows drawn without
-replacement by \texttt{numpy.random.default\_rng(42)}, or on the whole fold when
-it holds fewer; the kernel is then frozen and the exact GP is conditioned on
-\emph{every} training row of that fold, which is one Cholesky factorisation. No
-held-out row enters either stage. Hand-chosen hyperparameters are not adequate
-here, since a length scale an order of magnitude from the one the data supports
-makes the third rung look like a failure. Intervals quoted for these models are
-equal-tailed posterior intervals on $\log\tau$ that include the fitted
-observation-noise term, exponentiated to $\tau$.
+\paragraph{Specification.} The three kernels are a squared-exponential with a
+single isotropic length scale shared across the standardised log features, a
+dot-product kernel, and their sum, each with an additive \texttt{WhiteKernel}
+for observation noise. The prior mean is constant and \texttt{normalize\_y} is
+on, which puts it at the training mean of $\log\tau$: this is what makes
+``reverts to the prior'' and ``returns the average training target'' the same
+statement, and the parallel with a tree ensemble exact. Hyperparameters are
+fitted by maximising the log marginal likelihood on a seeded subsample of 1000
+training rows; the kernel is then frozen and the exact GP is conditioned on
+\emph{every} training row of that fold. No held-out row enters either stage.
+Every rung starts from the same initialisation for every term it has, so the
+three fits differ only in which terms exist. Hand-chosen hyperparameters are not
+adequate here, since a length scale an order of magnitude from the one the data
+supports makes the third rung look like a failure. Intervals quoted for these
+models are equal-tailed posterior intervals on $\log\tau$ that include the
+fitted observation-noise term, exponentiated to $\tau$. The kernel equations,
+initialisations and bounds are in Sec.~S6 of the Supplementary Material.
 
 \begin{table}[t]
 \centering
@@ -1787,7 +1473,7 @@ only flexible model tested whose \emph{native} posterior intervals reach nominal
 coverage out of distribution without conformal recalibration. That is a
 statement about where the interval comes from rather than about coverage alone:
 the constrained power law of Sec.~\ref{sec:dimensional} also holds near nominal
-at this cut (91\%, Table~\ref{tab:shift}), but through an externally calibrated
+at this cut (91\%, Sec.~\ref{sec:shift}), but through an externally calibrated
 split-conformal interval rather than one the model supplies itself. The bounded rung is the instructive failure: it is the
 one model that does become vague out of distribution, with a half-width four
 times any other, and it still covers 16.7\%, having reverted to a prior mean
@@ -1813,33 +1499,32 @@ The consequence is a reporting convention rather than a modelling one, and it is
 short enough to state as a checklist. For any confinement model offered as an
 alternative to a power law on this database:
 
-\begin{enumerate}\setlength{\itemsep}{2pt}
-\item \textbf{Report leave-one-device-out beside cross-validation.} It costs one
-refit per device, on the same rows and the same features, and the two numbers
-print together. Where they agree the interpolation number is informative. Where
-they disagree, as here by a factor of 3.6, the disagreement is the result, and
-the interpolation number should not be quoted on its own.
-\item \textbf{Report the distance of the target operating point from the
-training distribution.} This needs no held-out device. The Mahalanobis distance
-of a label's mean log-feature vector tracked per-label error at $\rho=+0.85$ for
-the random forest and at $\rho=-0.06$ for the power law, so it separates the
-models that will degrade from the ones that will not, in advance, and without
-waiting for the machine to exist.
-\item \textbf{State whether the model's predictions can leave the range of its
-training targets.} A random forest provably cannot, since every prediction is an
-average of training targets. A model that cannot exceed the largest confinement
-time it has seen cannot project a machine expected to exceed it, and that is a
-property of the estimator, checkable before anything is fitted.
-\item \textbf{Do not carry a calibrated interval across a device boundary
-without saying so.} Split conformal assumes exchangeable conformity scores, and
-across a held-out device that assumption is false. What it costs is not a wider
-interval but the same interval with the coverage removed: 90\% nominal
-delivering 35\% on an unseen label and 3\% across the size cut, at a width that
-moves by under 1.5\%.
+\begin{enumerate}\setlength{\itemsep}{3pt}
+\item Report leave-one-device-out beside cross-validation. It costs one refit
+per device, on the same rows and the same features, and the two numbers print
+together. Where they agree the interpolation number is informative. Where they
+disagree, as here by a factor of 3.6, the disagreement is the result, and the
+interpolation number should not be quoted on its own.
+\item Report how far the target operating point sits from the training
+distribution. This needs no held-out device. The Mahalanobis distance of a
+label's mean log-feature vector tracked per-label error at $\rho=+0.85$ for the
+random forest and at $\rho=-0.06$ for the power law, so it separates the models
+that will degrade from the ones that will not, without waiting for the machine
+to exist.
+\item Say whether the model's predictions can leave the range of its training
+targets. A random forest provably cannot, since every prediction is an average
+of training targets, and a model that cannot exceed the largest confinement time
+it has seen cannot project a machine expected to exceed it. That is a property
+of the estimator, checkable before anything is fitted.
+\item Do not carry a calibrated interval across a device boundary without saying
+so. Split conformal assumes exchangeable conformity scores, and across a
+held-out device that assumption is false. What it costs is not a wider interval
+but the same interval with the coverage removed: 90\% nominal delivering 35\% on
+an unseen label and 3\% across the size cut, at a width that moves by under
+1.5\%.
 \end{enumerate}
 
-\noindent None of the four requires a new model, a new dataset, or a new method.
-The first costs one refit per device; the other three cost nothing and are
+\noindent Only the first needs a refit. The other three cost nothing and are
 computable from the fitted model and the intended operating point alone.
 
 The positive findings point the same way, and both are about the far field
@@ -1971,71 +1656,52 @@ kernel are the two things that work here and nothing has tried them together.
 \section{Conclusion}
 
 On real confinement data, the model that wins cross-validation by 29\% over a
-log-linear power law refitted inside the same folds loses to that same power law on all 13
-held-out database labels and on
-all 11 physical devices once the JET and ASDEX Upgrade variants are collapsed,
-and to the published IPB98(y,2) law as well, though that law is a historical
-reference fitted to the DB2.8 predecessor of this database and was not refitted
-within these folds. Three separate
+log-linear power law refitted inside the same folds loses to that same power law
+on all 13 held-out database labels and on all 11 physical devices once the JET
+and ASDEX Upgrade variants are collapsed, and to the published IPB98(y,2) law as
+well, though that law is a historical reference fitted to the DB2.8 predecessor
+of this database and was not refitted within these folds. Three separate
 diagnostics point at that failure and none of them is a tuning fix; the
-mechanism they converge on is long-range saturation. At the size extrapolation that
-separates this database from ITER, the two tree ensembles that lead the
-conventional cross-validation comparison land closer to a constant predictor
-than to the power law, and their nominal 90\% intervals cover 3\% and 0\% of
-the held-out rows at unchanged width. In these tests the
-power-law form survives leaving the data behind despite fitting the observed
-rows less accurately under conventional cross-validation. A bounded correction
-on its residuals improves it along the size-extrapolation direction tested here,
-and the bounded range that disqualifies trees as predictors is what limits how
-much extrapolation error that correction can contribute.
+mechanism they converge on is long-range saturation. At the size extrapolation
+that separates this database from ITER, the two tree ensembles that lead the
+conventional comparison land closer to a constant predictor than to the power
+law, and their nominal 90\% intervals cover 3\% and 0\% of the held-out rows at
+unchanged width. The inversion survives rows the standard set does not contain,
+a second confinement regime, the collapse of 13 labels into 11 devices, either
+aggregation of the score, a nested hyperparameter search under two selection
+procedures, and shuffled fold assignments, so it is not an artifact of a single
+bookkeeping choice. What the models disagree about is recorded rather than
+argued: on a machine inside the database's size range they agree to within
+15\%, and on ITER they differ by a factor of 8.3.
 
-The repair that scored best, though, is not additional model flexibility at all:
-it is a dimensional constraint on the existing power law, and the two rungs
-tested carry different weight. The Kadomtsev rung was fixed by the literature in
-1975 and enforced when IPB98(y,2) was fitted, so imposing it here selected
-nothing: it costs nothing in sample and beats the unconstrained fit at all 15
+The repair that scored best is not additional model flexibility at all: it is a
+dimensional constraint on the existing power law, and the two rungs tested carry
+different weight. The Kadomtsev rung was fixed by the literature in 1975 and
+enforced when IPB98(y,2) was itself fitted, so imposing it here selected
+nothing; it costs nothing in sample and beats the unconstrained fit at all 15
 cuts of the size sweep. The collisionless rung gave the lowest observed error of
-any fit tested here at the ITER-size-matched cut, cost 0.001 in sample, and has
-no within-surface hyperparameter to tune, but it was selected after the held-out
-scores at this cut had been seen, as Sec.~\ref{sec:dimensional} states, so it is
-the lowest error among the surfaces examined rather than a prediction that this
-surface is the right one. Supplying
-the same physics as the Gaussian prior tested here is worth substantially less:
-the constraint restricts the fit to a surface those assumptions permit where the
-prior only favours a location within parameter space, and here the surface
-transfers better. The inversion itself survives several separate robustness checks: rows the
-standard set does not contain, a second confinement regime, collapsing the 13
-database labels into 11 physical devices, and either aggregation of the score.
-The inversion is therefore robust to the validation, aggregation and
-row-selection choices tested here, rather than an artifact of a single
-bookkeeping choice. What the models disagree about is
-recorded rather than argued: on a machine inside the database's size range they
-agree to within 15\%, and on ITER they differ by a factor of 8.3.
+any fit tested here at the ITER-size-matched cut, but was selected after those
+scores had been seen, so it is the lowest error among the surfaces examined
+rather than a prediction that this surface is the right one.
 
-Two results temper the diagnosis and neither weakens the practical advice.
-In the nested predictor ladder, the extrapolation failure persists at every
-predictor count tested while the ranking inversion does not:
-the inversion needs the flexible model to win the interpolation split first, so a field whose scaling
-law has one predictor faces the same danger with no warning at all. And
-separating flexibility from long-range saturation shows the failure belongs to
-the second. A bounded RBF process fails as the trees do, while adding an
-extrapolative linear component to that process gives the best cross-validated
-score here, holds up at the ITER-size-matched cut, and is the only flexible
-model in this work whose native posterior intervals reach nominal coverage out
-of distribution without conformal recalibration. That
-comparison enlarges the function class as well as changing the asymptote, so the
-cleaner test is the ablation that fixes the nonlinear component's specification
-and varies only the mean function. It moves the ITER-size-matched cut by a factor of
+Two results temper the diagnosis and neither weakens the practical advice. In
+the nested predictor ladder the extrapolation failure persists at every
+predictor count tested while the ranking inversion does not, because the
+inversion needs the flexible model to win the interpolation split first: a field
+whose scaling law has one predictor faces the same danger with no warning at
+all. And separating flexibility from long-range saturation shows the failure
+belongs to the second. Holding the nonlinear component's specification fixed and
+varying only the mean function moves the ITER-size-matched cut by a factor of
 7.0, and the better arm lands exactly on the power law's score there, because
-far from the data its correction has reverted to zero and left the trend
-behind.
+far from the data its correction has reverted to zero and left the trend behind.
+
 The lesson is not that flexible models cannot be trusted beyond their data. It
 is that a model whose predictions stop tracking the features once the input
 leaves the training data is structurally unsuited to a problem where the target
-itself has to leave that range. The two are easy to confuse
-because the flexible models that win the conventional interpolation comparison
-here are the saturating ones, while the non-saturating polynomial control
-becomes unstable in extrapolation instead.
+itself has to leave that range. The two are easy to confuse because the flexible
+models that win the conventional interpolation comparison here are the
+saturating ones, while the non-saturating polynomial control becomes unstable in
+extrapolation instead.
 
 \section*{Acknowledgments}
 

@@ -12,16 +12,22 @@ both. The GP ladder separates flexibility from long-range saturation and support
 the long-range-saturation diagnosis, and the mean-function ablation is the controlled version of that
 test, holding the nonlinear covariance family and its fitting procedure fixed
 while only the long-range mean changes. It closes on the replication over
-STD5-disjoint rows and the locked device forecast. The two replications outside
-fusion are in `supplementary.tex`, a standalone document with its own reference
-list, rather than in the main text.
+STD5-disjoint rows and the locked device forecast.
+
+`supplementary.tex` is a standalone document with its own reference list and
+carries six sections. S1 to S3 are fusion analyses whose headline numbers stay
+in the main text while their construction, tables and caveats moved here when
+the paper was shortened: the interval repair, the STD5-disjoint replication and
+the locked forecast. S4 and S5 are the two replications outside fusion. S6 is
+the full model, kernel and split specification.
 Result 9's prior-shrinkage control is reported as a paragraph rather than a
 section, since its finding is a negative one about an alternative to Result 8
 rather than a result in its own right.
 
 `tests/test_reported_numbers.py` binds every headline number to the artifact it
-came from, and its `LATE_RESULTS` document tuple includes `PAPER` and
-`PAPER_PDF`, so the paper's copies are enforced along with the prose. The PDF is
+came from. Its `LATE_RESULTS` tuple includes `PAPER` and `PAPER_PDF`, so the
+paper's copies are enforced along with the prose; `MOVED_TO_SUPPLEMENT` is the
+same guard pointed at `supplementary.tex` for the figures that moved there. The PDF is
 committed, so **rebuild it whenever `paper.tex` changes** or the test will catch
 the two disagreeing.
 

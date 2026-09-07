@@ -308,6 +308,13 @@ def _paired(a: dict, model_a: str, model_b: str) -> dict:
 # rather than literals and there is nothing there to go stale.
 LATE_RESULTS = (README, RESULTS_MD, PAPER, PAPER_PDF)
 
+# Numbers whose home moved out of the main text and into the Supplementary
+# Material when the paper was shortened: the replication on rows STD5 excludes
+# and the locked device forecast. The main text keeps each result's headline and
+# points at its supplementary section, so these particular figures live there
+# now and the guard follows them rather than the other way round.
+MOVED_TO_SUPPLEMENT = (README, RESULTS_MD, SUPPLEMENTARY, SUPPLEMENTARY_PDF)
+
 # Result 13's numbers. The replication itself is in the Supplementary Material,
 # not the main text, so these are bound to it rather than to the paper; where a
 # document words something differently the claim carries both spellings rather
@@ -498,10 +505,10 @@ CLAIMS: tuple[Claim, ...] = (
           lambda a: _arm(a, "non_h")["n_rows"], documents=LATE_RESULTS),
     Claim("CV gain over IPB98 on the disjoint arm", "42%",
           lambda a: _arm(a, "disjoint_h")["cv_gain_over_baseline"], _pct(0),
-          documents=LATE_RESULTS),
+          documents=MOVED_TO_SUPPLEMENT),
     Claim("CV gain over ITER89-P on the non-H arm", "67%",
           lambda a: _arm(a, "non_h")["cv_gain_over_baseline"], _pct(0),
-          documents=LATE_RESULTS),
+          documents=MOVED_TO_SUPPLEMENT),
 
     # -- Result 12: the locked forecast -----------------------------------
     Claim("largest confinement time in the training data", "1.321",
@@ -509,13 +516,13 @@ CLAIMS: tuple[Claim, ...] = (
           documents=LATE_RESULTS),
     Claim("IPB98 on ITER", "3.591",
           lambda a: _cast(a, "ITER", "ipb98y2_analytic"), _r(3),
-          documents=LATE_RESULTS),
+          documents=MOVED_TO_SUPPLEMENT),
     Claim("random forest on ITER", "0.435",
           lambda a: _cast(a, "ITER", "random_forest"), _r(3),
-          documents=LATE_RESULTS),
+          documents=MOVED_TO_SUPPLEMENT),
     Claim("collisionless power law on ITER", "2.837",
           lambda a: _cast(a, "ITER", "powerlaw_collisionless"), _r(3),
-          documents=LATE_RESULTS),
+          documents=MOVED_TO_SUPPLEMENT),
 
     # -- the shipped predictor, whose worked example is in the README ------
     Claim("ITER extrapolation distance", "4.72",

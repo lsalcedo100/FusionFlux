@@ -78,7 +78,7 @@
       "coverage_shortfall": 0.5531097466315059,
       "cv_interval_factor": 1.240685724416296,
       "lomo_interval_factor": 1.230722947690569,
-      "size_cut_interval_factor": 1.2592460250656576,
+      "size_cut_interval_factor": 1.2592460250656583,
       "distance_spearman": -0.7692307692307693
     }
   ],

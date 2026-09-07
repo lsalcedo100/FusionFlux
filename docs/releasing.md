@@ -180,7 +180,7 @@ paper's title page, and cut a `v0.2.2` for that edit.
 ## 3. arXiv
 
 `make arxiv` produces `build/arxiv-submission.tar.gz`, which contains
-`paper.tex` and the four figures it includes, with no parent-directory paths, so
+`paper.tex` and the five figures it includes, with no parent-directory paths, so
 it builds in the single flat directory arXiv unpacks into. That is verified:
 `tools/check_paper_submission.py` enforces it and runs in the ordinary suite.
 

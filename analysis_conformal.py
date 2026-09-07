@@ -52,6 +52,7 @@ import pandas as pd
 
 import hdb5
 from analysis_extrapolation import spearman
+from figures import apply_font_policy, save_figure
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -308,6 +309,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
         return None
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    apply_font_policy()
     figure, axes = plt.subplots(
         1, 2, figsize=(15.0, 5.6), gridspec_kw={"width_ratios": [1.0, 1.15]}
     )
@@ -374,7 +376,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
     axes[0].set_ylim(0, 1.0)
     axes[0].set_ylabel(f"empirical coverage of {nominal * 100:.0f}% intervals", fontsize=10, color=INK)
     axes[0].set_title(
-        "Result 7a/b: the interval is calibrated only on the split it was calibrated on",
+        "Calibrated only on the split it was calibrated on",
         fontsize=10.5,
         color=INK,
         loc="left",
@@ -476,7 +478,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
         f"empirical coverage of {nominal * 100:.0f}% intervals", fontsize=10, color=INK
     )
     axes[1].set_title(
-        "Result 7c: the trees' coverage tracks distance, the power law's does not",
+        "Coverage against extrapolation distance",
         fontsize=10.5,
         color=INK,
         loc="left",
@@ -486,7 +488,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
 
     figure.tight_layout()
     path = RESULTS_DIR / "conformal.png"
-    figure.savefig(path, dpi=170)
+    save_figure(figure, path)
     plt.close(figure)
     return path
 
