@@ -69,19 +69,26 @@ def test_the_control_paper_passes(tmp_path: Path) -> None:
     [
         ("build-time date", GOOD_PAPER.replace(r"\date{31 August 2026}", r"\date{\today}"), "fixed date"),
         ("no graphicspath", GOOD_PAPER.replace(r"\graphicspath{{../results/}{./}}", ""), "graphicspath"),
-        ("parent-directory figure path",
-         GOOD_PAPER.replace("{extrapolation.png}", "{../results/extrapolation.png}"), "flat directory"),
-        ("figure with no file",
-         GOOD_PAPER.replace("{size_extrapolation.png}", "{no_such_figure.png}"), "no file under results/"),
+        (
+            "parent-directory figure path",
+            GOOD_PAPER.replace("{extrapolation.png}", "{../results/extrapolation.png}"),
+            "flat directory",
+        ),
+        (
+            "figure with no file",
+            GOOD_PAPER.replace("{size_extrapolation.png}", "{no_such_figure.png}"),
+            "no file under results/",
+        ),
         ("placeholder author", GOOD_PAPER.replace("Real Name", "Your Name"), "placeholder"),
         ("no author line", GOOD_PAPER.replace(r"\author{Real Name\thanks{Independent work.}}", ""), "author"),
-        ("no figures at all", "\n".join(
-            line for line in GOOD_PAPER.splitlines() if "includegraphics" not in line), "figure check"),
+        (
+            "no figures at all",
+            "\n".join(line for line in GOOD_PAPER.splitlines() if "includegraphics" not in line),
+            "figure check",
+        ),
     ],
 )
-def test_each_rule_rejects_a_paper_that_breaks_it(
-    tmp_path: Path, label: str, paper: str, expected: str
-) -> None:
+def test_each_rule_rejects_a_paper_that_breaks_it(tmp_path: Path, label: str, paper: str, expected: str) -> None:
     problems = checker.check(*_write(tmp_path, paper))
     assert any(expected in p for p in problems), f"{label}: nothing matched {expected!r} in {problems}"
 
@@ -136,14 +143,9 @@ def test_the_freshness_check_is_not_in_the_default_rule_set() -> None:
 def test_stale_pdf_sections_reports_a_section_the_pdf_lacks(tmp_path: Path) -> None:
     paper = tmp_path / "paper.tex"
     paper.write_text(
-        "\\documentclass{article}\n"
-        "\\begin{document}\n"
-        "\\section{A section no PDF has ever contained}\n"
-        "\\end{document}\n"
+        "\\documentclass{article}\n\\begin{document}\n\\section{A section no PDF has ever contained}\n\\end{document}\n"
     )
-    missing = checker.stale_pdf_sections(
-        paper=paper, pdf=ROOT / "paper" / "paper.pdf"
-    )
+    missing = checker.stale_pdf_sections(paper=paper, pdf=ROOT / "paper" / "paper.pdf")
     assert missing == ["A section no PDF has ever contained"]
 
 
@@ -225,3 +227,101 @@ def test_abstract_is_within_the_journal_word_limit() -> None:
 def test_the_abstract_word_count_is_measuring_something() -> None:
     """A counter that returned nothing would pass the limit check silently."""
     assert len(abstract_words()) > 150
+
+
+# --- every float is pointed at from the prose --------------------------------
+#
+# A figure or table no sentence references is a defect LaTeX cannot see: it
+# compiles, and a float with no anchor drifts to wherever the placement
+# algorithm leaves it. Five accumulated here, four of them when material moved
+# between the two documents and took the referring sentence with it, including a
+# full-width figure the main text no longer mentioned at all.
+#
+# References are pooled across both files rather than checked per file, because
+# the supplement's floats are sometimes introduced from the main text.
+
+DOCUMENTS = ("paper/paper.tex", "paper/supplementary.tex")
+
+
+def _all_references() -> set[str]:
+    pooled = "".join((ROOT / name).read_text() for name in DOCUMENTS)
+    return set(re.findall(r"\\(?:ref|eqref|autoref)\{([^}]+)\}", pooled))
+
+
+@pytest.mark.parametrize("document", DOCUMENTS)
+def test_no_float_is_orphaned(document: str) -> None:
+    source = (ROOT / document).read_text()
+    floats = re.findall(r"\\label\{((?:fig|tab):[^}]+)\}", source)
+    orphaned = sorted(set(floats) - _all_references())
+    assert not orphaned, (
+        f"{document} defines {orphaned} but no sentence in either document "
+        "references them. Add the reference where the float is described, or "
+        "remove the float."
+    )
+
+
+@pytest.mark.parametrize("document", DOCUMENTS)
+def test_the_orphan_check_is_looking_at_something(document: str) -> None:
+    source = (ROOT / document).read_text()
+    assert len(re.findall(r"\\label\{(?:fig|tab):[^}]+\}", source)) >= 8
+
+
+def test_no_reference_points_at_a_label_that_does_not_exist() -> None:
+    """Renders as ?? in the PDF, which is easy to miss in a 31-page proof."""
+    labels = set()
+    for name in DOCUMENTS:
+        labels |= set(re.findall(r"\\label\{([^}]+)\}", (ROOT / name).read_text()))
+    # Each file is compiled alone, so a reference has to resolve within its own
+    # document; pooling here would hide exactly the break that moving a section
+    # between the two causes.
+    for name in DOCUMENTS:
+        source = (ROOT / name).read_text()
+        own = set(re.findall(r"\\label\{([^}]+)\}", source))
+        used = set(re.findall(r"\\(?:ref|eqref|autoref)\{([^}]+)\}", source))
+        assert not (used - own), f"{name} references {sorted(used - own)}, defined elsewhere"
+
+
+# --- the hardcoded pointers into the supplement ------------------------------
+#
+# The two documents compile separately, so the main text cannot \ref a section
+# of the supplement and points at it by number instead. Reordering the
+# supplement silently redirects every one of those, and neither LaTeX nor the
+# orphan check above can see it: the reference still resolves, to the wrong
+# section. That is how "Sec.~S6" came to name the GP ladder in a sentence about
+# the model specification.
+#
+# So the mapping is written down. Moving a supplement section fails this with
+# the section it now points at, and the fix is to correct the number here and in
+# paper.tex together.
+
+EXPECTED_POINTERS = {
+    1: "Repairing the intervals",
+    2: "Robustness on rows the standard analysis set excludes",
+    3: "Locked predictions at three device operating points",
+    7: "Full model, kernel and split specification",
+}
+
+
+def _supplement_sections() -> list[str]:
+    source = (ROOT / "paper" / "supplementary.tex").read_text()
+    titles = re.findall(r"\\section\{((?:[^{}]|\{[^{}]*\})*)\}", source)
+    return [re.sub(r"\s+", " ", title).strip() for title in titles]
+
+
+@pytest.mark.parametrize("number,expected", sorted(EXPECTED_POINTERS.items()))
+def test_each_hardcoded_pointer_names_the_right_section(number: int, expected: str) -> None:
+    sections = _supplement_sections()
+    assert number <= len(sections), f"paper.tex points at S{number}; there are {len(sections)}"
+    assert sections[number - 1].startswith(expected), (
+        f"S{number} is now {sections[number - 1]!r}, not {expected!r}. "
+        "A supplement section moved: fix the number in paper.tex and here."
+    )
+
+
+def test_every_pointer_in_the_paper_is_covered_here() -> None:
+    """A new Sec.~SN in the main text has to be added to the mapping above."""
+    source = (ROOT / "paper" / "paper.tex").read_text()
+    used = {int(n) for n in re.findall(r"Sec(?:tion|\.)~S(\d+)", source)}
+    assert used == set(EXPECTED_POINTERS), (
+        f"paper.tex points at S{sorted(used)}; EXPECTED_POINTERS covers S{sorted(EXPECTED_POINTERS)}"
+    )

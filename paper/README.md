@@ -25,11 +25,18 @@ Result 9's prior-shrinkage control is reported as a paragraph rather than a
 section, since its finding is a negative one about an alternative to Result 8
 rather than a result in its own right.
 
-The main text points at these by hardcoded number, as `Sec.~S6` and the like,
+The main text points at these by hardcoded number, as `Sec.~S7` and the like,
 rather than by `\ref`, because they are separate documents. Reordering
-`supplementary.tex` therefore breaks those pointers with no warning from LaTeX
-and nothing in the test suite. Grep `Sec.~S[0-9]` in `paper.tex` after any such
-move and check each one by hand.
+`supplementary.tex` therefore redirects those pointers to the wrong sections
+with no warning from LaTeX, since the reference still resolves. That is not a
+hypothetical: moving the GP ladder into S6 left the main text naming it where
+it meant the specification, which had become S7.
+
+`EXPECTED_POINTERS` in `tests/test_paper_submission.py` writes the mapping down,
+so a move now fails with the section the pointer landed on. Fix the number there
+and in `paper.tex` together. The same file also fails on a figure or table that
+no sentence references, which is the other thing moving material between the two
+documents breaks: the referring sentence stays behind.
 
 
 `tests/test_reported_numbers.py` binds every headline number to the artifact it
