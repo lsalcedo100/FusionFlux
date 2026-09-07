@@ -372,3 +372,163 @@ def test_a_renamed_supplement_section_is_caught(tmp_path: Path) -> None:
 def test_the_checker_knows_where_the_supplement_lives() -> None:
     assert checker.SUPPLEMENT.name == "supplementary.tex"
     assert checker.SUPPLEMENT_PDF.name == "supplementary.pdf"
+
+
+# --- the archive the paper cites actually contains the commit it pins --------
+#
+# This guard exists because the two checks either side of it both passed while
+# the cited Zenodo release sat seventeen commits behind the pinned commit and
+# did not contain it, so the archived code was not the code that produced the
+# printed numbers. It had no tests of its own, which for a check written to
+# catch a defect that already happened is the wrong way round.
+#
+# These build a throwaway repository rather than asserting against this one,
+# whose tags move.
+
+
+def _git(repo: Path, *arguments: str) -> str:
+    import subprocess
+
+    done = subprocess.run(
+        ("git", *arguments), cwd=repo, capture_output=True, text=True, check=True
+    )
+    return done.stdout.strip()
+
+
+@pytest.fixture
+def repo(tmp_path: Path) -> Path:
+    """Two commits and a tag on the first, which is the shape of the defect."""
+    _git(tmp_path, "init", "-q", "-b", "main")
+    _git(tmp_path, "config", "user.email", "test@example.com")
+    _git(tmp_path, "config", "user.name", "Test")
+    (tmp_path / "a.txt").write_text("one\n")
+    _git(tmp_path, "add", "a.txt")
+    _git(tmp_path, "commit", "-qm", "first")
+    _git(tmp_path, "tag", "v1.0.0")
+    (tmp_path / "a.txt").write_text("two\n")
+    _git(tmp_path, "add", "a.txt")
+    _git(tmp_path, "commit", "-qm", "second")
+    return tmp_path
+
+
+def _paper_citing(repo: Path, commit: str, version: str) -> Path:
+    paper = repo / "paper.tex"
+    paper.write_text(
+        f"(v{version}; the DOI for all versions is X)\n\\texttt{{{commit}}}\n"
+    )
+    return paper
+
+
+def test_a_release_that_predates_the_pin_is_reported(repo: Path) -> None:
+    head = _git(repo, "rev-parse", "HEAD")
+    problems = checker.stale_archive(_paper_citing(repo, head, "1.0.0"), repo)
+    assert len(problems) == 1
+    assert "does not contain it" in problems[0]
+    assert head[:12] in problems[0]
+
+
+def test_a_release_containing_the_pin_is_accepted(repo: Path) -> None:
+    tagged = _git(repo, "rev-parse", "v1.0.0^{commit}")
+    assert checker.stale_archive(_paper_citing(repo, tagged, "1.0.0"), repo) == []
+
+
+def test_a_version_with_no_tag_is_reported(repo: Path) -> None:
+    """The state right after a version bump, before the tag is cut."""
+    head = _git(repo, "rev-parse", "HEAD")
+    problems = checker.stale_archive(_paper_citing(repo, head, "9.9.9"), repo)
+    assert len(problems) == 1
+    assert "not a tag" in problems[0]
+
+
+def test_a_repository_with_no_tags_is_not_a_defect(tmp_path: Path) -> None:
+    """A shallow clone or an export cannot answer, which is not the paper's fault."""
+    _git(tmp_path, "init", "-q", "-b", "main")
+    _git(tmp_path, "config", "user.email", "test@example.com")
+    _git(tmp_path, "config", "user.name", "Test")
+    (tmp_path / "a.txt").write_text("one\n")
+    _git(tmp_path, "add", "a.txt")
+    _git(tmp_path, "commit", "-qm", "first")
+    head = _git(tmp_path, "rev-parse", "HEAD")
+    assert checker.stale_archive(_paper_citing(tmp_path, head, "1.0.0"), tmp_path) == []
+
+
+def test_a_paper_pinning_nothing_is_left_to_the_other_check(tmp_path: Path) -> None:
+    """stale_provenance owns the missing-pin message; two would be noise."""
+    paper = tmp_path / "paper.tex"
+    paper.write_text("(v1.0.0; the DOI for all versions is X)\n")
+    assert checker.stale_archive(paper, tmp_path) == []
+
+
+def test_a_paper_citing_no_version_is_not_checked(repo: Path) -> None:
+    head = _git(repo, "rev-parse", "HEAD")
+    paper = repo / "paper.tex"
+    paper.write_text(f"\\texttt{{{head}}}\n")
+    assert checker.stale_archive(paper, repo) == []
+
+
+def test_a_comment_cannot_satisfy_the_check(repo: Path) -> None:
+    """Comments are stripped first, so a pin written in one does not count."""
+    head = _git(repo, "rev-parse", "HEAD")
+    paper = repo / "paper.tex"
+    paper.write_text(
+        f"% (v1.0.0; the DOI for all versions is X)\n% \\texttt{{{head}}}\n"
+    )
+    assert checker.stale_archive(paper, repo) == []
+
+
+# --- the pin still describes the artifacts ----------------------------------
+#
+# The companion guard, and the older one. It asks whether the pinned commit is
+# still the last one that touched results/, which is the claim the paper makes
+# about which tree produced its printed values. It went wrong once over three
+# commits before it existed.
+
+
+def _repo_with_results(tmp_path: Path) -> Path:
+    _git(tmp_path, "init", "-q", "-b", "main")
+    _git(tmp_path, "config", "user.email", "test@example.com")
+    _git(tmp_path, "config", "user.name", "Test")
+    (tmp_path / "results").mkdir()
+    (tmp_path / "results" / "a.json").write_text("{}\n")
+    _git(tmp_path, "add", "results/a.json")
+    _git(tmp_path, "commit", "-qm", "generate results")
+    return tmp_path
+
+
+def test_a_pin_matching_the_last_results_commit_passes(tmp_path: Path) -> None:
+    root = _repo_with_results(tmp_path)
+    head = _git(root, "rev-parse", "HEAD")
+    assert checker.stale_provenance(_paper_citing(root, head, "1.0.0"), root) == []
+
+
+def test_a_pin_left_behind_by_a_regeneration_is_reported(tmp_path: Path) -> None:
+    root = _repo_with_results(tmp_path)
+    stale = _git(root, "rev-parse", "HEAD")
+    (root / "results" / "a.json").write_text('{"changed": true}\n')
+    _git(root, "add", "results/a.json")
+    _git(root, "commit", "-qm", "regenerate")
+    problems = checker.stale_provenance(_paper_citing(root, stale, "1.0.0"), root)
+    assert len(problems) == 1
+    assert "was last changed" in problems[0]
+
+
+def test_uncommitted_results_are_reported(tmp_path: Path) -> None:
+    """A dirty artifact is at no commit at all, so no pin can describe it."""
+    root = _repo_with_results(tmp_path)
+    head = _git(root, "rev-parse", "HEAD")
+    (root / "results" / "a.json").write_text('{"dirty": true}\n')
+    problems = checker.stale_provenance(_paper_citing(root, head, "1.0.0"), root)
+    assert any("uncommitted changes" in problem for problem in problems)
+
+
+def test_a_paper_with_no_pin_is_reported(tmp_path: Path) -> None:
+    paper = tmp_path / "paper.tex"
+    paper.write_text("no commit hash anywhere in this file\n")
+    problems = checker.stale_provenance(paper, tmp_path)
+    assert len(problems) == 1
+    assert "pins nothing" in problems[0]
+
+
+def test_a_directory_git_cannot_answer_for_is_not_a_defect(tmp_path: Path) -> None:
+    paper = _paper_citing(tmp_path, "0" * 40, "1.0.0")
+    assert checker.stale_provenance(paper, tmp_path) == []
