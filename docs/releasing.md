@@ -50,7 +50,7 @@ the data is not correctable by an edit.
 Then confirm the release metadata describes the work as it now stands:
 
 - `.zenodo.json` description and keywords
-- `CITATION.cff` abstract and `version`
+- `CITATION.cff` abstract, and its `version`
 - `version` in `pyproject.toml` (kept equal to the CITATION one)
 - the author line in `paper/paper.tex`, which carries the affiliation and ORCID
   a journal asks for and arXiv does not. Both are `FILL-IN` markers until
@@ -58,6 +58,25 @@ Then confirm the release metadata describes the work as it now stands:
 - the commit `paper/paper.tex` pins as the one its numbers were produced at.
   `--check-provenance` compares it against the last commit that touched
   `results/`, so a regeneration cannot silently orphan it.
+
+The version is written in five places and the archive DOI in two, so move them
+with the script rather than by hand:
+
+```bash
+python3 tools/bump_release.py --version 0.4.3        # before tagging
+python3 tools/bump_release.py --doi 10.5281/zenodo.NNNNNNN   # after publishing
+```
+
+Two steps, because the version DOI does not exist until the release is
+published, which is after the version bump is tagged. The concept DOI is never
+rewritten: it addresses every version at once and is the one to cite when the
+version does not matter.
+
+Doing this by hand is what cost `v0.4.1`. It was tagged with `pyproject.toml`
+still reading 0.4.0, and while the release workflow's version guard did fail the
+build, Zenodo had already minted a DOI: it archives when a release is
+*published*, not when its build passes. The tag could not be repaired, only
+superseded.
 
 `paper/README.md` covers the journal route, which differs from this one in what
 it asks for rather than in how it is built.
