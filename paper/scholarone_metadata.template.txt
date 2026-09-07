@@ -1,0 +1,56 @@
+ScholarOne metadata for Nuclear Fusion
+
+The doubled-brace placeholders below are filled from paper/paper.tex by
+tools/make_submission.py, so the title, abstract, keywords and author line
+cannot drift from the PDF being uploaded alongside them. Everything else on
+this page is judgement and is written here by hand.
+
+The abstract below is already flattened to plain text: the ScholarOne field is
+not a markup field, so paste this rather than copying from the PDF.
+
+ARTICLE TYPE   Paper (not a Letter)
+
+TITLE
+{{TITLE}}
+
+ABSTRACT ({{ABSTRACT_WORDS}} words)
+{{ABSTRACT}}
+
+KEYWORDS
+{{KEYWORDS}}
+
+AUTHOR
+{{AUTHOR}}
+
+FUNDING             none
+COMPETING INTERESTS none
+CONTRIBUTIONS       Sole author.
+
+DATA AVAILABILITY
+  Four third-party datasets, none redistributed, each fetched from its public
+  source and verified against a pinned SHA-256: ITPA HDB5 STD5 (DB5.2.3) and the
+  full DB5.2.3 from OSF, https://osf.io/drwcq; the mammalian metabolic-rate
+  deposit, doi:10.6084/m9.figshare.3549807.v1; and BAAD v1.0.1,
+  doi:10.6084/m9.figshare.c.3307692. Code and results are archived on Zenodo at
+  the version DOI printed on the title page; the generating commit is in the
+  paper.
+
+GENERATIVE AI
+  As stated in the Acknowledgements. Anthropic Claude Opus 5 (claude-opus-5)
+  assisted with author-specified analysis code and with drafting and editing.
+  OpenAI GPT-5.6 Sol critiqued drafts, supported the literature review and
+  proposed robustness checks, several of which were adopted. Neither is an
+  author; the author specified and verified every analysis, checked every
+  reference against its published record, and takes full responsibility.
+
+REFEREES
+  Nominate people whose work the paper engages with seriously: the confinement
+  database and scaling community, and the machine-learning-on-HDB5 authors
+  discussed in the related work. Do not oppose anyone. The paper criticises no
+  individual study and says so explicitly, and an opposed-reviewer entry would
+  contradict that in front of the editor who has just read it.
+
+FILES
+  manuscript.pdf ({{MANUSCRIPT_PAGES}} pp) and supplementary_material.pdf ({{SUPPLEMENT_PAGES}} pp), each submitted
+  as a single PDF with its figures and tables embedded, which is what NF asks
+  for. Use ./anonymous/ instead if you choose double-anonymous review.

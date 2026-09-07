@@ -146,6 +146,21 @@ for the things now carried in the source: affiliation, ORCID, funding, competing
 interests, author contributions, a data availability statement, and a statement
 on the use of AI tools.
 
+`make submission` assembles what ScholarOne wants into `build/submission/`: the
+manuscript and supplement as PDFs, their sources, `references.bib`, and the
+metadata answers in `scholarone_metadata.txt`. NF offers single- or
+double-anonymous review and the choice is made at upload, so it writes both, the
+anonymous pair under `anonymous/`.
+
+Anonymising LaTeX is easy to do incompletely, and the failures are quiet. The
+first pass here matched one spelling of the Zenodo link and left the other on
+the title page; a later one removed the generative-AI declaration along with the
+Acknowledgments it sits inside, which strips a disclosure IOP requires and that
+names nobody. So `tools/make_submission.py` reads the *rendered text* of the
+built PDFs back against a list of identifying strings, and
+`tests/test_submission_bundle.py` runs the same transform on every commit.
+Run it after `make dist`, never before: `dist` opens with `rm -rf build`.
+
 Two things to settle that are not in any file here:
 
 - **Talk to the database maintainers before submitting, not after.** This is a

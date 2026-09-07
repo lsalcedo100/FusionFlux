@@ -1,5 +1,5 @@
 # Developer shortcuts. Run `make check` to reproduce the CI quality gate locally.
-.PHONY: install check lint type test train results reproduce page arxiv dist paper-fresh
+.PHONY: install check lint type test train results reproduce page arxiv dist paper-fresh submission
 
 # Install the package plus dev tooling against the pinned, tested environment.
 install:
@@ -174,3 +174,12 @@ dist:
 # and `docs/releasing.md` runs it in pre-flight.
 paper-fresh:
 	python3 tools/check_paper_submission.py --check-pdf-fresh --check-provenance
+
+# The ScholarOne upload, in both review variants.
+#
+# Run it after `dist`, never before: `dist` starts with `rm -rf build`, which
+# takes build/submission with it. The anonymous variant is verified by reading
+# the rendered text of the built PDFs back against a list of identifying
+# strings, because an incomplete strip produces a PDF that looks anonymous.
+submission: paper-fresh
+	python3 tools/make_submission.py
