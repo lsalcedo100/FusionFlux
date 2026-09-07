@@ -1427,6 +1427,14 @@ extrapolation to an unknown one, and on this database the two comparisons do not
 merely differ in magnitude: they order the candidate models in opposite
 directions. A gain reported under the first is not evidence about the second.
 
+That is stronger than saying the interpolation number is uninformative. The
+convention selects on the cross-validated score, and on this database that
+score picks the random forest, which is the worst of the three on a label it
+has not seen. A practitioner following current practice is therefore not left
+with an open question about extrapolation. They are led to the model that
+extrapolates worst of the three, and the more thoroughly they follow the
+convention the more confidently they are led there.
+
 \subsection{What this changes in practice}
 
 The consequence is a reporting convention rather than a modelling one, and it is
