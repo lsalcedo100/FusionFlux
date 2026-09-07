@@ -13,7 +13,7 @@ Why this is worth a result of its own
 It converts Result 4c from a property into a checkable claim. A tree ensemble
 predicts by averaging training targets, so its output is bounded above by the
 largest target it was trained on, which in HDB5 STD5 is 1.321 s. IPB98(y,2) puts
-ITER near 3.6 s. **The random forest that beats the published law by 41% under
+ITER near 3.6 s. **The random forest that beats the published law by 36% under
 cross-validation therefore cannot reach the physics prediction whatever it is
 asked**, and what it actually returns is 0.435 s, lower by a factor of 8. This
 script records that number rather than describing it.

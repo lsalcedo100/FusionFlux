@@ -14,7 +14,7 @@ pip install scaling-audit
 
 Grouped cross-validation by *record* holds out rows while leaving every group in the training fold. That measures interpolation inside systems the model has already seen. A scaling law exists to answer a different question: predict a system that was not in the training set at all.
 
-Those two numbers can rank models in opposite orders. On the ITPA tokamak confinement database a random forest beats the published physics law by 41% under record-level cross-validation, and is worse than it on **13 of 13** machines when an entire machine is held out. The standard validation does not merely overstate the gain, it reverses the ranking.
+Those two numbers can rank models in opposite orders. On the ITPA tokamak confinement database a random forest beats the published physics law by 36% under record-level cross-validation, and is worse than it on **13 of 13** held-out labels when an entire machine is held out. The standard validation does not merely overstate the gain, it reverses the ranking.
 
 Reporting the held-out score alone makes that look like noise. The point of this package is that it is not noise and it is not a surprise: two cheap diagnostics predict it.
 
@@ -88,7 +88,7 @@ cross_val_score(model, X, y, cv=split, groups=frame["machine"])
 
 Train on one end of an ordering, predict the far end. It is a scikit-learn splitter, so it drops into anything that takes a `cv`.
 
-This is where the differences get large. At a size cut matched to the jump a next-step device asks for, the tree ensembles in the tokamak study land closer to predicting a constant than to the published law they beat by 41%.
+This is where the differences get large. At a size cut matched to the jump a next-step device asks for, the tree ensembles in the tokamak study land closer to predicting a constant than to the published law they beat by 36%.
 
 ## `ConstrainedLinearRegression` — a physics assumption as a constructor argument
 
@@ -115,7 +115,7 @@ The same three objects, unchanged, on three datasets that share no measurement c
 
 | domain | groups | published law | what the audit found |
 |---|---|---|---|
-| **Tokamak confinement** (ITPA HDB5, 6228 records, 18 devices) | machine | IPB98(y,2) | Forest beats the law by 41% under record-level CV; loses on **13 of 13** held-out machines. Error against distance: +0.85 for the forest, -0.06 for the law. |
+| **Tokamak confinement** (ITPA HDB5, 6228 records, 18 device/wall labels) | machine | IPB98(y,2) | Forest beats the law by 36% under record-level CV; loses on **13 of 13** held-out labels. Error against distance: +0.85 for the forest, -0.06 for the law. |
 | **Mammalian metabolic rate** (541 species, 11 orders) | taxonomic order | Kleiber, mass^(3/4) | Trees lose to both power laws at all 8 mass cuts. The reversal does *not* appear: with one predictor the trees never win the easy split either. |
 | **Tree allometry** (BAAD, 3599 plants, 53 species) | species | West-Brown-Enquist, diameter^(8/3) | Power law wins the held-out species at **4 of 4** feature counts. The reversal appears at exactly 3 predictors, where the trees first win interpolation. |
 

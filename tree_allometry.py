@@ -6,8 +6,8 @@ laws at all 8 mass cuts and on 9 of 11 held-out orders. The *ranking reversal*
 did not, and Result 13b says why, as a conjecture rather than a measurement:
 
     With a single predictor and a relationship that is close to a straight line
-    in logs, a tree has far less to exploit, and the 41% cross-validated margin
-    this README opens with is simply not available here to be reversed. **The
+    in logs, a tree has far less to exploit, and the cross-validated margin
+    this document opens with is simply not available here to be reversed. **The
     reversal needs enough feature dimensionality for the flexible model to win
     interpolation first.** Nothing in Results 4 to 12 could have shown that,
     because one database cannot.

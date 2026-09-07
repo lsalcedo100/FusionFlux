@@ -29,7 +29,7 @@ The Result 4c bound, made concrete
 The largest thermal confinement time anywhere in HDB5 STD5 is 1.321 s. A tree
 ensemble predicts by averaging training targets, so **its output cannot exceed
 that value**, for any input whatsoever. IPB98(y,2) says ITER will reach about
-3.6 s. So the random forest that beats the published law by 41% under
+3.6 s. So the random forest that beats the published law by 36% under
 cross-validation is not merely expected to be wrong about ITER: it is
 arithmetically incapable of returning the physics answer, whatever it is asked,
 and this file records the number it returns instead.

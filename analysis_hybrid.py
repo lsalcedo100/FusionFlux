@@ -5,7 +5,7 @@ for Result 6: the shrinkage sweep, the CV-versus-LOMO frontier, the honest
 model-selection outcome, the paired bootstrap against plain ridge, and the
 figure.
 
-Results 4 and 5 diagnose a failure and stop. The trees win by 41% under grouped
+Results 4 and 5 diagnose a failure and stop. The trees win by 36% under grouped
 cross-validation and lose to a log-linear power law on all 13 held-out machines,
 and at the ITER-size-matched cut they land closer to a constant predictor than
 to the power law. Result 4d attributes that to functional form rather than to

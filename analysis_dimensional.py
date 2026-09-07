@@ -6,7 +6,7 @@ Results 1 to 7 left untried.
 
 Where this sits in the argument
 -------------------------------
-Result 4 shows a flexible model beating the published power law by 41% under
+Result 4 shows a flexible model beating the published power law by 36% under
 cross-validation and losing to it on all 13 held-out machines. Result 5 shows
 that at the size jump ITER actually asks for, the tree ensembles land closer to
 a constant than to the law. Result 6 repairs some of that with a power law plus

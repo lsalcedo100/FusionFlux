@@ -1337,7 +1337,7 @@ def size_extrapolation_report(
 
 # --- The constrained hybrid: a power law plus a shrunk residual correction ---
 #
-# Result 4 diagnoses a failure and stops there. The trees win by 41% under
+# Result 4 diagnoses a failure and stops there. The trees win by 36% under
 # grouped CV and lose to a log-linear power law on every one of 13 held-out
 # machines, and Result 4d attributes that to functional form: the power law is
 # the only form on the ladder whose error is bounded away from the data.
