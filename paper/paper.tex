@@ -560,7 +560,8 @@ is inverted through the pseudo-inverse. Every statement below about ``distance''
 is a statement about that one diagnostic, not about distributional difference in
 general.
 
-The per-label scores behind that correlation are in the Supplementary Material.
+The per-label scores behind that correlation are in Sec.~S8 of the
+Supplementary Material.
 On the four most distant labels (PBX-M, NSTX, C-Mod, JFT-2M, all small, one
 of them spherical) the forest's error is $2.7$ to $4.8\times$ the power law's;
 on the four nearest it is within $1.7\times$.
@@ -690,7 +691,8 @@ selections out of the very revision analysed here.
 
 \paragraph{Where the row threshold is set.} The 13-of-13 count is reported at a
 30-row eligibility threshold, which is a choice, so it is swept.
-The Supplementary Material scores leave-one-label-out at 10, 20, 30 and 50 rows. Only which labels are \emph{scored} changes: every label stays in every
+Section~S8 of the Supplementary Material scores leave-one-label-out at 10, 20,
+30 and 50 rows. Only which labels are \emph{scored} changes: every label stays in every
 training fold at every threshold, so the models being compared do not change.
 The power law wins every scored label at 20, 30 and 50 rows, and 14 of 15 at 10
 rows, where the exception is TCV. TCV carries 11 rows, which is why it sits
@@ -1033,7 +1035,6 @@ requiring it to be expressible in the dimensionless plasma variables imposes
 therefore a matrix $C$, and the fit becomes
 \begin{equation}
 \min_{b}\ \lVert Xb - y \rVert^{2} \quad \text{subject to} \quad Cb = d ,
-\label{eq:constrained}
 \end{equation}
 which the Karush--Kuhn--Tucker (KKT) system solves in closed form. Nothing new is needed to run the
 experiment: the solver is the one written by hand for Sec.~\ref{sec:refit}.
@@ -1307,7 +1308,8 @@ is why its worst label is 4.601. Nothing scored so far is flexible,
 non-saturating and well behaved at long range at once.
 
 A Gaussian process (GP)~\cite{gpml} supplies one, and the property is a choice
-of kernel rather than a tuning parameter. The Supplementary Material fits three
+of kernel rather than a tuning parameter. Section~S6 of the Supplementary
+Material fits three
 over the same log features, with the same optimiser on the same rows, differing
 in whether the kernel admits a trend that continues at long range, and the
 ordering is the one saturation predicts. The squared-exponential rung alone
@@ -1355,7 +1357,9 @@ fitted power law & \textbf{0.115} & \textbf{0.212} & \textbf{0.278} \\
 \bottomrule
 \end{tabular}
 \caption{One RBF covariance family and fitting procedure, two mean functions.
-The constant-mean row reproduces the squared-exponential rung of the Supplementary Material to six decimals, which is the control: the decomposition is the same model rewritten.
+The constant-mean row reproduces the squared-exponential rung of Sec.~S6 of the
+Supplementary Material to six decimals, which is the control: the decomposition
+is the same model rewritten.
 Changing only the mean-function specification moves the ITER-size-matched cut by a
 factor of 7.0.}
 \label{tab:meanfunction}
@@ -1423,7 +1427,6 @@ merely differ in magnitude: they order the candidate models in opposite
 directions. A gain reported under the first is not evidence about the second.
 
 \subsection{What this changes in practice}
-\label{sec:practice}
 
 The consequence is a reporting convention rather than a modelling one, and it is
 short enough to state as a checklist. For any confinement model offered as an
@@ -1730,9 +1733,11 @@ produced at commit
 \begin{center}\scriptsize
 \texttt{ba6d4b5367b232320af72e578acfbb8a43d51237}
 \end{center}
-\noindent Each analysis script also writes the dataset fingerprint it verified
-into its own JSON output under \texttt{results/}, so a regenerated number
-carries the provenance of the bytes it was computed from.
+\noindent Every script verifies that fingerprint against the pin as it loads
+the data and refuses to run when the two disagree, so no number above can have
+been computed from a different revision of the database. Several of the JSON
+outputs under \texttt{results/} also record the digest they verified, which
+carries that provenance into the artifact itself.
 
 \begin{thebibliography}{99}
 \small\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
@@ -1842,8 +1847,9 @@ Figshare (2016).
 Allometry Database for woody plants} [dataset], Figshare (2015).
 \href{https://doi.org/10.6084/m9.figshare.c.3307692}{doi:10.6084/m9.figshare.c.3307692}.
 Release v1.0.1, \url{https://github.com/dfalster/baad/releases/tag/v1.0.1}
-\bibitem{zenodo} L. Salcedo, \emph{FusionFlux: the model that wins on
-cross-validation loses on a new machine}, version v0.4.2, Zenodo (2026).
+\bibitem{zenodo} L. Salcedo, \emph{FusionFlux: extrapolation, long-range
+saturation and physics constraints in confinement scaling}, version v0.4.2,
+Zenodo (2026).
 \href{https://doi.org/10.5281/zenodo.22562235}{doi:10.5281/zenodo.22562235}
 \end{thebibliography}
 

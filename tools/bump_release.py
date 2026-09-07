@@ -32,12 +32,16 @@ CONCEPT_DOI = "10.5281/zenodo.22215142"
 VERSION_SITES = (
     ("pyproject.toml", r'(?m)^version = "[^"]+"', 'version = "{v}"'),
     ("CITATION.cff", r"(?m)^version: .+$", "version: {v}"),
+    # Lookaheads rather than matched-and-retyped context: these sit in LaTeX
+    # prose that gets rewrapped, and a pattern spanning the following comma
+    # stops matching the moment a line break lands in it. Rewrapping the zenodo
+    # bibitem broke exactly that and the bump refused to run.
     (
         "paper/paper.tex",
-        r"\(v[0-9]+\.[0-9]+\.[0-9]+; the DOI for all versions is",
-        "(v{v}; the DOI for all versions is",
+        r"(?<=\()v[0-9]+\.[0-9]+\.[0-9]+(?=; the DOI for all versions)",
+        "v{v}",
     ),
-    ("paper/paper.tex", r"version v[0-9]+\.[0-9]+\.[0-9]+, Zenodo", "version v{v}, Zenodo"),
+    ("paper/paper.tex", r"(?<=version )v[0-9]+\.[0-9]+\.[0-9]+(?=,\s+Zenodo)", "v{v}"),
     ("paper/references.bib", r"version   = \{v[0-9]+\.[0-9]+\.[0-9]+\}", "version   = {{v{v}}}"),
 )
 

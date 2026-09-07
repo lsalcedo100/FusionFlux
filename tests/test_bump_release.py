@@ -13,6 +13,7 @@ repository holding whatever version it last asserted.
 from __future__ import annotations
 
 import importlib.util
+import re
 import shutil
 import subprocess
 import sys
@@ -57,7 +58,7 @@ def test_the_version_moves_everywhere_at_once(sandbox: Path) -> None:
     assert "version: 9.9.9" in (sandbox / "CITATION.cff").read_text()
     paper = (sandbox / "paper" / "paper.tex").read_text()
     assert "(v9.9.9; the DOI for all versions is" in paper
-    assert "version v9.9.9, Zenodo" in paper
+    assert re.search(r"version v9\.9\.9,\s+Zenodo", paper)
     assert "version   = {v9.9.9}," in (sandbox / "paper" / "references.bib").read_text()
     # Nothing anywhere still says the version it was.
     for relative in TOUCHED:
@@ -117,3 +118,17 @@ def test_a_missing_site_is_an_error_not_a_silent_skip(sandbox: Path) -> None:
     result = _run(sandbox, "--version", "9.9.9")
     assert result.returncode != 0
     assert "no version site matched" in result.stderr
+
+
+def test_a_rewrapped_bibitem_still_bumps(sandbox: Path) -> None:
+    """The LaTeX sites sit in prose, and prose gets reflowed.
+
+    An earlier pattern spanned "version vX.Y.Z, Zenodo" as one string. Rewrapping
+    the bibitem put a line break in the middle of it, and the bump refused to run
+    rather than doing four sites out of five, which is the right failure but an
+    avoidable one.
+    """
+    paper = sandbox / "paper" / "paper.tex"
+    paper.write_text(paper.read_text().replace("version v0.4.2,\nZenodo", "version v0.4.2, Zenodo"))
+    assert _run(sandbox, "--version", "9.9.9").returncode == 0
+    assert re.search(r"version v9\.9\.9,\s+Zenodo", paper.read_text())

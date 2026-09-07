@@ -298,7 +298,9 @@ EXPECTED_POINTERS = {
     1: "Repairing the intervals",
     2: "Robustness on rows the standard analysis set excludes",
     3: "Locked predictions at three device operating points",
+    6: "The three-kernel Gaussian-process ladder",
     7: "Full model, kernel and split specification",
+    8: "Per-label scores and the eligibility-threshold sweep",
 }
 
 
