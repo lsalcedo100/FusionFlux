@@ -1002,11 +1002,11 @@ nominal line, and the per-label coverage against extrapolation distance.
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{conformal}
-\caption{\textbf{The interval collapse.} Left: empirical coverage of nominal
+\caption{\textbf{The interval collapse.} Top: empirical coverage of nominal
 90\% split-conformal intervals for each model under the three splits, against
 the nominal line. Every model is calibrated under grouped cross-validation, and
 only the linear and constrained fits stay near it once the held-out unit becomes
-a whole label and then a size range. Right: per-label coverage against the
+a whole label and then a size range. Bottom: per-label coverage against the
 Mahalanobis distance of the label from the training data. Under grouped
 cross-validation coverage is flat on the nominal line at every distance; under
 leave-one-label-out the tree ensembles fall away with distance and the power law
@@ -1505,19 +1505,25 @@ supply 77\% of rows. Only 13 of the 18 database labels are scored under
 leave-one-label-out; the
 five excluded are the smallest and most unlike the rest, so the reported gap is
 if anything optimistic. Thirteen labels is a small bootstrap and the paired
-differences are the more reliable statistic. The training-target bound of
+differences are the more reliable statistic.
+
+The training-target bound of
 Sec.~\ref{sec:mechanisms} is a theorem for the random forest and an observation
 for the gradient booster: boosting sums tree outputs rather than averaging
 targets, so nothing confines it to the training range, and what is reported
 here is only that it stayed inside that range on all 14 splits scored. The ITER-size-matched cut reproduces
 ITER's size ratio and nothing else: ITER is a burning plasma dominated by alpha
 self-heating at a gain no row here approaches, so clearing this bar is necessary
-and not sufficient. The per-label coverages in Sec.~\ref{sec:conformal} are proportions over as
+and not sufficient.
+
+The per-label coverages in Sec.~\ref{sec:conformal} are proportions over as
 few as 39 rows and carry binomial uncertainty of ten points or more; the pooled
 contrasts are far larger than that noise, the within-column ordering is not. The
 constraint hierarchy of Sec.~\ref{sec:dimensional} has an optimum in its middle that nothing here
 predicted and that cross-validation cannot select, so the result is that a
-constraint helps rather than that this constraint is the right one. The
+constraint helps rather than that this constraint is the right one.
+
+The
 robustness arms of Sec.~\ref{sec:replication} are disjoint in rows but not
 independent in provenance: both come from the same ITPA collection and the same
 devices, and the five-machine arm is too small to carry a claim alone. The
@@ -1527,7 +1533,9 @@ removed, which the reversal survives. The locked forecast of
 Sec.~\ref{sec:forecast} is a record, not a validation; only JT-60SA can be checked against
 measurement in the near term, that check requires an H-mode campaign rather than
 the completed L-mode one and we put no date on when that arrives, and it is the one device of
-the three that sits inside the database's size range. The two biological replications carry their own limitations, stated in full in
+the three that sits inside the database's size range.
+
+The two biological replications carry their own limitations, stated in full in
 Secs.~S4 and~S5 of the Supplementary Material: the metabolic-rate arm has one
 predictor and eleven
 groups that are phylogenetically related rather than independent, which the
@@ -1535,7 +1543,9 @@ comparative-biology literature handles with phylogenetically controlled
 regression~\cite{felsenstein} and we do not, and the plant ladder is one
 ordering of one selectively intersected set of predictors, so it establishes
 that a crossing exists and that the inversion tracks it, not that three is a
-threshold. Neither establishes a rate for anything. Every power-law fit here treats the engineering parameters as measured without
+threshold. Neither establishes a rate for anything.
+
+Every power-law fit here treats the engineering parameters as measured without
 error, which the confinement-scaling literature has long objected to because
 these predictors carry real measurement uncertainty. Refitting
 Eq.~\eqref{eq:powerlaw} by orthogonal distance regression, which spreads the
@@ -1548,14 +1558,18 @@ nothing pinning it down along the weak singular direction of
 Sec.~\ref{sec:refit}, which carries 0.3\% of the design's variance, and it runs
 away along exactly that direction. The honest statement is that these are
 least-squares exponents, that an EIV fit would differ, and that this database
-does not supply what computing a credible one would need. Every fit also weights
+does not supply what computing a credible one would need.
+
+Every fit also weights
 rows equally, so JET and ASDEX Upgrade set most of what each model learns even
 though the target is transfer to a device neither resembles. Refitting every
 model with each label weighted equally, reported in Sec.~\ref{sec:robustness},
 costs the power law more than the forest and takes the win count to 12 of 13.
 The row imbalance is therefore not the source of the power law's advantage, but
 it is not irrelevant to its size either, and one weighting is not a
-characterisation of how the result behaves under reweighting in general. The Gaussian-process intervals of Sec.~\ref{sec:gp} are
+characterisation of how the result behaves under reweighting in general.
+
+The Gaussian-process intervals of Sec.~\ref{sec:gp} are
 equal-tailed posterior intervals on $\log\tau$ that include the fitted
 observation-noise term and are exponentiated to $\tau$; that is the closest
 available analogue of a conformal interval, which is also a statement about a
@@ -1735,7 +1749,7 @@ this paper is archived with a persistent identifier~\cite{zenodo}. The analysis
 code is pinned as firmly as its inputs: every number and figure above was
 produced at commit
 \begin{center}\scriptsize
-\texttt{ba6d4b5367b232320af72e578acfbb8a43d51237}
+\texttt{a6a15407c592cb7abfa6cf12d80e1e9bbc18a42c}
 \end{center}
 \noindent Every script verifies that fingerprint against the pin as it loads
 the data and refuses to run when the two disagree, so no number above can have
