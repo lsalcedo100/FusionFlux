@@ -298,6 +298,8 @@ EXPECTED_POINTERS = {
     1: "Repairing the intervals",
     2: "Robustness on rows the standard analysis set excludes",
     3: "Locked predictions at three device operating points",
+    4: "The same audit on a scaling law from another science",
+    5: "The reversal's precondition, measured directly",
     6: "The three-kernel Gaussian-process ladder",
     7: "Full model, kernel and split specification",
     8: "Per-label scores and the eligibility-threshold sweep",
@@ -323,7 +325,10 @@ def test_each_hardcoded_pointer_names_the_right_section(number: int, expected: s
 def test_every_pointer_in_the_paper_is_covered_here() -> None:
     """A new Sec.~SN in the main text has to be added to the mapping above."""
     source = (ROOT / "paper" / "paper.tex").read_text()
-    used = {int(n) for n in re.findall(r"Sec(?:tion|\.)~S(\d+)", source)}
+    # "Secs.~S4 and~S5" names two sections in one phrase, and an earlier pattern
+    # saw neither: it required "Sec." or "Section", so the plural and the
+    # second number both slipped past and went unchecked.
+    used = {int(n) for n in re.findall(r"(?:Sec(?:tion|s?\.)~|and~)S(\d+)", source)}
     assert used == set(EXPECTED_POINTERS), (
         f"paper.tex points at S{sorted(used)}; EXPECTED_POINTERS covers S{sorted(EXPECTED_POINTERS)}"
     )
