@@ -213,21 +213,21 @@ def test_the_page_count_is_read_from_the_pdf() -> None:
     assert make_submission._page_count(IDENTIFIED) > 20
 
 
-def test_a_template_missing_a_placeholder_is_refused(tmp_path: Path) -> None:
+def test_a_template_missing_a_placeholder_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Half a field sheet would go to ScholarOne looking complete."""
     stand_in = tmp_path / "template.txt"
     stand_in.write_text("TITLE\n{{TITLE}}\n")
-    original = make_submission.TEMPLATE
-    make_submission.TEMPLATE = stand_in
-    try:
-        with pytest.raises(SystemExit) as refused:
-            make_submission.scholarone_metadata(PAPER.read_text(), 31, 16)
-        assert "ABSTRACT" in str(refused.value)
-    finally:
-        make_submission.TEMPLATE = original
+    monkeypatch.setattr(make_submission, "TEMPLATE", stand_in)
+    with pytest.raises(SystemExit) as refused:
+        make_submission.scholarone_metadata(PAPER.read_text(), 31, 16)
+    assert "ABSTRACT" in str(refused.value)
 
 
-def test_an_unfilled_placeholder_is_refused(tmp_path: Path) -> None:
+def test_an_unfilled_placeholder_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     stand_in = tmp_path / "template.txt"
     stand_in.write_text(
         "\n".join(
@@ -244,11 +244,7 @@ def test_an_unfilled_placeholder_is_refused(tmp_path: Path) -> None:
         )
         + "\n{{INVENTED}}\n"
     )
-    original = make_submission.TEMPLATE
-    make_submission.TEMPLATE = stand_in
-    try:
-        with pytest.raises(SystemExit) as refused:
-            make_submission.scholarone_metadata(PAPER.read_text(), 31, 16)
-        assert "unfilled placeholder" in str(refused.value)
-    finally:
-        make_submission.TEMPLATE = original
+    monkeypatch.setattr(make_submission, "TEMPLATE", stand_in)
+    with pytest.raises(SystemExit) as refused:
+        make_submission.scholarone_metadata(PAPER.read_text(), 31, 16)
+    assert "unfilled placeholder" in str(refused.value)

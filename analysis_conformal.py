@@ -52,7 +52,7 @@ import pandas as pd
 
 import hdb5
 from analysis_extrapolation import spearman
-from figures import apply_font_policy, save_figure
+from figures import PAPER_WIDTH_IN, apply_font_policy, save_figure
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -294,8 +294,8 @@ SPLIT_HUES = {
 def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
     """Two panels: the collapse per model, and the collapse against distance.
 
-    Left is Result 7a and 7b: every model's coverage under each split against
-    the nominal line, which is the claim. Right is Result 7c: per-machine
+    Top is Result 7a and 7b: every model's coverage under each split against
+    the nominal line, which is the claim. Bottom is Result 7c: per-machine
     coverage against how far the machine sits outside the training data, where
     the in-distribution arm stays flat on the nominal line and the held-out arm
     falls away from it.
@@ -311,7 +311,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     apply_font_policy()
     figure, axes = plt.subplots(
-        1, 2, figsize=(15.0, 5.6), gridspec_kw={"width_ratios": [1.0, 1.15]}
+        2, 1, figsize=(PAPER_WIDTH_IN, 6.8), gridspec_kw={"height_ratios": [1.0, 1.15]}
     )
     for axis in axes:
         axis.grid(alpha=0.25, linewidth=0.6)
@@ -325,7 +325,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
 
     nominal = analysis.nominal_coverage
 
-    # --- Left: coverage per model, one group of bars per model -------------
+    # --- Top: coverage per model, one group of bars per model --------------
     models = [row for row in analysis.collapse]
     positions = np.arange(len(models), dtype=float)
     width = 0.26
@@ -383,10 +383,10 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
     )
     axes[0].legend(frameon=False, fontsize=8.5, loc="lower left")
 
-    # --- Right: coverage against extrapolation distance --------------------
+    # --- Bottom: coverage against extrapolation distance -------------------
     #
     # Three models under the held-out-machine split only. The pooled CV numbers
-    # in the left panel are the control for this panel; drawing the per-machine
+    # in the top panel are the control for this panel; drawing the per-machine
     # CV curves here as well put two nearly coincident lines on top of the
     # result and made the panel harder to read, not more complete.
     distance_models = (
@@ -421,38 +421,84 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
     # the x position is shared by all three, so hanging them off a single curve
     # would imply they belong to it.
     if ordered_machines is not None:
-        # Several machines sit within 0.05 distance units of each other (AUGW
+        # Several machines sit within 0.06 distance units of each other (AUGW
         # and JETILW, MAST and JFT2M), which is closer than a rotated label is
-        # wide. Those drop to a second row rather than being written on top of
-        # their neighbour.
-        span = float(
-            ordered_machines["feature_mahalanobis"].max()
-            - ordered_machines["feature_mahalanobis"].min()
+        # wide, so they go into rows below one another rather than on top of one
+        # another. Both the spacing between rows and the test for "too close"
+        # are measured off the drawn axis rather than set as fractions of the
+        # data: fractions were tuned when this figure was 15 inches wide, and
+        # every cluster collided again the moment it was redrawn at the text
+        # width, once horizontally and once because a six-character name is
+        # longer than the gap that had been left between rows.
+        names = [str(name) for name in ordered_machines["scope"]]
+        # Drawn with the probe in place, because an artist added after the last
+        # draw reports a 1 x 1 box rather than its size. Measuring it before the
+        # draw put every row 3.7 points apart and stacked the whole gutter into
+        # one line.
+        # Anchored in axes fractions, at the middle. In data coordinates the
+        # obvious (0, 0) sits outside the x limits, where the artist is clipped
+        # and reports a 1 x 1 box, which is the same wrong answer as measuring
+        # it before the draw.
+        probe = axes[1].annotate(
+            max(names, key=len),
+            xy=(0.5, 0.5),
+            xycoords="axes fraction",
+            rotation=90,
+            fontsize=7,
+            alpha=0.0,
         )
-        crowded_within = 0.03 * span if span > 0 else 0.0
-        previous_distance = -np.inf
-        previous_row = 1
-        for _, row in ordered_machines.iterrows():
-            distance = float(row["feature_mahalanobis"])
-            if distance - previous_distance < crowded_within and previous_row == 0:
-                label_row = 1
-            elif distance - previous_distance < crowded_within:
-                label_row = 0
+        figure.canvas.draw()
+        # Agg only, which is the backend selected above; the base canvas
+        # class does not declare it.
+        renderer = figure.canvas.get_renderer()  # type: ignore[attr-defined]
+        to_points = 72.0 / figure.dpi
+        label_length_points = probe.get_window_extent(renderer).height * to_points
+        probe.remove()
+
+        box = axes[1].get_window_extent()
+        axis_width_points = box.width * to_points
+        axis_height_points = box.height * to_points
+
+        low, high = axes[1].get_xlim()
+        # Upright text is about one cap height wide whatever it says, so the
+        # horizontal room a label needs is the same for "JET" and "JETILW".
+        crowded_within = 9.0 * (high - low) / max(axis_width_points, 1.0)
+        row_pitch_points = label_length_points + 3.0
+
+        # Greedy in distance order: the first row whose last label is far enough
+        # back. Deterministic, and it opens a row only when the ones above it
+        # are genuinely occupied.
+        row_last_x: list[float] = []
+        for name, distance in zip(names, ordered_machines["feature_mahalanobis"], strict=True):
+            distance = float(distance)
+            for label_row, last_x in enumerate(row_last_x):
+                if distance - last_x >= crowded_within:
+                    row_last_x[label_row] = distance
+                    break
             else:
-                label_row = 1
-            previous_distance, previous_row = distance, label_row
-            axes[1].axvline(
-                distance, color=MUTED, linewidth=0.5, alpha=0.25, zorder=1
-            )
+                label_row = len(row_last_x)
+                row_last_x.append(distance)
+            axes[1].axvline(distance, color=MUTED, linewidth=0.5, alpha=0.25, zorder=1)
             axes[1].annotate(
-                str(row["scope"]),
-                xy=(distance, -0.02 if label_row else -0.13),
+                name,
+                xy=(distance, 0.0),
+                xytext=(0, -4.0 - row_pitch_points * label_row),
+                textcoords="offset points",
                 rotation=90,
                 ha="center",
                 va="top",
                 fontsize=7,
                 color=MUTED,
             )
+
+        # How deep the gutter has to be, solved rather than guessed. The axis
+        # box keeps its height in points when the limits change, so asking for
+        # `depth` points below zero out of a total range of `top + gutter` gives
+        # gutter * height / (top + gutter) >= depth, hence the closed form.
+        depth_points = 4.0 + row_pitch_points * (len(row_last_x) - 1) + label_length_points
+        top = 1.08
+        headroom = axis_height_points - depth_points
+        gutter_depth = top * depth_points / headroom if headroom > 0 else top
 
     axes[1].axhline(nominal, color=INK, linewidth=1.2, linestyle="--", zorder=4)
     axes[1].annotate(
@@ -468,7 +514,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
     # A gutter below zero holds the machine names. Three of the machines sit
     # within 0.25 distance units of each other, so labels placed among the marks
     # collide with them and with each other whatever the rotation.
-    axes[1].set_ylim(-0.34, 1.08)
+    axes[1].set_ylim(-max(gutter_depth, 0.34), 1.08)
     axes[1].set_yticks(np.arange(0.0, 1.01, 0.2))
     axes[1].axhline(0.0, color=MUTED, linewidth=0.8, zorder=2)
     axes[1].set_xlabel(
