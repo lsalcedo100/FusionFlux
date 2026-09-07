@@ -560,7 +560,6 @@ is inverted through the pseudo-inverse. Every statement below about ``distance''
 is a statement about that one diagnostic, not about distributional difference in
 general.
 
-
 The per-label scores behind that correlation are in the Supplementary Material.
 On the four most distant labels (PBX-M, NSTX, C-Mod, JFT-2M, all small, one
 of them spherical) the forest's error is $2.7$ to $4.8\times$ the power law's;
@@ -700,7 +699,6 @@ is not a quantity this paper would report on its own. The mean gap moves between
 $+0.211$ and $+0.251$ across the four thresholds and the sign test stays below
 $10^{-3}$ throughout, so the headline does not depend on where the line is
 drawn.
-
 
 \paragraph{One partition, or any partition.} The cross-validation column comes
 from a single deterministic \texttt{GroupKFold} assignment of discharges to five
@@ -1023,7 +1021,6 @@ everywhere rather than catastrophically too narrow far away, and for a
 next-step device that distinction is most of what matters, because distance is
 the one thing known in advance. None of this is a defect in
 conformal prediction. It is a measurement of an assumption being false.
-
 
 \section{Dimensional constraints from Connor--Taylor similarity}
 \label{sec:dimensional}
@@ -1396,22 +1393,6 @@ the input leaves the training data'' is the right one, and the random forest's
 training-target ceiling is its strictest case. This does not displace the constrained power law, which still wins
 the ITER-size-matched cut with no within-surface hyperparameter to tune, and the process does not beat the
 power law on a held-out label (0.218 against 0.214).
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\linewidth]{gp}
-\caption{\textbf{One model family, three kernels.} Gaussian processes with a
-radial-basis-function (RBF) kernel, a linear (dot-product) kernel, and their
-sum. Top: log-RMSE on a held-out label and at the ITER-size-matched cut. The
-kernels differ in whether they permit a trend that continues at long range;
-adding the linear component also enlarges the function class. Bottom: spread of
-the predictions against spread of the truth on the held-out rows. A model whose
-posterior has reverted to its prior mean predicts nearly the same value
-everywhere, so its spread sits near zero however good its in-range fit was: the
-same failure a tree ensemble shows when it cannot exceed its largest training
-target, reached by a different route.}
-\label{fig:gp}
-\end{figure}
 
 A Gaussian process also supplies an interval by construction rather than by
 calibration, so Sec.~\ref{sec:conformal}'s question

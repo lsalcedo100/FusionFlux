@@ -586,7 +586,9 @@ whose loss would signal it.
 The main text states the ordering across three Gaussian-process kernels and
 builds its mean-function ablation on it. The ladder itself is here: the same log
 features, the same optimiser and the same rows, differing only in which kernel
-terms exist.
+terms exist. Table~\ref{tab:supgp} gives the scores, and
+Figure~\ref{fig:gp} shows them beside the spread of each rung's predictions,
+which is where a model that has reverted to a constant becomes visible as such.
 
 \paragraph{Specification.} The three kernels are a squared-exponential with a
 single isotropic length scale shared across the standardised log features, a
@@ -604,7 +606,7 @@ adequate here, since a length scale an order of magnitude from the one the data
 supports makes the third rung look like a failure. Intervals quoted for these
 models are equal-tailed posterior intervals on $\log\tau$ that include the
 fitted observation-noise term, exponentiated to $\tau$. The kernel equations,
-initialisations and bounds are in Sec.~S6 of the Supplementary Material.
+initialisations and bounds are in Sec.~\ref{supp:spec}.
 
 \begin{table}[t]
 \centering
@@ -630,6 +632,22 @@ fitted to the DB2.8 predecessor of this database~\cite{hdb5} and is not
 refitted within these folds.}
 \label{tab:supgp}
 \end{table}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{gp}
+\caption{\textbf{One model family, three kernels.} Gaussian processes with a
+radial-basis-function (RBF) kernel, a linear (dot-product) kernel, and their
+sum. Top: log-RMSE on a held-out label and at the ITER-size-matched cut. The
+kernels differ in whether they permit a trend that continues at long range;
+adding the linear component also enlarges the function class. Bottom: spread of
+the predictions against spread of the truth on the held-out rows. A model whose
+posterior has reverted to its prior mean predicts nearly the same value
+everywhere, so its spread sits near zero however good its in-range fit was: the
+same failure a tree ensemble shows when it cannot exceed its largest training
+target, reached by a different route.}
+\label{fig:gp}
+\end{figure}
 
 The control behaves as intended: the linear-kernel process and ridge agree to $0.0000$ under
 cross-validation and on a held-out label, and to $0.0007$ at the ITER-size-matched
@@ -771,10 +789,12 @@ method,'' \emph{Am.\ Nat.} \textbf{125}, 1 (1985).
 \label{sec:perlabel}
 
 Both results are stated in prose in the main text. The tables are here for a
-reader who wants the per-unit numbers behind them: the leave-one-label-out
-scores the distance correlation is computed over, the sweep of the row threshold
-that decides which labels are scored at all, and the full size-ordered sweep
-whose matched cut the main text reports.
+reader who wants the per-unit numbers behind them:
+Table~\ref{tab:permachine} gives the leave-one-label-out scores the distance
+correlation is computed over, Table~\ref{tab:threshold} the sweep of the row
+threshold that decides which labels are scored at all, and
+Figure~\ref{fig:size} the full size-ordered sweep whose matched cut the main
+text reports.
 
 \begin{table}[t]
 \centering
