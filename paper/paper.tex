@@ -78,10 +78,14 @@ targets. At a size-ordered cut reproducing ITER's $1.82\times$ jump in major
 radius, the tree ensembles score closer to a constant predictor than to the
 power law, and split-conformal intervals calibrated to 90\% fall to 3\% and 0\%
 row-level coverage, at unchanged width.
-Two repairs improve extrapolation, both supplying long-range structure: a
-Connor--Taylor constraint surface, selected post hoc and so the lowest observed
-error among those tested rather than a prediction, and a Gaussian process whose
-linear component keeps trending. Across the model families tested,
+Two repairs improve extrapolation, both supplying long-range structure.
+Constraining the exponents to a Connor--Taylor similarity surface helps
+prospectively: the Kadomtsev rung, fixed by the literature in 1975 and
+independent of anything measured here, costs nothing in sample and beats the
+unconstrained fit at all 15 cuts of a size sweep. The collisionless rung scores
+lowest of any fit at the size-matched cut but was selected post hoc, so it is
+the best of three surfaces tested rather than a prediction. The second repair is
+a Gaussian process whose linear component keeps trending. Across the model families tested,
 extrapolation failure tracks long-range saturation rather than flexibility
 alone. For ITER the
 IPB98(y,2) and random-forest point predictions differ by a factor of 8.3.
@@ -198,9 +202,10 @@ in the tail; (iii) a
 size-ordered split inside the database that reproduces ITER's extrapolation
 factor, at which conformal intervals calibrated to 90\% cover 3\% of rows
 without becoming any wider; (iv) the Connor--Taylor dimensional constraints,
-imposed as linear equality constraints on the exponents, giving the lowest
-observed error of any fit tested here at that cut, with no within-surface
-hyperparameter to tune, on a surface selected after those scores were seen; (v) a Gaussian-process experiment
+imposed as linear equality constraints on the exponents, where the rung fixed by
+the literature in advance beats the unconstrained fit at all 15 cuts of a size
+sweep at no cost in sample, and the rung selected after those scores were seen
+gives the lowest observed error of any fit tested here at that cut; (v) a Gaussian-process experiment
 that separates flexibility from long-range saturation, holding the nonlinear
 component's specification fixed and varying only the mean-function
 specification, and corrects the diagnosis
@@ -866,10 +871,25 @@ error. Asked the question a scaling law exists to answer, the two tree ensembles
 that lead the conventional cross-validation comparison land closer to a constant
 than to the published law they beat by 36\% under cross-validation. The ordering is identical on all three
 individually scored held-out labels, so the pooled number is not an artifact
-of JET's weight. Four labels sit above the cut but only three are scored
-individually: TFTR
-contributes 2 rows, far below the 30 required to report a label on its own,
-and enters only the pooled number. Dropping the spherical tokamaks moves the
+of how JET is weighted within the pool.
+
+That control is weaker than it looks, and the composition of the held-out side
+should be read before the number is. The four labels above the cut are JET
+(1762 rows), JET-ILW (866), JT-60U (100) and TFTR (2); TFTR falls far below the
+30 rows required to report a label on its own and enters only the pooled number.
+So 2628 of the 2730 held-out rows, \SI{96}{\percent} of them, come from a single
+physical device, and the three individually scored labels are two physical
+machines rather than three, since JET and JET-ILW are the same tokamak in two
+wall eras. Seeing the same ordering twice on one machine is not two independent
+confirmations of it. What this cut establishes is that the tree ensembles
+collapse across an ITER-sized jump on the rows this database has above one, and
+what would settle it is a second large device at comparable weight, which this
+database does not contain. That is a limitation of the question as much as of
+the split: large machines are few, and their scarcity is the same fact that
+makes the extrapolation hard in the first place. The
+leave-one-label-out result of Sec.~\ref{sec:reversal}, which holds on all 13
+labels and all 11 devices, is the one that rests on many machines; this
+one rests on a large jump. Dropping the spherical tokamaks moves the
 random forest from 0.938 to 0.936, so the effect is not driven by including the
 spherical devices; other shape or regime covariates that track size are not
 ruled out by this control.
@@ -1122,9 +1142,17 @@ surprising, and we use it only as a check that the surfaces derived in code
 from Eq.~\eqref{eq:groups} agree with the constraint the published law was
 fitted under. What is new here is not the idea of constraining the exponents
 but the comparison: a hierarchy of such surfaces, fitted and scored under a
-validation protocol matched to the deployment problem. Of the three rungs
-tested, the collisionless one gives the best size-cut transfer, and that rung
-was selected after those scores were seen.
+validation protocol matched to the deployment problem.
+
+The three rungs do not carry the same evidential status, and separating them
+matters more than ranking them does. The Kadomtsev rung is
+\emph{prospective}. It was specified by Kadomtsev in
+1975~\cite{kadomtsev}, and enforced when IPB98(y,2) was fitted in
+1998~\cite{hdb5}, both without reference to anything measured here; imposing it
+is a prediction this analysis inherited rather than a surface it selected. The
+collisionless rung is the best of the three at the size cut and was chosen after
+those scores were seen. Both results are reported below, in that order, and they
+should be weighed differently.
 
 \begin{table}[t]
 \centering
@@ -1150,6 +1178,31 @@ power law, unconstrained & 0.1808 & 0.181 & 0.214 & 0.279 \\
 this database~\cite{hdb5} and not refitted within these folds.}
 \end{table}
 
+Take the prospective rung first. The Kadomtsev constraint is \emph{free}: at
+0.1808 in sample it matches the unconstrained fit to four decimals, because the
+data already satisfies it unaided. It nonetheless beats that unconstrained fit
+at every one of the 15 cuts in the size sweep, including all 8 well-powered
+ones, where a cut is called well-powered when it trains on at least 1000 rows.
+A constraint the data satisfies on average is not thereby idle: satisfying a
+constraint on average is not the same as being unable to violate it, and what
+the constraint buys is refusal to wander along that direction when the training
+half is small or shifted. The underpowered rungs show the mechanism directly. At
+six training machines the unconstrained fit scores 0.971 and the Kadomtsev fit
+0.274. Nothing about that comparison was selected after the fact, and it is the
+result in this section a reader should weigh most heavily.
+
+The collisionless rung is the stronger assumption and the better score, and it
+was chosen post hoc. Two things can still be said for it before any score is
+consulted, and they are worth separating from the selection. It is a physics
+judgement about the machine being extrapolated \emph{to} rather than a
+hyperparameter: one adopts it because one expects the target plasma to be
+collisionless, and ITER is expected to sit at lower normalised collisionality
+than the devices in this database rather than higher, which points at this rung
+in advance and for a reason external to the data. And it has no
+within-surface quantity to tune, so there is nothing for a validation split to
+fit even in principle. Neither of those makes the result prospective, and the
+disclosure stands as written.
+
 At the ITER-size-matched cut the collisionless power law scores \textbf{0.183}, the
 lowest held-out error of any model fitted here without using the held-out rows
 (Table~\ref{tab:dimensional}). The fit is blind to the held-out rows; the
@@ -1165,15 +1218,11 @@ no within-surface hyperparameter to tune, though the surface itself was
 selected post hoc from the three tested. Figure~\ref{fig:dimensional} shows the trade between what each
 constraint costs in sample and what it buys at the size cut.
 
-The two constraints behave differently. The Kadomtsev constraint is
-\emph{free}: at 0.1808 in sample it is identical to the unconstrained fit to
-four decimals, because the data already satisfies it
-unaided. It nonetheless beats the unconstrained fit at all 8 well-powered cuts,
-and descriptively at all 15 cuts in the size sweep when the underpowered ones
-are included, since a constraint the data satisfies on average still stops the fit
-wandering when the training half is small. The collisionless constraint costs
-0.001 in sample and wins at 8 of 8 well-powered cuts, where a cut is called
-well-powered when it trains on at least 1000 rows. Push one rung further to a
+The collisionless constraint costs 0.001 in sample against the unconstrained
+fit and wins at 8 of 8 well-powered cuts, so it is not a single lucky cut, but
+it is worse than Kadomtsev at every rung below the well-powered line: it is the
+stronger assumption and it pays only where there is enough data for constraining
+to be worth doing. Push one rung further to a
 beta-independent law and it degrades sharply, to 0.237. There is an optimum in
 the middle of the hierarchy, and nothing in this analysis predicted where it
 would fall; as with the hybrid, cross-validation does not select it. Every
@@ -1757,17 +1806,41 @@ extrapolation to an unknown one, and on this database the two comparisons do not
 merely differ in magnitude: they order the candidate models in opposite
 directions. A gain reported under the first is not evidence about the second.
 
-That suggests a reporting convention rather than a modelling one. Any confinement
-model offered as an alternative to a power law can be scored under
-leave-one-label-out on the same rows and the same features, at a cost of one
-refit per unit, and the two numbers can be printed together. Where they
-agree, the interpolation number is informative. Where they disagree, as here by
-a factor of 3.6, the disagreement is the result. Two diagnostics that need no
-held-out device are worth reporting alongside: the distance of the target
-operating point from the training distribution, which tracked per-label error
-at $\rho=+0.85$ for the forest and not at all for the power law, and whether the
-model's prediction can leave the range of its training targets at all, which for
-a random forest it provably cannot.
+\subsection{What this changes in practice}
+\label{sec:practice}
+
+The consequence is a reporting convention rather than a modelling one, and it is
+short enough to state as a checklist. For any confinement model offered as an
+alternative to a power law on this database:
+
+\begin{enumerate}\setlength{\itemsep}{2pt}
+\item \textbf{Report leave-one-device-out beside cross-validation.} It costs one
+refit per device, on the same rows and the same features, and the two numbers
+print together. Where they agree the interpolation number is informative. Where
+they disagree, as here by a factor of 3.6, the disagreement is the result, and
+the interpolation number should not be quoted on its own.
+\item \textbf{Report the distance of the target operating point from the
+training distribution.} This needs no held-out device. The Mahalanobis distance
+of a label's mean log-feature vector tracked per-label error at $\rho=+0.85$ for
+the random forest and at $\rho=-0.06$ for the power law, so it separates the
+models that will degrade from the ones that will not, in advance, and without
+waiting for the machine to exist.
+\item \textbf{State whether the model's predictions can leave the range of its
+training targets.} A random forest provably cannot, since every prediction is an
+average of training targets. A model that cannot exceed the largest confinement
+time it has seen cannot project a machine expected to exceed it, and that is a
+property of the estimator, checkable before anything is fitted.
+\item \textbf{Do not carry a calibrated interval across a device boundary
+without saying so.} Split conformal assumes exchangeable conformity scores, and
+across a held-out device that assumption is false. What it costs is not a wider
+interval but the same interval with the coverage removed: 90\% nominal
+delivering 35\% on an unseen label and 3\% across the size cut, at a width that
+moves by under 1.5\%.
+\end{enumerate}
+
+\noindent None of the four requires a new model, a new dataset, or a new method.
+The first costs one refit per device; the other three cost nothing and are
+computable from the fitted model and the intended operating point alone.
 
 The positive findings point the same way, and both are about the far field
 rather than about capacity. Constraining the exponents to a Connor--Taylor
@@ -1790,9 +1863,11 @@ is wanted, the evidence here favours one that keeps trending, and the
 linear-plus-RBF Gaussian process was both the best cross-validated model in this
 study, at 0.112, and the only flexible model whose native posterior intervals
 reached nominal coverage out of distribution without conformal recalibration; the constrained
-power law reaches comparable coverage there through split conformal instead. Where a physics constraint is available, imposing it costs
-0.001 in in-sample log-RMSE and was the best-scoring option at the size cut, on
-a constraint rung chosen after those scores had been seen.
+power law reaches comparable coverage there through split conformal instead. Where a physics constraint is available, imposing it is close to free and helps
+out of distribution. The rung the literature fixed in advance costs nothing in
+sample and beats the unconstrained fit at all 15 cuts of the size sweep; the
+rung selected after those scores had been seen costs 0.001 and was the
+best-scoring option at the size cut.
 
 Nothing in the argument so far rules out reading all of it as a fact about
 tokamaks, so the same audit was run on two scaling laws from biology, reported
@@ -1915,14 +1990,16 @@ and the bounded range that disqualifies trees as predictors is what limits how
 much extrapolation error that correction can contribute.
 
 The repair that scored best, though, is not additional model flexibility at all:
-it is a dimensional constraint on the existing power law. Constraining the
-exponents to the surface implied by the collisionless Connor--Taylor similarity
-assumptions gave the lowest observed error of any fit tested here at the
-ITER-size-matched cut, cost 0.001 in sample, and has no within-surface
-hyperparameter to tune. That rung
-was selected after the held-out scores at this cut had been seen, as
-Sec.~\ref{sec:dimensional} states, so it is the lowest error among the surfaces
-examined rather than a prediction that this surface is the right one. Supplying
+it is a dimensional constraint on the existing power law, and the two rungs
+tested carry different weight. The Kadomtsev rung was fixed by the literature in
+1975 and enforced when IPB98(y,2) was fitted, so imposing it here selected
+nothing: it costs nothing in sample and beats the unconstrained fit at all 15
+cuts of the size sweep. The collisionless rung gave the lowest observed error of
+any fit tested here at the ITER-size-matched cut, cost 0.001 in sample, and has
+no within-surface hyperparameter to tune, but it was selected after the held-out
+scores at this cut had been seen, as Sec.~\ref{sec:dimensional} states, so it is
+the lowest error among the surfaces examined rather than a prediction that this
+surface is the right one. Supplying
 the same physics as the Gaussian prior tested here is worth substantially less:
 the constraint restricts the fit to a surface those assumptions permit where the
 prior only favours a location within parameter space, and here the surface

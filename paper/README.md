@@ -139,10 +139,16 @@ Two things to settle that are not in any file here:
   Being able to say in the cover letter that the ITPA group has seen it is worth
   more than any formatting, and it is how a misreading of STD5's selection
   criteria surfaces before a referee finds it.
-- **The cover letter should lead with the constraint result**, not the critique.
-  The Connor-Taylor fit and the linear-plus-RBF process are what an editor can
-  send to referees as a contribution; the inversion is what makes them
-  necessary.
+- **The cover letter should lead with the reversal**, which is what the title
+  and the abstract lead with. An earlier draft led with the constraint result,
+  on the reasoning that the Connor-Taylor fit and the linear-plus-RBF process
+  are what an editor can send to referees as a contribution while the inversion
+  is only what makes them necessary. That was reversed for two reasons. The
+  constraint's headline number is post-hoc selected by the paper's own account,
+  so leading with it hands the editor the first referee objection unprompted.
+  And a letter whose lead contribution the title does not mention reads as an
+  author unsure what the paper is. The constraint still appears, second, with
+  the prospective Kadomtsev result in front of it.
 
 A preprint is compatible with IOP policy either way, and journal submission
 needs no arXiv endorsement, so the endorsement problem in `docs/releasing.md`
