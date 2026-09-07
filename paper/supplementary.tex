@@ -45,7 +45,7 @@
 \author{Liam Salcedo\thanks{Independent researcher, Montclair, New Jersey, USA.
 \texttt{liamsalcedo100@gmail.com}.
 ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}}.}}
-\date{6 September 2026}
+\date{7 September 2026}
 
 \begin{document}
 \maketitle
@@ -67,12 +67,23 @@ the main text and whose construction, tables and caveats are given here in full:
 repairing the interval collapse and finding the limit of the repair, replicating
 the ranking inversion on rows the standard analysis set excludes, and a locked
 forecast at three device operating points. Sections~S4 and~S5 are the two
-replications outside fusion. Those two are supporting replications rather than
-evidence the main confinement result depends on: they show that the
-extrapolation failure measured on the ITPA database is not specific to tokamaks,
-and they probe what the ranking inversion needs and the extrapolation failure
-does not. Section and equation numbers prefixed S refer to this document;
-unprefixed section names refer to the main text.
+replications outside fusion.
+
+Those two need a word of justification to a fusion reader, because a scaling law
+for mammalian metabolic rate is not obviously anyone's business here. They exist
+because every other result in this work rests on a single ITPA file, and one of
+them establishes something the fusion data cannot. The nested predictor ladder
+of Sec.~\ref{sec:ladder} varies how many predictors the models see while holding
+the rows, the splits and the model specifications fixed, and finds the
+extrapolation failure at every rung, including the rungs where the flexible
+model has no interpolation advantage at all. That is the harder case and the
+one with no warning sign: a practitioner running the conventional comparison
+there sees nothing wrong and still cannot extrapolate. HDB5 cannot show it,
+because on these nine features the flexible model always wins the interpolation
+split. Neither replication is evidence the confinement result depends on.
+
+Section and equation numbers prefixed S refer to this document; unprefixed
+section names refer to the main text.
 
 Each section here is a result the main text states and relies on. What moved is
 the construction, the tables and the caveats, not the finding.
@@ -566,6 +577,82 @@ whose loss would signal it.
 
 
 
+\section{The three-kernel Gaussian-process ladder}
+\label{sec:supgp}
+
+The main text states the ordering across three Gaussian-process kernels and
+builds its mean-function ablation on it. The ladder itself is here: the same log
+features, the same optimiser and the same rows, differing only in which kernel
+terms exist.
+
+\paragraph{Specification.} The three kernels are a squared-exponential with a
+single isotropic length scale shared across the standardised log features, a
+dot-product kernel, and their sum, each with an additive \texttt{WhiteKernel}
+for observation noise. The prior mean is constant and \texttt{normalize\_y} is
+on, which puts it at the training mean of $\log\tau$: this is what makes
+``reverts to the prior'' and ``returns the average training target'' the same
+statement, and the parallel with a tree ensemble exact. Hyperparameters are
+fitted by maximising the log marginal likelihood on a seeded subsample of 1000
+training rows; the kernel is then frozen and the exact GP is conditioned on
+\emph{every} training row of that fold. No held-out row enters either stage.
+Every rung starts from the same initialisation for every term it has, so the
+three fits differ only in which terms exist. Hand-chosen hyperparameters are not
+adequate here, since a length scale an order of magnitude from the one the data
+supports makes the third rung look like a failure. Intervals quoted for these
+models are equal-tailed posterior intervals on $\log\tau$ that include the
+fitted observation-noise term, exponentiated to $\tau$. The kernel equations,
+initialisations and bounds are in Sec.~S6 of the Supplementary Material.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+model & CV & held-out & ITER cut & $\rho$ \\
+\midrule
+GP, linear $+$ RBF & \textbf{0.112} & 0.218 & \textbf{0.191} & $-0.01$ \\
+GP, RBF only & 0.142 & 0.541 & 1.948 & $+0.65$ \\
+GP, linear only & 0.181 & 0.214 & 0.278 & $-0.06$ \\
+random forest & 0.128 & 0.465 & 0.938 & $+0.85$ \\
+IPB98(y,2), historical ref.\ & 0.199 & 0.188 & 0.194 & $-0.49$ \\
+mean baseline & 0.869 & 0.994 & 1.459 & $+0.56$ \\
+\bottomrule
+\end{tabular}
+\caption{log-RMSE under the three splits, and the rank correlation of per-label
+error against extrapolation distance. The intended difference across the first
+three rows is whether the kernel admits a trend that continues at long range;
+adding the linear term also enlarges the function class. The three span a factor
+of ten at the ITER-size-matched cut. IPB98(y,2) is a historical reference
+fitted to the DB2.8 predecessor of this database~\cite{hdb5} and is not
+refitted within these folds.}
+\label{tab:supgp}
+\end{table}
+
+The control behaves as intended: the linear-kernel process and ridge agree to $0.0000$ under
+cross-validation and on a held-out label, and to $0.0007$ at the ITER-size-matched
+cut, which is what licenses reading the other two rows as consequences of the
+kernel. The bounded rung then fails exactly as a tree does. It beats the power
+law under cross-validation and scores 1.948 at the ITER-size-matched cut, worse than
+predicting a constant, with error tracking distance at $\rho = +0.65$. The
+mechanism is the one in the main text: a random forest cannot exceed
+the largest training target, and an RBF process reverts to its prior mean. Both are
+structural long-range behaviours rather than tuning shortfalls, and on the
+held-out rows this one's
+predictions carry half the spread of the truth.
+
+Adding a dot-product term to that same kernel keeps the nonlinear RBF component
+it already had and supplies an unbounded linear trend alongside it. Flexibility
+is retained rather than held exactly fixed, since a linear kernel enlarges the
+function class as well as changing the asymptote; what the comparison isolates
+is the availability of a continuing trend. It gives the best
+cross-validated score in this work, 0.112 against the random forest's 0.128; it
+scores 0.191 at the ITER-size-matched cut, better than the analytic law, which
+is a historical reference fitted to the DB2.8 predecessor and not refitted
+within these folds, and second only to the constrained fit of
+the main text at 0.183; and its error is flat against distance at
+$\rho = -0.01$.
+
+
 \section{Full model, kernel and split specification}
 \label{supp:spec}
 
@@ -616,7 +703,7 @@ prior'' and ``returns the average training target'' the same statement, and the
 parallel with a tree ensemble exact. Observation noise enters as an additive
 \texttt{WhiteKernel} rather than through a fixed jitter. Hyperparameters are
 fitted by maximising the log marginal likelihood with scikit-learn's default
-L-BFGS-B optimizer, \texttt{n\_restarts\_optimizer}~$=0$, from the shared
+L-BFGS-B optimiser, \texttt{n\_restarts\_optimizer}~$=0$, from the shared
 initialisation $\sigma_l^{2}=1$, $\sigma_0=1$, $\sigma_r^{2}=0.5$, $\ell=1$,
 $\sigma_n^{2}=0.05$, under the bounds $\sigma_l^{2},\sigma_0 \in [10^{-3},
 10^{3}]$, $\sigma_r^{2}\in[10^{-3},10^{3}]$, $\ell\in[10^{-2},10^{3}]$ and
@@ -672,5 +759,74 @@ structure and allometry of plant vascular systems,'' \emph{Nature}
 method,'' \emph{Am.\ Nat.} \textbf{125}, 1 (1985).
 \href{https://doi.org/10.1086/284325}{doi:10.1086/284325}
 \end{thebibliography}
+
+\section{Per-label scores and the eligibility-threshold sweep}
+\label{sec:perlabel}
+
+Both results are stated in prose in the main text. The tables are here for a
+reader who wants the per-unit numbers behind them: the leave-one-label-out
+scores the distance correlation is computed over, the sweep of the row threshold
+that decides which labels are scored at all, and the full size-ordered sweep
+whose matched cut the main text reports.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Per-label log-RMSE under leave-one-label-out, ordered by Mahalanobis
+distance of the held-out label's mean log-feature vector from the training
+mean (computed through the pseudo-inverse, since that covariance is singular:
+the design matrix is rank deficient by two, as the main text shows). The trees degrade with distance; the power law does not.}
+\label{tab:permachine}
+\begin{tabular}{lrrrrrr}
+\toprule
+Held out & rows & dist. & IPB98 & ridge & hist GB & forest \\
+\midrule
+D3D & 388 & 1.1 & 0.252 & 0.251 & 0.246 & 0.406 \\
+AUG & 1377 & 1.2 & 0.197 & 0.216 & 0.281 & 0.279 \\
+AUGW & 767 & 1.6 & 0.218 & 0.207 & 0.212 & 0.219 \\
+JETILW & 866 & 1.7 & 0.257 & 0.216 & 0.244 & 0.318 \\
+JET & 1762 & 2.2 & 0.148 & 0.198 & 0.487 & 0.478 \\
+JT60U & 100 & 2.5 & 0.275 & 0.285 & 0.307 & 0.291 \\
+PDX & 97 & 4.0 & 0.227 & 0.233 & 0.323 & 0.407 \\
+ASDEX & 431 & 5.2 & 0.131 & 0.194 & 0.207 & 0.507 \\
+MAST & 39 & 5.4 & 0.136 & 0.154 & 0.317 & 0.581 \\
+JFT2M & 69 & 5.4 & 0.095 & 0.094 & 0.234 & 0.450 \\
+CMOD & 45 & 6.9 & 0.119 & 0.173 & 0.569 & 0.521 \\
+NSTX & 185 & 7.8 & 0.222 & 0.289 & 0.686 & 0.857 \\
+PBXM & 59 & 10.2 & 0.172 & 0.274 & 0.559 & 0.727 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Leave-one-label-out at four eligibility thresholds. Only the set of
+labels scored changes across rows; the training folds and the models are
+identical throughout. The 30-row threshold is the one reported elsewhere in
+this paper. $p$ is the exact two-sided sign test on the win count.}
+\label{tab:threshold}
+\begin{tabular}{rrrrrr}
+\toprule
+min.\ rows & labels scored & power law & forest & forest worse on & $p$ \\
+\midrule
+10 & 15 & 0.262 & 0.473 & 14 of 15 & $9.8\times10^{-4}$ \\
+20 & 13 & 0.214 & 0.465 & 13 of 13 & $2.4\times10^{-4}$ \\
+30 & 13 & 0.214 & 0.465 & 13 of 13 & $2.4\times10^{-4}$ \\
+50 & 11 & 0.223 & 0.449 & 11 of 11 & $9.8\times10^{-4}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{size_extrapolation}
+\caption{\textbf{Size-ordered extrapolation.} Top: the escalation across three
+splits of increasing difficulty, where the tree ensembles collapse toward the
+mean baseline. Bottom: the sweep across every cut, with underpowered cuts drawn
+faint and excluded from claims. The power law holds across the sweep and the
+trees do not recover.}
+\label{fig:size}
+\end{figure}
 
 \end{document}
