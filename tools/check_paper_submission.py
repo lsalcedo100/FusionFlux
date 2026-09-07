@@ -126,8 +126,8 @@ def resolve_figure(figure: str) -> Path | None:
 def bundled_figures(makefile: str) -> set[str]:
     """The figures `make arxiv` copies into the flat submission directory."""
     match = re.search(
-        r"^\t@cp ((?:results/\S+\.(?:png|pdf) )*results/\S+\.(?:png|pdf)) build/arxiv/",
-        makefile, re.MULTILINE)
+        r"^\t@cp ((?:results/\S+\.(?:png|pdf) )*results/\S+\.(?:png|pdf)) build/arxiv/", makefile, re.MULTILINE
+    )
     if match is None or match.group(1) is None:
         return set()
     return {Path(p).name for p in match.group(1).split()}
@@ -140,9 +140,7 @@ def check(paper: Path = PAPER, makefile: Path = MAKEFILE) -> list[str]:
     latex = _strip_comments(raw)
 
     if re.search(r"\\date\{\s*\\today\s*\}", latex):
-        problems.append(
-            r"\date{\today} puts the build date on a permanent record; use a fixed date"
-        )
+        problems.append(r"\date{\today} puts the build date on a permanent record; use a fixed date")
 
     if not re.search(r"\\graphicspath\{", latex):
         problems.append(
@@ -269,9 +267,7 @@ def stale_provenance(paper: Path = PAPER, root: Path = ROOT) -> list[str]:
 
     def git(*arguments: str) -> str | None:
         try:
-            finished = subprocess.run(
-                ("git", *arguments), cwd=root, capture_output=True, text=True, timeout=30
-            )
+            finished = subprocess.run(("git", *arguments), cwd=root, capture_output=True, text=True, timeout=30)
         except (OSError, subprocess.SubprocessError):
             return None
         return finished.stdout.strip() if finished.returncode == 0 else None
@@ -293,10 +289,64 @@ def stale_provenance(paper: Path = PAPER, root: Path = ROOT) -> list[str]:
     if dirty:
         problems.append(
             "results/ has uncommitted changes, so no commit describes the artifacts "
-            "the paper was built from:\n      "
-            + "\n      ".join(dirty.splitlines()[:10])
+            "the paper was built from:\n      " + "\n      ".join(dirty.splitlines()[:10])
         )
     return problems
+
+
+def stale_archive(paper: Path = PAPER, root: Path = ROOT) -> list[str]:
+    """Does the archived release actually contain the commit the paper pins?
+
+    `stale_provenance` asks whether the pin still matches `results/`. It cannot
+    see this one, because it never looks at the release the paper cites. Both
+    passed while the DOI on the title page named v0.4.2, seventeen commits
+    behind the pinned commit, and `analysis_conformal.py` and
+    `analysis_fitting_conventions.py` both changed in between. A reader who
+    downloaded the archive to check a number would have got code that did not
+    produce it.
+
+    The paper's own credibility argument rests on that download working, so the
+    pin has to be an ancestor of the cited tag. Returns an empty list when git
+    cannot answer or the repository carries no tags, which covers a source
+    tarball, a shallow clone, and anyone building from an export.
+    """
+    latex = _strip_comments(paper.read_text())
+    pinned = re.search(r"\\texttt\{([0-9a-f]{40})\}", latex)
+    cited = re.search(r"\(v([0-9]+\.[0-9]+\.[0-9]+); the DOI for all versions", latex)
+    if pinned is None or cited is None:
+        return []
+
+    def git(*arguments: str) -> subprocess.CompletedProcess[str] | None:
+        try:
+            return subprocess.run(("git", *arguments), cwd=root, capture_output=True, text=True, timeout=30)
+        except (OSError, subprocess.SubprocessError):
+            return None
+
+    tags = git("tag", "--list")
+    if tags is None or tags.returncode != 0 or not tags.stdout.strip():
+        return []
+
+    tag = f"v{cited.group(1)}"
+    if tag not in tags.stdout.split():
+        return [
+            f"the paper cites release {tag}, which is not a tag in this repository. "
+            "Cut it before submitting, or cite the release that exists."
+        ]
+
+    ancestor = git("merge-base", "--is-ancestor", pinned.group(1), tag)
+    if ancestor is None:
+        return []
+    if ancestor.returncode != 0:
+        behind = git("rev-list", "--count", f"{tag}..HEAD")
+        distance = f", {behind.stdout.strip()} commits behind HEAD" if behind else ""
+        return [
+            f"the paper pins commit {pinned.group(1)[:12]} but cites archive {tag}"
+            f"{distance}, which does not contain it. The archived code is therefore "
+            "not the code that produced the printed numbers. Cut a new release at "
+            "the submission commit and repoint the DOI with "
+            "`python3 tools/bump_release.py`."
+        ]
+    return []
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -305,6 +355,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if "--check-provenance" in arguments:
         problems.extend(stale_provenance())
+        problems.extend(stale_archive())
 
     if "--check-pdf-fresh" in arguments:
         missing = stale_pdf_sections()
