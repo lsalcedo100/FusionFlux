@@ -2330,7 +2330,8 @@ Fitted by REML, it scores **0.264** per label against the power law's 0.214 and
 ratio the fit chooses is unstable across folds, between 1.4 and 8.1 by label and
 between 2.0 and 143 by device, so it is swept as well as fitted. Over devices
 the score rises monotonically with the ratio and is best at zero, where the
-estimator *is* the pooled power law and reproduces its 0.212 to three decimals;
+estimator *is* the pooled power law, at 0.212 against the ridge spelling's 0.211,
+the two parting company in the fourth decimal;
 over labels the best rung is 0.01, at 0.2127 against 0.2141. The
 deployment-matched estimator therefore does not beat a pooled power law on an
 unseen device even with its one free quantity chosen against the score it is

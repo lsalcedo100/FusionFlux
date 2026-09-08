@@ -89,6 +89,7 @@ def artifacts() -> dict[str, object]:
         "tuned": _json("tuned.json"),
         "sensitivity": _json("sensitivity.json"),
         "mixed": _json("mixed_model.json"),
+        "robustness": _json("robustness.json"),
         "boundedness": _json("boundedness.json"),
         "stored": _json("stored_energy.json"),
         "dimensionless": _json("dimensionless.json"),
@@ -209,6 +210,17 @@ def _cov(a: dict, model: str, column: str) -> float:
 
 def _dim(a: dict, model: str, column: str) -> float:
     return float(a["dim_splits"].loc[model, column])
+
+
+def _robustness(a: dict, arm: str, model: str, column: str) -> float:
+    """One cell of Table 2, which had no binding at all until one was wrong.
+
+    Fifteen of its sixteen cells matched the artifact; the device row's ridge
+    cell printed 0.212, which is the closed-form least-squares spelling from
+    mixed_model.json, against this file's 0.21148 for the ridge. The two differ
+    by 0.000082 and round apart, and nothing noticed because nothing looked.
+    """
+    return float(a["robustness"]["arms"][arm][model][column])
 
 
 def _constraint(a: dict, source: str, model: str) -> float:
@@ -699,9 +711,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "rho* displacement across the size cut, in training standard deviations",
         "1.21",
-        lambda a: _dimensionless(
-            a, "iter_matched_cut", "groups", "log_rho_star", "fraction_of_a_training_sd"
-        ),
+        lambda a: _dimensionless(a, "iter_matched_cut", "groups", "log_rho_star", "fraction_of_a_training_sd"),
         _r(2),
         documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
@@ -753,36 +763,28 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "forest interpolation gain in dimensionless coordinates",
         "28.9%",
-        lambda a: _dimensionless(
-            a, "device_identity", "arms", "dimensionless_groups", "cv_gain_of_forest"
-        ),
+        lambda a: _dimensionless(a, "device_identity", "arms", "dimensionless_groups", "cv_gain_of_forest"),
         _pct(1),
         documents=(PAPER, PAPER_PDF),
     ),
     Claim(
         "labels the forest loses in dimensionless coordinates",
         "11 of 13",
-        lambda a: _dimensionless(
-            a, "device_identity", "arms", "dimensionless_groups", "by_label", "n_forest_worse"
-        ),
+        lambda a: _dimensionless(a, "device_identity", "arms", "dimensionless_groups", "by_label", "n_forest_worse"),
         lambda v: f"{int(v)} of 13",
         documents=(PAPER, PAPER_PDF),
     ),
     Claim(
         "devices the forest loses in dimensionless coordinates",
         "9 of 11",
-        lambda a: _dimensionless(
-            a, "device_identity", "arms", "dimensionless_groups", "by_device", "n_forest_worse"
-        ),
+        lambda a: _dimensionless(a, "device_identity", "arms", "dimensionless_groups", "by_device", "n_forest_worse"),
         lambda v: f"{int(v)} of 11",
         documents=(PAPER, PAPER_PDF),
     ),
     Claim(
         "forest interpolation gain on the within-device features only",
         "50.3%",
-        lambda a: _dimensionless(
-            a, "device_identity", "arms", "within_device_features_only", "cv_gain_of_forest"
-        ),
+        lambda a: _dimensionless(a, "device_identity", "arms", "within_device_features_only", "cv_gain_of_forest"),
         _pct(1),
         documents=(PAPER, PAPER_PDF),
     ),
@@ -1003,6 +1005,40 @@ CLAIMS: tuple[Claim, ...] = (
         lambda a: _constraint(a, "ipb98y2_published", "collisionless"),
         _r(4),
         documents=LATE_RESULTS,
+    ),
+    # The leave-one-device-out row of Table 2, all four cells. This is the row
+    # the paper's device claim rests on and the row that carried the error.
+    Claim(
+        "Table 2, device row, forest pooled over rows",
+        "0.551",
+        lambda a: _robustness(a, "lomo_by_physical_device", "random_forest", "pooled_rows"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (f"leave-one-device-out (11) & {literal}", f"(11) {literal}"),
+    ),
+    Claim(
+        "Table 2, device row, ridge pooled over rows",
+        "0.200",
+        lambda a: _robustness(a, "lomo_by_physical_device", "ridge_loglinear", "pooled_rows"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (f"& 0.551 & {literal}", f"0.551 {literal}"),
+    ),
+    Claim(
+        "Table 2, device row, forest each unit equally",
+        "0.527",
+        lambda a: _robustness(a, "lomo_by_physical_device", "random_forest", "unit_equal"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (f"& 0.200 & {literal}", f"0.200 {literal}"),
+    ),
+    Claim(
+        "Table 2, device row, ridge each unit equally",
+        "0.211",
+        lambda a: _robustness(a, "lomo_by_physical_device", "ridge_loglinear", "unit_equal"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (f"& 0.527 & {literal}", f"0.527 {literal}"),
     ),
     # The rest of the Kadomtsev column of Table 9. The section argues that
     # proximity to a surface does not order these four, which is a claim about
@@ -1401,16 +1437,14 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    100: "One hundred",
-    130: "one hundred and thirty",
+    104: "One hundred and four",
+    134: "one hundred and thirty-four",
 }
 
 
 def test_the_paper_states_how_many_of_its_numbers_are_bound(documents: dict) -> None:
     in_paper = sum(1 for claim in CLAIMS if PAPER in claim.documents)
-    in_both = sum(
-        1 for claim in CLAIMS if PAPER in claim.documents or SUPPLEMENTARY in claim.documents
-    )
+    in_both = sum(1 for claim in CLAIMS if PAPER in claim.documents or SUPPLEMENTARY in claim.documents)
     text = documents[PAPER]
     for count in (in_paper, in_both):
         spelled = SPELLED.get(count)
