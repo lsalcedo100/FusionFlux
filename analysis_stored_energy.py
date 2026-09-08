@@ -35,6 +35,7 @@ from math import comb
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 import hdb5
@@ -49,6 +50,9 @@ BOOSTER = "hist_gradient_boosting"
 
 # The stored-energy column DB5.2.3 carries and STD5 does not, in joules.
 STORED_ENERGY_COLUMN = "w_th_j"
+
+# The log loss-power feature that is also the target's denominator.
+POWER_COLUMN = "log_p_loss_mw"
 
 
 def dataset_with_stored_energy(
@@ -77,9 +81,7 @@ def identity_residual(dataset: pd.DataFrame) -> dict[str, float]:
     two arms are not measuring the same thing, and the reader should be able to
     see how loose.
     """
-    ratio = dataset[STORED_ENERGY_COLUMN] / (
-        dataset[hdb5.TARGET_COLUMN] * dataset["p_loss_mw"] * 1e6
-    )
+    ratio = dataset[STORED_ENERGY_COLUMN] / (dataset[hdb5.TARGET_COLUMN] * dataset["p_loss_mw"] * 1e6)
     return {
         "median": float(ratio.median()),
         "q25": float(ratio.quantile(0.25)),
@@ -116,6 +118,32 @@ def _retargeted(dataset: pd.DataFrame, target: str) -> pd.DataFrame:
     return framed
 
 
+def _loss_power_exponent(dataset: pd.DataFrame, target: str) -> float:
+    """The fitted exponent on log P, in raw units, for one target.
+
+    The control is often read as removing the identity tau = W/P from what the
+    log-linear model can represent. It does not. log W = log tau + log P up to
+    the deposit's conventions, and log P is a column of the design matrix, so
+    retargeting leaves that matrix untouched and moves this one coefficient by
+    one. What changes for a tree is the size of the slope it has to extrapolate
+    in that direction, which gets *smaller*, so the control is biased toward the
+    tree rather than away from it. Reporting the two exponents is what lets a
+    reader see that rather than take it on trust.
+    """
+    from sklearn.linear_model import Ridge
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+
+    columns = list(hdb5.BLIND_FEATURE_COLUMNS)
+    features = dataset[columns].to_numpy(dtype=float)
+    response = np.log(dataset[target].to_numpy(dtype=float))
+    fitted = make_pipeline(StandardScaler(), Ridge(alpha=1.0, solver="svd"))
+    with hdb5._suppress_benign_matmul_warnings():
+        fitted.fit(features, response)
+    raw = fitted[-1].coef_ / fitted[0].scale_
+    return float(raw[columns.index(POWER_COLUMN)])
+
+
 def _arm(dataset: pd.DataFrame, target: str) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
     framed = _retargeted(dataset, target)
     by_device = hdb5.with_device_column(framed).copy()
@@ -149,11 +177,10 @@ def _arm(dataset: pd.DataFrame, target: str) -> tuple[dict[str, Any], pd.DataFra
     return (
         {
             "target": target,
+            "loss_power_exponent": _loss_power_exponent(dataset, target),
             "cv_rmsle": cross_validated,
             "lolo_mean_rmsle": {n: float(summary.loc[n, "mean_rmsle"]) for n in summary.index},
-            "lodo_mean_rmsle": {
-                n: float(device_summary.loc[n, "mean_rmsle"]) for n in device_summary.index
-            },
+            "lodo_mean_rmsle": {n: float(device_summary.loc[n, "mean_rmsle"]) for n in device_summary.index},
             "iter_matched_cut": {n: float(v) for n, v in cut.items()},
             "forest_worse_by_label": _paired(per_label, FOREST, POWER_LAW),
             "forest_worse_by_device": _paired(per_device, FOREST, POWER_LAW),
@@ -195,9 +222,7 @@ def _report(payload: dict[str, Any]) -> None:
         label = arm["forest_worse_by_label"]
         device = arm["forest_worse_by_device"]
         print(f"\n{name} (target {arm['target']})")
-        print(
-            f"  CV        forest {arm['cv_rmsle'][FOREST]:.4f}   power law {arm['cv_rmsle'][POWER_LAW]:.4f}"
-        )
+        print(f"  CV        forest {arm['cv_rmsle'][FOREST]:.4f}   power law {arm['cv_rmsle'][POWER_LAW]:.4f}")
         print(
             f"  LOLO      forest {arm['lolo_mean_rmsle'][FOREST]:.4f}   "
             f"power law {arm['lolo_mean_rmsle'][POWER_LAW]:.4f}   "

@@ -1020,6 +1020,18 @@ label and $+0.348$ by device and leaves the size cut where it was. A reading of
 this paper as ``a log-linear model can represent $\tau = W/P$ exactly and a tree
 cannot'' is therefore available, and this is the measurement that bounds what it
 can carry.
+
+What the retargeting does to the log-linear model is worth stating exactly,
+because it is not what removing a term would do. Since $\log W_{\mathrm{th}}
+= \log\tau_{\mathrm{th}} + \log P_{\mathrm{LTH}}$ up to the deposit's
+conventions, and $\log P$ is a column of the design matrix, the matrix is
+unchanged and one coefficient moves: the fitted exponent on $\log P$ goes from
+-0.688 to $+0.308$, one unit, which is the identity being carried on the other
+side rather than taken away. The slope a tree has to reproduce in that direction
+more than halves, so this control makes the tree's task easier and not harder.
+That the gap widens under it anyway, from $+0.315$ to $+0.348$ by device and
+from 0.938 to 1.081 across the size cut, is the measurement, and it is a
+stronger one than a symmetric control would have been.
 The specification is in \texttt{analysis\_stored\_energy.py} and
 \texttt{results/stored\_energy.json}.
 
@@ -2282,8 +2294,8 @@ outputs under \texttt{results/} also record the digest they verified, which
 carries that provenance into the artefact itself.
 
 The prose is bound to those artefacts in the same way.
-\textbf{One hundred and fourteen} of the numbers printed above, and \textbf{one
-hundred and forty-four} across this paper and its Supplementary Material, are tied by test
+\textbf{One hundred and sixteen} of the numbers printed above, and \textbf{one
+hundred and forty-six} across this paper and its Supplementary Material, are tied by test
 to the field of the generated file they came from, in both directions: if an analysis is rerun and its output moves, the
 rendered value stops matching the printed one and the suite fails; if a number
 in the text is edited, it stops matching the artefact. A figure that disagrees

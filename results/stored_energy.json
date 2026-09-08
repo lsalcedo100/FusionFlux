@@ -11,6 +11,7 @@
   "arms": {
     "confinement_time": {
       "target": "tau_th_s",
+      "loss_power_exponent": -0.6883651234728668,
       "cv_rmsle": {
         "hist_gradient_boosting": 0.12922228506114863,
         "random_forest": 0.12922752006615118,
@@ -72,6 +73,7 @@
     },
     "stored_energy": {
       "target": "w_th_j",
+      "loss_power_exponent": 0.3077042084432476,
       "cv_rmsle": {
         "random_forest": 0.12294500591556888,
         "hist_gradient_boosting": 0.12411392568939265,

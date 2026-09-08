@@ -279,6 +279,13 @@ def _forecast(a: dict, model: str) -> float:
     raise AssertionError(f"no ITER forecast for {model}")
 
 
+def _stored_arm(a: dict, arm: str, *path: str) -> float:
+    node = a["stored"]["arms"][arm]
+    for key in path:
+        node = node[key]
+    return float(node)
+
+
 def _stored(a: dict, *path: str) -> float:
     node = a["stored"]["arms"]["stored_energy"]
     for key in path:
@@ -1017,6 +1024,24 @@ CLAIMS: tuple[Claim, ...] = (
         _r(4),
         documents=LATE_RESULTS,
     ),
+    # The two exponents that show what the stored-energy control actually does
+    # to the log-linear model: shift one coefficient by one, not remove a term.
+    Claim(
+        "loss-power exponent, confinement-time arm",
+        "-0.688",
+        lambda a: _stored_arm(a, "confinement_time", "loss_power_exponent"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (f"goes from\n{literal}", f"goes from {literal}"),
+    ),
+    Claim(
+        "loss-power exponent, stored-energy arm",
+        "0.308",
+        lambda a: _stored_arm(a, "stored_energy", "loss_power_exponent"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (f"to $+{literal}$, one unit", f"to +{literal}, one unit"),
+    ),
     # --- Result 19: the leave-one-device-out column ------------------------
     Claim(
         "device arm, collisionless",
@@ -1541,8 +1566,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    114: "One hundred and fourteen",
-    144: "one hundred and forty-four",
+    116: "One hundred and sixteen",
+    146: "one hundred and forty-six",
 }
 
 
