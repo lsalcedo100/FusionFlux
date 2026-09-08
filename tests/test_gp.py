@@ -31,9 +31,7 @@ def _make_dataset(n_per_machine: int = 80, seed: int = 11) -> pd.DataFrame:
     """A prepared HDB5-shaped frame drawn from an exact power law plus noise."""
     rng = np.random.default_rng(seed)
     frames = []
-    for index, (machine, radius) in enumerate(
-        {"A": 0.7, "B": 1.2, "C": 1.9, "D": 2.6, "E": 3.2}.items()
-    ):
+    for index, (machine, radius) in enumerate({"A": 0.7, "B": 1.2, "C": 1.9, "D": 2.6, "E": 3.2}.items()):
         n = n_per_machine
         ip = rng.uniform(0.4, 4.0, n)
         bt = rng.uniform(1.0, 5.0, n)
@@ -44,8 +42,7 @@ def _make_dataset(n_per_machine: int = 80, seed: int = 11) -> pd.DataFrame:
         kappa = rng.uniform(1.1, 2.2, n)
         meff = rng.uniform(1.0, 3.0, n)
         tau = (
-            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69
-            * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
+            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
         ) * np.exp(rng.normal(0.0, 0.08, n))
         frames.append(
             pd.DataFrame(
@@ -125,9 +122,7 @@ def test_linear_kernel_reproduces_the_log_linear_power_law() -> None:
     features, log_tau = _xy(dataset)
 
     gp_linear = gp.build_gp_models(n_tuning_rows=200)["gp_linear"].fit(features, log_tau)
-    ridge = Pipeline(
-        [("scale", StandardScaler()), ("model", Ridge(alpha=1.0, solver="svd"))]
-    ).fit(features, log_tau)
+    ridge = Pipeline([("scale", StandardScaler()), ("model", Ridge(alpha=1.0, solver="svd"))]).fit(features, log_tau)
 
     gap = float(np.sqrt(np.mean((gp_linear.predict(features) - ridge.predict(features)) ** 2)))
     assert gap < 0.02, f"linear-kernel GP and ridge disagree by {gap:.4f} in log space"
@@ -230,8 +225,7 @@ def test_learned_kernel_is_not_sensitive_to_the_subsample() -> None:
     large_theta = np.exp(large.kernel_.theta)
     relative = np.abs(small_theta - large_theta) / np.maximum(np.abs(large_theta), 1e-12)
     assert relative.max() < 0.5, (
-        f"learned kernel moved by {relative.max():.1%} between subsample sizes: "
-        f"{small.kernel_} against {large.kernel_}"
+        f"learned kernel moved by {relative.max():.1%} between subsample sizes: {small.kernel_} against {large.kernel_}"
     )
 
 
@@ -260,9 +254,7 @@ def test_tuning_uses_only_the_rows_it_was_given() -> None:
 def test_tuning_subsample_is_capped_by_the_fold_size() -> None:
     dataset = _make_dataset(n_per_machine=20)
     features, log_tau = _xy(dataset)
-    model = gp.SubsampledGaussianProcess(n_tuning_rows=10_000).fit(
-        StandardScaler().fit_transform(features), log_tau
-    )
+    model = gp.SubsampledGaussianProcess(n_tuning_rows=10_000).fit(StandardScaler().fit_transform(features), log_tau)
     assert model.n_tuning_rows_ == len(features)
 
 
@@ -295,9 +287,7 @@ def test_the_ladder_scores_through_the_existing_size_split() -> None:
     if not splits:
         pytest.skip("synthetic dataset yielded no usable size cut")
 
-    scores = hdb5.score_size_split(
-        dataset, splits[0], extra_models=gp.build_gp_models(n_tuning_rows=150)
-    )
+    scores = hdb5.score_size_split(dataset, splits[0], extra_models=gp.build_gp_models(n_tuning_rows=150))
     scored = set(scores["model_name"])
     assert {"gp_rbf", "gp_linear", "gp_linear_rbf"} <= scored
     assert {"random_forest", "ridge_loglinear"} <= scored

@@ -88,9 +88,7 @@ def test_an_ordinary_operating_point_trips_nothing() -> None:
     assert not result.physics_exceeds_training_ceiling
     assert not result.beyond_validated_range
     assert not result.outside_training_hull
-    assert result.warnings == (
-        "Inside the training distribution; all models here are on measured ground.",
-    )
+    assert result.warnings == ("Inside the training distribution; all models here are on measured ground.",)
 
 
 def test_a_machine_beyond_every_scored_one_is_flagged_and_not_trusted() -> None:
@@ -129,17 +127,12 @@ def test_predictions_agree_with_the_locked_forecast() -> None:
     forecast = json.loads(forecast_path.read_text())
 
     devices = {row["name"]: row for row in forecast["devices"]}
-    expected = {
-        (row["device"], row["model_name"]): row["tau_predicted_s"]
-        for row in forecast["forecasts"]
-    }
+    expected = {(row["device"], row["model_name"]): row["tau_predicted_s"] for row in forecast["forecasts"]}
     card = _card_or_skip()
 
     for name in ("SPARC", "JT-60SA", "ITER"):
         device = devices[name]
-        result = predictor.predict(
-            **{key: float(device[key]) for key in predictor.REQUIRED_INPUTS}, card=card
-        )
+        result = predictor.predict(**{key: float(device[key]) for key in predictor.REQUIRED_INPUTS}, card=card)
         for prediction in result.predictions:
             key = (name, prediction.model_name)
             if key not in expected:
@@ -152,9 +145,7 @@ def test_the_ceiling_matches_the_forecast_artifact() -> None:
     if not forecast_path.exists():
         pytest.skip("No forecast artifact.")
     forecast = json.loads(forecast_path.read_text())
-    assert _card_or_skip().training_ceiling_s == pytest.approx(
-        float(forecast["train_tau_max_s"]), rel=1e-9
-    )
+    assert _card_or_skip().training_ceiling_s == pytest.approx(float(forecast["train_tau_max_s"]), rel=1e-9)
 
 
 def test_distance_matches_the_studys_own_measure() -> None:
@@ -171,13 +162,9 @@ def test_distance_matches_the_studys_own_measure() -> None:
 
     values = dict(ITER)
     values["a_m"] = values["inverse_aspect_ratio"] * values["r_m"]
-    query = np.array(
-        [[np.log(values[c.removeprefix("log_")]) for c in card.distance_feature_columns]]
-    )
+    query = np.array([[np.log(values[c.removeprefix("log_")]) for c in card.distance_feature_columns]])
     expected = float(cshift.row_mahalanobis(training, query)[0])
-    assert predictor.predict(**ITER, card=card).extrapolation_distance == pytest.approx(
-        expected, rel=1e-6
-    )
+    assert predictor.predict(**ITER, card=card).extrapolation_distance == pytest.approx(expected, rel=1e-6)
 
 
 # --- inputs -----------------------------------------------------------------
@@ -241,9 +228,7 @@ def test_report_names_the_ceiling_when_it_applies() -> None:
     text = predictor.format_prediction(predictor.predict(**ITER, card=card))
     assert "cannot exceed" in text
     assert "recommended" in text
-    assert "cannot exceed" not in predictor.format_prediction(
-        predictor.predict(**IN_RANGE, card=card)
-    )
+    assert "cannot exceed" not in predictor.format_prediction(predictor.predict(**IN_RANGE, card=card))
 
 
 # --- the card ---------------------------------------------------------------
@@ -291,9 +276,7 @@ def _synthetic_dataset(n_per_machine: int = 120, seed: int = 11) -> pd.DataFrame
 
     rng = np.random.default_rng(seed)
     frames = []
-    for index, (machine, radius) in enumerate(
-        {"A": 0.9, "B": 1.3, "C": 1.8, "D": 2.4, "E": 3.0}.items()
-    ):
+    for index, (machine, radius) in enumerate({"A": 0.9, "B": 1.3, "C": 1.8, "D": 2.4, "E": 3.0}.items()):
         n = n_per_machine
         ip = rng.uniform(0.5, 4.0, n)
         bt = rng.uniform(1.0, 5.0, n)
@@ -304,8 +287,7 @@ def _synthetic_dataset(n_per_machine: int = 120, seed: int = 11) -> pd.DataFrame
         kappa = rng.uniform(1.2, 2.0, n)
         meff = rng.uniform(1.5, 2.5, n)
         tau = (
-            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69
-            * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
+            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
         ) * np.exp(rng.normal(0.0, 0.10, n))
         frames.append(
             pd.DataFrame(
@@ -351,13 +333,17 @@ def test_a_freshly_built_card_predicts_the_law_it_was_drawn_from() -> None:
     """
     card = predictor.build_service_card(_synthetic_dataset())
     inputs = {
-        "ip_ma": 2.0, "bt_t": 3.0, "ne_line_1e19_m3": 8.0, "p_loss_mw": 9.0,
-        "r_m": 1.9, "inverse_aspect_ratio": 0.30, "kappa": 1.6, "m_eff_amu": 2.0,
+        "ip_ma": 2.0,
+        "bt_t": 3.0,
+        "ne_line_1e19_m3": 8.0,
+        "p_loss_mw": 9.0,
+        "r_m": 1.9,
+        "inverse_aspect_ratio": 0.30,
+        "kappa": 1.6,
+        "m_eff_amu": 2.0,
     }
     result = predictor.predict(**inputs, card=card)
-    analytic = next(
-        row.tau_s for row in result.predictions if row.model_name == "ipb98y2_analytic"
-    )
+    analytic = next(row.tau_s for row in result.predictions if row.model_name == "ipb98y2_analytic")
     assert result.tau_s == pytest.approx(analytic, rel=0.15)
 
 

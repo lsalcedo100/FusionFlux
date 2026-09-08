@@ -26,15 +26,7 @@ def _make_fake_hdb5(n_rows: int = 600, seed: int = 7) -> pd.DataFrame:
     kappa = rng.uniform(1.1, 2.2, n_rows)
     meff = rng.uniform(1.0, 3.0, n_rows)
     tau_true = (
-        0.0562
-        * ip**0.93
-        * bt**0.15
-        * nel**0.41
-        * plth**-0.69
-        * rgeo**1.97
-        * eps**0.58
-        * kappa**0.78
-        * meff**0.19
+        0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
     )
     tau = tau_true * np.exp(rng.normal(0.0, 0.12, n_rows))
     shots = rng.integers(0, n_rows // 2, n_rows)
@@ -67,9 +59,7 @@ def test_map_to_canonical_applies_units_and_abs() -> None:
     assert (canonical["bt_t"] > 0).all()
     np.testing.assert_allclose(canonical["ip_ma"], raw["IP"].abs(), rtol=1e-9)
     # minor radius derived from inverse aspect ratio * major radius
-    np.testing.assert_allclose(
-        canonical["a_m"], raw["EPS"] * raw["RGEO"], rtol=1e-9
-    )
+    np.testing.assert_allclose(canonical["a_m"], raw["EPS"] * raw["RGEO"], rtol=1e-9)
     assert canonical[hdb5.TARGET_COLUMN].gt(0).all()
     assert canonical[hdb5.GROUP_COLUMN].str.contains("::").all()
 
@@ -133,9 +123,7 @@ def test_train_confinement_model_writes_and_roundtrips(tmp_path) -> None:
     _make_fake_hdb5(400).to_csv(dataset_path, index=False)
     output_dir = tmp_path / "out"
 
-    metadata = hdb5.train_confinement_model(
-        dataset_path, output_dir=output_dir, n_splits=4
-    )
+    metadata = hdb5.train_confinement_model(dataset_path, output_dir=output_dir, n_splits=4)
 
     assert metadata["target_column"] == hdb5.TARGET_COLUMN
     assert int(cast(int, metadata["n_rows"])) > 0
@@ -200,9 +188,7 @@ def test_predict_single_case_roundtrips(tmp_path) -> None:
     output_dir = tmp_path / "out"
     hdb5.train_confinement_model(dataset_path, output_dir=output_dir, n_splits=4)
 
-    result = hdb5.predict_single_case(
-        _valid_single_case(), model_path=output_dir / "confinement_model.joblib"
-    )
+    result = hdb5.predict_single_case(_valid_single_case(), model_path=output_dir / "confinement_model.joblib")
     assert float(cast(float, result["predicted_tau_th_s"])) > 0
     assert np.isfinite(float(cast(float, result["predicted_tau_th_s"])))
     assert float(cast(float, result["ipb98y2_tau_s"])) > 0
@@ -247,9 +233,7 @@ def _make_fake_hdb5_with_outlier_machine(seed: int = 11) -> pd.DataFrame:
 def test_blind_feature_columns_drop_only_the_ipb98_prior() -> None:
     assert "log_ipb98y2_tau_s" in hdb5.MODEL_FEATURE_COLUMNS
     assert "log_ipb98y2_tau_s" not in hdb5.BLIND_FEATURE_COLUMNS
-    assert set(hdb5.BLIND_FEATURE_COLUMNS) == set(hdb5.MODEL_FEATURE_COLUMNS) - {
-        "log_ipb98y2_tau_s"
-    }
+    assert set(hdb5.BLIND_FEATURE_COLUMNS) == set(hdb5.MODEL_FEATURE_COLUMNS) - {"log_ipb98y2_tau_s"}
 
 
 def test_eligible_tokamaks_respects_min_rows() -> None:
@@ -331,9 +315,7 @@ def test_leave_one_tokamak_out_holds_each_machine_out_entirely() -> None:
 
 def test_leave_one_tokamak_out_can_drop_the_reference_and_add_controls() -> None:
     dataset = hdb5.prepare_dataset_from_frame(_make_fake_hdb5(n_rows=240, seed=13))
-    scores = hdb5.leave_one_tokamak_out(
-        dataset, min_rows=20, include_ipb98_reference=False, include_controls=True
-    )
+    scores = hdb5.leave_one_tokamak_out(dataset, min_rows=20, include_ipb98_reference=False, include_controls=True)
     assert "ipb98y2_analytic" not in set(scores["model_name"])
     assert set(hdb5.build_control_models()) <= set(scores["model_name"])
     assert bool(scores["is_blind"].all())
@@ -348,9 +330,7 @@ def test_leave_one_tokamak_out_requires_an_eligible_machine() -> None:
 def test_constrained_form_beats_trees_on_held_out_machines() -> None:
     """The headline claim, on data where the true law is an exact power law."""
     dataset = hdb5.prepare_dataset_from_frame(_make_fake_hdb5_with_outlier_machine())
-    summary = hdb5.summarize_leave_one_tokamak_out(
-        hdb5.leave_one_tokamak_out(dataset, min_rows=20)
-    )
+    summary = hdb5.summarize_leave_one_tokamak_out(hdb5.leave_one_tokamak_out(dataset, min_rows=20))
     by_model = summary.set_index("model_name")["mean_rmsle"]
     assert by_model["ridge_loglinear"] < by_model["random_forest"]
     assert by_model["ridge_loglinear"] < by_model["mean_baseline"]

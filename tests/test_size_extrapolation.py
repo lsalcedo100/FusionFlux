@@ -46,15 +46,7 @@ def _make_size_ordered_dataset(
         kappa = rng.uniform(1.1, 2.2, n)
         meff = rng.uniform(1.0, 3.0, n)
         tau = (
-            0.0562
-            * ip**0.93
-            * bt**0.15
-            * nel**0.41
-            * plth**-0.69
-            * rgeo**1.97
-            * eps**0.58
-            * kappa**0.78
-            * meff**0.19
+            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
         ) * np.exp(rng.normal(0.0, 0.08, n))
         frames.append(
             pd.DataFrame(
@@ -139,9 +131,7 @@ def test_a_dataset_with_too_few_machines_yields_no_splits() -> None:
 
 def test_the_iter_ratio_is_read_off_the_data_rather_than_hardcoded() -> None:
     dataset = _make_size_ordered_dataset()
-    assert hdb5.iter_size_ratio(dataset) == pytest.approx(
-        hdb5.ITER_MAJOR_RADIUS_M / dataset["r_m"].max()
-    )
+    assert hdb5.iter_size_ratio(dataset) == pytest.approx(hdb5.ITER_MAJOR_RADIUS_M / dataset["r_m"].max())
 
 
 def test_the_matched_split_is_the_one_closest_to_the_iter_ratio_in_log_terms() -> None:
@@ -199,9 +189,7 @@ def test_no_test_machine_appears_in_its_own_training_set() -> None:
     dataset = dataset.copy()
     dataset.loc[labels == "L2", hdb5.TARGET_COLUMN] *= 6.0
 
-    split = hdb5.iter_matched_split(
-        dataset, hdb5.size_ordered_splits(dataset, min_train_machines=3, min_test_rows=10)
-    )
+    split = hdb5.iter_matched_split(dataset, hdb5.size_ordered_splits(dataset, min_train_machines=3, min_test_rows=10))
     assert "L2" in split.test_machines
     scores = hdb5.score_size_split(dataset, split, per_machine=True, min_rows=10)
     on_l2 = scores[(scores["scope"] == "L2") & (scores["model_name"] == "random_forest")]
@@ -290,9 +278,7 @@ def test_a_tree_ensemble_cannot_reach_above_its_training_range_at_the_size_cut()
     from sklearn.ensemble import RandomForestRegressor
 
     dataset = _make_size_ordered_dataset()
-    split = hdb5.iter_matched_split(
-        dataset, hdb5.size_ordered_splits(dataset, min_train_machines=3, min_test_rows=10)
-    )
+    split = hdb5.iter_matched_split(dataset, hdb5.size_ordered_splits(dataset, min_train_machines=3, min_test_rows=10))
     labels = dataset[hdb5.TOKAMAK_LABEL_COLUMN].to_numpy()
     train_mask = np.isin(labels, list(split.train_machines))
     features = dataset[list(hdb5.BLIND_FEATURE_COLUMNS)]
@@ -311,9 +297,7 @@ def test_a_tree_ensemble_cannot_reach_above_its_training_range_at_the_size_cut()
 
 def test_truncation_reports_the_share_of_unreachable_rows() -> None:
     dataset = _make_size_ordered_dataset()
-    split = hdb5.iter_matched_split(
-        dataset, hdb5.size_ordered_splits(dataset, min_train_machines=3, min_test_rows=10)
-    )
+    split = hdb5.iter_matched_split(dataset, hdb5.size_ordered_splits(dataset, min_train_machines=3, min_test_rows=10))
     truncation = sx.build_truncation(dataset, split)
 
     assert 0.0 <= truncation["fraction_above_train_max"] <= 1.0
@@ -346,9 +330,7 @@ def test_the_power_law_beats_both_tree_ensembles_at_the_iter_matched_cut() -> No
     scores = hdb5.score_size_split(dataset, matched)
     rmsle = {
         str(name): float(value)
-        for name, value in zip(
-            scores["model_name"].to_numpy(), scores["rmsle"].to_numpy(dtype=float)
-        , strict=True)
+        for name, value in zip(scores["model_name"].to_numpy(), scores["rmsle"].to_numpy(dtype=float), strict=True)
     }
 
     assert rmsle["ridge_loglinear"] < rmsle["random_forest"]

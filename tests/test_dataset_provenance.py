@@ -127,9 +127,7 @@ def _allometry_rows() -> list[tuple[str, str, float, float]]:
 def _allometry_bytes() -> bytes:
     """The deposit's shape: tab separated, carriage-return line endings."""
     lines = [_ALLOMETRY_HEADER]
-    lines.extend(
-        f"{order}\t{species}\t{bmr}\t{mass}" for order, species, bmr, mass in _allometry_rows()
-    )
+    lines.extend(f"{order}\t{species}\t{bmr}\t{mass}" for order, species, bmr, mass in _allometry_rows())
     return ("\r".join(lines) + "\r").encode()
 
 
@@ -154,9 +152,7 @@ def test_allometry_verification_accepts_the_file_it_is_pinned_to(allometry_depos
     assert fingerprint.n_bytes == allometry_deposit.stat().st_size
 
 
-def test_allometry_default_path_sits_in_the_raw_data_directory(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_allometry_default_path_sits_in_the_raw_data_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(al.config, "DATA_RAW_DIR", tmp_path)
     assert al.default_allometry_path() == tmp_path / al.DEFAULT_ALLOMETRY_FILENAME
 
@@ -308,11 +304,9 @@ def _baad_frame() -> pd.DataFrame:
     # A plant measured on every rung but the top one. Rung 1 could score it; the
     # design says no rung may, or the rungs would differ in rows as well as
     # features.
-    incomplete = {ta.GROUP_COLUMN: "Pinus", "d.ba": 0.5, "m.to": 30.0, "h.t": 20.0,
-                  "a.lf": 25.0, "ma.ilf": np.nan}
+    incomplete = {ta.GROUP_COLUMN: "Pinus", "d.ba": 0.5, "m.to": 30.0, "h.t": 20.0, "a.lf": 25.0, "ma.ilf": np.nan}
     # A height of zero has no logarithm.
-    non_positive = {ta.GROUP_COLUMN: "Pinus", "d.ba": 0.5, "m.to": 30.0, "h.t": 0.0,
-                    "a.lf": 25.0, "ma.ilf": 1.0}
+    non_positive = {ta.GROUP_COLUMN: "Pinus", "d.ba": 0.5, "m.to": 30.0, "h.t": 0.0, "a.lf": 25.0, "ma.ilf": 1.0}
     return pd.concat([frame, pd.DataFrame([incomplete, non_positive])], ignore_index=True)
 
 
@@ -337,9 +331,7 @@ def test_baad_verification_accepts_the_release_it_is_pinned_to(baad_release: Pat
     assert fingerprint.n_bytes == baad_release.stat().st_size
 
 
-def test_baad_default_path_sits_in_the_raw_data_directory(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_baad_default_path_sits_in_the_raw_data_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(ta.config, "DATA_RAW_DIR", tmp_path)
     assert ta.default_baad_path() == tmp_path / ta.DEFAULT_BAAD_FILENAME
 
@@ -356,9 +348,7 @@ def test_a_corrupt_baad_download_never_lands_at_the_target_path(
     assert list((tmp_path / "raw").glob("*")) == [], "staging debris was left behind"
 
 
-def test_a_baad_download_can_waive_verification_on_request(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_a_baad_download_can_waive_verification_on_request(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _serve(monkeypatch, _baad_zip_bytes(_baad_frame()))
     target = tmp_path / "raw" / ta.DEFAULT_BAAD_FILENAME
     assert ta.download_baad(target, verify=False) == target
@@ -379,9 +369,7 @@ def test_a_baad_file_that_matches_the_pin_is_not_fetched_again(
     assert ta.download_baad(baad_release) == baad_release
 
 
-def test_the_plant_table_is_read_out_of_the_archive_without_unpacking_it(
-    baad_release: Path, tmp_path: Path
-) -> None:
+def test_the_plant_table_is_read_out_of_the_archive_without_unpacking_it(baad_release: Path, tmp_path: Path) -> None:
     raw = ta.load_baad_raw(baad_release)
     assert len(raw) == len(_baad_frame())
     assert set(ta.SOURCE_COLUMNS) <= set(raw.columns)
@@ -458,10 +446,7 @@ def _physical_rows(n_rows: int, seed: int) -> pd.DataFrame:
     eps = rng.uniform(0.2, 0.7, n_rows)
     kappa = rng.uniform(1.1, 2.2, n_rows)
     meff = rng.uniform(1.0, 3.0, n_rows)
-    tau = (
-        0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69
-        * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
-    )
+    tau = 0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
     return pd.DataFrame(
         {
             "TAUTH": tau * np.exp(rng.normal(0.0, 0.1, n_rows)),
@@ -534,9 +519,7 @@ def test_db523_verification_accepts_the_revision_it_is_pinned_to(
     assert rp.verify_db523_file(path).sha256 == rp.DB523_SHA256
 
 
-def test_db523_default_path_sits_in_the_raw_data_directory(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_db523_default_path_sits_in_the_raw_data_directory(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(rp.config, "DATA_RAW_DIR", tmp_path)
     assert rp.default_db523_path() == tmp_path / rp.DEFAULT_DB523_FILENAME
 
@@ -553,9 +536,7 @@ def test_a_corrupt_db523_download_never_lands_at_the_target_path(
     assert list((tmp_path / "raw").glob("*")) == [], "staging debris was left behind"
 
 
-def test_a_db523_download_can_waive_verification_on_request(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_a_db523_download_can_waive_verification_on_request(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _serve(monkeypatch, b"0,1\nTOK,TAUTH\nJET,0.5\n")
     target = tmp_path / "raw" / rp.DEFAULT_DB523_FILENAME
     assert rp.download_db523(target, verify=False) == target

@@ -119,12 +119,7 @@ def test_every_arm_combination_is_present(committed: dict) -> None:
     for arm in cv_arms + lomo_arms:
         assert arm in committed["arms"]
 
-    expected = {
-        f"{cv}|{lomo}|{agg}"
-        for cv in cv_arms
-        for lomo in lomo_arms
-        for agg in ("pooled_rows", "unit_equal")
-    }
+    expected = {f"{cv}|{lomo}|{agg}" for cv in cv_arms for lomo in lomo_arms for agg in ("pooled_rows", "unit_equal")}
     assert set(committed["inversion_holds"]) == expected
 
 
@@ -141,6 +136,7 @@ def test_the_inversion_survives_every_discretionary_choice(committed: dict) -> N
         f"failing cells: {[k for k, v in committed['inversion_holds'].items() if not v]}"
     )
 
+
 # --- the analysis end to end, on a small synthetic frame -------------------
 
 
@@ -148,9 +144,7 @@ def _dataset(n_per_machine: int = 45, seed: int = 9) -> pd.DataFrame:
     """Four machines, two of them wall variants of the same physical device."""
     rng = np.random.default_rng(seed)
     frames = []
-    for index, (machine, radius) in enumerate(
-        {"JET": 2.9, "JETILW": 2.9, "AUG": 1.6, "C-Mod": 0.7}.items()
-    ):
+    for index, (machine, radius) in enumerate({"JET": 2.9, "JETILW": 2.9, "AUG": 1.6, "C-Mod": 0.7}.items()):
         n = n_per_machine
         ip = rng.uniform(0.5, 4.0, n)
         bt = rng.uniform(1.0, 5.0, n)
@@ -161,8 +155,7 @@ def _dataset(n_per_machine: int = 45, seed: int = 9) -> pd.DataFrame:
         kappa = rng.uniform(1.2, 2.0, n)
         meff = rng.uniform(1.5, 2.5, n)
         tau = (
-            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69
-            * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
+            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
         ) * np.exp(rng.normal(0.0, 0.08, n))
         frames.append(
             pd.DataFrame(
@@ -170,9 +163,16 @@ def _dataset(n_per_machine: int = 45, seed: int = 9) -> pd.DataFrame:
                     "TOK": machine,
                     "SHOT": rng.integers(index * 10_000, index * 10_000 + n // 3, n),
                     "TIME": rng.uniform(1.0, 5.0, n),
-                    "TAUTH": tau, "IP": ip, "BT": bt, "NEL": nel, "PLTH": plth,
-                    "RGEO": rgeo, "DELTA1": rng.uniform(0.1, 0.5, n),
-                    "KAPPAA": kappa, "EPS": eps, "MEFF": meff,
+                    "TAUTH": tau,
+                    "IP": ip,
+                    "BT": bt,
+                    "NEL": nel,
+                    "PLTH": plth,
+                    "RGEO": rgeo,
+                    "DELTA1": rng.uniform(0.1, 0.5, n),
+                    "KAPPAA": kappa,
+                    "EPS": eps,
+                    "MEFF": meff,
                 }
             )
         )

@@ -53,9 +53,7 @@ def test_the_threshold_excludes_machines_from_scoring_not_from_training(dataset)
 
 def test_scored_machines_are_exactly_the_eligible_ones(dataset) -> None:
     """The other half of the same claim, so neither can drift alone."""
-    scored = set(
-        hdb5.leave_one_tokamak_out(dataset, extra_models=None)["tokamak"].unique()
-    )
+    scored = set(hdb5.leave_one_tokamak_out(dataset, extra_models=None)["tokamak"].unique())
     assert scored == set(hdb5.eligible_tokamaks(dataset, min_rows=hdb5.MIN_HELD_OUT_ROWS))
 
 

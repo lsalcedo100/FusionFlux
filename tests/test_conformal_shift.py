@@ -56,15 +56,7 @@ def _make_dataset(
         kappa = rng.uniform(1.2, 2.0, n)
         meff = rng.uniform(1.5, 2.5, n)
         tau = (
-            0.0562
-            * ip**0.93
-            * bt**0.15
-            * nel**0.41
-            * plth**-0.69
-            * rgeo**1.97
-            * eps**0.58
-            * kappa**0.78
-            * meff**0.19
+            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
         ) * np.exp(rng.normal(0.0, 0.12, n))
         frames.append(
             pd.DataFrame(
@@ -89,11 +81,7 @@ def _make_dataset(
 
 
 def _ridge() -> dict[str, Pipeline]:
-    return {
-        "ridge_loglinear": Pipeline(
-            [("scale", StandardScaler()), ("model", Ridge(alpha=1.0, solver="svd"))]
-        )
-    }
+    return {"ridge_loglinear": Pipeline([("scale", StandardScaler()), ("model", Ridge(alpha=1.0, solver="svd"))])}
 
 
 # --- the distance measure ---------------------------------------------------
@@ -155,9 +143,7 @@ def test_machine_cv_calibration_uses_only_training_rows() -> None:
     dataset = _make_dataset()
     labels = dataset[hdb5.TOKAMAK_LABEL_COLUMN].to_numpy()
     train_index = np.flatnonzero(labels != "F")
-    calibration = cshift.machine_cv_calibration(
-        dataset, _ridge()["ridge_loglinear"], train_index
-    )
+    calibration = cshift.machine_cv_calibration(dataset, _ridge()["ridge_loglinear"], train_index)
     assert calibration.absolute_residuals.size == train_index.size
     assert calibration.n_machines == 5
 
@@ -166,9 +152,7 @@ def test_machine_cv_calibration_needs_two_machines() -> None:
     dataset = _make_dataset(machines={"A": 1.0, "B": 1.5})
     labels = dataset[hdb5.TOKAMAK_LABEL_COLUMN].to_numpy()
     with pytest.raises(ValueError, match="at least two"):
-        cshift.machine_cv_calibration(
-            dataset, _ridge()["ridge_loglinear"], np.flatnonzero(labels == "A")
-        )
+        cshift.machine_cv_calibration(dataset, _ridge()["ridge_loglinear"], np.flatnonzero(labels == "A"))
 
 
 # --- the control arm --------------------------------------------------------
@@ -183,12 +167,8 @@ def test_machine_cv_lands_near_nominal_when_there_is_no_shift() -> None:
     everything would sail past 90% here and fail this test.
     """
     dataset = _make_dataset()
-    _, summary = cshift.coverage_leave_one_tokamak_out(
-        dataset, _ridge(), methods=("machine_cv",), alpha=0.10
-    )
-    pooled = summary[
-        (summary["scope"] == "__pooled__") & (summary["model_name"] == "ridge_loglinear")
-    ]
+    _, summary = cshift.coverage_leave_one_tokamak_out(dataset, _ridge(), methods=("machine_cv",), alpha=0.10)
+    pooled = summary[(summary["scope"] == "__pooled__") & (summary["model_name"] == "ridge_loglinear")]
     coverage = float(pooled["empirical_coverage"].iloc[0])
     assert 0.83 < coverage < 0.97
 
@@ -247,9 +227,7 @@ def test_widths_grow_with_distance_when_the_residuals_do() -> None:
     assert slope > 0.0
 
     calibration = cshift.CalibrationSet(growing, distances, n_machines=5)
-    quantile = hdb5.split_conformal_half_width(
-        calibration.scaled_scores(intercept, slope), alpha=0.10
-    )
+    quantile = hdb5.split_conformal_half_width(calibration.scaled_scores(intercept, slope), alpha=0.10)
     near, far = cshift.distance_scale(np.array([1.0, 6.0]), intercept, slope) * quantile
     assert far > near
 

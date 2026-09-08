@@ -182,9 +182,7 @@ def test_coarser_units_widen_exactly_the_heterogeneous_exponents(
         widening = {width.variable: width.widening_factors[name] for width in resolution.widths}
         for variable in HETEROGENEOUS:
             assert widening[variable] > 2.0, (name, variable)
-        homogeneous = [
-            factor for variable, factor in widening.items() if variable not in HETEROGENEOUS
-        ]
+        homogeneous = [factor for variable, factor in widening.items() if variable not in HETEROGENEOUS]
         assert max(homogeneous) < 2.0, name
 
 
@@ -208,9 +206,7 @@ def test_real_database_widens_on_every_exponent(level: str) -> None:
         assert width.widening_factors[level] > 1.5, width.variable
     # And the wider interval must be the more forgiving one about the published
     # exponents: that is the substantive consequence for Result 2's narrative.
-    assert resolution.n_published_inside(level) >= resolution.n_published_inside(
-        asl.BASELINE_LEVEL
-    )
+    assert resolution.n_published_inside(level) >= resolution.n_published_inside(asl.BASELINE_LEVEL)
 
 
 def test_the_baseline_level_is_its_own_reference(
@@ -238,9 +234,10 @@ def test_a_wider_interval_can_only_admit_more_published_values(
             narrow_low, narrow_high = width.bounds[asl.BASELINE_LEVEL]
             wide_low, wide_high = width.bounds[name]
             if wide_low <= narrow_low and narrow_high <= wide_high:
-                assert width.published_inside[name] or not width.published_inside[
-                    asl.BASELINE_LEVEL
-                ], (width.variable, name)
+                assert width.published_inside[name] or not width.published_inside[asl.BASELINE_LEVEL], (
+                    width.variable,
+                    name,
+                )
 
 
 def test_every_exponent_appears_at_every_level(

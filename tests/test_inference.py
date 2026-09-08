@@ -273,7 +273,9 @@ def test_predict_batch_aggregates_time_resolved_shots_using_saved_cutoff_and_run
     monkeypatch.setattr(
         inference,
         "_load_prediction_artifact",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("prediction runtime should reuse the loaded artifact")),
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("prediction runtime should reuse the loaded artifact")
+        ),
     )
 
     result = inference.predict_batch(batch_input, runtime=runtime)
@@ -623,7 +625,11 @@ def test_predict_single_case_explicit_artifact_paths_remain_strict_even_with_usa
         feature_columns=feature_columns,
     )
     default_metadata = _build_artifact_metadata(
-        model_path=isolated_project_dirs["processed"] / train_model.TRAINING_RUNS_DIRNAME / default_run_id / "models" / train_model.TRAINING_MODEL_FILENAME,
+        model_path=isolated_project_dirs["processed"]
+        / train_model.TRAINING_RUNS_DIRNAME
+        / default_run_id
+        / "models"
+        / train_model.TRAINING_MODEL_FILENAME,
         training_run_id=default_run_id,
         feature_columns=feature_columns,
         best_model_name="temperature_echo",
@@ -688,7 +694,7 @@ def test_predict_single_case_rejects_python_and_pandas_version_skew_before_deser
 
     monkeypatch.setattr(train_model.joblib, "load", fail_load)
 
-    with pytest.raises(ValueError, match=fr"runtime version mismatch for {runtime_field}"):
+    with pytest.raises(ValueError, match=rf"runtime version mismatch for {runtime_field}"):
         train_model.predict_single_case(
             density_m3=1.0e20,
             temperature=12.0,
@@ -760,7 +766,9 @@ def test_predict_single_case_rejects_corrupted_latest_manifest_before_deserializ
 
     monkeypatch.setattr(train_model.joblib, "load", fail_load)
 
-    with pytest.raises(ValueError, match="No usable training artifacts were found.*Artifact manifest .* is not valid JSON"):
+    with pytest.raises(
+        ValueError, match="No usable training artifacts were found.*Artifact manifest .* is not valid JSON"
+    ):
         train_model.predict_single_case(
             density_m3=1.0e20,
             temperature=12.0,
@@ -797,7 +805,11 @@ def test_predict_single_case_falls_back_to_older_default_artifact_and_tolerates_
         feature_columns=feature_columns,
     )
     latest_metadata = _build_artifact_metadata(
-        model_path=isolated_project_dirs["processed"] / train_model.TRAINING_RUNS_DIRNAME / latest_run_id / "models" / train_model.TRAINING_MODEL_FILENAME,
+        model_path=isolated_project_dirs["processed"]
+        / train_model.TRAINING_RUNS_DIRNAME
+        / latest_run_id
+        / "models"
+        / train_model.TRAINING_MODEL_FILENAME,
         training_run_id=latest_run_id,
         feature_columns=feature_columns,
         best_model_name="temperature_echo",
@@ -815,7 +827,11 @@ def test_predict_single_case_falls_back_to_older_default_artifact_and_tolerates_
         feature_columns=feature_columns,
     )
     fallback_metadata = _build_artifact_metadata(
-        model_path=isolated_project_dirs["processed"] / train_model.TRAINING_RUNS_DIRNAME / fallback_run_id / "models" / train_model.TRAINING_MODEL_FILENAME,
+        model_path=isolated_project_dirs["processed"]
+        / train_model.TRAINING_RUNS_DIRNAME
+        / fallback_run_id
+        / "models"
+        / train_model.TRAINING_MODEL_FILENAME,
         training_run_id=fallback_run_id,
         feature_columns=feature_columns,
         best_model_name="temperature_echo",
@@ -884,7 +900,11 @@ def test_predict_single_case_prefers_exact_runtime_match_over_newer_compatible_d
         feature_columns=feature_columns,
     )
     exact_metadata = _build_artifact_metadata(
-        model_path=isolated_project_dirs["processed"] / train_model.TRAINING_RUNS_DIRNAME / exact_run_id / "models" / train_model.TRAINING_MODEL_FILENAME,
+        model_path=isolated_project_dirs["processed"]
+        / train_model.TRAINING_RUNS_DIRNAME
+        / exact_run_id
+        / "models"
+        / train_model.TRAINING_MODEL_FILENAME,
         training_run_id=exact_run_id,
         feature_columns=feature_columns,
         best_model_name="tau_echo",
@@ -902,7 +922,11 @@ def test_predict_single_case_prefers_exact_runtime_match_over_newer_compatible_d
         feature_columns=feature_columns,
     )
     newer_drift_metadata = _build_artifact_metadata(
-        model_path=isolated_project_dirs["processed"] / train_model.TRAINING_RUNS_DIRNAME / newer_drift_run_id / "models" / train_model.TRAINING_MODEL_FILENAME,
+        model_path=isolated_project_dirs["processed"]
+        / train_model.TRAINING_RUNS_DIRNAME
+        / newer_drift_run_id
+        / "models"
+        / train_model.TRAINING_MODEL_FILENAME,
         training_run_id=newer_drift_run_id,
         feature_columns=feature_columns,
         best_model_name="temperature_echo",
@@ -940,7 +964,10 @@ def test_predict_single_case_prefers_exact_runtime_match_over_newer_compatible_d
     assert prediction["predicted_neutron_yield"] == pytest.approx(1.0)
     assert prediction["model_name"] == "tau_echo"
     assert any("selection mode 'best_compatibility'" in warning for warning in prediction["prediction_warnings"])
-    assert any("exact_runtime_match" in warning and "newer_minor_drift" in warning for warning in prediction["prediction_warnings"])
+    assert any(
+        "exact_runtime_match" in warning and "newer_minor_drift" in warning
+        for warning in prediction["prediction_warnings"]
+    )
 
 
 def test_predict_single_case_default_selection_uses_metadata_created_at_not_run_directory_name(
@@ -962,7 +989,11 @@ def test_predict_single_case_default_selection_uses_metadata_created_at_not_run_
         feature_columns=feature_columns,
     )
     older_metadata = _build_artifact_metadata(
-        model_path=isolated_project_dirs["processed"] / train_model.TRAINING_RUNS_DIRNAME / older_run_id / "models" / train_model.TRAINING_MODEL_FILENAME,
+        model_path=isolated_project_dirs["processed"]
+        / train_model.TRAINING_RUNS_DIRNAME
+        / older_run_id
+        / "models"
+        / train_model.TRAINING_MODEL_FILENAME,
         training_run_id=older_run_id,
         feature_columns=feature_columns,
         best_model_name="tau_echo",
@@ -980,7 +1011,11 @@ def test_predict_single_case_default_selection_uses_metadata_created_at_not_run_
         feature_columns=feature_columns,
     )
     newer_metadata = _build_artifact_metadata(
-        model_path=isolated_project_dirs["processed"] / train_model.TRAINING_RUNS_DIRNAME / newer_run_id / "models" / train_model.TRAINING_MODEL_FILENAME,
+        model_path=isolated_project_dirs["processed"]
+        / train_model.TRAINING_RUNS_DIRNAME
+        / newer_run_id
+        / "models"
+        / train_model.TRAINING_MODEL_FILENAME,
         training_run_id=newer_run_id,
         feature_columns=feature_columns,
         best_model_name="temperature_echo",
@@ -1265,9 +1300,7 @@ def test_grouped_time_series_training_and_batch_inference_share_prepared_represe
     assert batch_result.predictions["temperature_keV"].tolist() == pytest.approx(
         training_representation["temperature_keV"].tolist()
     )
-    assert batch_result.predictions["predicted_neutron_yield"].tolist() == pytest.approx(
-        expected_predictions.tolist()
-    )
+    assert batch_result.predictions["predicted_neutron_yield"].tolist() == pytest.approx(expected_predictions.tolist())
 
 
 def test_predict_single_case_clips_negative_predictions(
@@ -1302,9 +1335,7 @@ def test_predict_single_case_clips_negative_predictions(
 
     assert prediction["predicted_neutron_yield"] == 0.0
     assert prediction["clipped_negative_prediction"] is True
-    assert prediction["prediction_warnings"] == [
-        "Model predicted a negative neutron yield; output was clipped to 0.0."
-    ]
+    assert prediction["prediction_warnings"] == ["Model predicted a negative neutron yield; output was clipped to 0.0."]
 
 
 def test_raw_loaded_artifact_predict_clips_and_warns() -> None:

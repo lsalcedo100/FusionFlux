@@ -28,14 +28,22 @@ def _card_or_skip() -> None:
 
 ITER_ARGS = [
     "predict",
-    "--ip-ma", "15.0",
-    "--bt-t", "5.3",
-    "--ne-line-1e19-m3", "10.0",
-    "--p-loss-mw", "87.0",
-    "--r-m", "6.2",
-    "--inverse-aspect-ratio", "0.32258",
-    "--kappa", "1.7",
-    "--m-eff-amu", "2.5",
+    "--ip-ma",
+    "15.0",
+    "--bt-t",
+    "5.3",
+    "--ne-line-1e19-m3",
+    "10.0",
+    "--p-loss-mw",
+    "87.0",
+    "--r-m",
+    "6.2",
+    "--inverse-aspect-ratio",
+    "0.32258",
+    "--kappa",
+    "1.7",
+    "--m-eff-amu",
+    "2.5",
 ]
 
 
@@ -129,9 +137,7 @@ def test_console_script_points_at_this_module() -> None:
     else:  # Python 3.10, which `requires-python` still supports
         import tomli as tomllib
 
-    config = tomllib.loads(
-        (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
-    )
+    config = tomllib.loads((Path(__file__).resolve().parents[1] / "pyproject.toml").read_text())
     assert config["project"]["scripts"]["fusionflux"] == "fusionflux.cli:main"
 
     # The entry point has to resolve inside a package the wheel actually ships.
@@ -161,10 +167,29 @@ def test_module_entry_point_runs_without_an_install() -> None:
 
     root = Path(__file__).resolve().parents[1]
     result = subprocess.run(
-        [sys.executable, "-m", "fusionflux", "predict", "--json",
-         "--ip-ma", "15", "--bt-t", "5.3", "--ne-line-1e19-m3", "10",
-         "--p-loss-mw", "87", "--r-m", "6.2", "--inverse-aspect-ratio", "0.3226",
-         "--kappa", "1.7", "--m-eff-amu", "2.5"],
+        [
+            sys.executable,
+            "-m",
+            "fusionflux",
+            "predict",
+            "--json",
+            "--ip-ma",
+            "15",
+            "--bt-t",
+            "5.3",
+            "--ne-line-1e19-m3",
+            "10",
+            "--p-loss-mw",
+            "87",
+            "--r-m",
+            "6.2",
+            "--inverse-aspect-ratio",
+            "0.3226",
+            "--kappa",
+            "1.7",
+            "--m-eff-amu",
+            "2.5",
+        ],
         capture_output=True,
         text=True,
         cwd=root,

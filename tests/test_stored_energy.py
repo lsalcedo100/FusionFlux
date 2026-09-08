@@ -112,12 +112,8 @@ def test_both_arms_are_scored_on_the_same_rows(committed: dict) -> None:
     keeps it that way: the row count is shared, and each arm scores the same
     number of held-out units.
     """
-    label_units = {
-        arm["forest_worse_by_label"]["n_units"] for arm in committed["arms"].values()
-    }
-    device_units = {
-        arm["forest_worse_by_device"]["n_units"] for arm in committed["arms"].values()
-    }
+    label_units = {arm["forest_worse_by_label"]["n_units"] for arm in committed["arms"].values()}
+    device_units = {arm["forest_worse_by_device"]["n_units"] for arm in committed["arms"].values()}
     assert len(label_units) == 1
     assert len(device_units) == 1
 
@@ -138,10 +134,7 @@ def test_the_control_answers_the_objection_it_was_run_for(committed: dict) -> No
         assert arm[key]["n_worse"] > arm[key]["n_units"] / 2
         assert arm[key]["mean_difference"] > 0
     # The device gap is the one the paper says is not merely preserved but larger.
-    assert (
-        arm["forest_worse_by_device"]["mean_difference"]
-        > baseline["forest_worse_by_device"]["mean_difference"]
-    )
+    assert arm["forest_worse_by_device"]["mean_difference"] > baseline["forest_worse_by_device"]["mean_difference"]
     assert arm["iter_matched_cut"]["random_forest"] > 3 * arm["iter_matched_cut"]["ridge_loglinear"]
 
 

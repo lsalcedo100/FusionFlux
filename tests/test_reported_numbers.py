@@ -590,19 +590,22 @@ CLAIMS: tuple[Claim, ...] = (
         _r(3),
         documents=(PAPER, PAPER_PDF),
     ),
+    # These seven moved to the supplement with Sec. S13 and the trimmed
+    # mixed-model paragraph. The claims did not silently follow: all seven
+    # failed on the move, which is what the second half of each claim is for.
     Claim(
         "largest measured elongation ratio",
         "1.341",
         lambda a: _elongation(a, "conversion_ratio", "max"),
         _r(3),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     Claim(
         "rows above the shape model's ceiling",
         "16%",
         lambda a: _elongation(a, "conversion_ratio", "fraction_above_shape_model_ceiling"),
         _pct(0),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     Claim(
         "rows below unity, which no such boundary produces",
@@ -616,7 +619,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.739",
         lambda a: _elongation(a, "conversion_ratio", "per_label_median", "PBXM"),
         _r(3),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     # -- Sec. 4.2: the stored-energy control -------------------------------
     Claim(
@@ -689,7 +692,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.264",
         lambda a: a["mixed"]["leave_one_label_out"]["reml"]["mean_rmsle"],
         _r(3),
-        documents=(PAPER, PAPER_PDF, ZENODO),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF, ZENODO),
     ),
     Claim(
         "mixed model, leave-one-device-out",
@@ -813,21 +816,21 @@ CLAIMS: tuple[Claim, ...] = (
         "0.154",
         lambda a: a["sensitivity"]["elongation_convention"]["indentation"]["per_label_median"]["PBXM"],
         _r(3),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     Claim(
         "elongation ratio where the boundary is indented",
         "0.740",
         lambda a: a["sensitivity"]["elongation_convention"]["indentation"]["median_ratio_where_indented"],
         _r(3),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     Claim(
         "rows below unity beyond rounding",
         "2.0%",
         lambda a: _elongation(a, "conversion_ratio", "fraction_below_one_beyond_rounding"),
         _pct(1),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     # -- Sec. 6: the coverage that is close enough to zero to look like a bug --
     Claim(
@@ -1582,7 +1585,7 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    117: "One hundred and seventeen",
+    110: "One hundred and ten",
     147: "one hundred and forty-seven",
 }
 

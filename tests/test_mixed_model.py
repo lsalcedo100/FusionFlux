@@ -62,11 +62,7 @@ def _brute_force(design, response, groups, variance_ratio):
     residual = response - design @ coefficients
     degrees = len(response) - design.shape[1]
     scale = float(residual @ inverse @ residual) / degrees
-    criterion = (
-        degrees * np.log(scale)
-        + np.linalg.slogdet(covariance)[1]
-        + np.linalg.slogdet(information)[1]
-    )
+    criterion = degrees * np.log(scale) + np.linalg.slogdet(covariance)[1] + np.linalg.slogdet(information)[1]
     return coefficients, criterion
 
 

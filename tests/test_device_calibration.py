@@ -37,9 +37,7 @@ def _dataset_or_skip():
 @pytest.fixture(scope="module")
 def committed() -> dict:
     if not RESULTS.exists():
-        pytest.skip(
-            "no results/device_calibration.json; run `python3 analysis_device_calibration.py`"
-        )
+        pytest.skip("no results/device_calibration.json; run `python3 analysis_device_calibration.py`")
     return json.loads(RESULTS.read_text())
 
 

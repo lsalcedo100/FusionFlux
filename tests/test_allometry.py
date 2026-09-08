@@ -37,8 +37,7 @@ RESULTS = ROOT / "results"
 def _dataset_or_skip() -> pd.DataFrame:
     if not al.default_allometry_path().exists():
         pytest.skip(
-            "Allometry dataset not downloaded; run "
-            "`python3 -c 'import allometry; allometry.download_allometry()'`."
+            "Allometry dataset not downloaded; run `python3 -c 'import allometry; allometry.download_allometry()'`."
         )
     return al.prepare_dataset()
 

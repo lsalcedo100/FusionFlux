@@ -47,15 +47,7 @@ def _make_multi_machine_dataset(
         kappa = rng.uniform(1.1, 2.2, n)
         meff = rng.uniform(1.0, 3.0, n)
         tau = (
-            0.0562
-            * ip**0.93
-            * bt**0.15
-            * nel**0.41
-            * plth**-0.69
-            * rgeo**1.97
-            * eps**0.58
-            * kappa**0.78
-            * meff**0.19
+            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
         ) * np.exp(rng.normal(0.0, 0.08, n))
         tau = tau * (offsets or {}).get(machine, 1.0)
         frames.append(
@@ -122,9 +114,7 @@ def test_spearman_is_nan_for_a_constant_vector_and_rejects_length_mismatch() -> 
 def test_evaluate_models_honours_the_requested_feature_columns() -> None:
     """Both arms of Result 4 must be able to run on one shared feature set."""
     dataset = _make_multi_machine_dataset(n_per_machine=60)
-    scores = hdb5.evaluate_models(
-        dataset, n_splits=3, feature_columns=hdb5.BLIND_FEATURE_COLUMNS
-    )
+    scores = hdb5.evaluate_models(dataset, n_splits=3, feature_columns=hdb5.BLIND_FEATURE_COLUMNS)
     assert {score.model_name for score in scores} >= {"ridge_loglinear", "random_forest"}
     assert all(np.isfinite(score.cv_rmsle) for score in scores)
 
@@ -176,9 +166,7 @@ def test_analysis_reports_a_degradation_factor_consistent_with_its_own_scores() 
     dataset = _make_multi_machine_dataset()
     analysis = ax.analyze_extrapolation(dataset, min_rows=30, n_splits=3)
     for transfer in analysis.transfers:
-        assert transfer.degradation_factor == pytest.approx(
-            transfer.lomo_mean_rmsle / transfer.cv_rmsle
-        )
+        assert transfer.degradation_factor == pytest.approx(transfer.lomo_mean_rmsle / transfer.cv_rmsle)
         assert transfer.lomo_median_rmsle <= transfer.lomo_worst_rmsle
         assert transfer.worst_machine in analysis.machines_held_out
 
@@ -277,9 +265,7 @@ def test_controls_are_scored_under_both_splits_or_neither() -> None:
     """A control only discriminates if it appears in both arms of the comparison."""
     dataset = _make_multi_machine_dataset()
 
-    with_controls = ax.analyze_extrapolation(
-        dataset, min_rows=30, n_splits=3, include_controls=True
-    )
+    with_controls = ax.analyze_extrapolation(dataset, min_rows=30, n_splits=3, include_controls=True)
     names = {transfer.model_name for transfer in with_controls.transfers}
     assert set(ax.CONTROL_MODELS) <= names
     for name in ax.CONTROL_MODELS:
@@ -287,9 +273,7 @@ def test_controls_are_scored_under_both_splits_or_neither() -> None:
         assert np.isfinite(transfer.cv_rmsle)
         assert np.isfinite(transfer.lomo_mean_rmsle)
 
-    without = ax.analyze_extrapolation(
-        dataset, min_rows=30, n_splits=3, include_controls=False, include_ladder=False
-    )
+    without = ax.analyze_extrapolation(dataset, min_rows=30, n_splits=3, include_controls=False, include_ladder=False)
     assert not set(ax.CONTROL_MODELS) & {t.model_name for t in without.transfers}
 
 
@@ -364,9 +348,7 @@ def test_paired_difference_detects_a_gap_the_marginals_would_hide() -> None:
     """
     machines = [f"M{i}" for i in range(10)]
     difficulty = [0.1, 0.3, 0.5, 0.8, 1.2, 1.6, 2.0, 2.4, 2.8, 3.2]
-    report = _fake_per_machine(
-        {"a": difficulty, "b": [value + 0.15 for value in difficulty]}, machines
-    )
+    report = _fake_per_machine({"a": difficulty, "b": [value + 0.15 for value in difficulty]}, machines)
     marginals = {i.model_name: i for i in ax.bootstrap_over_machines(report, n_resamples=1000)}
     assert marginals["a"].ci_high > marginals["b"].ci_low  # the intervals overlap
 
@@ -378,9 +360,7 @@ def test_paired_difference_detects_a_gap_the_marginals_would_hide() -> None:
 
 def test_paired_difference_is_antisymmetric_and_rejects_unscored_models() -> None:
     machines = [f"M{i}" for i in range(6)]
-    report = _fake_per_machine(
-        {"a": [0.2, 0.3, 0.4, 0.5, 0.6, 0.7], "b": [0.3, 0.3, 0.5, 0.4, 0.8, 0.6]}, machines
-    )
+    report = _fake_per_machine({"a": [0.2, 0.3, 0.4, 0.5, 0.6, 0.7], "b": [0.3, 0.3, 0.5, 0.4, 0.8, 0.6]}, machines)
     forward = ax.bootstrap_paired_difference(report, "a", "b", n_resamples=400)
     backward = ax.bootstrap_paired_difference(report, "b", "a", n_resamples=400)
     assert forward.mean_difference == pytest.approx(-backward.mean_difference)

@@ -51,15 +51,7 @@ def _make_dataset(
         kappa = rng.uniform(1.1, 2.2, n)
         meff = rng.uniform(1.0, 3.0, n)
         tau = (
-            0.0562
-            * ip**0.93
-            * bt**0.15
-            * nel**0.41
-            * plth**-0.69
-            * rgeo**1.97
-            * eps**0.58
-            * kappa**0.78
-            * meff**0.19
+            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
         ) * np.exp(rng.normal(0.0, 0.10, n))
         frames.append(
             pd.DataFrame(
@@ -156,17 +148,13 @@ def test_calibration_split_always_leaves_both_sides_non_empty() -> None:
     """Guards the rounding: a tiny fraction must not empty the calibration set."""
     groups = np.repeat(np.arange(6), 3)
     for fraction in (0.01, 0.5, 0.99):
-        mask = hdb5._calibration_mask_by_group(
-            groups, calibration_fraction=fraction, seed=1
-        )
+        mask = hdb5._calibration_mask_by_group(groups, calibration_fraction=fraction, seed=1)
         assert 0 < int(mask.sum()) < mask.size
 
 
 def test_calibration_split_rejects_a_single_discharge() -> None:
     with pytest.raises(ValueError, match="at least two discharges"):
-        hdb5._calibration_mask_by_group(
-            np.zeros(10), calibration_fraction=0.25, seed=0
-        )
+        hdb5._calibration_mask_by_group(np.zeros(10), calibration_fraction=0.25, seed=0)
 
 
 # --- coverage under the two splits ------------------------------------------

@@ -40,9 +40,7 @@ def _dataset_or_skip() -> pd.DataFrame:
 # --- the device parameters --------------------------------------------------
 
 
-@pytest.mark.parametrize(
-    "device", [device for device in fc.DEVICES if device.published_ipb98_tau_s is not None]
-)
+@pytest.mark.parametrize("device", [device for device in fc.DEVICES if device.published_ipb98_tau_s is not None])
 def test_parameters_reproduce_the_published_confinement_time(device: fc.Device) -> None:
     """The external check on the whole input vector.
 
@@ -53,9 +51,7 @@ def test_parameters_reproduce_the_published_confinement_time(device: fc.Device) 
     """
     frame = fc.device_frame((device,))
     predicted = float(hdb5.ipb98y2_tau_s(frame).iloc[0])
-    assert predicted == pytest.approx(
-        device.published_ipb98_tau_s, rel=fc.PUBLISHED_TAU_TOLERANCE
-    )
+    assert predicted == pytest.approx(device.published_ipb98_tau_s, rel=fc.PUBLISHED_TAU_TOLERANCE)
 
 
 def test_devices_are_ordered_by_size_and_span_the_iter_jump() -> None:
@@ -75,9 +71,7 @@ def test_every_device_records_its_source() -> None:
 def test_inverse_aspect_ratio_is_derived_not_typed() -> None:
     """``eps`` must follow from the two radii, so the three cannot disagree."""
     for device in fc.DEVICES:
-        assert device.inverse_aspect_ratio == pytest.approx(
-            device.minor_radius_m / device.r_m
-        )
+        assert device.inverse_aspect_ratio == pytest.approx(device.minor_radius_m / device.r_m)
         assert 0.15 < device.inverse_aspect_ratio < 0.8
 
 
@@ -130,9 +124,7 @@ def test_the_unbounded_law_is_not_flagged_as_bounded() -> None:
     zoo = {"ridge_loglinear": hdb5.build_model_zoo()["ridge_loglinear"]}
     record = fc.build_forecast(dataset, zoo)
     frame = pd.DataFrame([row.to_json() for row in record.forecasts])
-    assert not frame[frame["model_name"] == "ridge_loglinear"][
-        "bounded_by_training_range"
-    ].any()
+    assert not frame[frame["model_name"] == "ridge_loglinear"]["bounded_by_training_range"].any()
 
 
 # --- the lock ---------------------------------------------------------------
@@ -194,6 +186,7 @@ def test_content_digest_covers_the_dataset_it_was_fitted_on() -> None:
 
 def test_digest_is_stable_under_reordering_of_json_keys() -> None:
     """Two identical records must agree, so a digest change always means content."""
+
     def _record() -> fc.ForecastRecord:
         return fc.ForecastRecord(
             generated_on="2026-01-01",

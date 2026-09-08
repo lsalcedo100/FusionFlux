@@ -123,8 +123,7 @@ def test_wheel_claims_no_generic_top_level_names(wheel_names: list[str]) -> None
     installed = {name for name in installed if not name.endswith(".dist-info")}
     collisions = installed & RESERVED_TOP_LEVEL_NAMES
     assert not collisions, (
-        f"the wheel would shadow {sorted(collisions)} in site-packages; "
-        "only `fusionflux` may be installed top level"
+        f"the wheel would shadow {sorted(collisions)} in site-packages; only `fusionflux` may be installed top level"
     )
 
 
@@ -138,9 +137,7 @@ def test_wheel_installs_exactly_one_importable_name(wheel_names: list[str]) -> N
 def test_console_script_points_at_the_moved_cli(wheel: Path) -> None:
     with zipfile.ZipFile(wheel) as archive:
         entry_points = next(
-            archive.read(name).decode()
-            for name in archive.namelist()
-            if name.endswith("entry_points.txt")
+            archive.read(name).decode() for name in archive.namelist() if name.endswith("entry_points.txt")
         )
     assert "fusionflux = fusionflux.cli:main" in entry_points
 

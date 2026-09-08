@@ -784,22 +784,13 @@ scores, where every label counts once. And JET and JET-ILW are one physical
 tokamak either side of a wall change, as are AUG and AUGW, so holding out
 JET-ILW while training on JET does not hold out an unseen device.
 
-\paragraph{The labels too small to score.} A fourth choice is worth stating
-because it looks like a confound and is not. Five labels hold fewer than 30
-rows (COMPASS, TCV, START, TDEV and TFTR, 43 rows between them, under 1\% of the
-database) and none can carry a held-out score of its own. They are nonetheless
-in every training fold, since the threshold governs scoring rather than
-training. They are also among the most unusual points in the feature space, so
-whether a flexible model can exploit those few rows is a fair question to ask of
-the ranking.
-
-Dropping them from training as well answers it. Every fitted model gets slightly
-worse without them, by 0.012 for the power law, 0.027 for the gradient booster
-and 0.007 for the random forest, and the ordering over the 13 held-out labels
-is unchanged: power law 0.214 to 0.226, gradient booster 0.359 to 0.387, random
-forest 0.465 to 0.472. The 43 rows help the tree ensembles slightly, as one
-would expect of rows in a sparse region, and nowhere near enough to recover the
-inversion. The analytic reference is unaffected, since it fits nothing.
+\paragraph{The labels too small to score.} Five labels hold fewer than 30 rows
+and none can carry a held-out score of its own, but all five stay in every
+training fold, since the threshold governs scoring rather than training. They
+are among the most unusual points in the feature space, so whether a flexible
+model exploits them is a fair question; dropping them from training as well
+leaves the ordering over the 13 held-out labels unchanged, and Sec.~S11 of the
+Supplementary Material gives the arm.
 
 \begin{table}[t]
 \centering
@@ -850,35 +841,13 @@ checks. So ITPA20 and ITPA20-IL are scored below on the
 elongation they were fitted to, and IPB98(y,2) on the areal elongation it was
 fitted to, which is what makes the three comparable at all.
 
-What the substitution costs is worth stating, and it is worth stating that a
-shape model is the wrong way to find out. On a parametrised boundary
-$\kappa/\kappa_a$ depends on the triangularity alone, which confines the ratio
-to $[1.000, 1.110]$. The measured ratio has a median of \textbf{1.083} and a
-maximum of \textbf{1.341}, with 16\% of rows above that ceiling and 7\%
-\emph{below} unity, which no boundary of that family produces at all. Only
-\textbf{2.0\%} are below it by more than $5\times10^{-4}$; the rest is rounding
-on machines that ran circular.
-
-The rows below unity are worth following, because the obvious reading of them
-is that the delivered column is wrong and the obvious reading is not right here.
-A boundary elongation below the areal elongation is impossible for a
-\emph{convex} boundary, and of the 2.0\% that clear rounding, all but PBX-M's 59
-rows sit within 3.5\% of unity on near-circular machines, which the two columns'
-precision covers. PBX-M does not: its ratio runs from 0.67 to 0.80, at a median
-of \textbf{0.739}. PBX-M ran
-indented, bean-shaped plasmas, its boundary is not convex, and the convexity
-argument does not apply to it. DB5.2.3 records that directly: of the analysed
-rows, PBX-M is the only label carrying an indentation above 0.04, at a median of
-\textbf{0.154}, and the 60 rows with any indentation at all have a median
-$\kappa/\kappa_a$ of 0.740. The column is not defective on those rows; the
-parametrised boundary is simply the wrong shape for them, which is the same
-point the ratio makes everywhere else and is here checkable against a third
-column.
-
 Scoring on the delivered column rather than the measured one moves ITPA20 by up
-to 0.018 and ITPA20-IL by up to 0.022, twenty to thirty times what the model
-would predict and enough to reorder ITPA20 against IPB98(y,2) per label. Where a
-column exists, a model of it is not evidence about it.
+to 0.018 and ITPA20-IL by up to 0.022, enough to reorder ITPA20 against
+IPB98(y,2) per label, so the substitution is not free and is not modelled here.
+Sec.~S13 of the Supplementary Material measures what it costs and why a shape
+model is the wrong way to find out, including the rows where the measured ratio
+falls below unity and the one label, PBX-M, whose indented boundary explains
+them.
 
 Evaluated analytically on the rows analysed here, ITPA20 scores 0.188 over all
 rows, 0.191 per label and \textbf{0.177} across the ITER-size-matched cut;
@@ -1075,14 +1044,12 @@ pairs it with a third kind of estimator: a mixed model carrying a random
 intercept per device, from which a device never seen is predicted by the
 population-level fixed effects alone. It is neither a power law nor a tree and
 it is the fit matched to the deployment question, so Sec.~S10 of the
-Supplementary Material fits and scores it rather than conceding it. Fitted by
-restricted maximum likelihood it scores 0.264 per label against the power law's
-0.214 and \textbf{0.829} per device against 0.212, losing on 10 of the 11
+Supplementary Material fits and scores it rather than conceding it. It scores
+\textbf{0.829} per device against the power law's 0.212, losing on 10 of the 11
 devices, and sweeping its one variance component shows the best value that
 component could take is the one at which the estimator \emph{is} the pooled
-power law. The deployment-matched estimator therefore does not displace a pooled
-power law on an unseen device, and what has been ruled out is narrower than the
-class: a single random intercept, no random slopes, on eleven groups.
+power law. What has been ruled out is narrower than the class: a single random
+intercept, no random slopes, on eleven groups.
 
 \section{A size-extrapolation stress test matched to ITER}
 \label{sec:size}
@@ -2307,7 +2274,7 @@ outputs under \texttt{results/} also record the digest they verified, which
 carries that provenance into the artefact itself.
 
 The prose is bound to those artefacts in the same way.
-\textbf{One hundred and seventeen} of the numbers printed above, and \textbf{one
+\textbf{One hundred and ten} of the numbers printed above, and \textbf{one
 hundred and forty-seven} across this paper and its Supplementary Material, are tied by test
 to the field of the generated file they came from, in both directions: if an analysis is rerun and its output moves, the
 rendered value stops matching the printed one and the suite fails; if a number

@@ -32,14 +32,22 @@ pytestmark = pytest.mark.slow
 # ITER, the operating point the README prints. Chosen because the interesting
 # behaviour is the refusal, and ITER is the case that triggers it.
 ITER_ARGS = [
-    "--ip-ma", "15",
-    "--bt-t", "5.3",
-    "--ne-line-1e19-m3", "10",
-    "--p-loss-mw", "87",
-    "--r-m", "6.2",
-    "--inverse-aspect-ratio", "0.3226",
-    "--kappa", "1.7",
-    "--m-eff-amu", "2.5",
+    "--ip-ma",
+    "15",
+    "--bt-t",
+    "5.3",
+    "--ne-line-1e19-m3",
+    "10",
+    "--p-loss-mw",
+    "87",
+    "--r-m",
+    "6.2",
+    "--inverse-aspect-ratio",
+    "0.3226",
+    "--kappa",
+    "1.7",
+    "--m-eff-amu",
+    "2.5",
 ]
 
 
@@ -115,8 +123,14 @@ def test_installed_prediction_matches_the_checkout(installed_cli: Path, tmp_path
     installed = json.loads(result.stdout)
 
     local = predictor.predict(
-        ip_ma=15.0, bt_t=5.3, ne_line_1e19_m3=10.0, p_loss_mw=87.0,
-        r_m=6.2, inverse_aspect_ratio=0.3226, kappa=1.7, m_eff_amu=2.5,
+        ip_ma=15.0,
+        bt_t=5.3,
+        ne_line_1e19_m3=10.0,
+        p_loss_mw=87.0,
+        r_m=6.2,
+        inverse_aspect_ratio=0.3226,
+        kappa=1.7,
+        m_eff_amu=2.5,
     )
     assert installed["tau_s"] == pytest.approx(local.tau_s, rel=1e-12)
 
@@ -133,9 +147,7 @@ def test_the_wheel_does_not_shadow_a_generic_module(installed_cli: Path, tmp_pat
         text=True,
         cwd=tmp_path,
     )
-    assert probe.returncode == 0, (
-        "installing fusionflux shadowed the caller's `config` module:\n" + probe.stderr
-    )
+    assert probe.returncode == 0, "installing fusionflux shadowed the caller's `config` module:\n" + probe.stderr
     assert "the caller's own config" in probe.stdout
 
 
@@ -173,9 +185,7 @@ def test_no_stray_console_scripts(installed_cli: Path) -> None:
     bin_dir = installed_cli.parent
     installed = {path.name for path in bin_dir.iterdir() if path.is_file()}
     # Whatever pip and venv put there, plus ours. Nothing else from this project.
-    unexpected = {
-        name
-        for name in installed
-        if name.startswith(("fusion", "neutron", "train", "hdb5"))
-    } - {"fusionflux"}
+    unexpected = {name for name in installed if name.startswith(("fusion", "neutron", "train", "hdb5"))} - {
+        "fusionflux"
+    }
     assert not unexpected, f"unexpected console scripts installed: {sorted(unexpected)}"

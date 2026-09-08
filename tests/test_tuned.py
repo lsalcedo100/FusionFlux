@@ -47,8 +47,7 @@ def _make_dataset(n_per_machine: int = 60, seed: int = 17) -> pd.DataFrame:
         kappa = rng.uniform(1.1, 2.2, n)
         meff = rng.uniform(1.0, 3.0, n)
         tau = (
-            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69
-            * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
+            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
         ) * np.exp(rng.normal(0.0, 0.08, n))
         frames.append(
             pd.DataFrame(
@@ -145,9 +144,7 @@ def test_machine_mode_holds_out_one_whole_machine_per_fold() -> None:
     for inner_train, inner_test in folds:
         held = set(labels[train_rows[inner_test]])
         assert len(held) == 1, "an inner fold held out more than one machine"
-        assert held.isdisjoint(set(labels[train_rows[inner_train]])), (
-            "the held-out machine was also used to fit"
-        )
+        assert held.isdisjoint(set(labels[train_rows[inner_train]])), "the held-out machine was also used to fit"
 
 
 def test_a_machine_too_small_to_score_is_not_made_an_inner_fold() -> None:
@@ -233,8 +230,14 @@ def test_tuning_never_fits_on_a_row_outside_the_training_fold(
     monkeypatch.setattr(at, "_build", lambda name, config: _RecordingModel(config, seen))
 
     at._tune_and_fit(
-        "random_forest", at.RF_GRID, features, log_target, groups, train_rows,
-        inner_unit=labels, mode="machine",
+        "random_forest",
+        at.RF_GRID,
+        features,
+        log_target,
+        groups,
+        train_rows,
+        inner_unit=labels,
+        mode="machine",
     )
 
     assert seen, "nothing was fitted; the assertion below would pass vacuously"
@@ -260,9 +263,7 @@ def test_the_chosen_configuration_is_the_one_that_scored_best_inside_the_fold(
     seen: set[int] = set()
     monkeypatch.setattr(at, "_build", lambda name, config: _ScriptedModel(config, seen))
 
-    _, record = at._tune_and_fit(
-        "random_forest", at.RF_GRID, features, log_target, groups, train_rows
-    )
+    _, record = at._tune_and_fit("random_forest", at.RF_GRID, features, log_target, groups, train_rows)
     assert record["config"]["min_samples_leaf"] == "5", "the worse configuration was chosen"
     assert record["inner_rmsle"] > 0.0
     assert set(record["config"]) == set(at.RF_GRID)
@@ -279,12 +280,11 @@ def analysis() -> dict[str, Any]:
     estimators are still covered; what this exercises is the splitting, the
     scoring and the shape of the result.
     """
+
     def _small(name: str, config: dict[str, Any]) -> Any:
         if name == "random_forest":
             return RandomForestRegressor(n_estimators=5, random_state=hdb5.RANDOM_STATE, **config)
-        return HistGradientBoostingRegressor(
-            max_iter=10, random_state=hdb5.RANDOM_STATE, **config
-        )
+        return HistGradientBoostingRegressor(max_iter=10, random_state=hdb5.RANDOM_STATE, **config)
 
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(at, "_build", _small)
@@ -319,9 +319,7 @@ def test_both_selection_procedures_are_reported_and_cover_the_same_machines(
         assert set(per_machine) == {"discharge", "machine"}
         assert set(per_machine["discharge"]) == eligible
         assert set(per_machine["machine"]) == eligible
-        assert row["leave_one_machine_out"] == pytest.approx(
-            float(np.mean(list(per_machine["discharge"].values())))
-        )
+        assert row["leave_one_machine_out"] == pytest.approx(float(np.mean(list(per_machine["discharge"].values()))))
         assert row["leave_one_machine_out_inner_machine"] == pytest.approx(
             float(np.mean(list(per_machine["machine"].values())))
         )

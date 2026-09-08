@@ -52,15 +52,7 @@ def _make_dataset(
         kappa = rng.uniform(1.1, 2.2, n)
         meff = rng.uniform(1.0, 3.0, n)
         tau = (
-            0.0562
-            * ip**0.93
-            * bt**0.15
-            * nel**0.41
-            * plth**-0.69
-            * rgeo**1.97
-            * eps**0.58
-            * kappa**0.78
-            * meff**0.19
+            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
         ) * np.exp(rng.normal(0.0, 0.08, n))
         frames.append(
             pd.DataFrame(
@@ -117,9 +109,7 @@ def test_zero_shrinkage_is_exactly_the_base_ridge(correction: str) -> None:
     with np.errstate(divide="ignore", over="ignore", invalid="ignore"):
         base = hdb5.build_model_zoo()["ridge_loglinear"].fit(features, log_tau)
         base_prediction = base.predict(features)
-    hybrid = hdb5.PowerLawResidualHybrid(correction=correction, shrinkage=0.0).fit(
-        features, log_tau
-    )
+    hybrid = hdb5.PowerLawResidualHybrid(correction=correction, shrinkage=0.0).fit(features, log_tau)
     np.testing.assert_allclose(hybrid.predict(features), base_prediction, atol=1e-12)
 
 
@@ -134,20 +124,16 @@ def test_prediction_is_affine_in_the_damping_factor(correction: str) -> None:
     dataset = _make_dataset()
     features, log_tau = _xy(dataset)
 
-    at_zero = hdb5.PowerLawResidualHybrid(correction=correction, shrinkage=0.0).fit(
-        features, log_tau
-    ).predict(features)
-    at_one = hdb5.PowerLawResidualHybrid(correction=correction, shrinkage=1.0).fit(
-        features, log_tau
-    ).predict(features)
+    at_zero = hdb5.PowerLawResidualHybrid(correction=correction, shrinkage=0.0).fit(features, log_tau).predict(features)
+    at_one = hdb5.PowerLawResidualHybrid(correction=correction, shrinkage=1.0).fit(features, log_tau).predict(features)
 
     for shrinkage in (0.25, 0.5, 0.75):
-        predicted = hdb5.PowerLawResidualHybrid(
-            correction=correction, shrinkage=shrinkage
-        ).fit(features, log_tau).predict(features)
-        np.testing.assert_allclose(
-            predicted, at_zero + shrinkage * (at_one - at_zero), atol=1e-10
+        predicted = (
+            hdb5.PowerLawResidualHybrid(correction=correction, shrinkage=shrinkage)
+            .fit(features, log_tau)
+            .predict(features)
         )
+        np.testing.assert_allclose(predicted, at_zero + shrinkage * (at_one - at_zero), atol=1e-10)
 
 
 def test_boosted_tree_correction_is_bounded_by_its_training_range() -> None:
@@ -169,9 +155,7 @@ def test_boosted_tree_correction_is_bounded_by_its_training_range() -> None:
     train = np.flatnonzero(np.isin(labels, ["S1", "S2", "M1", "M2"]))
     held = np.flatnonzero(np.isin(labels, ["L1", "L2"]))
 
-    model = hdb5.PowerLawResidualHybrid(correction="gbm", shrinkage=1.0).fit(
-        features.iloc[train], log_tau[train]
-    )
+    model = hdb5.PowerLawResidualHybrid(correction="gbm", shrinkage=1.0).fit(features.iloc[train], log_tau[train])
     train_correction = model.correction_.predict(features.iloc[train])
     held_correction = model.correction_.predict(features.iloc[held])
 
@@ -196,17 +180,14 @@ def test_polynomial_correction_is_not_bounded_that_way() -> None:
     train = np.flatnonzero(np.isin(labels, ["S1", "S2", "M1", "M2"]))
     held = np.flatnonzero(np.isin(labels, ["L1", "L2"]))
 
-    model = hdb5.PowerLawResidualHybrid(
-        correction="ridge", shrinkage=1.0, ridge_correction_alpha=1.0
-    ).fit(features.iloc[train], log_tau[train])
+    model = hdb5.PowerLawResidualHybrid(correction="ridge", shrinkage=1.0, ridge_correction_alpha=1.0).fit(
+        features.iloc[train], log_tau[train]
+    )
     with np.errstate(divide="ignore", over="ignore", invalid="ignore"):
         train_correction = model.correction_.predict(features.iloc[train])
         held_correction = model.correction_.predict(features.iloc[held])
 
-    assert (
-        held_correction.min() < train_correction.min()
-        or held_correction.max() > train_correction.max()
-    )
+    assert held_correction.min() < train_correction.min() or held_correction.max() > train_correction.max()
 
 
 def test_unknown_correction_is_rejected() -> None:
@@ -252,9 +233,7 @@ def test_hybrids_score_under_every_split_the_zoo_does() -> None:
     hybrids = hdb5.build_hybrid_models((0.5,), corrections=("gbm",))
 
     lomo = hdb5.leave_one_tokamak_out(dataset, min_rows=10, extra_models=hybrids)
-    cv = hdb5.evaluate_models(
-        dataset, feature_columns=hdb5.BLIND_FEATURE_COLUMNS, extra_models=hybrids
-    )
+    cv = hdb5.evaluate_models(dataset, feature_columns=hdb5.BLIND_FEATURE_COLUMNS, extra_models=hybrids)
     split = hdb5.size_ordered_splits(dataset, min_train_machines=3, min_test_rows=10)[0]
     size = hdb5.score_size_split(dataset, split, extra_models=hybrids)
 
@@ -274,9 +253,7 @@ def test_selection_never_picks_the_rung_by_its_held_out_score() -> None:
     the reported rung is the CV-minimising one, whatever its LOMO score.
     """
     dataset = _make_dataset()
-    analysis = ah.analyze_hybrid(
-        dataset, shrinkage_grid=(0.0, 0.5, 1.0), corrections=("gbm",), n_resamples=50
-    )
+    analysis = ah.analyze_hybrid(dataset, shrinkage_grid=(0.0, 0.5, 1.0), corrections=("gbm",), n_resamples=50)
     outcome = analysis.selection[0]
     rungs = [p for p in analysis.frontier if p.correction == "gbm"]
     best_cv = min(rungs, key=lambda p: p.cv_rmsle)
@@ -286,9 +263,7 @@ def test_selection_never_picks_the_rung_by_its_held_out_score() -> None:
 
 def test_frontier_carries_every_rung_under_all_three_splits() -> None:
     dataset = _make_dataset()
-    analysis = ah.analyze_hybrid(
-        dataset, shrinkage_grid=(0.0, 1.0), corrections=("gbm",), n_resamples=50
-    )
+    analysis = ah.analyze_hybrid(dataset, shrinkage_grid=(0.0, 1.0), corrections=("gbm",), n_resamples=50)
     rungs = [point for point in analysis.frontier if point.is_hybrid]
     assert len(rungs) == 2
     for point in rungs:
@@ -376,9 +351,7 @@ def test_hyperparameter_sweep_covers_the_reported_setting() -> None:
     dataset = _make_dataset()
     splits = hdb5.size_ordered_splits(dataset, min_train_machines=3, min_test_rows=10)
     rows = ah.sweep_correction_hyperparameters(dataset, splits[0])
-    assert len(rows) == len(ah.HYPERPARAMETER_GRID_DEPTHS) * len(
-        ah.HYPERPARAMETER_GRID_ITERATIONS
-    )
+    assert len(rows) == len(ah.HYPERPARAMETER_GRID_DEPTHS) * len(ah.HYPERPARAMETER_GRID_ITERATIONS)
     reported = (hdb5.DEFAULT_GBM_CORRECTION_DEPTH, hdb5.DEFAULT_GBM_CORRECTION_ITERATIONS)
     assert reported in {(row.gbm_max_depth, row.gbm_max_iter) for row in rows}
 
@@ -387,7 +360,5 @@ def test_real_data_every_grid_setting_beats_ridge_at_the_matched_cut() -> None:
     """Result 6e's first claim: the gain is not an artifact of one setting."""
     dataset = _real_dataset_or_skip()
     splits = hdb5.size_ordered_splits(dataset)
-    rows = ah.sweep_correction_hyperparameters(
-        dataset, hdb5.iter_matched_split(dataset, splits)
-    )
+    rows = ah.sweep_correction_hyperparameters(dataset, hdb5.iter_matched_split(dataset, splits))
     assert all(row.beats_ridge for row in rows)

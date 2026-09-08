@@ -32,10 +32,7 @@ import replication as rp
 
 def _db523_or_skip() -> pd.DataFrame:
     if not rp.default_db523_path().exists():
-        pytest.skip(
-            "DB5.2.3 not downloaded; run "
-            "`python3 -c 'import replication; replication.download_db523()'`."
-        )
+        pytest.skip("DB5.2.3 not downloaded; run `python3 -c 'import replication; replication.download_db523()'`.")
     return rp.load_db523_raw()
 
 
@@ -161,12 +158,9 @@ def test_derived_inverse_aspect_ratio_matches_std5() -> None:
     """``AMIN / RGEO`` must reproduce STD5's own ``EPS``, which has no DB5.2.3 column."""
     raw = _db523_or_skip()
     std5 = _std5_or_skip()
-    derived = pd.to_numeric(raw["AMIN"], errors="coerce") / pd.to_numeric(
-        raw["RGEO"], errors="coerce"
-    )
-    merged = (
-        raw.assign(key=rp._match_keys(raw), derived_eps=derived)
-        .merge(std5.assign(key=rp._match_keys(std5)), on="key")
+    derived = pd.to_numeric(raw["AMIN"], errors="coerce") / pd.to_numeric(raw["RGEO"], errors="coerce")
+    merged = raw.assign(key=rp._match_keys(raw), derived_eps=derived).merge(
+        std5.assign(key=rp._match_keys(std5)), on="key"
     )
     difference = (merged["derived_eps"] - pd.to_numeric(merged["EPS"], errors="coerce")).abs()
     assert difference.max() < 1e-6

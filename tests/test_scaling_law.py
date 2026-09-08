@@ -201,9 +201,7 @@ def test_expected_dependencies_are_found_by_projection_not_by_reading_the_basis(
 
     assert cosine(triple, pair) > 0.5  # far from orthogonal, so no basis shows both
     readable = sum(
-        cosine(basis_vector, expected) > 0.999
-        for basis_vector in report.null_space
-        for expected in (triple, pair)
+        cosine(basis_vector, expected) > 0.999 for basis_vector in report.null_space for expected in (triple, pair)
     )
     assert readable <= 1
 

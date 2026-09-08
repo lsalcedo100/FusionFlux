@@ -102,9 +102,7 @@ def test_the_constraint_is_actually_satisfied(allometry: pd.DataFrame) -> None:
     """A constraint that is silently not applied looks like one that did not help."""
     # Pin the mass exponent to Kleiber's 3/4. Columns are [intercept, mass, temp].
     constraint = np.array([[0.0, 1.0, 0.0]])
-    model = sa.ConstrainedLinearRegression(constraint, np.array([0.75])).fit(
-        allometry[FEATURES], allometry["log_rate"]
-    )
+    model = sa.ConstrainedLinearRegression(constraint, np.array([0.75])).fit(allometry[FEATURES], allometry["log_rate"])
     assert model.constraint_violation() < 1e-9
     assert model.coef_[0] == pytest.approx(0.75, abs=1e-9)
 
@@ -119,9 +117,7 @@ def test_constraint_costs_something_in_sample_and_nothing_is_free(
     """
     y = allometry["log_rate"].to_numpy()
     free = sa.ConstrainedLinearRegression().fit(allometry[FEATURES], y)
-    pinned = sa.ConstrainedLinearRegression(
-        np.array([[0.0, 1.0, 0.0]]), np.array([0.70])
-    ).fit(allometry[FEATURES], y)
+    pinned = sa.ConstrainedLinearRegression(np.array([[0.0, 1.0, 0.0]]), np.array([0.70])).fit(allometry[FEATURES], y)
     free_rmse = float(np.sqrt(np.mean((y - free.predict(allometry[FEATURES])) ** 2)))
     pinned_rmse = float(np.sqrt(np.mean((y - pinned.predict(allometry[FEATURES])) ** 2)))
     assert pinned_rmse >= free_rmse - 1e-12
@@ -139,9 +135,7 @@ def test_agrees_with_the_from_scratch_solver(allometry: pd.DataFrame) -> None:
     rhs = np.array([0.75])
 
     theirs = sl.solve_constrained_lstsq(design, target, constraint, rhs)
-    ours = sa.ConstrainedLinearRegression(constraint, rhs).fit(
-        allometry[FEATURES], target
-    ).coefficients_
+    ours = sa.ConstrainedLinearRegression(constraint, rhs).fit(allometry[FEATURES], target).coefficients_
     np.testing.assert_allclose(ours, theirs, rtol=1e-9, atol=1e-11)
 
 
@@ -283,9 +277,7 @@ def test_summarize_ranks_by_the_tail(report: pd.DataFrame) -> None:
 
 
 def test_small_groups_are_skipped_rather_than_averaged_in(allometry: pd.DataFrame) -> None:
-    frame = pd.concat(
-        [allometry, allometry.head(2).assign(clade="fossil")], ignore_index=True
-    )
+    frame = pd.concat([allometry, allometry.head(2).assign(clade="fossil")], ignore_index=True)
     audited = sa.audit_groups(
         frame[FEATURES],
         frame["log_rate"].to_numpy(),
@@ -308,9 +300,7 @@ def test_mismatched_lengths_are_rejected(allometry: pd.DataFrame) -> None:
 
 def test_an_empty_estimator_map_is_rejected(allometry: pd.DataFrame) -> None:
     with pytest.raises(ValueError, match="at least one estimator"):
-        sa.audit_groups(
-            allometry[FEATURES], allometry["log_rate"].to_numpy(), allometry["clade"], {}
-        )
+        sa.audit_groups(allometry[FEATURES], allometry["log_rate"].to_numpy(), allometry["clade"], {})
 
 
 def test_estimators_are_cloned_not_mutated(allometry: pd.DataFrame) -> None:
@@ -351,10 +341,7 @@ def test_ordered_split_trains_on_the_small_end_and_predicts_the_large(
 def test_ordered_split_cuts_grow_monotonically(allometry: pd.DataFrame) -> None:
     order = {clade: index for index, clade in enumerate(CLADES)}
     labels = allometry["clade"].to_numpy()
-    sizes = [
-        len(train)
-        for train, _ in sa.OrderedGroupSplit(order, min_train_groups=2).split(groups=labels)
-    ]
+    sizes = [len(train) for train, _ in sa.OrderedGroupSplit(order, min_train_groups=2).split(groups=labels)]
     assert sizes == sorted(sizes)
     assert len(set(sizes)) == len(sizes)
 
@@ -382,22 +369,19 @@ def test_extrapolating_along_the_ordering_is_harder_than_leaving_one_out(
     labels = allometry["clade"].to_numpy()
     X, y = allometry[FEATURES], allometry["log_rate"].to_numpy()
 
-    lomo = sa.audit_groups(
-        X, y, labels, {"forest": RandomForestRegressor(n_estimators=60, random_state=0)}
-    )
+    lomo = sa.audit_groups(X, y, labels, {"forest": RandomForestRegressor(n_estimators=60, random_state=0)})
     lomo_worst = float(lomo["score"].max())
 
     order = {clade: index for index, clade in enumerate(CLADES)}
     scores = []
-    for train_index, test_index in sa.OrderedGroupSplit(order, min_train_groups=2).split(
-        groups=labels
-    ):
+    for train_index, test_index in sa.OrderedGroupSplit(order, min_train_groups=2).split(groups=labels):
         model = RandomForestRegressor(n_estimators=60, random_state=0)
         model.fit(X.iloc[train_index], y[train_index])
         predicted = model.predict(X.iloc[test_index])
         scores.append(float(np.sqrt(np.mean((y[test_index] - predicted) ** 2))))
 
     assert max(scores) > lomo_worst
+
 
 # --- the packaged distribution ----------------------------------------------
 #
@@ -531,8 +515,13 @@ def test_readme_documents_the_actual_api() -> None:
     assert "rhs=[0.75]" in readme
 
     # Names the README explicitly got wrong once.
-    for wrong in ("constraint_matrix", "constraint_values", "n_test_groups",
-                  "feature_mahalanobis", "target_above_train_max_fraction"):
+    for wrong in (
+        "constraint_matrix",
+        "constraint_values",
+        "n_test_groups",
+        "feature_mahalanobis",
+        "target_above_train_max_fraction",
+    ):
         assert wrong not in readme, f"the README still names {wrong}, which does not exist"
 
 
@@ -547,8 +536,13 @@ def test_readme_report_columns_are_real_columns(allometry: pd.DataFrame) -> None
         {"ridge": Ridge()},
         min_held_out_rows=5,
     )
-    for column in ("score", "mahalanobis", "fraction_above_train_max",
-                   "log_target_headroom", "prediction_bounded_by_train_range"):
+    for column in (
+        "score",
+        "mahalanobis",
+        "fraction_above_train_max",
+        "log_target_headroom",
+        "prediction_bounded_by_train_range",
+    ):
         assert column in report.columns
         assert f"`{column}`" in readme, f"the README does not document {column}"
 

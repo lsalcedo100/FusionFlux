@@ -106,9 +106,7 @@ def test_the_distance_is_the_same_construction_as_the_engineering_one() -> None:
     rng = np.random.default_rng(11)
     train = rng.normal(size=(200, 4))
     held = rng.normal(size=(30, 4)) + 1.5
-    assert ad._mahalanobis_of_mean(train, held) == pytest.approx(
-        hdb5._mahalanobis_of_mean(train, held), rel=1e-12
-    )
+    assert ad._mahalanobis_of_mean(train, held) == pytest.approx(hdb5._mahalanobis_of_mean(train, held), rel=1e-12)
 
 
 def test_the_distance_ignores_a_constant_offset_in_any_group() -> None:
@@ -135,9 +133,7 @@ def test_the_spearman_helper_matches_the_committed_engineering_correlation() -> 
         pytest.skip("no results/extrapolation_per_machine.csv")
     frame = pd.read_csv(path)
     forest = frame[frame["model_name"] == "random_forest"]
-    computed = ad._spearman(
-        forest["rmsle"].to_numpy(), forest["feature_mahalanobis"].to_numpy()
-    )
+    computed = ad._spearman(forest["rmsle"].to_numpy(), forest["feature_mahalanobis"].to_numpy())
     assert computed == pytest.approx(0.846, abs=5e-4)
 
 
@@ -205,10 +201,7 @@ def test_deleting_the_device_constant_features_is_inconclusive(committed: dict) 
     trimmed = arms["within_device_features_only"]
     full = arms["nine_engineering_features"]
     assert trimmed["by_device"]["mean_difference"] < 0
-    assert (
-        trimmed["by_device"]["power_law_mean_rmsle"]
-        > 2 * full["by_device"]["power_law_mean_rmsle"]
-    )
+    assert trimmed["by_device"]["power_law_mean_rmsle"] > 2 * full["by_device"]["power_law_mean_rmsle"]
 
 
 def test_the_reversal_survives_in_dimensionless_coordinates(committed: dict) -> None:

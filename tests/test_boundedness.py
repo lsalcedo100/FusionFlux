@@ -29,9 +29,7 @@ def _dataset(n_per_machine: int = 60, seed: int = 5) -> pd.DataFrame:
     """A prepared HDB5-shaped frame whose machines are ordered in size."""
     rng = np.random.default_rng(seed)
     frames = []
-    for index, (machine, radius) in enumerate(
-        {"A": 0.7, "B": 1.2, "C": 1.9, "D": 2.6, "E": 3.2}.items()
-    ):
+    for index, (machine, radius) in enumerate({"A": 0.7, "B": 1.2, "C": 1.9, "D": 2.6, "E": 3.2}.items()):
         n = n_per_machine
         ip = rng.uniform(0.4, 4.0, n)
         bt = rng.uniform(1.0, 5.0, n)
@@ -42,8 +40,7 @@ def _dataset(n_per_machine: int = 60, seed: int = 5) -> pd.DataFrame:
         kappa = rng.uniform(1.1, 2.2, n)
         meff = rng.uniform(1.0, 3.0, n)
         tau = (
-            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69
-            * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
+            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
         ) * np.exp(rng.normal(0.0, 0.08, n))
         frames.append(
             pd.DataFrame(
@@ -133,9 +130,7 @@ def test_a_bounded_model_breaking_the_bound_is_raised_rather_than_recorded(
 
     monkeypatch.setattr(ab, "ENSEMBLES", ("random_forest",))
     monkeypatch.setattr(ab, "STRUCTURALLY_BOUNDED", ("random_forest",))
-    monkeypatch.setattr(
-        hdb5, "build_model_zoo", lambda: {"random_forest": AlwaysAboveTheCeiling()}
-    )
+    monkeypatch.setattr(hdb5, "build_model_zoo", lambda: {"random_forest": AlwaysAboveTheCeiling()})
 
     dataset = _dataset()
     labels = dataset[hdb5.TOKAMAK_LABEL_COLUMN].to_numpy()
@@ -172,9 +167,7 @@ def test_an_unbounded_model_exceeding_the_ceiling_is_recorded_not_raised(
 
     monkeypatch.setattr(ab, "ENSEMBLES", ("hist_gradient_boosting",))
     monkeypatch.setattr(ab, "STRUCTURALLY_BOUNDED", ("random_forest",))
-    monkeypatch.setattr(
-        hdb5, "build_model_zoo", lambda: {"hist_gradient_boosting": AlwaysAboveTheCeiling()}
-    )
+    monkeypatch.setattr(hdb5, "build_model_zoo", lambda: {"hist_gradient_boosting": AlwaysAboveTheCeiling()})
 
     dataset = _dataset()
     labels = dataset[hdb5.TOKAMAK_LABEL_COLUMN].to_numpy()
@@ -221,9 +214,7 @@ def test_every_row_carries_the_numbers_the_paper_quotes(analysis: dict[str, obje
 def test_headroom_is_the_difference_it_claims_to_be(analysis: dict[str, object]) -> None:
     """`log_headroom_used` must be prediction max minus training max, not an alias."""
     for row in _rows(analysis):
-        assert row["log_headroom_used"] == pytest.approx(
-            row["log_prediction_max"] - row["log_train_target_max"]
-        )
+        assert row["log_headroom_used"] == pytest.approx(row["log_prediction_max"] - row["log_train_target_max"])
 
 
 def test_best_shot_ratio_is_expressed_in_linear_units(analysis: dict[str, object]) -> None:
@@ -246,8 +237,6 @@ def test_the_committed_artifact_agrees_with_its_own_structure() -> None:
 
     payload = json.loads(path.read_text())
     for row in payload["per_split"]:
-        assert row["log_headroom_used"] == pytest.approx(
-            row["log_prediction_max"] - row["log_train_target_max"]
-        )
+        assert row["log_headroom_used"] == pytest.approx(row["log_prediction_max"] - row["log_train_target_max"])
         if row["model_name"] == "random_forest":
             assert row["log_headroom_used"] <= 0.0

@@ -38,9 +38,7 @@ def _dataset_or_skip():
 @pytest.fixture(scope="module")
 def committed() -> dict:
     if not RESULTS.exists():
-        pytest.skip(
-            "no results/fitting_conventions.json; run `python3 analysis_fitting_conventions.py`"
-        )
+        pytest.skip("no results/fitting_conventions.json; run `python3 analysis_fitting_conventions.py`")
     return json.loads(RESULTS.read_text())
 
 
@@ -97,9 +95,9 @@ def test_weights_reach_the_estimator() -> None:
     with hdb5._suppress_benign_matmul_warnings():
         plain.fit(features, target)
         weighted.fit(features, target, model__sample_weight=afc.equal_label_weights(labels))
-    assert not np.allclose(
-        plain.named_steps["model"].coef_, weighted.named_steps["model"].coef_
-    ), "the weights did not change the fit"
+    assert not np.allclose(plain.named_steps["model"].coef_, weighted.named_steps["model"].coef_), (
+        "the weights did not change the fit"
+    )
 
 
 # --- the committed report -----------------------------------------------------
@@ -127,7 +125,4 @@ def test_the_arms_are_scored_on_different_label_sets(committed: dict) -> None:
 
 def test_weighting_arm_scores_the_same_labels_as_the_baseline(committed: dict) -> None:
     """It changes the fit, not the population, so the two are directly comparable."""
-    assert (
-        committed["summaries"]["equal_label_weights"]["labels"]
-        == committed["summaries"]["baseline"]["labels"]
-    )
+    assert committed["summaries"]["equal_label_weights"]["labels"] == committed["summaries"]["baseline"]["labels"]

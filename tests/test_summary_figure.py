@@ -59,10 +59,7 @@ def test_the_left_panel_actually_shows_a_reversal(
     # also carries ``mean_baseline``, the constant predictor, which is worst
     # under every split by construction and would make this pass for the wrong
     # reason; and IPB98(y,2) is excluded because it is not blind.
-    drawn = [
-        m for m in summary_figure.STYLE
-        if m in scores.index and m != "ipb98y2_analytic"
-    ]
+    drawn = [m for m in summary_figure.STYLE if m in scores.index and m != "ipb98y2_analytic"]
     blind = scores.loc[drawn]
     best_cv = blind["cv_rmsle"].idxmin()
     worst_lomo = blind["lomo_mean_rmsle"].idxmax()

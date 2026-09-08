@@ -182,8 +182,7 @@ def test_larger_penalty_shrinks_the_fit_towards_the_training_mean() -> None:
     fold = afs._factor_fold(expanded[~held], expanded[held], log_target[~held])
 
     spreads = [
-        float(np.max(np.abs(fold.predict_log(alpha) - fold.target_mean)))
-        for alpha in (1e-3, 1.0, 1e3, 1e6, 1e9)
+        float(np.max(np.abs(fold.predict_log(alpha) - fold.target_mean))) for alpha in (1e-3, 1.0, 1e3, 1e6, 1e9)
     ]
     assert spreads == sorted(spreads, reverse=True)
     # Relative rather than absolute: what matters is that the penalty collapses

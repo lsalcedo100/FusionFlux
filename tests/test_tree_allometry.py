@@ -33,17 +33,13 @@ def _make_dataset(n_per_species: int = 60, seed: int = 3) -> pd.DataFrame:
     """A BAAD-shaped frame in which mass really is a power law in the predictors."""
     rng = np.random.default_rng(seed)
     frames = []
-    for index, (species, scale) in enumerate(
-        {"a": 0.02, "b": 0.05, "c": 0.12, "d": 0.3, "e": 0.7}.items()
-    ):
+    for index, (species, scale) in enumerate({"a": 0.02, "b": 0.05, "c": 0.12, "d": 0.3, "e": 0.7}.items()):
         n = n_per_species
         diameter = scale * rng.uniform(0.6, 1.6, n)
-        height = 20.0 * diameter ** 0.7 * rng.uniform(0.85, 1.15, n)
-        leaf_area = 300.0 * diameter ** 1.8 * rng.uniform(0.8, 1.25, n)
+        height = 20.0 * diameter**0.7 * rng.uniform(0.85, 1.15, n)
+        leaf_area = 300.0 * diameter**1.8 * rng.uniform(0.8, 1.25, n)
         leaf_mass = 0.12 * leaf_area * rng.uniform(0.85, 1.2, n)
-        mass = (
-            120.0 * diameter ** ta.WBE_EXPONENT * height ** 0.25
-        ) * np.exp(rng.normal(0.0, 0.15, n))
+        mass = (120.0 * diameter**ta.WBE_EXPONENT * height**0.25) * np.exp(rng.normal(0.0, 0.15, n))
         frames.append(
             pd.DataFrame(
                 {
@@ -106,8 +102,7 @@ def test_interpolation_split_keeps_every_species_on_both_sides() -> None:
     for train_index, test_index in cv.split(dataset):
         shared = set(groups[train_index]) & set(groups[test_index])
         assert shared == set(np.unique(groups)), (
-            "the interpolation split must leave every species on both sides; "
-            f"only {sorted(shared)} were shared"
+            f"the interpolation split must leave every species on both sides; only {sorted(shared)} were shared"
         )
 
 
@@ -147,8 +142,7 @@ def test_reversal_requires_both_halves() -> None:
     assert not no_interpolation_win.trees_win_interpolation
     assert no_interpolation_win.power_law_wins_extrapolation
     assert not no_interpolation_win.reversal, (
-        "losing both splits is not a reversal; Result 13's outcome must not be "
-        "counted as one"
+        "losing both splits is not a reversal; Result 13's outcome must not be counted as one"
     )
 
 
@@ -169,10 +163,8 @@ def test_first_reversal_rung_is_the_lowest_one() -> None:
         return ata.RungResult(
             n_features=n,
             features=tuple("abcd"[:n]),
-            cv_rmsle={ata.POWER_LAW: 0.5, "random_forest": cv_tree,
-                      "hist_gradient_boosting": cv_tree},
-            loo_rmsle={ata.POWER_LAW: 0.6, "random_forest": 0.8,
-                       "hist_gradient_boosting": 0.9},
+            cv_rmsle={ata.POWER_LAW: 0.5, "random_forest": cv_tree, "hist_gradient_boosting": cv_tree},
+            loo_rmsle={ata.POWER_LAW: 0.6, "random_forest": 0.8, "hist_gradient_boosting": 0.9},
             n_species_scored=5,
         )
 
@@ -194,10 +186,8 @@ def test_no_reversal_anywhere_returns_none() -> None:
             ata.RungResult(
                 n_features=n,
                 features=tuple("abcd"[:n]),
-                cv_rmsle={ata.POWER_LAW: 0.4, "random_forest": 0.5,
-                          "hist_gradient_boosting": 0.5},
-                loo_rmsle={ata.POWER_LAW: 0.6, "random_forest": 0.8,
-                           "hist_gradient_boosting": 0.9},
+                cv_rmsle={ata.POWER_LAW: 0.4, "random_forest": 0.5, "hist_gradient_boosting": 0.5},
+                loo_rmsle={ata.POWER_LAW: 0.6, "random_forest": 0.8, "hist_gradient_boosting": 0.9},
                 n_species_scored=5,
             )
             for n in (1, 2)

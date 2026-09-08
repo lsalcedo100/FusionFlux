@@ -55,9 +55,7 @@ def printed_entries() -> dict[str, str]:
     entries: dict[str, str] = {}
     for document in (PAPER, SUPPLEMENT):
         latex = _strip_comments(document.read_text())
-        block = latex[
-            latex.index(r"\begin{thebibliography}") : latex.index(r"\end{thebibliography}")
-        ]
+        block = latex[latex.index(r"\begin{thebibliography}") : latex.index(r"\end{thebibliography}")]
         for chunk in re.split(r"(?=\\bibitem\{)", block):
             if match := re.match(r"\\bibitem\{([^}]+)\}", chunk):
                 entries[match.group(1)] = chunk
@@ -67,10 +65,7 @@ def printed_entries() -> dict[str, str]:
 def bib_entries() -> dict[str, str]:
     """Each key in references.bib, mapped to the body of that entry."""
     text = BIB.read_text()
-    return {
-        match.group(2): match.group(0)
-        for match in re.finditer(r"@(\w+)\{([^,]+),(.*?)\n\}", text, re.DOTALL)
-    }
+    return {match.group(2): match.group(0) for match in re.finditer(r"@(\w+)\{([^,]+),(.*?)\n\}", text, re.DOTALL)}
 
 
 def test_every_printed_reference_is_in_the_bib_file() -> None:
@@ -99,9 +94,7 @@ def test_dois_agree_between_the_two_files() -> None:
         bib_doi = in_bib.group(1) if in_bib else None
         if paper_doi != bib_doi:
             disagreements.append(f"{key}: paper.tex has {paper_doi!r}, references.bib has {bib_doi!r}")
-    assert not disagreements, "DOIs disagree between the two reference lists:\n  " + "\n  ".join(
-        disagreements
-    )
+    assert not disagreements, "DOIs disagree between the two reference lists:\n  " + "\n  ".join(disagreements)
 
 
 def test_every_reference_without_a_doi_is_one_we_expect() -> None:

@@ -951,6 +951,22 @@ difference excludes zero.
 \section{Four choices that do not carry the reversal}
 \label{supp:choices}
 
+\paragraph{The labels too small to score at all.} Five labels hold fewer than
+30 rows (COMPASS, TCV, START, TDEV and TFTR, 43 rows between them, under 1\% of
+the database) and none can carry a held-out score of its own. They are
+nonetheless in every training fold, since the threshold governs scoring rather
+than training, and they are among the most unusual points in the feature space,
+so whether a flexible model can exploit those few rows is a fair question to ask
+of the ranking.
+
+Dropping them from training as well answers it. Every fitted model gets slightly
+worse without them, by 0.012 for the power law, 0.027 for the gradient booster
+and 0.007 for the random forest, and the ordering over the 13 held-out labels is
+unchanged: power law 0.214 to 0.226, gradient booster 0.359 to 0.387, random
+forest 0.465 to 0.472. The 43 rows help the tree ensembles slightly, as one
+would expect of rows in a sparse region, and nowhere near enough to recover the
+inversion. The analytic reference is unaffected, since it fits nothing.
+
 \paragraph{Where the row threshold is set.} The 13-of-13 count is reported at a
 30-row eligibility threshold, which is a choice, so it is swept.
 Sec.~\ref{supp:permachine} scores leave-one-label-out at 10, 20,
@@ -1090,6 +1106,44 @@ displacement in size, $\rho^{*}$ and $\nu^{*}$, and the paper says so rather
 than describing it as a size extrapolation alone. The leave-one-device-out
 comparison of Sec.~4 of the main text carries no such confound, which is the
 second reason it and not the cut is the claim this paper rests on.
+
+\section{What the elongation substitution costs}
+\label{supp:elongation}
+
+ITPA20 and ITPA20-IL are specified on the separatrix elongation at the geometric
+axis, $\kappa$, and STD5 delivers one elongation column, \texttt{KAPPAA}: the
+areal elongation $\kappa_a = S/(\pi a^2)$, which is the definition IPB98(y,2)
+was fitted to. Sec.~4.2 of the main text scores each law on the column it was
+fitted to, taking $\kappa$ from the full DB5.2.3 revision. What that
+substitution is worth is measured here rather than modelled, and the measurement
+is also the argument for not modelling it.
+
+On a parametrised boundary $\kappa/\kappa_a$ depends on the triangularity
+alone, which confines the ratio to $[1.000, 1.110]$. The measured ratio has a
+median of \textbf{1.083} and a maximum of \textbf{1.341}, with 16\% of rows
+above that ceiling and 7\% \emph{below} unity, which no boundary of that family
+produces at all. Only \textbf{2.0\%} are below it by more than
+$5\times10^{-4}$; the rest is rounding on machines that ran circular.
+
+The rows below unity are worth following, because the obvious reading of them is
+that the delivered column is wrong and the obvious reading is not right here. A
+boundary elongation below the areal elongation is impossible for a \emph{convex}
+boundary, and of the 2.0\% that clear rounding, all but PBX-M's 59 rows sit
+within 3.5\% of unity on near-circular machines, which the two columns'
+precision covers. PBX-M does not: its ratio runs from 0.67 to 0.80, at a median
+of \textbf{0.739}. PBX-M ran indented, bean-shaped plasmas, its boundary is not
+convex, and the convexity argument does not apply to it. DB5.2.3 records that
+directly: of the analysed rows, PBX-M is the only label carrying an indentation
+above 0.04, at a median of \textbf{0.154}, and the 60 rows with any indentation
+at all have a median $\kappa/\kappa_a$ of 0.740. The column is not defective on
+those rows; the parametrised boundary is simply the wrong shape for them, which
+is the same point the ratio makes everywhere else and is here checkable against
+a third column.
+
+Scoring on the delivered column rather than the measured one moves ITPA20 by up
+to 0.018 and ITPA20-IL by up to 0.022, twenty to thirty times what the shape
+model would predict. Where a column exists, a model of it is not evidence about
+it.
 
 \begin{thebibliography}{99}
 \small\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}

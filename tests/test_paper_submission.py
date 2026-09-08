@@ -307,6 +307,7 @@ EXPECTED_POINTERS = {
     10: "The estimator this split design is usually paired with",
     11: "Four choices that do not carry the reversal",
     12: "The same distance in dimensionless coordinates",
+    13: "What the elongation substitution costs",
 }
 
 
@@ -368,9 +369,7 @@ def test_a_renamed_supplement_section_is_caught(tmp_path: Path) -> None:
             "\\section{A title the committed supplement cannot contain}",
         )
     )
-    assert checker.stale_pdf_sections(renamed, pdf) == [
-        "A title the committed supplement cannot contain"
-    ]
+    assert checker.stale_pdf_sections(renamed, pdf) == ["A title the committed supplement cannot contain"]
 
 
 def test_the_checker_knows_where_the_supplement_lives() -> None:
@@ -393,9 +392,7 @@ def test_the_checker_knows_where_the_supplement_lives() -> None:
 def _git(repo: Path, *arguments: str) -> str:
     import subprocess
 
-    done = subprocess.run(
-        ("git", *arguments), cwd=repo, capture_output=True, text=True, check=True
-    )
+    done = subprocess.run(("git", *arguments), cwd=repo, capture_output=True, text=True, check=True)
     return done.stdout.strip()
 
 
@@ -417,9 +414,7 @@ def repo(tmp_path: Path) -> Path:
 
 def _paper_citing(repo: Path, commit: str, version: str) -> Path:
     paper = repo / "paper.tex"
-    paper.write_text(
-        f"(v{version}; the DOI for all versions is X)\n\\texttt{{{commit}}}\n"
-    )
+    paper.write_text(f"(v{version}; the DOI for all versions is X)\n\\texttt{{{commit}}}\n")
     return paper
 
 
@@ -474,9 +469,7 @@ def test_a_comment_cannot_satisfy_the_check(repo: Path) -> None:
     """Comments are stripped first, so a pin written in one does not count."""
     head = _git(repo, "rev-parse", "HEAD")
     paper = repo / "paper.tex"
-    paper.write_text(
-        f"% (v1.0.0; the DOI for all versions is X)\n% \\texttt{{{head}}}\n"
-    )
+    paper.write_text(f"% (v1.0.0; the DOI for all versions is X)\n% \\texttt{{{head}}}\n")
     assert checker.stale_archive(paper, repo) == []
 
 
@@ -600,9 +593,7 @@ def test_a_doi_matching_the_cited_release_passes(tmp_path: Path) -> None:
 
 def test_the_previous_releases_doi_on_a_bumped_version_is_reported(tmp_path: Path) -> None:
     """The exact half-done release this check exists for."""
-    _with_ledger(
-        tmp_path, {"0.4.3": {"doi": "10.5281/zenodo.6"}, "0.4.4": {"doi": None}}
-    )
+    _with_ledger(tmp_path, {"0.4.3": {"doi": "10.5281/zenodo.6"}, "0.4.4": {"doi": None}})
     paper = _paper_with_doi(tmp_path, "0.4.4", "10.5281/zenodo.6")
     problems = checker.mismatched_doi(paper, tmp_path)
     assert len(problems) == 1
@@ -611,9 +602,7 @@ def test_the_previous_releases_doi_on_a_bumped_version_is_reported(tmp_path: Pat
 
 
 def test_a_doi_belonging_to_another_release_is_reported(tmp_path: Path) -> None:
-    _with_ledger(
-        tmp_path, {"0.4.3": {"doi": "10.5281/zenodo.6"}, "0.4.4": {"doi": "10.5281/zenodo.7"}}
-    )
+    _with_ledger(tmp_path, {"0.4.3": {"doi": "10.5281/zenodo.6"}, "0.4.4": {"doi": "10.5281/zenodo.7"}})
     paper = _paper_with_doi(tmp_path, "0.4.4", "10.5281/zenodo.6")
     problems = checker.mismatched_doi(paper, tmp_path)
     assert len(problems) == 1
@@ -660,10 +649,7 @@ def _sections_with_labels(source: str) -> list[tuple[int, int, str]]:
     and then every ordinary reference to that table looks like a section
     referring to itself.
     """
-    marks = [
-        found.start()
-        for found in re.finditer(r"\\(?:section|subsection)\*?\{", source)
-    ]
+    marks = [found.start() for found in re.finditer(r"\\(?:section|subsection)\*?\{", source)]
     spans = []
     for index, start in enumerate(marks):
         end = marks[index + 1] if index + 1 < len(marks) else len(source)
@@ -785,10 +771,8 @@ def test_every_back_pointer_in_the_supplement_is_covered_here() -> None:
     """A new hardcoded pointer has to be added to the maps above, not left loose."""
     sections, tables = _supplement_back_pointers()
     assert sections == set(BACK_POINTERS), (
-        f"the supplement points at main-text sections {sorted(sections)}; "
-        f"BACK_POINTERS covers {sorted(BACK_POINTERS)}"
+        f"the supplement points at main-text sections {sorted(sections)}; BACK_POINTERS covers {sorted(BACK_POINTERS)}"
     )
     assert tables == set(BACK_TABLES), (
-        f"the supplement points at main-text tables {sorted(tables)}; "
-        f"BACK_TABLES covers {sorted(BACK_TABLES)}"
+        f"the supplement points at main-text tables {sorted(tables)}; BACK_TABLES covers {sorted(BACK_TABLES)}"
     )

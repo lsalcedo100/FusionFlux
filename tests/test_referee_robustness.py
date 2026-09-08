@@ -43,9 +43,7 @@ def _dataset_or_skip() -> pd.DataFrame:
 @pytest.fixture(scope="module")
 def committed() -> dict:
     if not RESULTS.exists():
-        pytest.skip(
-            "no results/referee_robustness.json; run `python3 analysis_referee_robustness.py`"
-        )
+        pytest.skip("no results/referee_robustness.json; run `python3 analysis_referee_robustness.py`")
     return json.loads(RESULTS.read_text())
 
 
@@ -116,9 +114,7 @@ def test_shuffled_partitions_differ_from_each_other_and_from_the_default() -> No
     deterministic = fold_labels(GroupKFold(n_splits=hdb5.N_CV_FOLDS))
     seen = [deterministic]
     for seed in arr.CV_SEEDS[:4]:
-        shuffled = fold_labels(
-            GroupKFold(n_splits=hdb5.N_CV_FOLDS, shuffle=True, random_state=seed)
-        )
+        shuffled = fold_labels(GroupKFold(n_splits=hdb5.N_CV_FOLDS, shuffle=True, random_state=seed))
         assert any(not np.array_equal(shuffled, other) for other in seen)
         seen.append(shuffled)
 

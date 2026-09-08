@@ -44,9 +44,7 @@ def _make_dataset(n_per_machine: int = 90, seed: int = 5) -> pd.DataFrame:
     """A prepared HDB5-shaped frame drawn from an exact power law plus noise."""
     rng = np.random.default_rng(seed)
     frames = []
-    for index, (machine, radius) in enumerate(
-        {"A": 0.7, "B": 1.2, "C": 1.9, "D": 2.6, "E": 3.2}.items()
-    ):
+    for index, (machine, radius) in enumerate({"A": 0.7, "B": 1.2, "C": 1.9, "D": 2.6, "E": 3.2}.items()):
         n = n_per_machine
         ip = rng.uniform(0.4, 4.0, n)
         bt = rng.uniform(1.0, 5.0, n)
@@ -57,15 +55,7 @@ def _make_dataset(n_per_machine: int = 90, seed: int = 5) -> pd.DataFrame:
         kappa = rng.uniform(1.1, 2.2, n)
         meff = rng.uniform(1.0, 3.0, n)
         tau = (
-            0.0562
-            * ip**0.93
-            * bt**0.15
-            * nel**0.41
-            * plth**-0.69
-            * rgeo**1.97
-            * eps**0.58
-            * kappa**0.78
-            * meff**0.19
+            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
         ) * np.exp(rng.normal(0.0, 0.08, n))
         frames.append(
             pd.DataFrame(
@@ -133,9 +123,7 @@ def test_kadomtsev_recovers_the_closed_form_similarity_transformation() -> None:
 
     engineering = transform.engineering_exponents() * scale
     # Ip ~ L B, Bt ~ B, ne ~ n, P ~ n T L^3 / tau, R ~ L, then three zeros.
-    assert engineering == pytest.approx(
-        np.array([-0.25, -1.25, -2.0, -0.75, 1.0, 0.0, 0.0, 0.0]), abs=1e-12
-    )
+    assert engineering == pytest.approx(np.array([-0.25, -1.25, -2.0, -0.75, 1.0, 0.0, 0.0, 0.0]), abs=1e-12)
 
 
 def test_published_ipb98_lies_on_the_first_two_constraint_surfaces() -> None:
@@ -225,9 +213,7 @@ def test_constrained_power_law_needs_named_columns() -> None:
     dataset = _make_dataset()
     log_tau = np.log(dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float))
     with pytest.raises(TypeError, match="DataFrame"):
-        dm.ConstrainedPowerLaw().fit(
-            dataset[list(hdb5.BLIND_FEATURE_COLUMNS)].to_numpy(), log_tau
-        )
+        dm.ConstrainedPowerLaw().fit(dataset[list(hdb5.BLIND_FEATURE_COLUMNS)].to_numpy(), log_tau)
 
 
 # --- the prior-shrinkage family --------------------------------------------
@@ -241,9 +227,7 @@ def test_zero_penalty_reproduces_the_unconstrained_fit(weighting: str) -> None:
     estimator = sp.SpectralPriorRidge(weighting=weighting, alpha=0.0).fit(features, log_tau)
     plain = sl.fit_scaling_law(dataset, hdb5.TARGET_COLUMN)
     for name in sp.PRIOR_FEATURE_COLUMNS:
-        assert estimator.exponent_map_[name] == pytest.approx(
-            plain.exponents[name], rel=1e-6, abs=1e-8
-        )
+        assert estimator.exponent_map_[name] == pytest.approx(plain.exponents[name], rel=1e-6, abs=1e-8)
 
 
 @pytest.mark.parametrize("weighting", sp.WEIGHTINGS)
@@ -254,9 +238,7 @@ def test_infinite_penalty_reproduces_the_published_exponents(weighting: str) -> 
     log_tau = np.log(dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float))
     estimator = sp.SpectralPriorRidge(weighting=weighting, alpha=1e14).fit(features, log_tau)
     for name in sp.PRIOR_FEATURE_COLUMNS:
-        assert estimator.exponent_map_[name] == pytest.approx(
-            sl.IPB98Y2_EXPONENTS[name], abs=1e-6
-        )
+        assert estimator.exponent_map_[name] == pytest.approx(sl.IPB98Y2_EXPONENTS[name], abs=1e-6)
 
 
 def test_truncation_endpoints_are_the_two_anchor_models() -> None:
@@ -266,12 +248,10 @@ def test_truncation_endpoints_are_the_two_anchor_models() -> None:
     log_tau = np.log(dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float))
     plain = sl.fit_scaling_law(dataset, hdb5.TARGET_COLUMN)
 
-    full = sp.SpectralPriorRidge(
-        weighting="truncated", n_data_directions=len(sp.PRIOR_FEATURE_COLUMNS)
-    ).fit(features, log_tau)
-    none = sp.SpectralPriorRidge(weighting="truncated", n_data_directions=0).fit(
+    full = sp.SpectralPriorRidge(weighting="truncated", n_data_directions=len(sp.PRIOR_FEATURE_COLUMNS)).fit(
         features, log_tau
     )
+    none = sp.SpectralPriorRidge(weighting="truncated", n_data_directions=0).fit(features, log_tau)
     for name in sp.PRIOR_FEATURE_COLUMNS:
         assert full.exponent_map_[name] == pytest.approx(plain.exponents[name], rel=1e-6, abs=1e-8)
         assert none.exponent_map_[name] == pytest.approx(sl.IPB98Y2_EXPONENTS[name], abs=1e-10)

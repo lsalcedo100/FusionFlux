@@ -103,12 +103,8 @@ def test_the_jackknife_range_brackets_the_observed_correlation() -> None:
 
 def test_the_permutation_null_is_actually_reshuffled() -> None:
     """A null built without permuting would give p = 1 for every input."""
-    perfect = asens.correlation_uncertainty(
-        _per_machine([1.0, 2, 3, 4, 5, 6, 7, 8], [1.0, 2, 3, 4, 5, 6, 7, 8])
-    )["m"]
-    scrambled = asens.correlation_uncertainty(
-        _per_machine([1.0, 2, 3, 4, 5, 6, 7, 8], [5.0, 1, 8, 2, 7, 3, 6, 4])
-    )["m"]
+    perfect = asens.correlation_uncertainty(_per_machine([1.0, 2, 3, 4, 5, 6, 7, 8], [1.0, 2, 3, 4, 5, 6, 7, 8]))["m"]
+    scrambled = asens.correlation_uncertainty(_per_machine([1.0, 2, 3, 4, 5, 6, 7, 8], [5.0, 1, 8, 2, 7, 3, 6, 4]))["m"]
     assert perfect["permutation_p_two_sided"] < scrambled["permutation_p_two_sided"]
 
 
@@ -190,6 +186,7 @@ def test_the_permutation_draw_count_is_recorded(committed: dict) -> None:
     assert committed["permutation_draws"] == asens.PERMUTATION_DRAWS
     assert committed["permutation_draws"] >= 10_000
 
+
 # --- the analysis functions themselves, on a small synthetic frame ---------
 
 
@@ -207,9 +204,7 @@ def _dataset(n_per_machine: int = 45, seed: int = 7) -> pd.DataFrame:
     """
     rng = np.random.default_rng(seed)
     frames = []
-    for index, (machine, radius) in enumerate(
-        {"A": 0.8, "B": 1.4, "C": 2.1, "D": 2.9}.items()
-    ):
+    for index, (machine, radius) in enumerate({"A": 0.8, "B": 1.4, "C": 2.1, "D": 2.9}.items()):
         n = n_per_machine
         ip = rng.uniform(0.5, 4.0, n)
         bt = rng.uniform(1.0, 5.0, n)
@@ -221,8 +216,7 @@ def _dataset(n_per_machine: int = 45, seed: int = 7) -> pd.DataFrame:
         meff = rng.uniform(1.5, 2.5, n)
         one_plus_delta = 1.0 + rng.uniform(0.1, 0.5, n)
         tau = (
-            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69
-            * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
+            0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69 * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
         ) * np.exp(rng.normal(0.0, 0.08, n))
         frames.append(
             pd.DataFrame(
@@ -230,8 +224,16 @@ def _dataset(n_per_machine: int = 45, seed: int = 7) -> pd.DataFrame:
                     "TOK": machine,
                     "SHOT": rng.integers(index * 10_000, index * 10_000 + n // 3, n),
                     "TIME": rng.uniform(1.0, 5.0, n),
-                    "TAUTH": tau, "IP": ip, "BT": bt, "NEL": nel, "PLTH": plth,
-                    "RGEO": rgeo, "DELTA1": one_plus_delta, "KAPPAA": kappa, "EPS": eps, "MEFF": meff,
+                    "TAUTH": tau,
+                    "IP": ip,
+                    "BT": bt,
+                    "NEL": nel,
+                    "PLTH": plth,
+                    "RGEO": rgeo,
+                    "DELTA1": one_plus_delta,
+                    "KAPPAA": kappa,
+                    "EPS": eps,
+                    "MEFF": meff,
                 }
             )
         )
@@ -273,9 +275,7 @@ def test_a_zero_exponent_contributes_nothing() -> None:
     assert asens.published_prediction(altered, "ITPA20-IL") == pytest.approx(baseline)
 
     # The same change must move ITPA20, which does carry the term.
-    assert asens.published_prediction(altered, "ITPA20") != pytest.approx(
-        asens.published_prediction(dataset, "ITPA20")
-    )
+    assert asens.published_prediction(altered, "ITPA20") != pytest.approx(asens.published_prediction(dataset, "ITPA20"))
 
 
 def test_score_published_scores_every_law_under_every_split() -> None:
@@ -376,9 +376,9 @@ def test_the_published_laws_are_scored_on_the_elongation_they_were_fitted_to(
         assert law["largest_shift"] > 0.01, name
         # The headline row is the measured one.
         for column in ("all_rows", "machine_equal", "iter_matched_cut"):
-            assert published[name][column] == pytest.approx(
-                law["measured_kappa"][column], rel=1e-9
-            ), f"{name}/{column} is not the measured-kappa score"
+            assert published[name][column] == pytest.approx(law["measured_kappa"][column], rel=1e-9), (
+                f"{name}/{column} is not the measured-kappa score"
+            )
 
 
 def test_both_newer_laws_beat_the_reference_at_the_size_cut(committed: dict) -> None:
@@ -426,10 +426,7 @@ def test_only_indented_machines_have_a_ratio_meaningfully_below_one() -> None:
     # be on a machine the database records as indented.
     material = ratio < 0.95
     assert material.any()
-    indented_labels = {
-        str(label)
-        for label in labels[np.isfinite(indentation) & (indentation > 0.0)]
-    }
+    indented_labels = {str(label) for label in labels[np.isfinite(indentation) & (indentation > 0.0)]}
     assert {str(label) for label in labels[material]} <= indented_labels
 
     # And the rest really are small: nothing else is more than 5% below.

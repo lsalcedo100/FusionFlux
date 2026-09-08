@@ -69,10 +69,8 @@ def test_tolerance_is_tighter_than_reported_precision() -> None:
 def test_volatile_fields_are_excluded(pair: tuple[Path, Path]) -> None:
     """Absolute paths and timings differ by machine, not by analysis."""
     left, right = pair
-    _write(left, "a.json", {"provenance": {"path": "/home/a/x.csv", "sha256": "abc"},
-                            "seconds_per_solve": 0.00012})
-    _write(right, "a.json", {"provenance": {"path": "/runner/b/x.csv", "sha256": "abc"},
-                             "seconds_per_solve": 0.00007})
+    _write(left, "a.json", {"provenance": {"path": "/home/a/x.csv", "sha256": "abc"}, "seconds_per_solve": 0.00012})
+    _write(right, "a.json", {"provenance": {"path": "/runner/b/x.csv", "sha256": "abc"}, "seconds_per_solve": 0.00007})
     assert compare_directories(left, right) == []
 
 
@@ -105,8 +103,7 @@ def test_all_missing_csv_column_agrees_with_itself(pair: tuple[Path, Path]) -> N
     """An all-NaN column reads back as object dtype, where NaN != NaN."""
     left, right = pair
     for d in (left, right):
-        pd.DataFrame({"model": ["a", "b"], "correction": [None, None]}).to_csv(
-            d / "f.csv", index=False)
+        pd.DataFrame({"model": ["a", "b"], "correction": [None, None]}).to_csv(d / "f.csv", index=False)
     assert compare_directories(left, right) == []
 
 
@@ -141,10 +138,24 @@ def test_csv_row_count_change_is_caught(pair: tuple[Path, Path]) -> None:
 def test_the_conditioning_sweeps_measurements_are_excluded(pair: tuple[Path, Path]) -> None:
     """Result 2c measures where float64 breaks down, so it moves with the LAPACK."""
     left, right = pair
-    _write(left, "analysis.json", {"solver_conditioning": {"curves": [
-        {"median_errors": [1e-11, 0.002], "n_failures": [0, 12], "fitted_slope": 1.9190}]}})
-    _write(right, "analysis.json", {"solver_conditioning": {"curves": [
-        {"median_errors": [3e-11, 0.004], "n_failures": [0, 11], "fitted_slope": 1.9329}]}})
+    _write(
+        left,
+        "analysis.json",
+        {
+            "solver_conditioning": {
+                "curves": [{"median_errors": [1e-11, 0.002], "n_failures": [0, 12], "fitted_slope": 1.9190}]
+            }
+        },
+    )
+    _write(
+        right,
+        "analysis.json",
+        {
+            "solver_conditioning": {
+                "curves": [{"median_errors": [3e-11, 0.004], "n_failures": [0, 11], "fitted_slope": 1.9329}]
+            }
+        },
+    )
     assert compare_directories(left, right) == []
 
 
@@ -155,10 +166,16 @@ def test_the_design_behind_the_sweep_is_still_compared(pair: tuple[Path, Path]) 
     sweep that silently started measuring a different matrix would pass.
     """
     left, right = pair
-    _write(left, "analysis.json", {"solver_conditioning": {
-        "n_trials": 40, "curves": [{"solver": "cholesky", "condition_numbers": [1e1, 1e4]}]}})
-    _write(right, "analysis.json", {"solver_conditioning": {
-        "n_trials": 25, "curves": [{"solver": "cholesky", "condition_numbers": [1e1, 1e6]}]}})
+    _write(
+        left,
+        "analysis.json",
+        {"solver_conditioning": {"n_trials": 40, "curves": [{"solver": "cholesky", "condition_numbers": [1e1, 1e4]}]}},
+    )
+    _write(
+        right,
+        "analysis.json",
+        {"solver_conditioning": {"n_trials": 25, "curves": [{"solver": "cholesky", "condition_numbers": [1e1, 1e6]}]}},
+    )
     problems = compare_directories(left, right)
     assert any("n_trials" in p for p in problems), problems
     assert any("condition_numbers" in p for p in problems), problems
@@ -175,17 +192,17 @@ def test_the_exclusion_is_by_path_and_not_by_name(pair: tuple[Path, Path]) -> No
 def test_the_sweeps_csv_columns_are_excluded_but_its_grid_is_not(pair: tuple[Path, Path]) -> None:
     """The forward error and the breakdown flag move; the grid they were measured on does not."""
     left, right = pair
-    pd.DataFrame({"solver": ["cholesky"], "condition_number": [1e9],
-                  "relative_forward_error": [1.04], "failed": [True]}).to_csv(
-        left / "solver_conditioning.csv", index=False)
-    pd.DataFrame({"solver": ["cholesky"], "condition_number": [1e9],
-                  "relative_forward_error": [1.48], "failed": [False]}).to_csv(
-        right / "solver_conditioning.csv", index=False)
+    pd.DataFrame(
+        {"solver": ["cholesky"], "condition_number": [1e9], "relative_forward_error": [1.04], "failed": [True]}
+    ).to_csv(left / "solver_conditioning.csv", index=False)
+    pd.DataFrame(
+        {"solver": ["cholesky"], "condition_number": [1e9], "relative_forward_error": [1.48], "failed": [False]}
+    ).to_csv(right / "solver_conditioning.csv", index=False)
     assert compare_directories(left, right) == []
 
-    pd.DataFrame({"solver": ["cholesky"], "condition_number": [1e10],
-                  "relative_forward_error": [1.48], "failed": [False]}).to_csv(
-        right / "solver_conditioning.csv", index=False)
+    pd.DataFrame(
+        {"solver": ["cholesky"], "condition_number": [1e10], "relative_forward_error": [1.48], "failed": [False]}
+    ).to_csv(right / "solver_conditioning.csv", index=False)
     assert any("condition_number" in p for p in compare_directories(left, right))
 
 
@@ -200,17 +217,41 @@ def test_a_key_appearing_under_an_excluded_path_is_also_excluded(pair: tuple[Pat
 def test_the_rank_audit_alignments_are_excluded_but_the_rank_is_not(pair: tuple[Path, Path]) -> None:
     """Result 1 reports the rank, which is an integer. The alignments are a basis choice."""
     left, right = pair
-    _write(left, "analysis.json", {"rank_audit": {
-        "rank": 8, "rank_deficiency": 2,
-        "max_alignment_with_a_printed_basis_vector": {"a = eps * R": 0.9958}}})
-    _write(right, "analysis.json", {"rank_audit": {
-        "rank": 8, "rank_deficiency": 2,
-        "max_alignment_with_a_printed_basis_vector": {"a = eps * R": 0.9991}}})
+    _write(
+        left,
+        "analysis.json",
+        {
+            "rank_audit": {
+                "rank": 8,
+                "rank_deficiency": 2,
+                "max_alignment_with_a_printed_basis_vector": {"a = eps * R": 0.9958},
+            }
+        },
+    )
+    _write(
+        right,
+        "analysis.json",
+        {
+            "rank_audit": {
+                "rank": 8,
+                "rank_deficiency": 2,
+                "max_alignment_with_a_printed_basis_vector": {"a = eps * R": 0.9991},
+            }
+        },
+    )
     assert compare_directories(left, right) == []
 
-    _write(right, "analysis.json", {"rank_audit": {
-        "rank": 7, "rank_deficiency": 2,
-        "max_alignment_with_a_printed_basis_vector": {"a = eps * R": 0.9991}}})
+    _write(
+        right,
+        "analysis.json",
+        {
+            "rank_audit": {
+                "rank": 7,
+                "rank_deficiency": 2,
+                "max_alignment_with_a_printed_basis_vector": {"a = eps * R": 0.9991},
+            }
+        },
+    )
     assert any("rank" in p for p in compare_directories(left, right))
 
 
@@ -229,14 +270,11 @@ def test_the_forecast_digest_is_excluded_only_in_the_forecast(pair: tuple[Path, 
 def test_the_odr_exponents_are_loosened_rather_than_dropped(pair: tuple[Path, Path]) -> None:
     """An iterative fit lands slightly differently; a changed exponent must still fail."""
     left, right = pair
-    _write(left, "sensitivity.json", {"errors_in_variables": {
-        "odr_exponents": {"m_eff_amu": -0.13380692886953827}}})
-    _write(right, "sensitivity.json", {"errors_in_variables": {
-        "odr_exponents": {"m_eff_amu": -0.1338074193068061}}})
+    _write(left, "sensitivity.json", {"errors_in_variables": {"odr_exponents": {"m_eff_amu": -0.13380692886953827}}})
+    _write(right, "sensitivity.json", {"errors_in_variables": {"odr_exponents": {"m_eff_amu": -0.1338074193068061}}})
     assert compare_directories(left, right) == []
 
-    _write(right, "sensitivity.json", {"errors_in_variables": {
-        "odr_exponents": {"m_eff_amu": -0.1341}}})
+    _write(right, "sensitivity.json", {"errors_in_variables": {"odr_exponents": {"m_eff_amu": -0.1341}}})
     assert any("m_eff_amu" in p for p in compare_directories(left, right))
 
 

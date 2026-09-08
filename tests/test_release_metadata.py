@@ -68,9 +68,7 @@ def test_licence_agrees_across_the_three_files(zenodo: dict) -> None:
 
     assert "license: MIT" in CITATION.read_text(), "CITATION.cff no longer says MIT"
     assert "MIT License" in LICENSE.read_text(), "LICENSE is no longer the MIT licence"
-    assert identifier.upper() == "MIT", (
-        f".zenodo.json declares {identifier!r} while CITATION.cff and LICENSE say MIT"
-    )
+    assert identifier.upper() == "MIT", f".zenodo.json declares {identifier!r} while CITATION.cff and LICENSE say MIT"
 
 
 def test_the_dataset_is_not_claimed_under_the_repository_licence(zenodo: dict) -> None:
@@ -119,11 +117,8 @@ def test_citation_version_matches_the_packaged_version() -> None:
         packaged = tomllib.load(handle)["project"]["version"]
 
     declared = next(
-        line.split(":", 1)[1].strip()
-        for line in CITATION.read_text().splitlines()
-        if line.startswith("version:")
+        line.split(":", 1)[1].strip() for line in CITATION.read_text().splitlines() if line.startswith("version:")
     )
     assert declared == packaged, (
-        f"CITATION.cff says {declared} and pyproject.toml says {packaged}; "
-        "the release checklist requires them to match"
+        f"CITATION.cff says {declared} and pyproject.toml says {packaged}; the release checklist requires them to match"
     )

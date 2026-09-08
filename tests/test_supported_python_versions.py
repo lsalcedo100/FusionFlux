@@ -93,9 +93,7 @@ def testing_doc() -> str:
     return _collapsed(TESTING_DOC)
 
 
-def test_ci_matrix_starts_at_the_declared_minimum(
-    minimum_version: Version, ci_versions: tuple[Version, ...]
-) -> None:
+def test_ci_matrix_starts_at_the_declared_minimum(minimum_version: Version, ci_versions: tuple[Version, ...]) -> None:
     """A `>=X.Y` that no job runs is an untested claim, however plausible."""
     assert min(ci_versions) == minimum_version
 

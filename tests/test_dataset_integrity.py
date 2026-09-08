@@ -45,9 +45,7 @@ def test_sha256_of_file_matches_hashing_the_bytes_directly(tmp_path: Path) -> No
     assert hdb5.sha256_of_file(path) == hashlib.sha256(payload).hexdigest()
 
 
-def test_sha256_streams_files_larger_than_one_block(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_sha256_streams_files_larger_than_one_block(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Force multiple read() calls so the loop, not just the first block, is covered."""
     monkeypatch.setattr(hdb5, "_HASH_BLOCK_BYTES", 64)
     payload = bytes(range(256)) * 40  # comfortably many blocks
@@ -131,16 +129,12 @@ def test_integrity_error_is_not_a_value_error(tmp_path: Path) -> None:
 # --- where verification is and is not enforced ------------------------------
 
 
-def test_loading_the_canonical_path_enforces_the_pin(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_loading_the_canonical_path_enforces_the_pin(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The default path is the one the published results came from, so it is checked."""
     raw_dir = tmp_path / "raw"
     raw_dir.mkdir()
     monkeypatch.setattr(hdb5.config, "DATA_RAW_DIR", raw_dir)
-    pd.DataFrame({"TOK": ["JET"], "TAUTH": [0.5]}).to_csv(
-        raw_dir / hdb5.DEFAULT_HDB5_FILENAME, index=False
-    )
+    pd.DataFrame({"TOK": ["JET"], "TAUTH": [0.5]}).to_csv(raw_dir / hdb5.DEFAULT_HDB5_FILENAME, index=False)
 
     with pytest.raises(hdb5.DatasetIntegrityError):
         hdb5.load_hdb5_dataframe()
@@ -168,24 +162,18 @@ def test_verify_can_be_forced_on_an_explicit_path(tmp_path: Path) -> None:
         hdb5.load_hdb5_dataframe(target, verify=True)
 
 
-def test_verification_can_be_waived_on_the_canonical_path(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_verification_can_be_waived_on_the_canonical_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     raw_dir = tmp_path / "raw"
     raw_dir.mkdir()
     monkeypatch.setattr(hdb5.config, "DATA_RAW_DIR", raw_dir)
-    pd.DataFrame({"TOK": ["JET"], "TAUTH": [0.5]}).to_csv(
-        raw_dir / hdb5.DEFAULT_HDB5_FILENAME, index=False
-    )
+    pd.DataFrame({"TOK": ["JET"], "TAUTH": [0.5]}).to_csv(raw_dir / hdb5.DEFAULT_HDB5_FILENAME, index=False)
     assert len(hdb5.load_hdb5_dataframe(verify=False)) == 1
 
 
 # --- the download path ------------------------------------------------------
 
 
-def test_a_corrupt_download_never_lands_at_the_target_path(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_a_corrupt_download_never_lands_at_the_target_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Verification happens before the atomic rename, so a bad fetch leaves nothing.
 
     This is the property that matters: if a failed download could leave a
@@ -214,9 +202,7 @@ def test_a_corrupt_download_never_lands_at_the_target_path(
     assert list((tmp_path / "raw").glob("*")) == []
 
 
-def test_download_can_skip_verification_on_request(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_download_can_skip_verification_on_request(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import urllib.request
 
     class _FakeResponse:

@@ -115,7 +115,9 @@ def test_train_models_allow_synthetic_records_source_metadata(
 ) -> None:
     original_create_synthetic_dataset = features.create_synthetic_dataset
 
-    def create_small_synthetic_dataset(output_path: Path | None = None, n_rows: int = 600, random_state: int = 42) -> Path:
+    def create_small_synthetic_dataset(
+        output_path: Path | None = None, n_rows: int = 600, random_state: int = 42
+    ) -> Path:
         return original_create_synthetic_dataset(output_path=output_path, n_rows=60, random_state=random_state)
 
     monkeypatch.setattr(features, "create_synthetic_dataset", create_small_synthetic_dataset)
@@ -147,7 +149,9 @@ def test_train_models_allow_synthetic_records_source_metadata(
     assert metadata["dataset_source"]["resolved_dataset_path"] == "synthetic_training_input.csv"
     assert not (isolated_project_dirs["raw"] / "synthetic_nuclear_fusion_experiment.csv").exists()
     assert (Path(artifacts["metadata_path"]).parent / "synthetic_training_input.csv").exists()
-    latest_manifest = json.loads((isolated_project_dirs["processed"] / train_model.LATEST_TRAINING_RUN_FILENAME).read_text())
+    latest_manifest = json.loads(
+        (isolated_project_dirs["processed"] / train_model.LATEST_TRAINING_RUN_FILENAME).read_text()
+    )
     assert not Path(latest_manifest["model_path"]).is_absolute()
     assert not Path(latest_manifest["metadata_path"]).is_absolute()
     resolved_model_path, resolved_metadata_path = train_model._resolve_prediction_artifact_paths(None, None)
