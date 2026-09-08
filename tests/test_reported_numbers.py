@@ -224,6 +224,30 @@ def _device(a: dict, model: str, field: str = "lodo_mean_rmsle") -> float:
     return float(a["device_arm"]["models"][model][field])
 
 
+def _device_reader(model: str, field: str = "lodo_mean_rmsle") -> Reader:
+    """A Reader bound to one model, as a closure rather than a defaulted lambda.
+
+    ``_device_reader("x")`` binds the loop variable correctly but
+    gives the lambda a second parameter, so it no longer matches ``Reader`` and
+    mypy cannot infer it. Twenty-one of those turned a clean ``mypy .`` into
+    thirty-one errors, and ``make check`` gates a release on that command.
+    """
+
+    def read(artifacts: dict) -> float:
+        return _device(artifacts, model, field)
+
+    return read
+
+
+def _row_phrases(*templates: str) -> Callable[[str], tuple[str, ...]]:
+    """Spellings for one table row, one per document, ``{0}`` marking the value."""
+
+    def phrases(literal: str) -> tuple[str, ...]:
+        return tuple(template.format(literal) for template in templates)
+
+    return phrases
+
+
 def _robustness(a: dict, arm: str, model: str, column: str) -> float:
     """One cell of Table 2, which had no binding at all until one was wrong.
 
@@ -1065,53 +1089,50 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "device arm, collisionless",
         "0.203",
-        lambda a, _m="powerlaw_collisionless": _device(a, _m),
+        _device_reader("powerlaw_collisionless"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=lambda literal, _t="0.206 & {0}", _p="0.206 {0}": (_t.format(literal), _p.format(literal)),
+        phrases=_row_phrases("0.206 & {0}", "0.206 {0}"),
     ),
     Claim(
         "device arm, IPB98 analytic",
         "0.184",
-        lambda a, _m="ipb98y2_analytic": _device(a, _m),
+        _device_reader("ipb98y2_analytic"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=lambda literal, _t="0.188 & {0}", _p="0.188 {0}": (_t.format(literal), _p.format(literal)),
+        phrases=_row_phrases("0.188 & {0}", "0.188 {0}"),
     ),
     Claim(
         "device arm, bounded hybrid",
         "0.246",
-        lambda a, _m="hybrid_gbm_s1": _device(a, _m),
+        _device_reader("hybrid_gbm_s1"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=lambda literal, _t="0.246 & {0}", _p="0.246 {0}": (_t.format(literal), _p.format(literal)),
+        phrases=_row_phrases("0.246 & {0}", "0.246 {0}"),
     ),
     Claim(
         "device arm, electrostatic",
         "0.226",
-        lambda a, _m="powerlaw_electrostatic": _device(a, _m),
+        _device_reader("powerlaw_electrostatic"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=lambda literal, _t="0.241 & {0}", _p="0.241 {0}": (_t.format(literal), _p.format(literal)),
+        phrases=_row_phrases("0.241 & {0}", "0.241 {0}"),
     ),
     Claim(
         "device arm, Kadomtsev",
         "0.211",
-        lambda a, _m="powerlaw_kadomtsev": _device(a, _m),
+        _device_reader("powerlaw_kadomtsev"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=lambda literal, _t="0.210 & {0}", _p="0.210 {0}": (_t.format(literal), _p.format(literal)),
+        phrases=_row_phrases("0.210 & {0}", "0.210 {0}"),
     ),
     Claim(
         "device arm, unconstrained",
         "0.212",
-        lambda a, _m="powerlaw_free": _device(a, _m),
+        _device_reader("powerlaw_free"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=lambda literal, _t="0.214 & {0} & 8/11", _p="0.214 {0} 8/11": (
-            _t.format(literal),
-            _p.format(literal),
-        ),
+        phrases=_row_phrases("0.214 & {0} & 8/11", "0.214 {0} 8/11"),
     ),
     # --- the win-count column, added beside it -----------------------------
     # Table 7 grew a per-device win count because this paper counts wins
@@ -1122,7 +1143,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "worse-on count, collisionless",
         "5",
-        lambda a, _m="powerlaw_collisionless": _device(a, _m, "n_worse_than_power_law"),
+        _device_reader("powerlaw_collisionless", "n_worse_than_power_law"),
         _r(0),
         documents=(PAPER, PAPER_PDF),
         phrases=lambda n: (f"0.203 & {n}/11", f"0.203 {n}/11"),
@@ -1130,7 +1151,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "worse-on count, IPB98 analytic",
         "4",
-        lambda a, _m="ipb98y2_analytic": _device(a, _m, "n_worse_than_power_law"),
+        _device_reader("ipb98y2_analytic", "n_worse_than_power_law"),
         _r(0),
         documents=(PAPER, PAPER_PDF),
         phrases=lambda n: (f"0.184 & {n}/11", f"0.184 {n}/11"),
@@ -1138,7 +1159,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "worse-on count, bounded hybrid",
         "5",
-        lambda a, _m="hybrid_gbm_s1": _device(a, _m, "n_worse_than_power_law"),
+        _device_reader("hybrid_gbm_s1", "n_worse_than_power_law"),
         _r(0),
         documents=(PAPER, PAPER_PDF),
         phrases=lambda n: (f"0.246 & {n}/11", f"0.246 {n}/11"),
@@ -1146,7 +1167,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "worse-on count, electrostatic",
         "8",
-        lambda a, _m="powerlaw_electrostatic": _device(a, _m, "n_worse_than_power_law"),
+        _device_reader("powerlaw_electrostatic", "n_worse_than_power_law"),
         _r(0),
         documents=(PAPER, PAPER_PDF),
         phrases=lambda n: (f"0.226 & {n}/11", f"0.226 {n}/11"),
@@ -1154,7 +1175,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "worse-on count, Kadomtsev",
         "7",
-        lambda a, _m="powerlaw_kadomtsev": _device(a, _m, "n_worse_than_power_law"),
+        _device_reader("powerlaw_kadomtsev", "n_worse_than_power_law"),
         _r(0),
         documents=(PAPER, PAPER_PDF),
         phrases=lambda n: (f"0.211 & {n}/11", f"0.211 {n}/11"),
@@ -1162,7 +1183,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "worse-on count, unconstrained (the calibration)",
         "8",
-        lambda a, _m="powerlaw_free": _device(a, _m, "n_worse_than_power_law"),
+        _device_reader("powerlaw_free", "n_worse_than_power_law"),
         _r(0),
         documents=(PAPER, PAPER_PDF),
         phrases=lambda n: (f"0.212 & {n}/11", f"0.212 {n}/11"),
@@ -1170,7 +1191,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "worse-on count, Kadomtsev, in prose",
         "7",
-        lambda a, _m="powerlaw_kadomtsev": _device(a, _m, "n_worse_than_power_law"),
+        _device_reader("powerlaw_kadomtsev", "n_worse_than_power_law"),
         _r(0),
         documents=(PAPER, PAPER_PDF),
         phrases=lambda n: (f"unconstrained one on \\textbf{{{n}}} of them", f"unconstrained one on {n} of them"),
@@ -1178,7 +1199,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "worse-on count, collisionless, in prose",
         "5",
-        lambda a, _m="powerlaw_collisionless": _device(a, _m, "n_worse_than_power_law"),
+        _device_reader("powerlaw_collisionless", "n_worse_than_power_law"),
         _r(0),
         documents=(PAPER, PAPER_PDF),
         phrases=lambda n: (f"is worse on \\textbf{{{n}}}, at", f"is worse on {n}, at"),
@@ -1186,7 +1207,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "Kadomtsev mean paired gain per device",
         "0.001",
-        lambda a, _m="powerlaw_kadomtsev": _device(a, _m, "mean_difference_vs_power_law"),
+        _device_reader("powerlaw_kadomtsev", "mean_difference_vs_power_law"),
         lambda v: f"{abs(v):.3f}",
         documents=(PAPER, PAPER_PDF),
         phrases=lambda literal: (f"of {literal} in its favour",),
@@ -1194,7 +1215,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "collisionless mean paired gain per device",
         "0.009",
-        lambda a, _m="powerlaw_collisionless": _device(a, _m, "mean_difference_vs_power_law"),
+        _device_reader("powerlaw_collisionless", "mean_difference_vs_power_law"),
         lambda v: f"{abs(v):.3f}",
         documents=(PAPER, PAPER_PDF),
         phrases=lambda literal: (f", at {literal}",),
@@ -1202,7 +1223,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "the two solvers' per-device separation",
         "0.00008",
-        lambda a, _m="powerlaw_free": _device(a, _m, "mean_difference_vs_power_law"),
+        _device_reader("powerlaw_free", "mean_difference_vs_power_law"),
         lambda v: f"{v:.5f}",
         documents=(PAPER, PAPER_PDF),
         phrases=lambda literal: (f"separated by {literal} per device",),
@@ -1210,43 +1231,34 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "device arm, constant mean",
         "0.693",
-        lambda a, _m="mean_constant_rbf": _device(a, _m),
+        _device_reader("mean_constant_rbf"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=lambda literal, _t="0.541 & {0}", _p="0.541 {0}": (_t.format(literal), _p.format(literal)),
+        phrases=_row_phrases("0.541 & {0}", "0.541 {0}"),
     ),
     Claim(
         "device arm, power-law mean",
         "0.212",
-        lambda a, _m="mean_powerlaw_rbf": _device(a, _m),
+        _device_reader("mean_powerlaw_rbf"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=lambda literal, _t="0.115 & 0.212 & {0}", _p="0.115 0.212 {0}": (
-            _t.format(literal),
-            _p.format(literal),
-        ),
+        phrases=_row_phrases("0.115 & 0.212 & {0}", "0.115 0.212 {0}"),
     ),
     Claim(
         "device arm, IPB98 mean",
         "0.186",
-        lambda a, _m="mean_ipb98_rbf": _device(a, _m),
+        _device_reader("mean_ipb98_rbf"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=lambda literal, _t="\\textbf{{0.189}} & \\textbf{{{0}}}", _p="0.189 {0}": (
-            _t.format(literal),
-            _p.format(literal),
-        ),
+        phrases=_row_phrases("\\textbf{{0.189}} & \\textbf{{{0}}}", "0.189 {0}"),
     ),
     Claim(
         "device arm, GP linear+RBF",
         "0.219",
-        lambda a, _m="gp_linear_rbf": _device(a, _m),
+        _device_reader("gp_linear_rbf"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=lambda literal, _t="scores {0} against the power law", _p="scores {0} against the power law": (
-            _t.format(literal),
-            _p.format(literal),
-        ),
+        phrases=_row_phrases("scores {0} against the power law", "scores {0} against the power law"),
     ),
     # The leave-one-device-out row of Table 2, all four cells. This is the row
     # the paper's device claim rests on and the row that carried the error.
@@ -1397,10 +1409,7 @@ CLAIMS: tuple[Claim, ...] = (
     Claim(
         "Kadomtsev's label-arm gain over the unconstrained fit",
         "0.004",
-        lambda a: (
-            _device(a, "powerlaw_free", "lolo_mean_rmsle")
-            - _device(a, "powerlaw_kadomtsev", "lolo_mean_rmsle")
-        ),
+        lambda a: _device(a, "powerlaw_free", "lolo_mean_rmsle") - _device(a, "powerlaw_kadomtsev", "lolo_mean_rmsle"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
         phrases=lambda literal: (f"gains {literal} by label",),

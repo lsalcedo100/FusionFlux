@@ -189,7 +189,10 @@ def test_references_are_numbered_in_order_of_first_citation() -> None:
         printed, cited = _printed_order(document), _first_citation_order(document)
         wrong = [
             (n, shown, expected)
-            for n, (shown, expected) in enumerate(zip(printed, cited), start=1)
+            # strict=False deliberately: a length mismatch means a citation with
+            # no entry or an entry nothing cites, and both are already asserted
+            # by the two tests above with a clearer message than a ValueError.
+            for n, (shown, expected) in enumerate(zip(printed, cited, strict=False), start=1)
             if shown != expected
         ]
         assert not wrong, (
