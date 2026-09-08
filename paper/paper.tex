@@ -212,12 +212,9 @@ prediction to them, is reported there as a control and nowhere else.
 
 Because the result is a negative one about a common practice, it is worth
 saying early what a reader can check rather than take on trust. Every number and
-figure here regenerates from the published OSF deposit, which is verified
-against a pinned SHA-256 on load rather than redistributed, at the single commit
-named in Data availability; and the test suite binds each figure quoted in the
-prose to the field of the generated file it came from, in both directions, so a
-rerun that moved a value would fail rather than pass silently. Nothing below
-asks to be believed.
+figure here regenerates from the published OSF deposit at the single commit
+named in Data availability, which also gives the pinning and the test binding
+that hold the prose to the generated files. Nothing below asks to be believed.
 
 \paragraph{Related work on this database.} Four recent studies apply machine
 learning to the same ITPA data and are the closest prior work. Nam and
@@ -262,18 +259,15 @@ degrading out of distribution is a matter of degree and a margin can absorb it.
 A reversed ranking over the devices a law is deployed on cannot be absorbed by a
 margin, and neither can an interval that stops covering at unchanged width.
 
-The difference is not one of degree. Selecting on the cross-validated score is
-what the convention prescribes, and applied to the three primary models here it
-picks the one that extrapolates worst. A practitioner comparing that set is
-therefore not left with an open question about extrapolation. They are led to
-the worst available answer, and the more carefully they follow the convention
-the more confidently they are led there. The scope of that is the candidate set
-rather than the score: Sec.~\ref{sec:gp} fits a model with comparable
-flexibility and a different asymptote, and it is at once the best
+Selecting on the cross-validated score is what the convention prescribes, and
+applied to the three primary models here it picks the one that extrapolates
+worst, so a practitioner comparing that set is not left with an open question
+about extrapolation but led to the worst available answer, the more confidently
+the more carefully the convention is followed. The scope of that is the
+candidate set rather than the score: Sec.~\ref{sec:gp} fits a model with
+comparable flexibility and a different asymptote, at once the best
 cross-validated model in this work and one that extrapolates, so widening the
-set repairs the rule rather than replacing it. Degradation is expected and can
-be budgeted for; a selection rule anti-correlated with the goal it is used for,
-over the models actually being chosen between, cannot.
+set repairs the rule rather than replacing it.
 
 None of these works is the target of a criticism here; what any of them reports
 is what its split measures. Where a score on this database is computed without
@@ -309,14 +303,14 @@ machine that does not yet exist.
 
 This paper measures what the deployment-matched split costs. What is held out is
 escalated in three steps, a discharge, then a database label, then a physical
-device, and the same models are scored under each. A fourth comparison holds out an
-entire size range; its held-out side is 96\% one physical machine, so it is
-reported as a stress test across one large jump rather than as a fourth rung of
-the same ladder, and no claim here rests on it alone. Under the second step the
-ranking of the three primary fitted models reverses against their ranking
-under grouped cross-validation, and the best cross-validated model \emph{of
-those three} loses to a log-linear power law on all 13 held-out database labels
-and all 11 physical devices. That qualifier is load-bearing: the best
+device, and the same models are scored under each; a fourth comparison holds out
+an entire size range, and because its held-out side is 96\% one physical machine
+it is reported as a stress test across one large jump rather than as a fourth
+rung, with no claim resting on it alone. Under the second step the ranking of
+the three primary fitted models reverses against their ranking under grouped
+cross-validation, and the best cross-validated model \emph{of those three} loses
+to a log-linear power law on all 13 held-out database labels and all 11 physical
+devices. That qualifier is load-bearing: the best
 cross-validated model in this work is the Gaussian process of
 Sec.~\ref{sec:gp}, at 0.112, and it does not reverse. Three measurements say why, and
 they cover extrapolation distance, the training-target bound of a random
