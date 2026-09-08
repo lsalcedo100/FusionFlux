@@ -69,26 +69,26 @@ Confinement scaling laws set the size a next-step tokamak has to reach. On the
 ITPA Global H-mode Confinement Database (HDB5, STD5; 6228 slices, 18 labels),
 under cross-validation grouped by discharge, a random forest cuts log error by
 29\% against a power law refitted in the same folds and 36\% against published
-IPB98(y,2). That margin does not
-survive the question a scaling law exists to answer: held out one device at a
-time, the ordering of the three primary models reverses. Two controls set its
-strength. The loss power is the target's denominator, and regressing the stored
-energy instead leaves the forest worse on \textbf{9 of 13} labels and 9 of 11
-devices at a mean gap of $+0.220$, neither exact test reaching $p=0.05$. Several features barely move within a device; in dimensionless
-coordinates, where none is a device label, it is 11 of 13 and 9 of 11. On the
-confinement time and engineering features it is 13 of 13 and 11 of 11; those two
-effects are the difference. It also survives nested tuning, threshold and
-fold sweeps, and equal label weighting. The
-forest's error tracks the held-out label's Mahalanobis distance
-from the training data at $\rho=+0.85$, against $-0.06$ for the power law and
-$+0.56$ for a constant baseline. At a cut reproducing ITER's
-$1.82\times$ jump in major radius the trees land nearer a constant predictor
-than the power law, and 90\% split-conformal intervals fall to 3\% and 0\%
-coverage. Two repairs help, both supplying long-range structure rather than
-capacity: Connor--Taylor constraints, whose Kadomtsev rung is free in sample,
-and a Gaussian process with a linear kernel component. That process is
-this work's best cross-validated model and does not reverse.
-Extrapolation failure tracks long-range saturation rather than flexibility.
+IPB98(y,2). Held out one device at a time the ordering reverses, so selecting a
+confinement model on its cross-validated score does not merely fail to inform
+about extrapolation: over the three models compared here it picks the worst
+extrapolator. Two controls bound that. Regressing
+the stored energy, which leaves the loss power among the features and moves only
+the identity $\tau = W/P$, leaves the forest worse on \textbf{9 of 13} labels
+and 9 of 11 devices at a mean gap of $+0.220$; in dimensionless coordinates,
+where no feature is a device label, it is 11 of 13 and 9 of 11. On the
+confinement time and the engineering features it is 13 of 13 and 11 of 11. It
+survives nested tuning, threshold and fold sweeps, and equal label weighting.
+The forest's error tracks the held-out label's Mahalanobis distance from the
+training data at $\rho=+0.85$, against $-0.06$ for the power law. At a cut
+reproducing ITER's $1.82\times$ jump in major radius the trees land nearer a
+constant predictor than the power law, and 90\% split-conformal intervals fall
+to 3\% and 0\% coverage at unchanged width. Two repairs help, both supplying
+long-range structure rather than capacity: Connor--Taylor constraints, whose
+Kadomtsev rung is free in sample, and a Gaussian process with a linear kernel
+component, which is this work's best cross-validated model and does not reverse
+by label or by device. Extrapolation failure tracks long-range saturation rather
+than flexibility.
 \end{abstract}
 
 \begin{center}\small
