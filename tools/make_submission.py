@@ -329,10 +329,12 @@ def main() -> int:  # pragma: no cover - builds PDFs and writes the bundle
     shutil.copy2(PAPER / "paper.tex", OUT / "paper.tex")
     shutil.copy2(PAPER / "supplementary.tex", OUT / "supplementary_material.tex")
     # Kept, against the advice to drop it as unread: neither document runs it,
-    # but a journal's production style file wants a .bib, which is why it
-    # exists. It had drifted, missing the supplement's four keys, because the
-    # test that guards it read paper.tex alone. Both are fixed rather than the
-    # file deleted.
+    # but a journal's production style file wants a .bib at revision, which is
+    # why it exists. The worry about shipping a file nobody built from is that
+    # it drifts from the rendered list, and it had, missing the supplement's
+    # four keys, because the test that guards it read paper.tex alone. That test
+    # now reads both and binds keys and DOIs in both directions, so a reader who
+    # diffs the two finds no disagreement on either.
     shutil.copy2(PAPER / "references.bib", OUT / "references.bib")
 
     # The figures, so the sources build outside this repository. Without them a

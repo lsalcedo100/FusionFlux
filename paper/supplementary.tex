@@ -20,6 +20,8 @@
 \usepackage{caption}
 \usepackage{microtype}
 \usepackage[hidelinks]{hyperref}
+% Switched on by `make review-pdf` for the review upload only; see paper.tex.
+% \usepackage[mathlines]{lineno}\linenumbers
 \usepackage{xcolor}
 \usepackage{siunitx}
 \usepackage[section]{placeins}
@@ -42,10 +44,10 @@
 % article title follows underneath, where it orients a reader without being
 % mistaken for the formal supplementary title.
 \title{\vspace{-1.4cm}\textbf{Supplementary material}}
-\author{Liam Salcedo\thanks{Independent researcher, USA.
+\author{Liam Salcedo\thanks{Independent researcher, Montclair, New Jersey, USA.
 \texttt{liamsalcedo100@gmail.com}.
 ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}}.}}
-\date{7 September 2026}
+\date{8 September 2026}
 
 \begin{document}
 \maketitle
@@ -71,6 +73,9 @@ replications outside fusion. Sections~S6 to~S8 are supporting material for
 results the main text states in prose: the three-kernel Gaussian-process ladder
 behind the mean-function ablation, the full model, kernel and split
 specification, and the per-label scores with the eligibility-threshold sweep.
+Sections~S9 and~S10 are two results the main text summarises in a paragraph
+each: a power law with a bounded correction, and the mixed model the
+clustered-validation literature pairs with this split design.
 
 Why those two belong in a fusion paper is argued where they are first
 introduced, in the Discussion of the main text: HDB5 cannot separate the
@@ -214,11 +219,11 @@ is a historical reference rather than a fold-fitted competitor.
 
 Everything above rests on one file, which is a central limitation of the preceding analysis.
 The same OSF project publishes the full database revision, DB5.2.3, with 14153
-rows against STD5's 6228, and we pin it by its own SHA-256. Matching on
+rows against STD5's 6228, and it is pinned by its own SHA-256. Matching on
 (tokamak, shot, time) shows STD5 is an ELMy-H-mode quality selection out of it
 and leaves two populations this study had not analysed: \textbf{5358 H-mode rows
 STD5 does not contain} (12 labels, zero row overlap) and \textbf{3860 ohmic
-and L-mode rows} in a different confinement regime, which we score against
+and L-mode rows} in a different confinement regime, scored against
 ITER89-P~\cite{iter89p} because an H-mode law is the wrong baseline for an
 L-mode plasma.
 
@@ -258,9 +263,9 @@ alone.
 H-mode observations}
 
 Everything above is retrospective. To make the disagreement checkable rather
-than merely described, we record what each model predicts for three real
+than merely described, what each model predicts is recorded for three real
 devices, with intervals, a date, and a digest over the input rows so that a
-later edit leaves a mark. The parameter sets are published design values, and
+later edit is visible. The parameter sets are published design values, and
 for SPARC and ITER, evaluating IPB98(y,2) on the adopted design vector
 reproduces the reference confinement time its own source quotes, to 0.6\% and
 2.9\% respectively; the JT-60SA source supplies operating parameters rather than
@@ -278,19 +283,20 @@ $\bar{n}_e=\SI{10e19}{\per\cubic\metre}$, $P=\SI{87}{\mega\watt}$,
 $\kappa=1.7$ and $M=2.5$, are the ones the 2007 revision of the confinement and
 transport basis carries forward for the same scenario~\cite{doyle07}, so the
 choice is not a 1999 number that a 2007 number would replace. ITER's programme
-has since been rebaselined, and this forecast is therefore conditional on the
-operating point tabulated above rather than on ITER's current plan of record. It
-is not offered as a prediction of whatever ITER's first $Q=10$ discharge turns
-out to be. The complete input vector sits in \texttt{results/forecast.json}
-under the content digest quoted below, so a reader who prefers a different
-operating point can rescore every model at it without refitting anything, and
-the digest makes the substitution visible.
+has been rebaselined since, on a schedule and a staging this paper does not
+attempt to summarise and cites nothing for, so the row should be read as
+conditional on the operating point tabulated above rather than on ITER's current
+plan of record. It is not a prediction of whatever ITER's first $Q=10$ discharge
+turns out to be, and a reader who prefers a different operating point can
+rescore every model at one: the complete input vector is in
+\texttt{results/forecast.json}.
 
 \begin{table}[!ht]
 \centering
 \small
 \caption{Predicted energy confinement time, in seconds, with nominal 90\%
-intervals. Locked 31 August 2026 against a fixed dataset digest. Operating
+intervals. Locked 31 August 2026 against a fixed dataset digest, so that the operating
+points these were computed at can be recovered later. Operating
 points are published design values: SPARC from~\cite{creely} (V2 primary
 reference discharge), ITER from~\cite{ipb98} ($Q=10$ inductive baseline), and
 JT-60SA from its Research Plan~\cite{jt60saplan} (full-current inductive
@@ -379,7 +385,7 @@ time following L-mode scaling~\cite{jt60saop1}, whereas the row above is an
 H-mode prediction scored against IPB98(y,2). Checking it needs H-mode operation
 at a comparable design point, which the research plan~\cite{jt60saplan} places
 in a later campaign and which the overview of first operation and forward
-plans~\cite{jt60saop2} discusses in view of ITER and DEMO; we deliberately do not put a date on that here, because the
+plans~\cite{jt60saop2} discusses in view of ITER and DEMO; no date is put on that here, because the
 schedule is not ours to assert and the prediction is locked against a parameter
 vector rather than against a calendar.
 
@@ -415,7 +421,7 @@ Every result in the main text rests on ITPA data, which leaves open whether any
 of it is a fact about fusion specifically. Mammalian basal metabolic rate against body mass is
 the same object and the older one: Kleiber~\cite{kleiber} found in 1932 that
 metabolic rate scales as mass to the 3/4. Whether the true exponent is 3/4 or
-2/3 has been argued for decades and we take no position; 3/4 is used here as the
+2/3 has been argued for decades and this paper takes no position; 3/4 is used here as the
 canonical historical reference law a fitted model has to beat. Taxonomic \emph{order} is the
 unit a species belongs to, as a tokamak is the unit a discharge belongs to, and
 \emph{body mass} is the axis a next instance lies beyond, as machine size is.
@@ -516,7 +522,7 @@ A third dataset can probe that with a nested predictor ladder on the same rows
 and splits. The Biomass And Allometry Database~\cite{baad} records, for
 individual plants, a nested set of measurements: basal diameter, height, leaf
 area and leaf mass. Taking the rows complete in all four gives 3599 plants
-across 53 species, 33 of them with the 30 individuals we require to hold a
+across 53 species, 33 of them with the 30 individuals required to hold a
 species out, spanning 36x in diameter across species medians and over seven
 orders of magnitude in mass. It is released CC0 and pinned by SHA-256 as the
 other deposits are. Species plays the part of tokamak, diameter the part of
@@ -821,6 +827,124 @@ faint and excluded from claims. The power law holds across the sweep and the
 trees do not recover.}
 \label{fig:size}
 \end{figure}
+
+\section{A power law with a bounded correction}
+\label{supp:hybrid}
+
+The diagnosis in Sec.~4.1 of the main text suggests a specific repair. Fit the
+power law, learn a correction on its log residuals, and damp it by $\lambda$:
+\begin{equation}
+\log\tau = \underbrace{f_{\text{ridge}}(x)}_{\text{unbounded, log-linear}}
+         + \lambda\,\underbrace{g(x)}_{\text{correction on residuals}} .
+\end{equation}
+At $\lambda=0$ this is exactly the ridge row of Table~1 of the main text.
+Anchoring a learned correction on a frozen power law is also the design used in
+concurrent work on this database~\cite{wang}, and this section makes no claim on
+that idea. What is varied is the one property the diagnosis points at, the
+long-range behaviour of the correction: one corrector is a degree-2 log
+polynomial, which is unbounded, and the other is depth-2 boosted trees, which
+never left the residual range they were trained on here. The two families differ
+in more than that, and the controlled version of the comparison is
+Sec.~11.1 of the main text. The damping factor is swept over nine values from 0
+to 1, both correctors carry deliberately strong penalties so that $\lambda$
+rather than their own regularisation does the damping, neither corrector's
+hyperparameters are tuned, and the whole estimator is refitted from scratch
+inside every training fold; the exact specification is in
+\texttt{analysis\_hybrid.py} in the archived code.
+
+Across the ITER-size-matched cut the two correctors go opposite ways. Both start
+at 0.278; the polynomial correction climbs to 0.356 and the bounded correction
+falls monotonically to \textbf{0.206}, better than plain ridge on all three
+held-out labels and by the widest margin on the most distant of them, JT-60U
+(0.440 to 0.281).
+
+The mechanism is measurable. Fitted on the 14 small labels, the base power law
+is \emph{biased} on the held-out ones, at a mean log residual of $-0.218$, so it
+over-predicts by about 20\%, while its scatter (0.172) is no worse than
+in-sample (0.187). The tree correction never leaves its training range on any
+held-out row, and inside that bound it points the right way and is largest where
+the bias is largest. The same bounded range that makes these ensembles useless
+as predictors of $\tau$ on a larger machine limits how much extrapolation error
+the correction can contribute, because the quantity they are bounded on is no
+longer a target that grows with machine size but a residual centred on zero.
+Bounded is not the same as right: a correction confined to that range can still
+point the wrong way, and what is measured here is that on these rows it does
+not.
+
+Two limits qualify every later summary of this section. Cross-validation selects
+$\lambda=1$ in both families while the rung best on a held-out label is
+$\lambda=0$, so a practitioner tuning on the split they would ordinarily use
+does not arrive at the rung that transfers. And scored at every rung of the size
+sweep rather than only the matched one, the bounded hybrid wins at 5 of 8
+well-powered cuts, not all, with no rule over those eight points separating wins
+from losses. The claim that survives is narrow: at the cut matching the jump to
+ITER, the bounded hybrid equals the power law at $\lambda=0$, where it is that
+model, and beats it at all eight non-zero damping settings swept there, with the
+mechanism measurable.
+
+\section{The estimator this split design is usually paired with}
+\label{supp:mixed}
+
+Every
+comparison above sets a pooled global fit against ensembles. The
+clustered-validation literature cited here for the split
+design~\cite{roberts} pairs that design with a third kind of estimator: a mixed
+model carrying a random intercept per device, from which a device never seen is
+predicted by the population-level fixed effects alone. It is neither a power law
+nor a tree, it is the fit matched to the deployment question, and it is scored
+here rather than conceded.
+
+Write $\log\tau_{ij} = x_{ij}^{\prime}\beta + u_i + \varepsilon_{ij}$ with
+$u_i\sim N(0,\sigma_u^2)$ over devices, fit the variance components by
+restricted maximum likelihood, and predict a held-out device as
+$x^{\prime}\beta$. One quantity separates this from the pooled fit, the ratio
+$\lambda = \sigma_u^2/\sigma^2$. At $\lambda=0$ the estimator \emph{is} the
+pooled power law, and it reproduces the ridge column of
+Table~2 of the main text to three decimals, 0.214 by label and 0.212 by
+device. As $\lambda$ grows the intercept absorbs more of the between-device
+variation, which leaves $\beta$ identified increasingly by variation within a
+device; major radius and aspect ratio are constant within a device by
+construction, and elongation and isotopic mass nearly so, which is exactly the
+identification a projection to a new machine cannot use.
+
+The measurement follows that algebra. REML puts $\lambda$ between 1.4 and 8.1
+across the 13 label folds and between 2.0 and 143 across the 11 device folds,
+which is the spread eleven groups buy, and the held-out score tracks it: 0.264
+per label against the power law's 0.214, and \textbf{0.829} per device against
+0.212, worse on 10 of the 11 devices. Because that optimum is unstable, $\lambda$
+is swept as well as fitted, which bounds what any rule for choosing it could
+deliver. Over devices the score rises monotonically with $\lambda$ and is best
+at $\lambda=0$, where the estimator is the pooled fit; over labels the best rung
+is $\lambda=0.01$ at 0.2127 against 0.2141, a gain of 0.0014. The
+deployment-matched estimator therefore does not beat a pooled power law on an
+unseen device even when its one free quantity is chosen against the score it is
+being judged on. Across the ITER-size-matched cut it does help, at 0.255 against
+the pooled fit's 0.279, which is the least-squares spelling of the ridge row's
+0.278, and it stays well above the constrained fit of
+Sec.~8 of the main text at 0.183 and the analytic law's 0.194. What has been ruled out is
+narrower than the class: this is a single random intercept and no random slopes,
+so a device-level \emph{level} shift is what fails to be the missing structure,
+and a richer hierarchical specification is untested. Eleven devices is also few
+enough that the variance component is poorly determined, which is why the sweep
+rather than the fit carries the conclusion. The specification and the full sweep
+are in \texttt{analysis\_mixed\_model.py} and
+\texttt{results/mixed\_model.json}.
+
+The win counts support an exact test, under a null that is worth naming
+precisely. Call it the independent-unit-sign null: each unit, label or device
+as the case may be, is assigned to either model independently with equal
+probability. Under it, losing 13 of 13 has
+two-sided $p=2.4\times10^{-4}$ and losing 11 of 11 has $p=9.8\times10^{-4}$. The
+device-collapsed count is the one to quote, since the 13 database labels are not
+13 independent devices, and the same non-independence is a reason to prefer
+these counts to the 13-label bootstrap.
+
+That null is an idealisation, and Sec.~2 of the main text says in what way: any two
+of these fits share all but two of their training machines, so the outcomes are
+correlated through the training set even where the held-out devices are
+distinct. The descriptive statement carries the claim on its own. The forest is
+worse on every physical device scored, and the paired interval on the per-device
+difference excludes zero.
 
 \begin{thebibliography}{99}
 \small\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}

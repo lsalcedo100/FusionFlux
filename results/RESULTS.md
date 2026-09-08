@@ -2329,6 +2329,79 @@ judged on. Across the ITER-size-matched cut it does help, 0.255 against 0.279.
 What is ruled out is narrower than the class: a single random intercept and no
 random slopes, on eleven groups.
 
+## Result 18: where the held-out machines sit in dimensionless space
+
+`analysis_dimensionless.py`, `results/dimensionless.json`.
+
+Result 4b measures distance between mean log *engineering* vectors. The standing
+objection to organising anything here that way is Hall's: the weak size
+dependence may come from a subset localised in dimensionless space rather than
+from size, in which case an engineering distance measures a shadow. Everything
+needed to check it is already here. `dimensional.py` derives the Connor-Taylor
+constraints from the scalings of rho*, beta and nu*, so the group definitions
+are in code, and the stored energy joined across for Result 16 supplies the
+temperature. Placing every row by
+
+    rho* ~ T^(1/2) B^-1 L^-1,   beta ~ n T B^-2,   nu* ~ n L T^-2
+
+with T ~ W_th / (n V) and V ~ R a^2 kappa, and repeating Result 4b's distance
+construction on those three coordinates, gives a second ranking of the 13
+labels. Constants are dropped and cannot matter: every quantity is a difference
+of mean log-vectors.
+
+**The diagnosis survives the change of coordinates.** The two rankings agree at
+rho = +0.78. On the 6214 rows a placement is possible for, the forest's
+per-label error tracks dimensionless distance at **+0.77** against +0.79 for
+engineering distance, the booster at +0.35 against +0.51, and the power law is
+flat against both, -0.04 and -0.06. The headline +0.85 is the engineering figure
+on all 6228 rows; dropping the 14 rows with no stored energy accounts for the
+move to +0.79, and the coordinate change then moves it by 0.02.
+
+**The size cut does not survive it, and this is where the objection lands.**
+Across the ITER-size-matched cut the two sides separate in dimensionless space
+as well as in size. The interquartile ranges of log rho* do not overlap at all
+and its median moves by **1.21** training standard deviations; log nu* overlaps
+by 0.26 at 0.85 standard deviations; only log beta stays put, overlapping by
+0.69 at 0.22. Larger machines here run at smaller normalised gyroradius and
+lower collisionality, which is physics and not an artifact, and it means the cut
+is not a size boundary with everything else held fixed. Every result scored
+across it is transfer across a joint displacement in size, rho* and nu*. The
+leave-one-device-out comparison of Result 4 carries no such confound.
+
+## Result 19: three mean functions, not two
+
+`analysis_mechanism.py`, `results/mechanism.json`.
+
+Result 14's mean-function ablation compares a constant mean against a fitted
+power-law mean and finds a factor of 7.0 at the size cut. On its own that
+comparison is close to arithmetic: an RBF residual decays to zero over a finite
+length scale, so far outside the training support the prediction *is* the mean
+function and the score *is* the mean function's score. Contrasting "reverts to a
+constant" with "reverts to a fitted power law" cannot separate *saturation is
+the mechanism* from *whatever mean you supply is what you get*.
+
+A third arm separates them. Its mean also keeps trending and its slope is
+IPB98(y,2)'s, fixed in 1998 and fitted to nothing here, so two of the three arms
+have a trend and differ only in which one.
+
+| mean function | CV | held-out label | ITER cut |
+|---|---|---|---|
+| constant (saturating) | 0.142 | 0.541 | 1.948 |
+| fitted power law | 0.115 | 0.212 | 0.278 |
+| IPB98(y,2), unfitted | **0.112** | **0.189** | **0.186** |
+
+The two trending arms do not land together. Swapping the fitted power law for
+published exponents, with nothing else changed, moves the cut from 0.278 to
+0.186. Having a trend is necessary and not sufficient; which trend it is decides
+the answer, and the best of the three came from outside the study.
+
+One implementation note, because it is the kind of thing that produces a
+confident wrong number. The arm takes raw log features, not standardised ones: a
+fixed exponent vector is a statement about the raw coordinates and means nothing
+after a `StandardScaler`. Run through the same pipeline as its siblings it
+scored 2.97 at the size cut instead of 0.186, and looked like a finding.
+`tests/test_mechanism.py` pins the pipeline choice for that reason.
+
 ## Limitations
 
 - **The refit population is not IPB98's population.** No ITPA standard-set

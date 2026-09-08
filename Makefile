@@ -184,3 +184,33 @@ paper-fresh:
 # strip produces a PDF that looks anonymous.
 submission: paper-fresh
 	python3 tools/make_submission.py
+
+# The review PDF, which wants line numbers where the archived one must not have
+# them. A referee on a 39-page manuscript writes "p. 23, third paragraph" and
+# cannot be answered; lineno costs nothing and fixes that. It stays commented
+# out in paper.tex because the same source produces the PDF a DOI archives and
+# arXiv posts, where numbered lines are wrong, so this target switches it on,
+# builds to build/review/, and switches it back without touching the committed
+# PDFs.
+review-pdf:
+	@mkdir -p build/review
+	@# The package goes in the preamble and \linenumbers goes after
+	@# \begin{document}: issued in the preamble it is silently ineffective in
+	@# this one, which is how a "line-numbered" build came out with none.
+	@for f in paper supplementary; do \
+		sed -e 's/^% \\usepackage\[mathlines\]{lineno}\\linenumbers/\\usepackage[mathlines]{lineno}/' \
+		    -e 's/^\\begin{document}/\\begin{document}\\linenumbers/' \
+		    paper/$$f.tex > build/review/$$f.tex; \
+	done
+	@for f in paper supplementary; do \
+		grep -q '^.usepackage\[mathlines\]' build/review/$$f.tex \
+			&& grep -q 'begin{document}.linenumbers' build/review/$$f.tex \
+			|| { echo "lineno was not switched on in $$f; the marker moved"; exit 1; }; \
+	done
+	@# \graphicspath's "../results/" entry resolves from wherever the source
+	@# sits, so the figures come along rather than the build reaching back for
+	@# them; its "./" entry is what finds them here.
+	@cp results/*.pdf results/*.png build/review/ 2>/dev/null || true
+	tectonic -X compile build/review/paper.tex --outdir build/review
+	tectonic -X compile build/review/supplementary.tex --outdir build/review
+	@echo "line-numbered PDFs in build/review/. Upload these; do not commit them."

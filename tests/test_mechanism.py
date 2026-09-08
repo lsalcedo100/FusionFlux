@@ -193,6 +193,7 @@ def test_the_artifact_reports_both_controlled_substitutions() -> None:
     assert set(payload["mean_function"]) == {
         "constant mean + RBF residual",
         "power-law mean + RBF residual",
+        "IPB98(y,2) mean + RBF residual",
     }
     assert set(payload["clipping"]) == {
         "residual correction, unclipped",
@@ -200,3 +201,64 @@ def test_the_artifact_reports_both_controlled_substitutions() -> None:
     }
     assert payload["correction_depth"] == am.CORRECTION_DEPTH
     assert payload["correction_damping"] == am.CORRECTION_DAMPING
+
+
+# --- the third arm, which is what stops the ablation being an identity -------
+
+
+def test_the_fixed_law_mean_is_the_published_law_and_not_a_fit() -> None:
+    """A fitted mean would make this arm a duplicate of the power-law one.
+
+    The whole point of the third arm is that its slope came from outside this
+    study, so the assertion is that it reproduces the analytic column the rest of
+    the paper scores, exactly, from the log features alone.
+    """
+    import hdb5
+
+    if not hdb5.default_hdb5_path().exists():
+        pytest.skip("HDB5 STD5 not downloaded; run `python3 hdb5.py download`.")
+    dataset = hdb5.prepare_dataset()
+    features = dataset[list(hdb5.BLIND_FEATURE_COLUMNS)].to_numpy(dtype=float)
+
+    predicted = am.FixedLawMeanGP.mean_prediction(features)
+    expected = np.log(dataset["ipb98y2_tau_s"].to_numpy(dtype=float))
+    assert predicted == pytest.approx(expected, abs=1e-10)
+
+
+def test_the_fixed_law_mean_refuses_the_wrong_feature_count() -> None:
+    """Silently accepting eight columns would score a different law entirely."""
+    with pytest.raises(ValueError, match="log features"):
+        am.FixedLawMeanGP.mean_prediction(np.zeros((5, 8)))
+
+
+def test_the_fixed_law_arm_is_not_wrapped_in_a_scaler() -> None:
+    """A fixed exponent vector means nothing after a StandardScaler.
+
+    This is the bug the arm was written with: run through the same pipeline as
+    its siblings, it applied 1998 exponents to standardised coordinates and
+    scored 2.97 at the size cut instead of 0.186. The pipeline choice is
+    therefore load-bearing and is asserted rather than assumed.
+    """
+    assert am.FixedLawMeanGP.scales_internally is True
+    assert list(am._pipeline(am.FixedLawMeanGP()).named_steps) == ["model"]
+    assert list(am._pipeline(am.MeanPlusResidualGP()).named_steps) == ["scale", "model"]
+
+
+def test_the_two_trending_arms_do_not_agree_out_of_distribution() -> None:
+    """The claim Sec. 11.1 makes from this artifact.
+
+    If any trending mean gave the same answer far from the data, the ablation
+    would show only that a GP returns its mean function out there, which is a
+    property of the kernel and not a finding. The two trending arms have to
+    differ, and the saturating one has to be worse than both.
+    """
+    if not RESULTS.exists():
+        pytest.skip("no results/mechanism.json; run `python3 analysis_mechanism.py`")
+    arms = json.loads(RESULTS.read_text())["mean_function"]
+    constant = arms["constant mean + RBF residual"]["iter_matched_cut"]
+    fitted = arms["power-law mean + RBF residual"]["iter_matched_cut"]
+    published = arms["IPB98(y,2) mean + RBF residual"]["iter_matched_cut"]
+
+    assert constant > 5 * fitted
+    assert published < fitted
+    assert fitted / published > 1.2

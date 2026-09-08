@@ -48,6 +48,17 @@ CORRECTION_DEPTH = 2
 CORRECTION_DAMPING = 1.0
 
 
+# IPB98(y,2) as a linear functional of the nine log features, which is what it
+# is: a fixed power law is a fixed coefficient vector in log space. Written out
+# here so the third mean below is a pure function of X, fitted to nothing and
+# leaking nothing, in the order of ``hdb5.BLIND_FEATURE_COLUMNS``. The exponent
+# on log_a_m is zero because the law does not use minor radius directly.
+IPB98_LOG_INTERCEPT = float(np.log(0.0562))
+IPB98_LOG_COEFFICIENTS = np.array(
+    [0.93, 0.15, 0.41, -0.69, 1.97, 0.78, 0.58, 0.19, 0.0]
+)
+
+
 class MeanPlusResidualGP(RegressorMixin, BaseEstimator):
     """A mean function plus the same RBF Gaussian process on its residuals.
 
@@ -59,6 +70,10 @@ class MeanPlusResidualGP(RegressorMixin, BaseEstimator):
     same seed. That is the point. Everything the two arms could differ by has
     been held fixed except whether the model has a trend that continues once the
     input leaves the training data.
+
+    ``FixedLawMeanGP`` below is the third arm, and it is separate because the
+    outer ``StandardScaler`` makes a mean with fixed published exponents
+    meaningless in these coordinates.
     """
 
     def __init__(self, mean: str = "powerlaw", *, random_state: int = gp_module.RANDOM_STATE):
@@ -92,6 +107,66 @@ class MeanPlusResidualGP(RegressorMixin, BaseEstimator):
     def predict(self, X: Any) -> np.ndarray:
         features = np.asarray(X, dtype=float)
         return self._base(features) + np.asarray(self.residual_gp_.predict(features), dtype=float)
+
+
+class FixedLawMeanGP(RegressorMixin, BaseEstimator):
+    """A published power law as the mean, with the same RBF residual on top.
+
+    The two arms of ``MeanPlusResidualGP`` compare a mean that saturates against
+    a mean that keeps trending, and on its own that comparison is close to
+    arithmetic: an RBF residual decays to zero over a finite length scale, so
+    far outside the data the prediction is the mean function and the score is
+    the mean function's score. Contrasting "reverts to a constant" with "reverts
+    to a fitted power law" therefore cannot separate *saturation is the
+    mechanism* from *whatever mean you supply is what you get*.
+
+    This is the arm that can. Its mean also keeps trending, and its slope is
+    IPB98(y,2)'s, fixed in 1998 and fitted to nothing here, so both arms have a
+    trend and they differ only in which trend. If the two land in the same place
+    far from the data then the mean function is all that matters out there; if
+    they do not, then having a trend is not sufficient and which trend it is
+    decides the answer.
+
+    It takes raw log features rather than standardised ones, because a fixed
+    exponent vector is a statement about the raw coordinates and means nothing
+    after a ``StandardScaler``. It therefore scales internally for the GP and is
+    run through a bare pipeline, which also keeps the other two arms byte
+    identical to what they were before this one existed.
+    """
+
+    scales_internally = True
+
+    def __init__(self, *, random_state: int = gp_module.RANDOM_STATE):
+        self.random_state = random_state
+
+    @staticmethod
+    def mean_prediction(features: np.ndarray) -> np.ndarray:
+        """log tau under IPB98(y,2), as a linear functional of the log features."""
+        if features.shape[1] != len(IPB98_LOG_COEFFICIENTS):
+            raise ValueError(
+                f"expected {len(IPB98_LOG_COEFFICIENTS)} log features in the order of "
+                f"hdb5.BLIND_FEATURE_COLUMNS, got {features.shape[1]}"
+            )
+        return IPB98_LOG_INTERCEPT + features @ IPB98_LOG_COEFFICIENTS
+
+    def fit(self, X: Any, y: Any) -> FixedLawMeanGP:
+        features = np.asarray(X, dtype=float)
+        target = np.asarray(y, dtype=float)
+        base = self.mean_prediction(features)
+
+        self.scaler_ = StandardScaler().fit(features)
+        self.residual_gp_ = gp_module.SubsampledGaussianProcess(
+            kernel_name="rbf", random_state=self.random_state
+        ).fit(self.scaler_.transform(features), target - base)
+        self.training_residual_mean_ = float((target - base).mean())
+        return self
+
+    def predict(self, X: Any) -> np.ndarray:
+        features = np.asarray(X, dtype=float)
+        residual = np.asarray(
+            self.residual_gp_.predict(self.scaler_.transform(features)), dtype=float
+        )
+        return self.mean_prediction(features) + residual
 
 
 class ClippedResidualHybrid(RegressorMixin, BaseEstimator):
@@ -140,6 +215,9 @@ def _rmsle(actual: np.ndarray, predicted: np.ndarray) -> float:
 
 
 def _pipeline(estimator: Any) -> Pipeline:
+    """Scale, then fit, unless the estimator says its coordinates are the raw ones."""
+    if getattr(estimator, "scales_internally", False):
+        return Pipeline([("model", estimator)])
     return Pipeline([("scale", StandardScaler()), ("model", estimator)])
 
 
@@ -196,6 +274,8 @@ def main() -> None:
         {
             "constant mean + RBF residual": MeanPlusResidualGP(mean="constant"),
             "power-law mean + RBF residual": MeanPlusResidualGP(mean="powerlaw"),
+            "IPB98(y,2) mean + RBF residual": FixedLawMeanGP(),
+
         },
     )
     clipping = score_everywhere(

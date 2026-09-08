@@ -303,6 +303,8 @@ EXPECTED_POINTERS = {
     6: "The three-kernel Gaussian-process ladder",
     7: "Full model, kernel and split specification",
     8: "Per-label scores and the eligibility-threshold sweep",
+    9: "A power law with a bounded correction",
+    10: "The estimator this split design is usually paired with",
 }
 
 
@@ -637,3 +639,50 @@ def test_an_unreadable_ledger_is_reported_rather_than_ignored(tmp_path: Path) ->
     problems = checker.mismatched_doi(paper, tmp_path)
     assert len(problems) == 1
     assert "unreadable" in problems[0]
+
+
+# --- a cross-reference that points at the section it is standing in ----------
+#
+# `\ref{sec:robustness}` inside sec:robustness renders as "as in Sec. 4.2" while
+# the reader is in Sec. 4.2. It is not a broken reference, so the label check
+# above passes it, and it is not a missing float, so nothing else looks. It
+# reads as a pointer to somewhere else and points nowhere.
+
+
+def _sections_with_labels(source: str) -> list[tuple[int, int, str]]:
+    """(start, end, label) for each labelled sectioning command, in file order.
+
+    The label has to be the one attached to the heading, which here means the
+    line straight after it. Taking the first ``\\label`` anywhere in the span
+    instead picks up a table's label whenever the section has none of its own,
+    and then every ordinary reference to that table looks like a section
+    referring to itself.
+    """
+    marks = [
+        found.start()
+        for found in re.finditer(r"\\(?:section|subsection)\*?\{", source)
+    ]
+    spans = []
+    for index, start in enumerate(marks):
+        end = marks[index + 1] if index + 1 < len(marks) else len(source)
+        heading = re.match(
+            r"\\(?:section|subsection)\*?\{(?:[^{}]|\{[^{}]*\})*\}\s*\\label\{([^}]+)\}",
+            source[start:end],
+        )
+        if heading is not None:
+            spans.append((start, end, heading.group(1)))
+    return spans
+
+
+def test_no_section_cross_references_itself() -> None:
+    for name in ("paper.tex", "supplementary.tex"):
+        source = (ROOT / "paper" / name).read_text()
+        for start, end, label in _sections_with_labels(source):
+            body = source[start:end]
+            # The \label{...} that names the section is not a reference to it.
+            for reference in re.finditer(r"\\ref\{([^}]+)\}", body):
+                assert reference.group(1) != label, (
+                    f"{name}: \\ref{{{label}}} appears inside the section labelled "
+                    f"{label}, so it renders as a pointer to where the reader "
+                    "already is. Point it at the section that carries the material."
+                )

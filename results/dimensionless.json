@@ -1,0 +1,72 @@
+{
+  "n_rows": 6214,
+  "n_labels_scored": 13,
+  "group_columns": [
+    "log_rho_star",
+    "log_beta",
+    "log_nu_star"
+  ],
+  "distance_agreement": 0.7802197802197801,
+  "error_correlations": {
+    "random_forest": {
+      "against_dimensionless": 0.7747252747252747,
+      "against_engineering": 0.7857142857142857
+    },
+    "hist_gradient_boosting": {
+      "against_dimensionless": 0.3516483516483516,
+      "against_engineering": 0.5054945054945055
+    },
+    "ridge_loglinear": {
+      "against_dimensionless": -0.04395604395604395,
+      "against_engineering": -0.06043956043956044
+    }
+  },
+  "iter_matched_cut": {
+    "size_ratio": 1.8230563002680964,
+    "groups": {
+      "log_rho_star": {
+        "train_iqr": [
+          5.549736045052885,
+          5.924773231479836
+        ],
+        "test_iqr": [
+          5.132302708943373,
+          5.437628118269518
+        ],
+        "iqr_overlap_fraction": 0.0,
+        "median_shift": -0.4526899160345481,
+        "train_sd": 0.37378994665328225,
+        "fraction_of_a_training_sd": 1.2110810365225029
+      },
+      "log_beta": {
+        "train_iqr": [
+          11.49455737639034,
+          12.261685762582587
+        ],
+        "test_iqr": [
+          11.700967054654189,
+          12.234041564143016
+        ],
+        "iqr_overlap_fraction": 0.6948960813910425,
+        "median_shift": 0.15652074748868294,
+        "train_sd": 0.7230732168784203,
+        "fraction_of_a_training_sd": 0.21646597306480073
+      },
+      "log_nu_star": {
+        "train_iqr": [
+          -22.45451699859693,
+          -21.050064020199812
+        ],
+        "test_iqr": [
+          -23.018110526175587,
+          -21.939573841069418
+        ],
+        "iqr_overlap_fraction": 0.261651925380797,
+        "median_shift": -0.828897336355169,
+        "train_sd": 0.9772543597569585,
+        "fraction_of_a_training_sd": 0.8481899600440916
+      }
+    }
+  },
+  "dataset_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b"
+}

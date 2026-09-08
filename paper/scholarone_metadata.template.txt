@@ -101,6 +101,24 @@ REFEREES
   was emailed about this work on 6 September 2026. Declare that correspondence
   if you nominate him, or leave him off and let the editor find him.
 
+FREE-TEXT DISCLOSURE
+  Paste this into the free-text box beside the nominations. It is written out
+  rather than described because everything else on this sheet is paste-ready and
+  this was not, and because the cover letter and this box are different fields
+  that an editor may not both read.
+
+  On 6 September 2026 I wrote to Professor G. Verdoolaege, who leads the group
+  maintaining the ITPA global H-mode confinement database, describing this
+  result and inviting correction. I have had no reply as of submission. Two of
+  my suggested referees are co-authors with him on work cited in this
+  manuscript: J. Hall on the machine-size scaling contribution, and O. J. W. F.
+  Kardaun as fourth author of the database paper itself, which this manuscript
+  re-analyses. Neither has seen this work. I am declaring both so that the
+  editor learns them from me rather than from an author list.
+
+  CHECK THE FIRST TWO SENTENCES ON THE DAY. If he has replied before you upload,
+  the second one is false and the Acknowledgments need revisiting too.
+
 FILES
   Uploading the NAMED build: ./manuscript.pdf ({{MANUSCRIPT_PAGES}} pp) and
   ./supplementary_material.pdf ({{SUPPLEMENT_PAGES}} pp), each a single PDF

@@ -125,9 +125,19 @@ def test_the_sheet_carries_no_latex(sheet: str) -> None:
 
 
 def test_the_abstract_keeps_its_symbols(sheet: str) -> None:
-    assert "ρ=+0.85" in sheet, "the correlation lost its rho"
-    assert "1.82×" in sheet, "the size jump lost its multiplication sign"
-    assert "8.3×" in sheet, "the ITER disagreement lost its multiplication sign"
+    """The flattening must render maths, not drop it and not leave the command.
+
+    Written against the symbol classes rather than against three particular
+    numbers: the numbers are abstract prose and get edited, and a test that
+    names them fails when a sentence is rewritten rather than when the
+    flattening breaks. Editing "8.3x" out of the abstract is what retired the
+    previous version of this.
+    """
+    abstract = sheet.split("ABSTRACT")[1].split("KEYWORDS")[0]
+    assert "ρ" in abstract, "the correlations lost their rho"
+    assert "×" in abstract, "a multiplication sign was dropped"
+    for command in ("\\rho", "\\times", "\\textbf", "$"):
+        assert command not in abstract, f"{command} survived into the plain-text abstract"
 
 
 def test_the_abstract_matches_the_paper(sheet: str) -> None:

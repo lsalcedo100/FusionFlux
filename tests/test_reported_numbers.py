@@ -91,6 +91,9 @@ def artifacts() -> dict[str, object]:
         "mixed": _json("mixed_model.json"),
         "boundedness": _json("boundedness.json"),
         "stored": _json("stored_energy.json"),
+        "dimensionless": _json("dimensionless.json"),
+        "mechanism": _json("mechanism.json"),
+        "forecast_rows": _json("forecast.json"),
         "per_machine": _csv("extrapolation_per_machine.csv", "tokamak"),
         "conformal_per_machine": pd.read_csv(RESULTS / "conformal_per_machine.csv"),
     }
@@ -146,7 +149,14 @@ def _extract_pdf_text(path: Path) -> Union[str, None]:
     # The typeset minus is U+2212, not the ASCII hyphen the sources are written
     # with, so a claim like "-0.06" would never match without folding it.
     text = text.replace("\u2212", "-")
-    return re.sub(r"\s+", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    # Inline maths like "$\rho=+0.78$" extracts as "ρ = +0 .78": the decimal
+    # point arrives as its own glyph run and a space lands in front of it. There
+    # are 16 of these in the paper, and a claim on any of them would fail while
+    # the number on the page is correct, which is the worst kind of failure this
+    # file can produce. Only a space between a digit and a following ".digit" is
+    # closed, so nothing that is really two numbers gets joined.
+    return re.sub(r"(?<=\d) (?=\.\d)", "", text)
 
 
 Reader = Callable[[dict], Union[float, int]]
@@ -226,6 +236,24 @@ def _elongation(a: dict, *path: str) -> float:
     for key in path:
         node = node[key]
     return float(node)
+
+
+def _dimensionless(a: dict, *path: str) -> float:
+    node = a["dimensionless"]
+    for key in path:
+        node = node[key]
+    return float(node)
+
+
+def _mean_function(a: dict, arm: str, column: str) -> float:
+    return float(a["mechanism"]["mean_function"][arm][column])
+
+
+def _forecast(a: dict, model: str) -> float:
+    for row in a["forecast_rows"]["forecasts"]:
+        if row["device"] == "ITER" and row["model_name"] == model:
+            return float(row["tau_predicted_s"])
+    raise AssertionError(f"no ITER forecast for {model}")
 
 
 def _stored(a: dict, *path: str) -> float:
@@ -614,14 +642,68 @@ CLAIMS: tuple[Claim, ...] = (
         "0.2127",
         lambda a: a["mixed"]["leave_one_label_out"]["variance_ratio_sweep"]["best_mean_rmsle"],
         _r(4),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     Claim(
         "mixed model at the ITER-size-matched cut",
         "0.255",
         lambda a: a["mixed"]["iter_matched_cut"]["reml_rmsle"],
         _r(3),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+    ),
+    # -- Sec. 4.1: the same distance in dimensionless coordinates ----------
+    Claim(
+        "forest error against dimensionless distance",
+        "+0.77",
+        lambda a: _dimensionless(a, "error_correlations", "random_forest", "against_dimensionless"),
+        lambda v: f"{v:+.2f}",
         documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "the two distance rankings agree",
+        "+0.78",
+        lambda a: _dimensionless(a, "distance_agreement"),
+        lambda v: f"{v:+.2f}",
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "rho* displacement across the size cut, in training standard deviations",
+        "1.21",
+        lambda a: _dimensionless(
+            a, "iter_matched_cut", "groups", "log_rho_star", "fraction_of_a_training_sd"
+        ),
+        _r(2),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    # -- Sec. 11.1: the third mean function, which stops the ablation being an identity --
+    Claim(
+        "IPB98 mean function at the ITER-size-matched cut",
+        "0.186",
+        lambda a: _mean_function(a, "IPB98(y,2) mean + RBF residual", "iter_matched_cut"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "IPB98 mean function on a held-out label",
+        "0.189",
+        lambda a: _mean_function(a, "IPB98(y,2) mean + RBF residual", "leave_one_machine_out"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    # -- Sec. 10: the projection a design study would consume -------------
+    Claim(
+        "constrained fit's ITER prediction",
+        "2.837",
+        lambda a: _forecast(a, "powerlaw_collisionless"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "IPB98(y,2)'s ITER prediction",
+        "3.591",
+        lambda a: _forecast(a, "ipb98y2_analytic"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     # -- Sec. 6: the coverage that is close enough to zero to look like a bug --
     Claim(
@@ -1180,8 +1262,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    85: "Eighty-five",
-    109: "one hundred and nine",
+    90: "Ninety",
+    116: "one hundred and sixteen",
 }
 
 
