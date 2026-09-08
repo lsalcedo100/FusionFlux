@@ -68,10 +68,15 @@ def identifying_tokens(sources: "list[Path] | None" = None) -> tuple[str, ...]:
     return tuple(dict.fromkeys((*IDENTIFYING, *sorted(found))))
 
 
-# Sections that exist to credit people and therefore cannot survive anonymisation.
-# `Funding`, `Competing interests` and `Data availability` stay: they carry no
-# identity and IOP wants them in the reviewed manuscript.
-ANONYMISE_SECTIONS = ("Acknowledgments", "Author contributions")
+# IOP requires the generative-AI disclosure, the funding statement, the competing
+# interests and the contributions to sit in Acknowledgements, so paper.tex keeps
+# all four there as run-in paragraphs. Anonymisation can therefore no longer drop
+# that section wholesale: it would take three required declarations with it. What
+# comes out instead is the credit prose that opens the section, and the
+# contributions paragraph, which is the only one of the four that names anyone.
+ACKNOWLEDGMENT_HEAD = "\\section*{Acknowledgments}"
+FIRST_DECLARATION = "\\paragraph*{Use of generative AI.}"
+ANONYMISE_PARAGRAPHS = ("Author contributions.",)
 
 
 def _strip_section(text: str, title: str) -> str:
@@ -83,6 +88,39 @@ def _strip_section(text: str, title: str) -> str:
     stripped, n = pattern.subn("", text)
     if n != 1:
         raise SystemExit(f"expected exactly one '{title}' section, found {n}")
+    return stripped
+
+
+def _strip_paragraph(text: str, title: str) -> str:
+    """Drop one `\\paragraph*{title}` run-in and its body.
+
+    Stops at the next run-in, the next section or the bibliography, so a
+    paragraph can be removed from the middle of Acknowledgements without taking
+    the declarations after it.
+    """
+    pattern = re.compile(
+        r"\\paragraph\*\{"
+        + re.escape(title)
+        + r"\}.*?(?=\\paragraph\*?\{|\\section\*?\{|\\begin\{thebibliography\})",
+        re.DOTALL,
+    )
+    stripped, n = pattern.subn("", text)
+    if n != 1:
+        raise SystemExit(f"expected exactly one '{title}' paragraph, found {n}")
+    return stripped
+
+
+def _strip_acknowledgment_credits(text: str) -> str:
+    """Keep the Acknowledgements heading and its declarations, drop the thanks."""
+    pattern = re.compile(
+        re.escape(ACKNOWLEDGMENT_HEAD) + r".*?(?=" + re.escape(FIRST_DECLARATION) + r")",
+        re.DOTALL,
+    )
+    # A callable replacement, because the heading is full of backslashes and a
+    # template string would read them as escapes.
+    stripped, n = pattern.subn(lambda _match: ACKNOWLEDGMENT_HEAD + "\n\n", text)
+    if n != 1:
+        raise SystemExit(f"expected one Acknowledgements credit block, found {n}")
     return stripped
 
 
@@ -106,18 +144,18 @@ def anonymise(text: str) -> str:
     if n != 1:
         raise SystemExit("could not find the title-page availability block")
 
-    # The generative-AI declaration used to sit inside Acknowledgments, which
-    # anonymisation strips, so it was lifted out by comment marker and re-emitted
-    # as a section of its own. It is now a top-level section in paper.tex, so
-    # stripping Acknowledgments leaves it alone and nothing has to be lifted.
-    # This is checked rather than assumed: the declaration is required and it
-    # disappearing is the kind of loss that does not announce itself.
-    for title in ANONYMISE_SECTIONS:
-        if f"\\section*{{{title}}}" in text:
-            text = _strip_section(text, title)
+    # The three required declarations live inside Acknowledgements because IOP
+    # puts them there, so what is removed is the credit prose that opens the
+    # section and the one paragraph that names the author. This is checked
+    # rather than assumed: a required declaration disappearing is the kind of
+    # loss that does not announce itself.
+    text = _strip_acknowledgment_credits(text)
+    for title in ANONYMISE_PARAGRAPHS:
+        text = _strip_paragraph(text, title)
 
-    if "\\section*{Use of generative AI}" not in text:
-        raise SystemExit("anonymisation removed the generative-AI declaration")
+    for required in (FIRST_DECLARATION, "\\paragraph*{Funding.}", "\\paragraph*{Competing interests.}"):
+        if required not in text:
+            raise SystemExit(f"anonymisation removed a required declaration: {required}")
 
     # The code-availability paragraph and the Zenodo bibitem survive in shape but
     # not in content: a referee still needs to know the code is public and pinned.
@@ -244,6 +282,26 @@ def scholarone_metadata(paper: str, manuscript_pages: int, supplement_pages: int
     keywords = _plain(_between(paper, "Keywords:}", "\\end{center}"))
     author = _plain(_between(paper, "\\author{", "}}\n\\date"))
 
+    def reference_number(key: str) -> str:
+        """The printed [n] for a citation key.
+
+        Written out rather than typed into the template. These numbers appear in
+        the conflict-of-interest declaration, where a stale one points the editor
+        at an unrelated paper, and they move whenever a citation is added earlier
+        in the text.
+        """
+        keys = re.findall(r"\\bibitem\{([^}]*)\}", paper)
+        if key not in keys:
+            raise SystemExit(f"paper.tex has no \\bibitem{{{key}}}")
+        return str(keys.index(key) + 1)
+
+    def section_of_first_citation(key: str) -> str:
+        """The numbered section in which a key is first cited, for the same reason."""
+        hit = re.search(r"\\cite\{[^}]*\b" + re.escape(key) + r"\b[^}]*\}", paper)
+        if hit is None:
+            raise SystemExit(f"paper.tex never cites {key}")
+        return str(sum(1 for m in re.finditer(r"\\section\{", paper) if m.start() < hit.start()))
+
     filled = TEMPLATE.read_text()
     for key, value in {
         "TITLE": _wrap(title),
@@ -255,6 +313,10 @@ def scholarone_metadata(paper: str, manuscript_pages: int, supplement_pages: int
         "AUTHOR": _wrap(author),
         "MANUSCRIPT_PAGES": str(manuscript_pages),
         "SUPPLEMENT_PAGES": str(supplement_pages),
+        "REF_HDB5": reference_number("hdb5"),
+        "REF_HALL": reference_number("hall"),
+        "REF_HALL26": reference_number("hall26"),
+        "SEC_KARDAUN": section_of_first_citation("kardaun"),
     }.items():
         placeholder = "{{" + key + "}}"
         if placeholder not in filled:

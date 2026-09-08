@@ -157,3 +157,44 @@ def test_no_document_carries_a_bibitem_it_never_cites() -> None:
             "them. Either cite them or drop them; a printed reference nothing points at "
             "is a leftover a referee will notice before you do."
         )
+
+
+def _first_citation_order(document: Path) -> list[str]:
+    """Citation keys in the order the body first cites them."""
+    latex = _strip_comments(document.read_text())
+    body = latex.split(r"\begin{thebibliography}")[0]
+    order: list[str] = []
+    for group in re.findall(r"\\cite[a-z]*\{([^}]*)\}", body):
+        for key in (k.strip() for k in group.split(",")):
+            if key and key not in order:
+                order.append(key)
+    return order
+
+
+def _printed_order(document: Path) -> list[str]:
+    return re.findall(r"\\bibitem\{([^}]*)\}", _strip_comments(document.read_text()))
+
+
+def test_references_are_numbered_in_order_of_first_citation() -> None:
+    """Nuclear Fusion asks for the Vancouver system, and both documents drifted.
+
+    Vancouver numbers references in the order the text first cites them. Both
+    reference lists were kept in the order entries happened to be added, so the
+    introduction ran [1], [11], [2], [12], [3]. Bracketed numerals on their own
+    are not the Vancouver system, and production standardises the typography
+    inside an entry rather than the order of the list, because reordering it
+    changes every citation number in the text.
+    """
+    for document in (PAPER, SUPPLEMENT):
+        printed, cited = _printed_order(document), _first_citation_order(document)
+        wrong = [
+            (n, shown, expected)
+            for n, (shown, expected) in enumerate(zip(printed, cited), start=1)
+            if shown != expected
+        ]
+        assert not wrong, (
+            f"{document.name}: {len(wrong)} of {len(printed)} references are not in "
+            f"order of first citation. First offender is [{wrong[0][0]}], which prints "
+            f"{wrong[0][1]!r} where the text reaches {wrong[0][2]!r} first. Reorder the "
+            "thebibliography block; do not renumber by hand."
+        )

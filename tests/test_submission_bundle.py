@@ -69,10 +69,28 @@ def test_the_identified_source_does_contain_those_strings() -> None:
 
 @pytest.mark.parametrize(
     "declaration",
-    ("Use of generative AI", "Funding", "Competing interests", "Data availability"),
+    (
+        "\\paragraph*{Use of generative AI.}",
+        "\\paragraph*{Funding.}",
+        "\\paragraph*{Competing interests.}",
+        "\\section*{Data availability}",
+    ),
 )
 def test_required_declarations_survive(anonymous_paper: str, declaration: str) -> None:
-    assert f"\\section*{{{declaration}}}" in anonymous_paper
+    """IOP puts the first three inside Acknowledgements, so that is where they sit.
+
+    Anonymisation can therefore no longer drop that section wholesale, and what
+    it removes instead is the credit prose that opens it and the contributions
+    paragraph. The heading stays, carrying the declarations under it.
+    """
+    assert declaration in anonymous_paper
+
+
+def test_the_acknowledgement_heading_survives_without_its_credits(anonymous_paper: str) -> None:
+    """The section has to stay, because three required declarations live in it."""
+    assert "\\section*{Acknowledgments}" in anonymous_paper
+    assert "The author thanks them" not in anonymous_paper
+    assert "reviewed or endorsed this analysis" not in anonymous_paper
 
 
 def test_the_ai_declaration_keeps_its_body(anonymous_paper: str) -> None:
@@ -81,9 +99,11 @@ def test_the_ai_declaration_keeps_its_body(anonymous_paper: str) -> None:
     assert "GPT-5.6" in anonymous_paper
 
 
-@pytest.mark.parametrize("credit", make_submission.ANONYMISE_SECTIONS)
-def test_credit_sections_are_gone(anonymous_paper: str, credit: str) -> None:
-    assert f"\\section*{{{credit}}}" not in anonymous_paper
+@pytest.mark.parametrize("credit", make_submission.ANONYMISE_PARAGRAPHS)
+def test_credit_paragraphs_are_gone(anonymous_paper: str, credit: str) -> None:
+    """The one declaration of the four that names anyone."""
+    assert f"\\paragraph*{{{credit}}}" not in anonymous_paper
+    assert "Sole author, in CRediT" not in anonymous_paper
 
 
 def test_the_paper_still_compiles_in_shape(anonymous_paper: str) -> None:
@@ -159,7 +179,14 @@ def test_the_abstract_matches_the_paper(sheet: str) -> None:
     counted = re.search(r"ABSTRACT \((\d+) words\)", sheet)
     assert counted is not None
     assert int(counted.group(1)) == len(abstract_words())
-    assert "Confinement scaling laws set the size a next-step tokamak" in sheet
+    # The opening run of words comes from paper.tex rather than being typed
+    # here. A literal sentence in this test goes stale the moment the abstract
+    # is edited, which is exactly what happened when it was trimmed.
+    opening = " ".join(abstract_words()[:8])
+    assert opening in re.sub(r"\s+", " ", sheet), (
+        f"the sheet does not open with the paper's abstract ({opening!r}), so the two "
+        "have drifted apart."
+    )
 
 
 def test_the_abstract_is_one_line(sheet: str) -> None:
@@ -277,6 +304,10 @@ def test_an_unfilled_placeholder_is_refused(tmp_path: Path, monkeypatch: pytest.
                 "AUTHOR",
                 "MANUSCRIPT_PAGES",
                 "SUPPLEMENT_PAGES",
+                "REF_HDB5",
+                "REF_HALL",
+                "REF_HALL26",
+                "SEC_KARDAUN",
             )
         )
         + "\n{{INVENTED}}\n"

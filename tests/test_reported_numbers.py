@@ -1371,6 +1371,48 @@ CLAIMS: tuple[Claim, ...] = (
         _pct(0),
         documents=MOVED_TO_SUPPLEMENT,
     ),
+    # The same two arms counted against the fold-refitted power law, which is
+    # the baseline Sec. 1 calls like-for-like. The artifact carried both counts
+    # all along and only the one against the published law was printed.
+    Claim(
+        "replication, disjoint arm, trees losing to the refitted power law",
+        "16",
+        lambda a: _arm(a, "disjoint_h")["n_machines_trees_lose_to_ridge"],
+        _r(0),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"{n} of 24",),
+    ),
+    Claim(
+        "replication, non-H arm, trees losing to the refitted power law",
+        "9",
+        lambda a: _arm(a, "non_h")["n_machines_trees_lose_to_ridge"],
+        _r(0),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"{n} of 10",),
+    ),
+    # The Conclusion now states what the prospective rung is worth on the two
+    # leave-one-out arms, where it is inside the paper's own resolution. Both
+    # gaps are differences of artifact fields rather than fields themselves, so
+    # they are computed here rather than typed.
+    Claim(
+        "Kadomtsev's label-arm gain over the unconstrained fit",
+        "0.004",
+        lambda a: (
+            _device(a, "powerlaw_free", "lolo_mean_rmsle")
+            - _device(a, "powerlaw_kadomtsev", "lolo_mean_rmsle")
+        ),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (f"gains {literal} by label",),
+    ),
+    Claim(
+        "Kadomtsev's device-arm gain, restated in the Conclusion",
+        "0.001",
+        lambda a: -_device(a, "powerlaw_kadomtsev", "mean_difference_vs_power_law"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (f"and {literal} by device",),
+    ),
     # -- Result 12: the locked forecast -----------------------------------
     Claim(
         "largest confinement time in the training data",
@@ -1679,8 +1721,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    121: "One hundred and twenty-one",
-    158: "one hundred and fifty-eight",
+    125: "One hundred and twenty-five",
+    162: "one hundred and sixty-two",
 }
 
 

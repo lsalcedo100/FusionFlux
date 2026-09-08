@@ -64,7 +64,7 @@ REFEREES
   was not on.
 
   Hall is the closest existing work and the most likely to find an error.
-  Kardaun is cited in Sec. 6 and in Limitations as the precursor on interval
+  Kardaun is cited in Sec. {{SEC_KARDAUN}} and in Limitations as the precursor on interval
   estimation for ITER and on errors in variables, so he is the person best
   placed to say whether that treatment is fair. Rea is the reader who is not a
   scaling-law specialist, on machine learning applied to tokamak data more
@@ -74,8 +74,8 @@ REFEREES
   along with the 6 September 2026 letter, so the editor learns it from you
   rather than from the author list.
 
-    - J. Hall is a co-author on Ref. [15].
-    - O. J. W. F. Kardaun is the fourth author of Ref. [3], the paper
+    - J. Hall is a co-author on Refs. [{{REF_HALL}}] and [{{REF_HALL26}}].
+    - O. J. W. F. Kardaun is the fourth author of Ref. [{{REF_HDB5}}], the paper
       describing the database this manuscript critiques. That is the closer
       tie of the two.
 

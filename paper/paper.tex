@@ -59,36 +59,34 @@ ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}
 Code, results, and reproducibility materials:
 \url{https://github.com/lsalcedo100/FusionFlux}\\
 Archived at \href{https://doi.org/10.5281/zenodo.22651178}{doi:10.5281/zenodo.22651178}
-(v0.4.4; the DOI for all versions is
+(v0.4.5; the DOI for all versions is
 \href{https://doi.org/10.5281/zenodo.22215142}{10.5281/zenodo.22215142})
 \end{center}
 
 \begin{abstract}
 \noindent
-Confinement scaling laws set the size a next-step tokamak has to reach. On the
-ITPA Global H-mode Confinement Database (HDB5, STD5; 6228 slices, 18 labels),
+On the ITPA Global H-mode Confinement Database (HDB5, STD5; 6228 slices, 18 labels),
 under cross-validation grouped by discharge, a random forest cuts log error by
 29\% against a power law refitted in the same folds and 36\% against published
 IPB98(y,2). Held out one device at a time the ordering reverses, so selecting a
 confinement model on its cross-validated score does not merely fail to inform
 about extrapolation: over the three models compared here it picks the worst
-extrapolator. Two controls bound that. Regressing
-the stored energy, which leaves the loss power among the features and moves only
-the identity $\tau = W/P$, leaves the forest worse on \textbf{9 of 13} labels
-and 9 of 11 devices at a mean gap of $+0.220$; in dimensionless coordinates,
-where no feature is a device label, it is 11 of 13 and 9 of 11. On the
-confinement time and the engineering features it is 13 of 13 and 11 of 11. It
-survives nested tuning, threshold and fold sweeps, and equal label weighting.
-The forest's error tracks the held-out label's Mahalanobis distance from the
-training data at $\rho=+0.85$, against $-0.06$ for the power law. At a cut
+extrapolator. Two controls bound that. Regressing the stored energy, which moves
+only the identity $\tau=W/P$ and leaves the loss power among the features,
+leaves the forest worse on \textbf{9 of 13} labels and 9 of 11 devices at a mean
+gap of $+0.220$; in dimensionless coordinates, where no feature is a device
+label but each is built from the target, it is 11 of 13 and 9 of 11. On the
+confinement time and the engineering features it is 13 of 13 and 11 of 11. The
+forest's error tracks the held-out label's Mahalanobis distance from the
+training at $\rho=+0.85$, against $-0.06$ for the power law. At a cut
 reproducing ITER's $1.82\times$ jump in major radius the trees land nearer a
 constant predictor than the power law, and 90\% split-conformal intervals fall
 to 3\% and 0\% coverage at unchanged width. Two repairs help, both supplying
 long-range structure rather than capacity: Connor--Taylor constraints, whose
 Kadomtsev rung is free in sample, and a Gaussian process with a linear kernel
-component, which is this work's best cross-validated model and does not reverse
-by label or by device. Extrapolation failure tracks long-range saturation rather
-than flexibility.
+component, this work's best cross-validated model, which does not reverse.
+Holding nonlinear capacity fixed and varying only the long-range mean isolates
+the mechanism: the failure tracks saturation rather than flexibility.
 \end{abstract}
 
 \begin{center}\small
@@ -910,11 +908,25 @@ So the reversal is not an artefact of the features naming the machine. It is
 also not established at the strength the engineering-space numbers suggest: a
 part of that $+0.315$ is device identity, and $+0.130$ is what survives in
 coordinates where identity is unavailable. Both numbers are reported, and the
-dimensionless one is the conservative reading. Two limits attach to it. The
-temperature it needs comes from the stored energy of the control above, so it is
-scored on 6214 rows rather than 6228; and $\epsilon$ and $\kappa$ still move only
-5\% and 6\% within a device, so the coordinates are cleaner than the engineering
-ones rather than clean. The specification is in
+dimensionless one is the smaller. Three limits attach to it, and the third
+decides how it should be read. The temperature it needs comes from the stored
+energy of the control above, so it is scored on 6214 rows rather than 6228.
+$\epsilon$ and $\kappa$ still move only 5\% and 6\% within a device, so the
+coordinates are cleaner than the engineering ones rather than clean. And that
+temperature is recovered as $T\sim W_{\mathrm{th}}/(nV)$ rather than measured,
+while the control above puts $W_{\mathrm{th}}/(\tau_{\mathrm{th}}P)$ at a median
+of unity on these rows, so the three groups are algebraic functions of the
+target: substituting the definitions of Eq.~\eqref{eq:groups}, with
+$V\sim Ra^{2}\kappa$, gives
+$\log(B\tau_{E}) = \log\beta - \log P + \log V + 3\log B$ up to that ratio.
+Two things follow. Neither model is blind in this arm in the way it is in the
+engineering one, since each is handed a function of the held-out machine's own
+confinement time. And these coordinates cannot be evaluated for a machine that
+does not exist, because placing one needs the $\tau_{E}$ being predicted, which
+is why the forecast of Sec.~\ref{sec:forecast} is stated in engineering
+variables. This arm is a different experiment carrying a different confound
+rather than a stricter version of the same one, and nothing below reads it as
+the stricter one. The specification is in
 \texttt{analysis\_dimensionless.py}.
 
 \paragraph{Four choices that do not carry it.} Four more arms vary choices the
@@ -1612,7 +1624,11 @@ L-mode plasma.
 The ranking inverts in both arms, and it survives dropping the 336 discharges
 the disjoint H-mode arm shares with STD5 at different time slices. Counting
 label--model pairs where a tree ensemble loses to the published law on an unseen
-label gives 19 of 24 and 10 of 10. Section~S2 of the Supplementary Material
+label gives 19 of 24 and 10 of 10. Counted instead against the power law
+refitted inside each fold, which Sec.~\ref{sec:intro} calls the like-for-like
+baseline and which the rest of this paper states the reversal against, it is
+\textbf{16 of 24} and \textbf{9 of 10}; both counts are reported because the
+second is the one this paper's own standard asks for. Section~S2 of the Supplementary Material
 reports both arms in full, with the positive and negative checks on the row
 matcher, whose silent failure would otherwise reproduce
 Sec.~\ref{sec:reversal} by construction. This is emphatically \emph{not} an
@@ -1646,13 +1662,19 @@ law of Sec.~\ref{sec:dimensional} predicts \SI{2.837}{\second} at the $Q=10$
 inductive point and the unconstrained refit \SI{2.858}{\second}, against
 IPB98(y,2)'s \SI{3.591}{\second}: the two fits made here are \textbf{21\%} below
 the reference law at the operating point it was used to size. That is the only
-number in this paper a next-step design would consume, and three things bound
+number in this paper a next-step design would consume, and four things bound
 how much weight it can take. It is a point estimate from a fit selected on
 transfer rather than on physics; the constrained rung it comes from was chosen
 after the size-cut scores had been seen, so its standing is the one
 Sec.~\ref{sec:dimensional} gives it; and it points the same way as the newer
 published laws, which weaken the size dependence relative to IPB98(y,2) and
 which Sec.~\ref{sec:robustness} finds transferring better here than either fit.
+And the operating point is the $Q=10$ inductive scenario of the 1999
+basis~\cite{ipb98}, whose eight engineering values the 2007 revision carries
+forward for the same scenario~\cite{doyle07}; ITER has since been rebaselined,
+on a schedule and a staging this paper does not attempt to
+summarise~\cite{loarte}, so this row is conditional on the operating point
+tabulated in Sec.~S3 rather than on ITER's current plan of record.
 A lower projection than IPB98(y,2)'s is therefore what several independent
 routes agree on, and none of them is this paper's to certify.
 
@@ -1797,9 +1819,11 @@ comes from, and on this database the trend that transfers best came from outside
 the fit entirely. The kernel is marginally the best cross-validated model here,
 at 0.11179 against the IPB98-mean arm's 0.11196, which is a tie at any precision
 worth quoting; out of distribution the two part company, 0.218 against 0.189 on
-a held-out label. None of the three displaces the constrained fit of
-Sec.~\ref{sec:dimensional} at 0.183, and Sec.~\ref{sec:robustness} reports two
-published laws below that.
+a held-out label. None of the three beats the constrained fit of
+Sec.~\ref{sec:dimensional} at 0.183, and the two that come near it, at 0.186 and
+0.191, sit inside the 0.01 resolution Sec.~\ref{sec:limitations} states, so they
+are tied with it rather than behind it. Sec.~\ref{sec:robustness} reports two
+published laws below all of them.
 
 Across the model families tested here, this resolves the choice
 Sec.~\ref{sec:mechanisms} left open: extrapolation failure tracks long-range
@@ -1810,8 +1834,11 @@ properties; that is why the reading there was flagged as provisional rather than
 asserted. ``Do not use a flexible model out of distribution'' is the wrong
 lesson. ``Do not use a model whose predictions stop tracking the features once
 the input leaves the training data'' is the right one, and the random forest's
-training-target ceiling is its strictest case. This does not displace the constrained power law, which still wins
-the ITER-size-matched cut with no within-surface hyperparameter to tune, and the process does not beat the
+training-target ceiling is its strictest case. This does not displace the
+constrained power law, which ties it across the ITER-size-matched cut, 0.183
+against 0.191, a difference inside the resolution of
+Sec.~\ref{sec:limitations}, and which carries no within-surface hyperparameter
+to tune; and the process does not beat the
 power law on a held-out label (0.218 against 0.214). Held out one physical
 device at a time, which is the arm Sec.~\ref{sec:robustness} argues for, it
 scores 0.219 against the power law's 0.211 and is worse on 5 of the 11. So the
@@ -1888,11 +1915,15 @@ together. Where they agree the interpolation number is informative. Where they
 disagree, as here by a factor of 3.6, the disagreement is the result, and the
 interpolation number should not be quoted on its own.
 \item Report how far the target operating point sits from the training
-distribution. This needs no held-out device. The Mahalanobis distance of a
-label's mean log-feature vector tracked per-label error at $\rho=+0.85$ for the
-random forest and at $\rho=-0.06$ for the power law, so it separates the models
-that will degrade from the ones that will not, without waiting for the machine
-to exist.
+distribution. The distance itself needs no held-out device, and it is the one
+quantity that is known in advance for a machine that does not exist. The
+\emph{correlation} between distance and error is not free in the same way. It is
+measured over held-out units, so it arrives with item 1 rather than instead of
+it; and distance on its own predicts how hard a unit is rather than which model
+will fail on it, since the mean baseline of Sec.~\ref{sec:mechanisms} correlates
+with it at $+0.56$ while fitting nothing. What separates the models here is the
+contrast, $\rho=+0.85$ for the random forest against $\rho=-0.06$ for the power
+law.
 \item Say whether the model's predictions stop tracking the features outside the
 training support, and separately whether they can leave the range of the
 training targets at all. Both are properties of the estimator, checkable before
@@ -1913,8 +1944,10 @@ the calibration rank cannot move. The interval is therefore the wrong place to
 look for the warning, and the distance of item 2 is the right one.
 \end{enumerate}
 
-\noindent Only the first needs a refit. The other three cost nothing and are
-computable from the fitted model and the intended operating point alone.
+\noindent Only the first needs a refit, and item 2's correlation is measured on
+what that refit produces. Items 3 and 4, and the distance in item 2, cost
+nothing and are computable from the fitted model and the intended operating
+point alone.
 
 The positive findings point the same way, and both are about the far field
 rather than about capacity. Constraining the exponents to a Connor--Taylor
@@ -1936,7 +1969,9 @@ columns reproduces the reported ridge to within 0.0012 on every split. Where a f
 is wanted, the evidence here favours one that keeps trending, and the
 linear-plus-RBF Gaussian process was both the best cross-validated model in this
 study, at 0.112, and the only flexible model whose native posterior intervals
-reached nominal coverage out of distribution without conformal recalibration; the constrained
+reached nominal coverage out of distribution without conformal recalibration.
+That coverage is measured across the ITER-size-matched cut, so it is
+one-machine evidence in the sense Sec.~\ref{sec:limitations} gives; the constrained
 power law reaches comparable coverage there through split conformal instead. Where a physics constraint is available, imposing it is close to free and helps
 out of distribution. The rung the literature fixed in advance costs nothing in
 sample and beats the unconstrained fit at all 15 cuts of the size sweep; the
@@ -2163,7 +2198,11 @@ dimensional constraint on the existing power law, and the two rungs tested carry
 different weight. The Kadomtsev rung was fixed by the literature in 1975 and
 enforced when IPB98(y,2) was itself fitted, so imposing it here selected
 nothing; it costs nothing in sample and beats the unconstrained fit at all 15
-cuts of the size sweep. The collisionless rung gave the lowest error of any
+cuts of the size sweep. Where it does not show is the leave-one-out arms, on
+which it gains 0.004 by label and 0.001 by device against that same fit, inside
+the resolution Sec.~\ref{sec:limitations} states; the constraint's measurable
+benefit is confined to the size sweep, which
+Sec.~\ref{sec:limitations} also notes is one machine above the matched cut. The collisionless rung gave the lowest error of any
 model fitted here without using the held-out rows at the ITER-size-matched cut,
 but was selected after those scores had been seen, so it is the lowest error
 among the surfaces examined rather than a prediction that this surface is the
@@ -2204,13 +2243,14 @@ Supplementary Material describes. Neither the ITPA group nor any contributing
 team has reviewed or endorsed this analysis, and its conclusions are the
 author's alone.
 
-% This declaration is a top-level section of its own, deliberately, rather than a
-% block inside Acknowledgments. IOP requires it, it names nobody, and it must
-% survive anonymisation; Acknowledgments does not. Kept separate, the anonymous
-% build strips one and keeps the other with no lifting, and there is no marker
-% pair for a later edit to move text across.
-\section*{Use of generative AI}
-
+% IOP puts the generative-AI disclosure, the funding statement, the competing
+% interests and the contributions inside Acknowledgements, and its policy names
+% that section explicitly. They are therefore run-in paragraphs of the section
+% above rather than sections of their own. Anonymisation cannot simply drop the
+% whole section any more: tools/make_submission.py removes the credit prose and
+% the contributions paragraph by name and keeps the three required declarations,
+% and it still fails loudly if the generative-AI paragraph goes missing.
+\paragraph*{Use of generative AI.}
 Two generative AI systems were used in
 preparing this work, and each is named with its version and its role.
 
@@ -2237,17 +2277,14 @@ reference against its published record, and takes full responsibility for the
 content, the conclusions and any error in them. No text was incorporated
 without the author reading and verifying it.
 
-\section*{Funding}
-
+\paragraph*{Funding.}
 This research received no specific grant from any funding agency in the public,
 commercial or not-for-profit sectors.
 
-\section*{Competing interests}
-
+\paragraph*{Competing interests.}
 The author declares no competing interests.
 
-\section*{Author contributions}
-
+\paragraph*{Author contributions.}
 Sole author, in CRediT terms. L. Salcedo: conceptualization, methodology,
 software, validation, formal analysis, investigation, data curation, writing
 (original draft), writing (review and editing), visualization, project
@@ -2327,8 +2364,8 @@ outputs under \texttt{results/} also record the digest they verified, which
 carries that provenance into the artefact itself.
 
 The prose is bound to those artefacts in the same way.
-\textbf{One hundred and twenty-one} of the numbers printed above, and \textbf{one
-hundred and fifty-eight} across this paper and its Supplementary Material, are tied by test
+\textbf{One hundred and twenty-five} of the numbers printed above, and \textbf{one
+hundred and sixty-two} across this paper and its Supplementary Material, are tied by test
 to the field of the generated file they came from, in both directions: if an analysis is rerun and its output moves, the
 rendered value stops matching the printed one and the suite fails; if a number
 in the text is edited, it stops matching the artefact. A figure that disagrees
@@ -2346,10 +2383,17 @@ Physics Expert Group on Confinement Modelling and Database and ITER Physics
 Basis Editors, ``Chapter 2: Plasma confinement and transport,'' \emph{Nucl.\
 Fusion} \textbf{39}, 2175 (1999).
 \href{https://doi.org/10.1088/0029-5515/39/12/302}{doi:10.1088/0029-5515/39/12/302}
+\bibitem{hdb5} G. Verdoolaege \emph{et al.}, ``The updated ITPA global H-mode
+confinement database: description and analysis,'' \emph{Nucl.\ Fusion}
+\textbf{61}, 076006 (2021).
+\href{https://doi.org/10.1088/1741-4326/abdb91}{doi:10.1088/1741-4326/abdb91}
 \bibitem{doyle07} E. J. Doyle \emph{et al.}, ``Chapter 2: Plasma confinement
 and transport,'' \emph{Progress in the ITER Physics Basis}, \emph{Nucl.\
 Fusion} \textbf{47}, S18 (2007).
 \href{https://doi.org/10.1088/0029-5515/47/6/S02}{doi:10.1088/0029-5515/47/6/S02}
+\bibitem{creely} A.J. Creely \emph{et al.}, ``Overview of the SPARC tokamak,''
+\emph{J.\ Plasma Phys.} \textbf{86}, 865860502 (2020).
+\href{https://doi.org/10.1017/S0022377820001257}{doi:10.1017/S0022377820001257}
 \bibitem{citrin} J. Citrin \emph{et al.}, ``Real-time capable first principle
 based modelling of tokamak turbulent transport,'' \emph{Nucl.\ Fusion}
 \textbf{55}, 092001 (2015).
@@ -2362,33 +2406,10 @@ Fusion} \textbf{57}, 086034 (2017).
 plasma performance for the SPARC tokamak,'' \emph{J.\ Plasma Phys.}
 \textbf{86}, 865860503 (2020).
 \href{https://doi.org/10.1017/S0022377820001075}{doi:10.1017/S0022377820001075}
-\bibitem{gls} G. Verdoolaege, A. Shabbir and G. Hornung, ``Robust analysis of
-trends in noisy tokamak confinement data using geodesic least squares
-regression,'' \emph{Rev.\ Sci.\ Instrum.} \textbf{87}, 11D423 (2016).
-\href{https://doi.org/10.1063/1.4960069}{doi:10.1063/1.4960069}
-\bibitem{meredig} B. Meredig \emph{et al.}, ``Can machine learning identify the
-next high-temperature superconductor? Examining extrapolation performance for
-materials discovery,'' \emph{Mol.\ Syst.\ Des.\ Eng.} \textbf{3}, 819 (2018).
-\href{https://doi.org/10.1039/C8ME00012C}{doi:10.1039/C8ME00012C}
-\bibitem{sutton} C. Sutton \emph{et al.}, ``Identifying domains of applicability
-of machine learning models for materials science,'' \emph{Nat.\ Commun.}
-\textbf{11}, 4428 (2020).
-\href{https://doi.org/10.1038/s41467-020-17112-9}{doi:10.1038/s41467-020-17112-9}
 \bibitem{allen} L. Allen and C. M. Bishop, ``Neural network approach to energy
 confinement scaling in tokamaks,'' \emph{Plasma Phys.\ Control.\ Fusion}
 \textbf{34}, 1291 (1992).
 \href{https://doi.org/10.1088/0741-3335/34/7/008}{doi:10.1088/0741-3335/34/7/008}
-\bibitem{abbate} J. Abbate \emph{et al.}, ``Large-database cross-verification
-and validation of tokamak transport models using baselines for comparison,''
-\emph{Phys.\ Plasmas} \textbf{31}, 042506 (2024).
-\href{https://doi.org/10.1063/5.0190908}{doi:10.1063/5.0190908}
-\bibitem{hdb5} G. Verdoolaege \emph{et al.}, ``The updated ITPA global H-mode
-confinement database: description and analysis,'' \emph{Nucl.\ Fusion}
-\textbf{61}, 076006 (2021).
-\href{https://doi.org/10.1088/1741-4326/abdb91}{doi:10.1088/1741-4326/abdb91}
-\bibitem{creely} A.J. Creely \emph{et al.}, ``Overview of the SPARC tokamak,''
-\emph{J.\ Plasma Phys.} \textbf{86}, 865860502 (2020).
-\href{https://doi.org/10.1017/S0022377820001257}{doi:10.1017/S0022377820001257}
 \bibitem{katesharbeck} J. Kates-Harbeck, A. Svyatkovskiy and W. Tang,
 ``Predicting disruptive instabilities in controlled fusion plasmas through deep
 learning,'' \emph{Nature} \textbf{568}, 526 (2019).
@@ -2432,13 +2453,25 @@ Eng.\ Des.} \textbf{227}, 115740 (2026).
 data with temporal, spatial, hierarchical, or phylogenetic structure,''
 \emph{Ecography} \textbf{40}, 913 (2017).
 \href{https://doi.org/10.1111/ecog.02881}{doi:10.1111/ecog.02881}
+\bibitem{abbate} J. Abbate \emph{et al.}, ``Large-database cross-verification
+and validation of tokamak transport models using baselines for comparison,''
+\emph{Phys.\ Plasmas} \textbf{31}, 042506 (2024).
+\href{https://doi.org/10.1063/5.0190908}{doi:10.1063/5.0190908}
+\bibitem{meredig} B. Meredig \emph{et al.}, ``Can machine learning identify the
+next high-temperature superconductor? Examining extrapolation performance for
+materials discovery,'' \emph{Mol.\ Syst.\ Des.\ Eng.} \textbf{3}, 819 (2018).
+\href{https://doi.org/10.1039/C8ME00012C}{doi:10.1039/C8ME00012C}
+\bibitem{sutton} C. Sutton \emph{et al.}, ``Identifying domains of applicability
+of machine learning models for materials science,'' \emph{Nat.\ Commun.}
+\textbf{11}, 4428 (2020).
+\href{https://doi.org/10.1038/s41467-020-17112-9}{doi:10.1038/s41467-020-17112-9}
+\bibitem{breiman} L. Breiman, ``Random forests,'' \emph{Machine Learning}
+\textbf{45}, 5 (2001).
+\href{https://doi.org/10.1023/A:1010933404324}{doi:10.1023/A:1010933404324}
 \bibitem{leyland} M.J. Leyland \emph{et al.}, ``The H-mode pedestal structure
 and its role on confinement in JET with a carbon and metal wall,''
 \emph{Nucl.\ Fusion} \textbf{55}, 013019 (2015).
 \href{https://doi.org/10.1088/0029-5515/55/1/013019}{doi:10.1088/0029-5515/55/1/013019}
-\bibitem{breiman} L. Breiman, ``Random forests,'' \emph{Machine Learning}
-\textbf{45}, 5 (2001).
-\href{https://doi.org/10.1023/A:1010933404324}{doi:10.1023/A:1010933404324}
 \bibitem{hall} J. Hall, P. Zhang and G. Verdoolaege, ``Confinement scaling with
 machine size in the updated ITPA global H-mode energy confinement database,'' in
 \emph{Proc.\ 49th EPS Conf.\ on Plasma Physics}, Bordeaux, Europhys.\ Conf.\
@@ -2451,6 +2484,14 @@ form at the time of writing.
 \bibitem{conformal} V. Vovk, A. Gammerman and G. Shafer,
 \emph{Algorithmic Learning in a Random World}, Springer (2005).
 \href{https://doi.org/10.1007/b106715}{doi:10.1007/b106715}
+\bibitem{jackknife} R. Foygel Barber, E. J. Cand\`{e}s, A. Ramdas and R. J.
+Tibshirani, ``Predictive inference with the jackknife+,'' \emph{Ann.\ Statist.}
+\textbf{49}(1) (2021).
+\href{https://doi.org/10.1214/20-AOS1965}{doi:10.1214/20-AOS1965}
+\bibitem{kardaun} O. J. W. F. Kardaun, ``Interval estimation of global H-mode
+energy confinement in ITER,'' \emph{Plasma Phys.\ Control.\ Fusion} \textbf{41},
+429 (1999).
+\href{https://doi.org/10.1088/0741-3335/41/4/001}{doi:10.1088/0741-3335/41/4/001}
 \bibitem{shiftcp} R.J. Tibshirani, R. Foygel Barber, E.J. Cand\`es and
 A. Ramdas, ``Conformal prediction under covariate shift,'' \emph{Adv.\ Neural
 Inf.\ Process.\ Syst.} \textbf{32}, 2526 (2019).
@@ -2460,20 +2501,32 @@ uncertainty? Evaluating predictive uncertainty under dataset shift,''
 \bibitem{connor} J.W. Connor and J.B. Taylor, ``Scaling laws for plasma
 confinement,'' \emph{Nucl.\ Fusion} \textbf{17}, 1047 (1977).
 \href{https://doi.org/10.1088/0029-5515/17/5/015}{doi:10.1088/0029-5515/17/5/015}
+\bibitem{petty} C. C. Petty, ``Sizing up plasmas using dimensionless
+parameters,'' \emph{Phys.\ Plasmas} \textbf{15}, 080501 (2008).
+\href{https://doi.org/10.1063/1.2961043}{doi:10.1063/1.2961043}
+\bibitem{luce} T. C. Luce, C. C. Petty and J. G. Cordey, ``Application of
+dimensionless parameter scaling techniques to the design and interpretation of
+magnetic fusion experiments,'' \emph{Plasma Phys.\ Control.\ Fusion} \textbf{50},
+043001 (2008).
+\href{https://doi.org/10.1088/0741-3335/50/4/043001}{doi:10.1088/0741-3335/50/4/043001}
 \bibitem{kadomtsev} B.B. Kadomtsev, ``Tokamaks and dimensional analysis,''
 \emph{Sov.\ J.\ Plasma Phys.} \textbf{1}, 295 (1975).
 \bibitem{iter89p} P.N. Yushmanov \emph{et al.}, ``Scalings for tokamak energy
 confinement,'' \emph{Nucl.\ Fusion} \textbf{30}, 1999 (1990). ITER89-P.
 \href{https://doi.org/10.1088/0029-5515/30/10/001}{doi:10.1088/0029-5515/30/10/001}
+\bibitem{loarte} A. Loarte \emph{et al.}, ``The new ITER baseline, research plan
+and open R\&D issues,'' \emph{Plasma Phys.\ Control.\ Fusion} \textbf{67},
+065023 (2025).
+\href{https://doi.org/10.1088/1361-6587/add9c9}{doi:10.1088/1361-6587/add9c9}
+\bibitem{gpml} C.E. Rasmussen and C.K.I. Williams, \emph{Gaussian Processes for
+Machine Learning}, MIT Press (2006).
+\href{https://doi.org/10.7551/mitpress/3206.001.0001}{doi:10.7551/mitpress/3206.001.0001}
 \bibitem{chilenski} M.A. Chilenski, M. Greenwald, Y. Marzouk, N.T. Howard,
 A.E. White, J.E. Rice and J.R. Walk, ``Improved profile fitting and
 quantification of uncertainty in experimental measurements of impurity transport
 coefficients using Gaussian process regression,'' \emph{Nucl.\ Fusion}
 \textbf{55}, 023012 (2015).
 \href{https://doi.org/10.1088/0029-5515/55/2/023012}{doi:10.1088/0029-5515/55/2/023012}
-\bibitem{gpml} C.E. Rasmussen and C.K.I. Williams, \emph{Gaussian Processes for
-Machine Learning}, MIT Press (2006).
-\href{https://doi.org/10.7551/mitpress/3206.001.0001}{doi:10.7551/mitpress/3206.001.0001}
 \bibitem{kleiber} M. Kleiber, ``Body size and metabolism,''
 \emph{Hilgardia} \textbf{6}, 315 (1932).
 \href{https://doi.org/10.3733/hilg.v06n11p315}{doi:10.3733/hilg.v06n11p315}
@@ -2484,6 +2537,14 @@ Released CC0.
 \bibitem{felsenstein} J. Felsenstein, ``Phylogenies and the comparative
 method,'' \emph{Am.\ Nat.} \textbf{125}, 1 (1985).
 \href{https://doi.org/10.1086/284325}{doi:10.1086/284325}
+\bibitem{cordey} J. G. Cordey \emph{et al.}, ``Scaling of the energy confinement
+time with $\beta$ and collisionality approaching ITER conditions,'' \emph{Nucl.\
+Fusion} \textbf{45}, 1078 (2005).
+\href{https://doi.org/10.1088/0029-5515/45/9/007}{doi:10.1088/0029-5515/45/9/007}
+\bibitem{gls} G. Verdoolaege, A. Shabbir and G. Hornung, ``Robust analysis of
+trends in noisy tokamak confinement data using geodesic least squares
+regression,'' \emph{Rev.\ Sci.\ Instrum.} \textbf{87}, 11D423 (2016).
+\href{https://doi.org/10.1063/1.4960069}{doi:10.1063/1.4960069}
 \bibitem{osfdb} ITPA Confinement Database and Modelling Topical Group,
 \emph{International Global H-Mode Confinement Database}, version 5.2.3
 [dataset], Open Science Framework (2021). \url{https://osf.io/drwcq}
@@ -2496,29 +2557,9 @@ Allometry Database for woody plants} [dataset], Figshare (2015).
 \href{https://doi.org/10.6084/m9.figshare.c.3307692}{doi:10.6084/m9.figshare.c.3307692}.
 Release v1.0.1, \url{https://github.com/dfalster/baad/releases/tag/v1.0.1}
 \bibitem{zenodo} L. Salcedo, \emph{FusionFlux: extrapolation, long-range
-saturation and physics constraints in confinement scaling}, version v0.4.4,
+saturation and physics constraints in confinement scaling}, version v0.4.5,
 Zenodo (2026).
 \href{https://doi.org/10.5281/zenodo.22651178}{doi:10.5281/zenodo.22651178}
-\bibitem{kardaun} O. J. W. F. Kardaun, ``Interval estimation of global H-mode
-energy confinement in ITER,'' \emph{Plasma Phys.\ Control.\ Fusion} \textbf{41},
-429 (1999).
-\href{https://doi.org/10.1088/0741-3335/41/4/001}{doi:10.1088/0741-3335/41/4/001}
-\bibitem{petty} C. C. Petty, ``Sizing up plasmas using dimensionless
-parameters,'' \emph{Phys.\ Plasmas} \textbf{15}, 080501 (2008).
-\href{https://doi.org/10.1063/1.2961043}{doi:10.1063/1.2961043}
-\bibitem{luce} T. C. Luce, C. C. Petty and J. G. Cordey, ``Application of
-dimensionless parameter scaling techniques to the design and interpretation of
-magnetic fusion experiments,'' \emph{Plasma Phys.\ Control.\ Fusion} \textbf{50},
-043001 (2008).
-\href{https://doi.org/10.1088/0741-3335/50/4/043001}{doi:10.1088/0741-3335/50/4/043001}
-\bibitem{cordey} J. G. Cordey \emph{et al.}, ``Scaling of the energy confinement
-time with $\beta$ and collisionality approaching ITER conditions,'' \emph{Nucl.\
-Fusion} \textbf{45}, 1078 (2005).
-\href{https://doi.org/10.1088/0029-5515/45/9/007}{doi:10.1088/0029-5515/45/9/007}
-\bibitem{jackknife} R. Foygel Barber, E. J. Cand\`{e}s, A. Ramdas and R. J.
-Tibshirani, ``Predictive inference with the jackknife+,'' \emph{Ann.\ Statist.}
-\textbf{49}(1) (2021).
-\href{https://doi.org/10.1214/20-AOS1965}{doi:10.1214/20-AOS1965}
 \end{thebibliography}
 
 \end{document}

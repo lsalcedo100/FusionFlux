@@ -240,14 +240,14 @@ saw, and the best model on an unseen label is IPB98(y,2). On the ohmic and L-mod
 cross-validation gain over ITER89-P is 67\% and the best model on an unseen
 label is the collisionless power law of the constraint section of the main text. Counting label--model pairs
 where a tree ensemble loses to the published law on an unseen label: 19 of 24
-and 10 of 10.
+and 10 of 10; against the fold-refitted power law instead, 16 of 24 and 9 of 10.
 
 Row disjointness is not discharge disjointness, and the paper's own argument
 says the discharge is the unit that matters. Of the 5358 H-mode rows, 425
 (7.9\%) are slices of one of 336 discharges that STD5 samples at a different
 time. Dropping those discharges outright leaves 4933 rows across 2864
 discharges that share no shot with STD5 at all, and the arm survives: the best
-cross-validated model still beats the published law, by 39\% against 41\% on the
+cross-validated model still beats the published law, by 39\% against 42\% on the
 full arm, and the best model on an unseen label is still IPB98(y,2), with the
 tree ensembles at 0.526 and 0.552 against the power law's 0.332. The reversal
 does not depend on the shared discharges.
@@ -1171,26 +1171,9 @@ it.
 \begin{thebibliography}{99}
 \small\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
 \raggedright
-\bibitem{hdb5} G. Verdoolaege \emph{et al.}, ``The updated ITPA global H-mode
-confinement database: description and analysis,'' \emph{Nucl.\ Fusion}
-\textbf{61}, 076006 (2021).
-\href{https://doi.org/10.1088/1741-4326/abdb91}{doi:10.1088/1741-4326/abdb91}
-\bibitem{hall26} J. Hall, P. Zhang, Y. Zhang, C. Angioni and G. Verdoolaege,
-``Confinement scaling with machine size in the updated ITPA global H-mode
-energy confinement database,'' poster P2.1097, \emph{52nd EPS Conf.\ on Plasma
-Physics}, Edinburgh (2026). Conference presentation; not published in refereed
-form at the time of writing.
-\bibitem{breiman} L. Breiman, ``Random forests,'' \emph{Machine Learning}
-\textbf{45}, 5 (2001).
-\href{https://doi.org/10.1023/A:1010933404324}{doi:10.1023/A:1010933404324}
-\bibitem{roberts} D.R. Roberts \emph{et al.}, ``Cross-validation strategies for
-data with temporal, spatial, hierarchical, or phylogenetic structure,''
-\emph{Ecography} \textbf{40}, 913 (2017).
-\href{https://doi.org/10.1111/ecog.02881}{doi:10.1111/ecog.02881}
-\bibitem{wang} Z. Wang \emph{et al.}, ``Power-law-anchored residual learning
-for H-mode energy confinement time in tokamaks: interpolation and
-parameter-defined extrapolation,'' arXiv:2608.20684 (2026).
-\href{https://doi.org/10.48550/arXiv.2608.20684}{doi:10.48550/arXiv.2608.20684}
+\bibitem{iter89p} P.N. Yushmanov \emph{et al.}, ``Scalings for tokamak energy
+confinement,'' \emph{Nucl.\ Fusion} \textbf{30}, 1999 (1990). ITER89-P.
+\href{https://doi.org/10.1088/0029-5515/30/10/001}{doi:10.1088/0029-5515/30/10/001}
 \bibitem{ipb98} ITER Physics Expert Group on Confinement and Transport, ITER
 Physics Expert Group on Confinement Modelling and Database and ITER Physics
 Basis Editors, ``Chapter 2: Plasma confinement and transport,'' \emph{Nucl.\
@@ -1200,16 +1183,13 @@ Fusion} \textbf{39}, 2175 (1999).
 and transport,'' \emph{Progress in the ITER Physics Basis}, \emph{Nucl.\
 Fusion} \textbf{47}, S18 (2007).
 \href{https://doi.org/10.1088/0029-5515/47/6/S02}{doi:10.1088/0029-5515/47/6/S02}
-\bibitem{creely} A.J. Creely \emph{et al.}, ``Overview of the SPARC tokamak,''
-\emph{J.\ Plasma Phys.} \textbf{86}, 865860502 (2020).
-\href{https://doi.org/10.1017/S0022377820001257}{doi:10.1017/S0022377820001257}
-\bibitem{iter89p} P.N. Yushmanov \emph{et al.}, ``Scalings for tokamak energy
-confinement,'' \emph{Nucl.\ Fusion} \textbf{30}, 1999 (1990). ITER89-P.
-\href{https://doi.org/10.1088/0029-5515/30/10/001}{doi:10.1088/0029-5515/30/10/001}
 \bibitem{loarte} A. Loarte \emph{et al.}, ``The new ITER baseline, research plan
 and open R\&D issues,'' \emph{Plasma Phys.\ Control.\ Fusion} \textbf{67},
 065023 (2025).
 \href{https://doi.org/10.1088/1361-6587/add9c9}{doi:10.1088/1361-6587/add9c9}
+\bibitem{creely} A.J. Creely \emph{et al.}, ``Overview of the SPARC tokamak,''
+\emph{J.\ Plasma Phys.} \textbf{86}, 865860502 (2020).
+\href{https://doi.org/10.1017/S0022377820001257}{doi:10.1017/S0022377820001257}
 \bibitem{jt60saplan} JT-60SA Research Unit, \emph{JT-60SA Research Plan:
 Research Objectives and Strategy}, Version 5.0 (2021).
 \url{https://www.jt60sa.org/wp/wp-content/uploads/2021/02/JT-60SA_Res_Plan-5.pdf}
@@ -1224,6 +1204,9 @@ operation and plans in view of ITER and DEMO,'' \emph{Nucl.\ Fusion} \textbf{66}
 \bibitem{kleiber} M. Kleiber, ``Body size and metabolism,''
 \emph{Hilgardia} \textbf{6}, 315 (1932).
 \href{https://doi.org/10.3733/hilg.v06n11p315}{doi:10.3733/hilg.v06n11p315}
+\bibitem{felsenstein} J. Felsenstein, ``Phylogenies and the comparative
+method,'' \emph{Am.\ Nat.} \textbf{125}, 1 (1985).
+\href{https://doi.org/10.1086/284325}{doi:10.1086/284325}
 \bibitem{baad} D.S. Falster \emph{et al.}, ``BAAD: a Biomass And Allometry
 Database for woody plants,'' \emph{Ecology} \textbf{96}, 1445 (2015).
 Released CC0.
@@ -1232,9 +1215,26 @@ Released CC0.
 structure and allometry of plant vascular systems,'' \emph{Nature}
 \textbf{400}, 664 (1999).
 \href{https://doi.org/10.1038/23251}{doi:10.1038/23251}
-\bibitem{felsenstein} J. Felsenstein, ``Phylogenies and the comparative
-method,'' \emph{Am.\ Nat.} \textbf{125}, 1 (1985).
-\href{https://doi.org/10.1086/284325}{doi:10.1086/284325}
+\bibitem{hdb5} G. Verdoolaege \emph{et al.}, ``The updated ITPA global H-mode
+confinement database: description and analysis,'' \emph{Nucl.\ Fusion}
+\textbf{61}, 076006 (2021).
+\href{https://doi.org/10.1088/1741-4326/abdb91}{doi:10.1088/1741-4326/abdb91}
+\bibitem{breiman} L. Breiman, ``Random forests,'' \emph{Machine Learning}
+\textbf{45}, 5 (2001).
+\href{https://doi.org/10.1023/A:1010933404324}{doi:10.1023/A:1010933404324}
+\bibitem{wang} Z. Wang \emph{et al.}, ``Power-law-anchored residual learning
+for H-mode energy confinement time in tokamaks: interpolation and
+parameter-defined extrapolation,'' arXiv:2608.20684 (2026).
+\href{https://doi.org/10.48550/arXiv.2608.20684}{doi:10.48550/arXiv.2608.20684}
+\bibitem{roberts} D.R. Roberts \emph{et al.}, ``Cross-validation strategies for
+data with temporal, spatial, hierarchical, or phylogenetic structure,''
+\emph{Ecography} \textbf{40}, 913 (2017).
+\href{https://doi.org/10.1111/ecog.02881}{doi:10.1111/ecog.02881}
+\bibitem{hall26} J. Hall, P. Zhang, Y. Zhang, C. Angioni and G. Verdoolaege,
+``Confinement scaling with machine size in the updated ITPA global H-mode
+energy confinement database,'' poster P2.1097, \emph{52nd EPS Conf.\ on Plasma
+Physics}, Edinburgh (2026). Conference presentation; not published in refereed
+form at the time of writing.
 \end{thebibliography}
 
 \end{document}
