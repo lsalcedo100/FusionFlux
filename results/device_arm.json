@@ -1,0 +1,111 @@
+{
+  "n_devices": 11,
+  "devices": [
+    "ASDEX",
+    "AUG",
+    "CMOD",
+    "D3D",
+    "JET",
+    "JFT2M",
+    "JT60U",
+    "MAST",
+    "NSTX",
+    "PBXM",
+    "PDX"
+  ],
+  "baseline": "ridge_loglinear",
+  "models": {
+    "gp_rbf": {
+      "lodo_mean_rmsle": 0.6925573422001432,
+      "lolo_mean_rmsle": 0.5409673537739749,
+      "n_devices": 11,
+      "n_worse_than_power_law": 11,
+      "mean_difference_vs_power_law": 0.48107725964437864
+    },
+    "gp_linear": {
+      "lodo_mean_rmsle": 0.21153087919924382,
+      "lolo_mean_rmsle": 0.21407197222211438,
+      "n_devices": 11,
+      "n_worse_than_power_law": 8,
+      "mean_difference_vs_power_law": 5.079664347922765e-05
+    },
+    "gp_linear_rbf": {
+      "lodo_mean_rmsle": 0.21892752670411555,
+      "lolo_mean_rmsle": 0.21823624032440053,
+      "n_devices": 11,
+      "n_worse_than_power_law": 5,
+      "mean_difference_vs_power_law": 0.007447444148350974
+    },
+    "powerlaw_free": {
+      "lodo_mean_rmsle": 0.2115615892137134,
+      "lolo_mean_rmsle": 0.2140645545338596,
+      "n_devices": 11,
+      "n_worse_than_power_law": 8,
+      "mean_difference_vs_power_law": 8.150665794881803e-05
+    },
+    "powerlaw_kadomtsev": {
+      "lodo_mean_rmsle": 0.21051205062636508,
+      "lolo_mean_rmsle": 0.21049771097157016,
+      "n_devices": 11,
+      "n_worse_than_power_law": 7,
+      "mean_difference_vs_power_law": -0.00096803192939952
+    },
+    "powerlaw_collisionless": {
+      "lodo_mean_rmsle": 0.20295466000909415,
+      "lolo_mean_rmsle": 0.20557300361029182,
+      "n_devices": 11,
+      "n_worse_than_power_law": 5,
+      "mean_difference_vs_power_law": -0.008525422546670392
+    },
+    "powerlaw_electrostatic": {
+      "lodo_mean_rmsle": 0.22616558441921936,
+      "lolo_mean_rmsle": 0.2410829154710756,
+      "n_devices": 11,
+      "n_worse_than_power_law": 8,
+      "mean_difference_vs_power_law": 0.014685501863454796
+    },
+    "mean_constant_rbf": {
+      "lodo_mean_rmsle": 0.6925573422024871,
+      "lolo_mean_rmsle": 0.5409673537754686,
+      "n_devices": 11,
+      "n_worse_than_power_law": 11,
+      "mean_difference_vs_power_law": 0.48107725964672254
+    },
+    "mean_powerlaw_rbf": {
+      "lodo_mean_rmsle": 0.2116162669993474,
+      "lolo_mean_rmsle": 0.21238501237773205,
+      "n_devices": 11,
+      "n_worse_than_power_law": 3,
+      "mean_difference_vs_power_law": 0.0001361844435828561
+    },
+    "mean_ipb98_rbf": {
+      "lodo_mean_rmsle": 0.18606015402866402,
+      "lolo_mean_rmsle": 0.18888783207939908,
+      "n_devices": 11,
+      "n_worse_than_power_law": 3,
+      "mean_difference_vs_power_law": -0.025419928527100562
+    },
+    "ridge_loglinear": {
+      "lodo_mean_rmsle": 0.2114800825557646,
+      "lolo_mean_rmsle": 0.21407599766914132,
+      "n_devices": 11,
+      "n_worse_than_power_law": 0,
+      "mean_difference_vs_power_law": 0.0
+    },
+    "random_forest": {
+      "lodo_mean_rmsle": 0.5266735840073635,
+      "lolo_mean_rmsle": 0.46489304181310953,
+      "n_devices": 11,
+      "n_worse_than_power_law": 11,
+      "mean_difference_vs_power_law": 0.31519350145159897
+    },
+    "hist_gradient_boosting": {
+      "lodo_mean_rmsle": 0.40872688274241004,
+      "lolo_mean_rmsle": 0.3592919101020166,
+      "n_devices": 11,
+      "n_worse_than_power_law": 10,
+      "mean_difference_vs_power_law": 0.19724680018664548
+    }
+  },
+  "dataset_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b"
+}
