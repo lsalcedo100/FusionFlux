@@ -72,6 +72,14 @@ published, which is after the version bump is tagged. The concept DOI is never
 rewritten: it addresses every version at once and is the one to cite when the
 version does not matter.
 
+Between those two steps the paper names one release and links the previous
+one's DOI. Both strings are well formed and no other check can tell them apart,
+so both steps write `docs/releases.json`, which records which DOI belongs to
+which version, and `tools/check_paper_submission.py --check-provenance` refuses
+a paper whose cited version has no DOI recorded yet or carries another
+version's. **The checker is meant to fail between step 1 and step 2.** That is
+the window, and it closes when you run `--doi`.
+
 Doing this by hand is what cost `v0.4.1`. It was tagged with `pyproject.toml`
 still reading 0.4.0, and while the release workflow's version guard did fail the
 build, Zenodo had already minted a DOI: it archives when a release is
@@ -86,16 +94,16 @@ it asks for rather than in how it is built.
 `v0.1.0` exists and points at a commit that predates all of the current work, so
 it must not be the tag a DOI is minted on.
 
-`v0.2.2` is the newest tag and is the state the Zenodo record currently
-archives. It is no longer the state worth archiving. Since it was cut the paper
-has had every figure restacked one panel per row, the terminology renamed to
-`log-RMSE` and `ITER-size-matched` throughout, and `results/tuned.json` added.
-The DOI is printed on the paper's title page, so a referee who follows it gets
-that older manuscript. Cut a new tag before submitting anywhere.
+Which tag is current is not written down here, for the reason
+`paper/README.md` gives: a version restated in prose is a version that goes
+stale. `git tag` and `docs/releases.json` are the answer, and the second says
+which of them has a DOI.
 
-The tag has to match `version` in `pyproject.toml`, which is `0.2.2` and so has
-to be bumped first, in `CITATION.cff` as well. The release workflow fails rather
-than publishing a mismatch.
+What matters at this step is unchanged. The DOI is printed on the paper's title
+page, so a referee who follows a stale one gets an older manuscript, and the
+tag has to match `version` in `pyproject.toml` and `CITATION.cff`, which
+`bump_release.py` sets together. The release workflow fails rather than
+publishing a mismatch.
 
 ```bash
 git tag -a vX.Y.Z -m "<what this release is>"

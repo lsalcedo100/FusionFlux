@@ -24,7 +24,11 @@ AUTHOR
 
 FUNDING             none
 COMPETING INTERESTS none
-CONTRIBUTIONS       Sole author.
+CONTRIBUTIONS       Sole author, in CRediT terms. L. Salcedo: conceptualization,
+                    methodology, software, validation, formal analysis,
+                    investigation, data curation, writing (original draft),
+                    writing (review and editing), visualization, project
+                    administration.
 
 DATA AVAILABILITY
   Four third-party datasets, none redistributed, each fetched from its public
@@ -92,11 +96,11 @@ REFEREES
   if you nominate him, or leave him off and let the editor find him.
 
 FILES
-  Uploading the DOUBLE-ANONYMOUS build: ./anonymous/manuscript.pdf and
-  ./anonymous/supplementary_material.pdf, each a single PDF with its figures
-  and tables embedded, which is what NF asks for. Page counts are
-  {{MANUSCRIPT_PAGES}} pp and {{SUPPLEMENT_PAGES}} pp for the named build; the
-  anonymous pair differs only by the stripped front matter.
+  Uploading the DOUBLE-ANONYMOUS build: ./anonymous/manuscript.pdf
+  ({{MANUSCRIPT_PAGES}} pp) and ./anonymous/supplementary_material.pdf
+  ({{SUPPLEMENT_PAGES}} pp), each a single PDF with its figures and tables
+  embedded, which is what NF asks for. The page counts are the named build's;
+  the anonymous pair differs only by the stripped front matter.
 
   This is a decision rather than a default, so the reasoning is recorded here.
   Double-anonymous is IOP's default across the portfolio and single-anonymous
