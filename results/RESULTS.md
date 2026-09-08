@@ -2261,6 +2261,74 @@ Species are phylogenetically related rather than independent, exactly as Result
 these rows, so a species effect and a study effect are partly the same effect;
 holding out a species sometimes holds out a laboratory.
 
+## Result 16: the reversal without the loss power, and with the stored energy instead
+
+`analysis_power_ablation.py`, `results/power_ablation.json`;
+`analysis_stored_energy.py`, `results/stored_energy.json`.
+
+The thermal confinement time is thermal stored energy over thermal loss power,
+and the loss power is one of the nine features. One predictor is the denominator
+of the response, which a log-linear model represents exactly and outside the
+training range of P, and which a tree cannot represent at all. That admits a
+reading of Result 4 in which the power law transfers because an identity is
+exactly log-linear.
+
+Two controls separate what the identity carries from what it does not.
+
+**Deleting P** takes the win count from 13 of 13 labels to 10 of 13 and from 11
+of 11 devices to 9 of 11, the exact tests to p = 0.092 and p = 0.065, and the
+mean paired gap from +0.251 to +0.051. That is the harsher experiment than the
+objection asks for, because P is a real predictor of confinement as well as the
+target's denominator and deleting it removes both.
+
+**Regressing the stored energy instead** removes only the identity. STD5 carries
+no stored-energy column and the full DB5.2.3 revision pinned here does: `WTH`,
+on 13828 of 14153 rows, and joining on (machine, shot, time) recovers one for
+**6214 of the 6228** analysed rows. `KAPPAA` is delivered in both files and
+agrees across the join to 5e-10, which is what makes the join checkable rather
+than assumed. On these rows `WTH / (TAUTH * PLTH)` has median 1.000000 and
+quartiles 0.981 and 1.000.
+
+| target | CV | LOLO | LODO | ITER cut | forest worse |
+|---|---|---|---|---|---|
+| tau_th (as published) | 0.119 / 0.181 | 0.465 / 0.214 | 0.527 / 0.211 | 0.923 / 0.278 | 13 of 13, 11 of 11 |
+| W_th (P an ordinary predictor) | 0.121 / 0.193 | 0.468 / 0.247 | 0.596 / 0.249 | **1.081** / 0.289 | 9 of 13, 9 of 11 |
+
+Each cell is forest / power law. The direction and most of the magnitude
+survive: the mean paired gap is +0.220 by label and **+0.348** by device, the
+second being *larger* than the +0.315 the confinement-time target gives, and the
+size cut is untouched. What does not survive is the unanimity, and with it the
+exact tests, which fall to p = 0.267 and p = 0.065.
+
+So the identity carries the unanimity and not the effect. A summary of this work
+as "a log-linear model can represent tau = W/P exactly and a tree cannot" is
+available, and this is the measurement that rules it out.
+
+## Result 17: the estimator the clustered-validation literature recommends
+
+`analysis_mixed_model.py`, `results/mixed_model.json`.
+
+Result 4 sets a pooled global fit against ensembles and concludes for the pooled
+fit. The literature cited here for the split design pairs it with a third
+estimator: a mixed model with a random intercept per device, predicting an
+unseen device from the population-level fixed effects alone. It is neither a
+power law nor a tree, it is the fit matched to the deployment question, and it
+is scored rather than conceded.
+
+Fitted by REML, it scores **0.264** per label against the power law's 0.214 and
+**0.829** per device against 0.212, losing on 10 of the 11 devices. The variance
+ratio the fit chooses is unstable across folds, between 1.4 and 8.1 by label and
+between 2.0 and 143 by device, so it is swept as well as fitted. Over devices
+the score rises monotonically with the ratio and is best at zero, where the
+estimator *is* the pooled power law and reproduces its 0.212 to three decimals;
+over labels the best rung is 0.01, at 0.2127 against 0.2141. The
+deployment-matched estimator therefore does not beat a pooled power law on an
+unseen device even with its one free quantity chosen against the score it is
+judged on. Across the ITER-size-matched cut it does help, 0.255 against 0.279.
+
+What is ruled out is narrower than the class: a single random intercept and no
+random slopes, on eleven groups.
+
 ## Limitations
 
 - **The refit population is not IPB98's population.** No ITPA standard-set

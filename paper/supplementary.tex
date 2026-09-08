@@ -42,7 +42,7 @@
 % article title follows underneath, where it orients a reader without being
 % mistaken for the formal supplementary title.
 \title{\vspace{-1.4cm}\textbf{Supplementary material}}
-\author{Liam Salcedo\thanks{Independent researcher, Montclair, New Jersey, USA.
+\author{Liam Salcedo\thanks{Independent researcher, USA.
 \texttt{liamsalcedo100@gmail.com}.
 ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}}.}}
 \date{7 September 2026}
@@ -538,6 +538,10 @@ reversal can appear at any dimension.
 \begin{table}[t]
 \centering
 \small
+\caption{The best tree ensemble's margin over the log-linear power law, on 3599
+plants held fixed across the four rungs. Positive favours the trees. The
+interpolation column crosses zero; the extrapolation column does not, and grows
+slightly against them.}
 \begin{tabular}{lrrrr}
 \toprule
 predictors & interp.\ gain & held-out gain & reversal \\
@@ -548,10 +552,6 @@ $+$ leaf area & $+1.8\%$ & $-13.1\%$ & yes \\
 $+$ leaf mass & $+6.8\%$ & $-13.4\%$ & yes \\
 \bottomrule
 \end{tabular}
-\caption{The best tree ensemble's margin over the log-linear power law, on 3599
-plants held fixed across the four rungs. Positive favours the trees. The
-interpolation column crosses zero; the extrapolation column does not, and grows
-slightly against them.}
 \label{tab:ladder}
 \end{table}
 
@@ -619,6 +619,13 @@ initialisations and bounds are in Sec.~\ref{supp:spec}.
 \begin{table}[t]
 \centering
 \small
+\caption{log-RMSE under the three splits, and the rank correlation of per-label
+error against extrapolation distance. The intended difference across the first
+three rows is whether the kernel admits a trend that continues at long range;
+adding the linear term also enlarges the function class. The three span a factor
+of ten at the ITER-size-matched cut. IPB98(y,2) is a historical reference
+fitted to the DB2.8 predecessor of this database~\cite{hdb5} and is not
+refitted within these folds.}
 \begin{tabular}{lrrrr}
 \toprule
 model & CV & held-out & ITER cut & $\rho$ \\
@@ -631,13 +638,6 @@ IPB98(y,2), historical ref.\ & 0.199 & 0.188 & 0.194 & $-0.49$ \\
 mean baseline & 0.869 & 0.994 & 1.459 & $+0.56$ \\
 \bottomrule
 \end{tabular}
-\caption{log-RMSE under the three splits, and the rank correlation of per-label
-error against extrapolation distance. The intended difference across the first
-three rows is whether the kernel admits a trend that continues at long range;
-adding the linear term also enlarges the function class. The three span a factor
-of ten at the ITER-size-matched cut. IPB98(y,2) is a historical reference
-fitted to the DB2.8 predecessor of this database~\cite{hdb5} and is not
-refitted within these folds.}
 \label{tab:supgp}
 \end{table}
 
@@ -698,7 +698,12 @@ $\alpha=1$ and the SVD solver, chosen before any held-out score was computed and
 never varied. The random forest is \texttt{RandomForestRegressor} with 300 trees,
 \texttt{criterion="squared\_error"}, unlimited depth,
 \texttt{min\_samples\_split}~$=2$, \texttt{min\_samples\_leaf}~$=1$,
-\texttt{max\_features}~$=1.0$ and bootstrap resampling. The gradient booster is
+\texttt{max\_features}~$=1.0$ and bootstrap resampling. That last setting means
+every split considers all nine features rather than a random subset, so this is
+bagged CART with bootstrap resampling and not the feature-subsampled forest
+of~\cite{breiman}; it is scikit-learn's regression default, it is a choice
+rather than an oversight, and the nested search of the main text moves off it in
+13 of 19 folds. The gradient booster is
 \texttt{HistGradientBoostingRegressor} with squared-error loss, learning rate
 0.1, at most 100 boosting iterations, 31 leaves, no depth limit,
 \texttt{min\_samples\_leaf}~$=20$, no $L_2$ penalty and 255 bins. Its
@@ -824,6 +829,9 @@ trees do not recover.}
 confinement database: description and analysis,'' \emph{Nucl.\ Fusion}
 \textbf{61}, 076006 (2021).
 \href{https://doi.org/10.1088/1741-4326/abdb91}{doi:10.1088/1741-4326/abdb91}
+\bibitem{breiman} L. Breiman, ``Random forests,'' \emph{Machine Learning}
+\textbf{45}, 5 (2001).
+\href{https://doi.org/10.1023/A:1010933404324}{doi:10.1023/A:1010933404324}
 \bibitem{ipb98} ITER Physics Expert Group on Confinement and Transport, ITER
 Physics Expert Group on Confinement Modelling and Database and ITER Physics
 Basis Editors, ``Chapter 2: Plasma confinement and transport,'' \emph{Nucl.\

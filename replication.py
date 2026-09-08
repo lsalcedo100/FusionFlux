@@ -226,6 +226,75 @@ def _match_keys(frame: pd.DataFrame) -> pd.Series:
     )
 
 
+# STD5 labels a machine by wall era where DB5.2.3 labels it by machine, so a key
+# built from the STD5 label matches nothing for the 1633 JET-ILW and AUG-W rows.
+# Mapping them back to the parent takes the join from 4595 rows to 6228.
+WALL_ERA_PARENT = {"JETILW": "JET", "AUGW": "AUG"}
+
+
+def db523_columns(
+    columns: "tuple[str, ...]",
+    *,
+    std5_path: Path | str | None = None,
+    db523_path: Path | str | None = None,
+) -> pd.DataFrame:
+    """Columns DB5.2.3 carries and STD5 does not, aligned to the analysed rows.
+
+    STD5 is a 15-column extract. The full DB5.2.3 revision, which this module
+    already downloads and pins, carries 192, and two of them settle questions
+    the main analysis had recorded as unanswerable: ``WTH``, the thermal stored
+    energy, which is the numerator of the target and lets ``P`` be scored as an
+    ordinary predictor; and ``KAPPA``, the boundary elongation the ITPA20 laws
+    are specified on, where STD5 supplies only the areal ``KAPPAA``.
+
+    The returned frame is indexed like ``hdb5.prepare_dataset()``, with NaN
+    wherever a row did not match, so it can be assigned straight onto it. The
+    join is on the same (machine, shot, time) key ``build_replication_arms``
+    uses, and it is checked rather than trusted: ``KAPPAA`` is present in both
+    files, so the two copies are compared and a disagreement is an error.
+    """
+    raw = hdb5.load_hdb5_dataframe(std5_path)
+    analysed = raw.loc[hdb5.analysed_row_mask(raw)].reset_index(drop=True)
+    keys = _match_keys(analysed.assign(TOK=analysed["TOK"].astype(str).replace(WALL_ERA_PARENT)))
+
+    full = load_db523_raw(db523_path)
+    # dict.fromkeys, not a set: asking for KAPPAA itself would otherwise append a
+    # second copy of it, and `carried["KAPPAA"]` would return a frame where every
+    # caller, the join check included, expects a series.
+    wanted = list(dict.fromkeys(c for c in (*columns, "KAPPAA") if c in full.columns))
+    missing = [c for c in columns if c not in full.columns]
+    if missing:
+        raise ValueError(f"DB5.2.3 does not carry {missing}; it has {len(full.columns)} columns")
+
+    source = full.assign(_key=_match_keys(full)).drop_duplicates("_key").set_index("_key")
+    carried = source.reindex(keys)[wanted].reset_index(drop=True)
+
+    _check_join(analysed, carried)
+    return carried[list(columns)]
+
+
+def _check_join(analysed: pd.DataFrame, carried: pd.DataFrame) -> None:
+    """A wrong join would return plausible numbers for the wrong discharges.
+
+    ``KAPPAA`` is delivered in both files, so it is the control: on every matched
+    row the two copies must agree, which they do to 5e-10. Without this the
+    match could silently be off by a row and nothing downstream would show it.
+    """
+    if "KAPPAA" not in carried.columns:
+        return
+    matched = carried["KAPPAA"].notna()
+    if not matched.any():
+        raise AssertionError("the DB5.2.3 join matched no rows at all")
+    left = pd.to_numeric(analysed.loc[matched.to_numpy(), "KAPPAA"], errors="coerce").to_numpy()
+    right = pd.to_numeric(carried.loc[matched, "KAPPAA"], errors="coerce").to_numpy()
+    worst = float(np.nanmax(np.abs(left - right)))
+    if not worst < 1e-6:
+        raise AssertionError(
+            f"the DB5.2.3 join disagrees with STD5 on KAPPAA by up to {worst:.3g}; "
+            "the rows being carried across are not the rows being analysed"
+        )
+
+
 @dataclass(frozen=True)
 class ReplicationArm:
     """One replication population, with the provenance needed to read its numbers."""

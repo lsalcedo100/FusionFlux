@@ -90,6 +90,7 @@ def artifacts() -> dict[str, object]:
         "sensitivity": _json("sensitivity.json"),
         "mixed": _json("mixed_model.json"),
         "boundedness": _json("boundedness.json"),
+        "stored": _json("stored_energy.json"),
         "per_machine": _csv("extrapolation_per_machine.csv", "tokamak"),
         "conformal_per_machine": pd.read_csv(RESULTS / "conformal_per_machine.csv"),
     }
@@ -218,6 +219,20 @@ def _shift(a: dict, model: str, method: str, column: str) -> float:
 
 def _published(a: dict, name: str, column: str) -> float:
     return float(a["sensitivity"]["published_scalings"][name][column])
+
+
+def _elongation(a: dict, *path: str) -> float:
+    node = a["sensitivity"]["elongation_convention"]
+    for key in path:
+        node = node[key]
+    return float(node)
+
+
+def _stored(a: dict, *path: str) -> float:
+    node = a["stored"]["arms"]["stored_energy"]
+    for key in path:
+        node = node[key]
+    return float(node)
 
 
 def _gap(a: dict, label: str) -> float:
@@ -481,31 +496,103 @@ CLAIMS: tuple[Claim, ...] = (
     # -- Sec. 4.2: the newer published laws, and the elongation bound ------
     Claim(
         "ITPA20 at the ITER-size-matched cut",
-        "0.165",
+        "0.177",
         lambda a: _published(a, "ITPA20", "iter_matched_cut"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
     ),
     Claim(
         "ITPA20 over all rows",
-        "0.181",
+        "0.188",
         lambda a: _published(a, "ITPA20", "all_rows"),
         _r(3),
         documents=(PAPER, PAPER_PDF, ZENODO),
     ),
     Claim(
-        "largest elongation conversion ratio",
-        "1.110",
-        lambda a: a["sensitivity"]["elongation_convention"]["conversion_ratio"]["max"],
+        "ITPA20 per label",
+        "0.191",
+        lambda a: _published(a, "ITPA20", "machine_equal"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
     ),
     Claim(
-        "what the elongation conversion is worth to ITPA20",
-        "0.0007",
-        lambda a: a["sensitivity"]["elongation_convention"]["laws"]["ITPA20"]["largest_shift"],
-        _r(4),
+        "ITPA20-IL at the ITER-size-matched cut",
+        "0.165",
+        lambda a: _published(a, "ITPA20-IL", "iter_matched_cut"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    # The measured ratio, against the shape model it replaced. The model gave
+    # 1.110 as an upper bound; these are what the database says instead.
+    Claim(
+        "median measured elongation ratio",
+        "1.083",
+        lambda a: _elongation(a, "conversion_ratio", "median"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "largest measured elongation ratio",
+        "1.341",
+        lambda a: _elongation(a, "conversion_ratio", "max"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "rows above the shape model's ceiling",
+        "16%",
+        lambda a: _elongation(a, "conversion_ratio", "fraction_above_shape_model_ceiling"),
+        _pct(0),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "rows below unity, which no such boundary produces",
+        "7%",
+        lambda a: _elongation(a, "conversion_ratio", "fraction_below_one"),
+        _pct(0),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "PBX-M elongation ratio",
+        "0.739",
+        lambda a: _elongation(a, "conversion_ratio", "per_label_median", "PBXM"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    # -- Sec. 4.2: the stored-energy control -------------------------------
+    Claim(
+        "rows carrying a stored energy",
+        "6214",
+        lambda a: a["stored"]["n_rows"],
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "forest against the power law on stored energy, by label",
+        "9 of 13",
+        lambda a: _stored(a, "forest_worse_by_label", "n_worse"),
+        lambda v: f"{int(v)} of 13",
         documents=(PAPER, PAPER_PDF, ZENODO),
+    ),
+    Claim(
+        "stored-energy paired gap by label",
+        "+0.220",
+        lambda a: _stored(a, "forest_worse_by_label", "mean_difference"),
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "stored-energy paired gap by device",
+        "+0.348",
+        lambda a: _stored(a, "forest_worse_by_device", "mean_difference"),
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "forest across the size cut on stored energy",
+        "1.081",
+        lambda a: _stored(a, "iter_matched_cut", "random_forest"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
     ),
     # -- Sec. 4.2: the deployment-matched estimator ------------------------
     Claim(
@@ -1093,8 +1180,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    75: "Seventy-five",
-    99: "ninety-nine",
+    85: "Eighty-five",
+    109: "one hundred and nine",
 }
 
 

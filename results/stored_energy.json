@@ -1,0 +1,148 @@
+{
+  "n_rows": 6214,
+  "n_labels": 18,
+  "identity_residual": {
+    "median": 0.9999999999216972,
+    "q25": 0.9808051849412083,
+    "q75": 1.0000000001328881,
+    "q01": 0.8892182708667637,
+    "q99": 1.5002451595464135
+  },
+  "arms": {
+    "confinement_time": {
+      "target": "tau_th_s",
+      "cv_rmsle": {
+        "hist_gradient_boosting": 0.11875610930422832,
+        "random_forest": 0.11892789955495273,
+        "ridge_loglinear": 0.18116680943897184,
+        "ipb98y2_analytic": 0.19932029810234295,
+        "mean_baseline": 0.8694547860807613
+      },
+      "lolo_mean_rmsle": {
+        "ridge_loglinear": 0.21389695204385298,
+        "hist_gradient_boosting": 0.33776363799537934,
+        "random_forest": 0.46482885913315636,
+        "mean_baseline": 0.9941805299787678
+      },
+      "lodo_mean_rmsle": {
+        "ridge_loglinear": 0.21140119829433282,
+        "hist_gradient_boosting": 0.3868608284488289,
+        "random_forest": 0.5264647040633512,
+        "mean_baseline": 1.0764010622158227
+      },
+      "iter_matched_cut": {
+        "mean_baseline": 1.460185418367808,
+        "ridge_loglinear": 0.2776991277879737,
+        "random_forest": 0.9228288199872019,
+        "hist_gradient_boosting": 1.05184012211152
+      },
+      "forest_worse_by_label": {
+        "n_units": 13,
+        "n_worse": 13,
+        "mean_difference": 0.25093190708930335,
+        "sign_test_p": 0.000244140625,
+        "units_where_better_loses": []
+      },
+      "forest_worse_by_device": {
+        "n_units": 11,
+        "n_worse": 11,
+        "mean_difference": 0.3150635057690184,
+        "sign_test_p": 0.0009765625,
+        "units_where_better_loses": []
+      },
+      "booster_worse_by_label": {
+        "n_units": 13,
+        "n_worse": 11,
+        "mean_difference": 0.12386668595152638,
+        "sign_test_p": 0.0224609375,
+        "units_where_better_loses": [
+          "AUGW",
+          "JT60U"
+        ]
+      },
+      "booster_worse_by_device": {
+        "n_units": 11,
+        "n_worse": 10,
+        "mean_difference": 0.1754596301544961,
+        "sign_test_p": 0.01171875,
+        "units_where_better_loses": [
+          "JT60U"
+        ]
+      }
+    },
+    "stored_energy": {
+      "target": "w_th_j",
+      "cv_rmsle": {
+        "random_forest": 0.120926265617909,
+        "hist_gradient_boosting": 0.1255932163871725,
+        "ridge_loglinear": 0.19317179534348553,
+        "mean_baseline": 1.3947074520683842,
+        "ipb98y2_analytic": 15.639117100695517
+      },
+      "lolo_mean_rmsle": {
+        "ridge_loglinear": 0.247314743546496,
+        "hist_gradient_boosting": 0.4130199907005335,
+        "random_forest": 0.46769389406174394,
+        "mean_baseline": 1.7253381478995033
+      },
+      "lodo_mean_rmsle": {
+        "ridge_loglinear": 0.24859275699994463,
+        "hist_gradient_boosting": 0.5085880733915134,
+        "random_forest": 0.5962793553168382,
+        "mean_baseline": 1.883089003132672
+      },
+      "iter_matched_cut": {
+        "mean_baseline": 2.315900309900601,
+        "ridge_loglinear": 0.28854558458445395,
+        "random_forest": 1.0805267939425618,
+        "hist_gradient_boosting": 1.0861331160885312
+      },
+      "forest_worse_by_label": {
+        "n_units": 13,
+        "n_worse": 9,
+        "mean_difference": 0.22037915051524798,
+        "sign_test_p": 0.266845703125,
+        "units_where_better_loses": [
+          "ASDEX",
+          "AUGW",
+          "JETILW",
+          "JT60U"
+        ]
+      },
+      "forest_worse_by_device": {
+        "n_units": 11,
+        "n_worse": 9,
+        "mean_difference": 0.34768659831689347,
+        "sign_test_p": 0.0654296875,
+        "units_where_better_loses": [
+          "ASDEX",
+          "JT60U"
+        ]
+      },
+      "booster_worse_by_label": {
+        "n_units": 13,
+        "n_worse": 9,
+        "mean_difference": 0.16570524715403753,
+        "sign_test_p": 0.266845703125,
+        "units_where_better_loses": [
+          "ASDEX",
+          "AUGW",
+          "JETILW",
+          "JT60U"
+        ]
+      },
+      "booster_worse_by_device": {
+        "n_units": 11,
+        "n_worse": 9,
+        "mean_difference": 0.2599953163915687,
+        "sign_test_p": 0.0654296875,
+        "units_where_better_loses": [
+          "ASDEX",
+          "JT60U"
+        ]
+      }
+    }
+  },
+  "dataset_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b",
+  "db523_sha256": "7a48e34379663e3e298924990f05cd8f16b8581516bcfa7bb8f438f83ae80ab6"
+}

@@ -350,14 +350,29 @@ def map_to_canonical(raw: pd.DataFrame) -> pd.DataFrame:
     )
     frame["a_m"] = frame["inverse_aspect_ratio"] * frame["r_m"]
 
-    positive_columns = [TARGET_COLUMN, *BASE_ENGINEERING_COLUMNS]
-    finite_and_positive = frame[positive_columns].notna().all(axis=1) & (
-        frame[positive_columns] > 0
-    ).all(axis=1)
-    cleaned = frame.loc[finite_and_positive].reset_index(drop=True)
+    cleaned = frame.loc[analysed_row_mask(raw)].reset_index(drop=True)
     if cleaned.empty:
         raise ValueError("No valid HDB5 rows remained after cleaning.")
     return cleaned
+
+
+def analysed_row_mask(raw: pd.DataFrame) -> pd.Series:
+    """Which raw rows survive cleaning, indexed like `raw`.
+
+    Exposed because anything wanting to carry a raw column across to the
+    analysed frame has to select the same rows in the same order, and
+    ``map_to_canonical`` calls ``reset_index(drop=True)``, which throws away the
+    only handle on which rows those were. Two callers reproduced this mask by
+    copying it, and a copied mask is one that drifts.
+    """
+    frame = pd.DataFrame(index=raw.index)
+    for canonical, (source, take_abs) in CANONICAL_COLUMN_SOURCES.items():
+        values = pd.to_numeric(raw[source], errors="coerce")
+        frame[canonical] = values.abs() if take_abs else values
+    frame["a_m"] = frame["inverse_aspect_ratio"] * frame["r_m"]
+
+    positive_columns = [TARGET_COLUMN, *BASE_ENGINEERING_COLUMNS]
+    return frame[positive_columns].notna().all(axis=1) & (frame[positive_columns] > 0).all(axis=1)
 
 
 def ipb98y2_tau_s(frame: pd.DataFrame) -> pd.Series:

@@ -123,8 +123,10 @@ the other way round leaves the gate red and no hash that would satisfy it.
 
 ## References
 
-`references.bib` holds the same 33 references as the `thebibliography` block in
-`paper.tex`. Both exist because their consumers want different things: arXiv
+`references.bib` holds every reference cited by either document. How many that
+is is deliberately not written here: the count is a fact about two files that
+change, and `tests/test_paper_bibliography.py` compares them key by key, which
+is the check a number in this sentence was pretending to be. Both exist because their consumers want different things: arXiv
 builds a submission with no BibTeX pass and no `.bbl`, so the printed list has
 to be in the source, while a journal wants a `.bib` to run through its own style
 file. `tests/test_paper_bibliography.py` binds them, in both directions, keys

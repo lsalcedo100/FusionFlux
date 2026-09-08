@@ -267,3 +267,22 @@ def test_an_unfilled_placeholder_is_refused(
     with pytest.raises(SystemExit) as refused:
         make_submission.scholarone_metadata(PAPER.read_text(), 31, 16)
     assert "unfilled placeholder" in str(refused.value)
+
+
+def test_the_two_documents_agree_on_the_affiliation() -> None:
+    """One submission, two files, and they had two different affiliations.
+
+    The town was dropped from the manuscript and left in the supplement, which
+    an editor reading both sees before any referee does. Neither file is
+    generated from the other, so nothing else would have caught it.
+    """
+    import re
+
+    def affiliation(path: Path) -> str:
+        block = re.search(r"\\author\{.*?\\thanks\{(.*?)\.\s*\n", path.read_text(), re.DOTALL)
+        assert block is not None, f"no author block in {path.name}"
+        return block.group(1).strip()
+
+    paper = ROOT / "paper" / "paper.tex"
+    supplement = ROOT / "paper" / "supplementary.tex"
+    assert affiliation(paper) == affiliation(supplement)

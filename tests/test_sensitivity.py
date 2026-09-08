@@ -238,6 +238,11 @@ def _dataset(n_per_machine: int = 45, seed: int = 7) -> pd.DataFrame:
     raw = pd.concat(frames, ignore_index=True)
     dataset = hdb5.build_features(hdb5.map_to_canonical(raw))
     dataset["one_plus_delta"] = raw["DELTA1"].to_numpy()[: len(dataset)]
+    # DB5.2.3 supplies the boundary elongation the ITPA20 laws are specified on,
+    # and STD5 supplies only the areal one, so the analysed frame now carries
+    # both. Here it is drawn a few per cent above the areal column, which is the
+    # relation the real files show on most rows.
+    dataset[asens.BOUNDARY_ELONGATION] = dataset["kappa"] * rng.uniform(0.98, 1.15, len(dataset))
     return dataset
 
 
@@ -341,18 +346,44 @@ def test_real_delta1_column_is_one_plus_delta() -> None:
     assert delta1[~circular].min() > 1.0
 
 
-def test_elongation_conversion_is_bounded_and_leaves_the_ordering(committed: dict) -> None:
-    """Sec. 4.2 states the conversion is worth two orders of magnitude less than the gaps.
+def test_the_elongation_ratio_is_measured_not_modelled(committed: dict) -> None:
+    """The shape model this replaced put the ratio in [1.000, 1.110]. It is not.
 
-    The paper prints that bound, so the artifact has to keep supporting it: the
-    ratio is a shape factor near one, and substituting it moves no reported
-    level by anything that could reorder the laws.
+    The model could not produce a ratio below one at all, and PBX-M's is 0.739.
+    These bounds are deliberately loose: the point is that the measured spread
+    is outside what the model allowed, not that it sits at any exact value.
     """
-    elongation = committed["elongation_convention"]
-    assert 1.0 <= elongation["conversion_ratio"]["median"] < 1.05
-    assert elongation["conversion_ratio"]["max"] < 1.2
-    for name, law in elongation["laws"].items():
-        assert law["largest_shift"] < 0.01, name
-        delivered = law["kappa_a_as_delivered"]["iter_matched_cut"]
-        converted = law["shape_converted"]["iter_matched_cut"]
-        assert abs(delivered - converted) < 0.01
+    ratio = committed["elongation_convention"]["conversion_ratio"]
+    assert ratio["min"] < 1.0
+    assert ratio["max"] > 1.2
+    assert ratio["fraction_below_one"] > 0.01
+    assert ratio["fraction_above_shape_model_ceiling"] > 0.1
+    assert ratio["per_label_median"]["PBXM"] < 1.0
+
+
+def test_the_published_laws_are_scored_on_the_elongation_they_were_fitted_to(
+    committed: dict,
+) -> None:
+    """Sec. 4.2 prints the measured-kappa row, so that is what must be reported.
+
+    Scoring ITPA20 on the delivered areal elongation instead moves it by nearly
+    0.02, which is enough to reorder it against IPB98(y,2) per label. The choice
+    is therefore load-bearing and is asserted rather than assumed.
+    """
+    laws = committed["elongation_convention"]["laws"]
+    published = committed["published_scalings"]
+    for name, law in laws.items():
+        assert law["largest_shift"] > 0.01, name
+        # The headline row is the measured one.
+        for column in ("all_rows", "machine_equal", "iter_matched_cut"):
+            assert published[name][column] == pytest.approx(
+                law["measured_kappa"][column], rel=1e-9
+            ), f"{name}/{column} is not the measured-kappa score"
+
+
+def test_both_newer_laws_beat_the_reference_at_the_size_cut(committed: dict) -> None:
+    """The one comparison Sec. 4.2 rests on, which survives the elongation change."""
+    published = committed["published_scalings"]
+    reference = published["IPB98(y,2)"]["iter_matched_cut"]
+    for name in ("ITPA20", "ITPA20-IL"):
+        assert published[name]["iter_matched_cut"] < reference

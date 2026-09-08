@@ -70,13 +70,19 @@ REFEREES
   scaling-law specialist, on machine learning applied to tokamak data more
   broadly, and Murari is on machine-learning approaches to confinement scaling.
 
-  Hall is a co-author with G. Verdoolaege on Ref. [15]. Say so in the free-text
-  box, along with the 6 September 2026 letter, so the editor learns it from you
-  rather than from the author list. C. Angioni, also a Verdoolaege co-author on
-  that reference and previously nominated here, is deliberately not on the list
-  now: nominating two co-authors of the person you have just written to about a
-  negative result on his database reads narrower than it is, and one is enough
-  to have the database side represented.
+  Two of the four are Verdoolaege co-authors, and both go in the free-text box
+  along with the 6 September 2026 letter, so the editor learns it from you
+  rather than from the author list.
+
+    - J. Hall is a co-author on Ref. [15].
+    - O. J. W. F. Kardaun is the fourth author of Ref. [3], the paper
+      describing the database this manuscript critiques. That is the closer
+      tie of the two.
+
+  Kardaun's tie went undeclared here while C. Angioni was dropped to the
+  substitutes for having a weaker one, which is the wrong way round and reads
+  worse than either name would on its own. Declaring both is the fix; dropping
+  a third name is not.
 
   Do not oppose anyone. The paper criticises no individual study and says so
   explicitly, and an opposed-reviewer entry would contradict that in front of
@@ -96,25 +102,26 @@ REFEREES
   if you nominate him, or leave him off and let the editor find him.
 
 FILES
-  Uploading the DOUBLE-ANONYMOUS build: ./anonymous/manuscript.pdf
-  ({{MANUSCRIPT_PAGES}} pp) and ./anonymous/supplementary_material.pdf
-  ({{SUPPLEMENT_PAGES}} pp), each a single PDF with its figures and tables
-  embedded, which is what NF asks for. The page counts are the named build's;
-  the anonymous pair differs only by the stripped front matter.
+  Uploading the NAMED build: ./manuscript.pdf ({{MANUSCRIPT_PAGES}} pp) and
+  ./supplementary_material.pdf ({{SUPPLEMENT_PAGES}} pp), each a single PDF
+  with its figures and tables embedded, which is what NF asks for.
 
-  This is a decision rather than a default, so the reasoning is recorded here.
-  Double-anonymous is IOP's default across the portfolio and single-anonymous
-  is the opt-out. The argument for opting out was that this paper's
-  credibility rests on the analysis being checkable, and that naming the
-  repository is how a referee checks it. That argument is aimed at the editor,
-  who reads the cover letter under either model, and the cover letter carries
-  the repository URL and the version DOI explicitly for that reason. What the
-  referee loses is the link; what the referee also loses is the unaffiliated
-  author line that the objection this paper is most exposed to attaches to.
-  For a single author with no institution the second is worth more than the
-  first.
+  Nuclear Fusion runs single-anonymous review: the referee sees the author, the
+  author does not see the referee. There is no choice to make at the upload
+  form, so the named build is the one that goes.
 
-  The named build under ./ is kept and stays current, both because IOP states
-  it will not reject a submission for including author information and because
-  the decision is worth being able to reverse at the upload form.
+  An earlier version of this sheet said double-anonymous was IOP's default
+  across the portfolio and single-anonymous the opt-out, and the cover letter
+  told the editor the submission was double-anonymous. Both were wrong. IOP
+  runs three models and sets no portfolio default; it is Plasma Physics and
+  Controlled Fusion, not Nuclear Fusion, that offers the author a choice.
+  Asserting a factual error about the journal's own review model, in the first
+  paragraph an editor reads, is a worse opening than any framing gained by
+  getting it right. CHECK THIS ON THE ABOUT PAGE AND THE SUBMISSION FORM
+  BEFORE UPLOADING rather than trusting this paragraph, which is what the
+  previous one earned.
+
+  ./anonymous/ is still written and still verified clean, because the check
+  that it is anonymous is worth keeping green and because a revision could go
+  to a journal that wants it. It is not what you upload here.
   tools/make_submission.py writes both.
