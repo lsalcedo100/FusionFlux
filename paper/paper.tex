@@ -186,9 +186,13 @@ network to confinement data in 1992 and reported that it beat linear regression
 on an in-distribution score, which is the comparison this paper is about, made
 thirty-four years ago. Machine learning has been productive elsewhere in this
 field since: disruption
-prediction~\cite{katesharbeck}, transfer of a disruption predictor to a device
-that supplied almost none of its training data~\cite{zhu}, and real-time
-magnetic control~\cite{degrave}. Confinement scaling itself has been revisited
+prediction~\cite{katesharbeck}, predictors trained and compared across two
+devices rather than one~\cite{rea}, transfer of a disruption predictor to a
+device that supplied almost none of its training data~\cite{zhu}, and real-time
+magnetic control~\cite{degrave}. The disruption branch reached the
+cross-machine question first, and reached it with a target that can be scored
+shot by shot on the new machine, which is what a confinement scaling law for a
+device that does not yet exist cannot have. Confinement scaling itself has been revisited
 with symbolic regression, which abandons the power-law form rather than fitting
 it~\cite{murari}, and with a neural residual learned on top of a frozen power
 law~\cite{wang}. Measured conventionally the flexible models win. On the rows
@@ -400,7 +404,11 @@ other row in the database. \emph{Leave-one-device-out} holds out each of the 11
 physical devices those labels reduce to once JET and JET-ILW are merged, as are
 the two ASDEX Upgrade entries. The distinction matters here more than it
 usually would: holding out JET-ILW while JET stays in training does not hold out
-an unseen device, and this paper's own argument is that the held-out unit has to
+an unseen device. Collapsing them is not free either, since the ILW era carries a
+documented confinement reduction against the carbon wall, concentrated in the
+pedestal~\cite{leyland}, so a device-level fold containing both spans a known
+shift in the target; Sec.~\ref{sec:robustness} reports the gap widening when the
+variants are merged, and part of that is this rather than the split, and this paper's own argument is that the held-out unit has to
 match the deployment being claimed. Leave-one-label-out is the default reported
 column because it is the finer partition and the one a practitioner would reach
 for first; every claim that turns on a device being genuinely unseen is stated
@@ -1653,7 +1661,12 @@ is why its worst label is 4.601. Nothing scored so far is flexible,
 non-saturating and well behaved at long range at once.
 
 A Gaussian process (GP)~\cite{gpml} supplies one, and the property is a choice
-of kernel rather than a tuning parameter. Section~S6 of the Supplementary
+of kernel rather than a tuning parameter. The tool is not new to this field:
+Chilenski \emph{et al.}~\cite{chilenski} fit plasma profiles and impurity
+transport coefficients this way for the uncertainty a parametrised fit does not
+honestly give, which is a different use from the one here, where what the kernel
+is chosen for is its behaviour far outside the data rather than its error bars
+inside it. Section~S6 of the Supplementary
 Material fits three
 over the same log features, with the same optimiser on the same rows, differing
 in whether the kernel admits a trend that continues at long range, and the
@@ -2334,6 +2347,11 @@ confinement database: description and analysis,'' \emph{Nucl.\ Fusion}
 ``Predicting disruptive instabilities in controlled fusion plasmas through deep
 learning,'' \emph{Nature} \textbf{568}, 526 (2019).
 \href{https://doi.org/10.1038/s41586-019-1116-4}{doi:10.1038/s41586-019-1116-4}
+\bibitem{rea} C. Rea, R.S. Granetz, K. Montes, R.A. Tinguely, N. Eidietis,
+J.M. Hanson and B. Sammuli, ``Disruption prediction investigations using machine
+learning tools on DIII-D and Alcator C-Mod,'' \emph{Plasma Phys.\ Control.\
+Fusion} \textbf{60}, 084004 (2018).
+\href{https://doi.org/10.1088/1361-6587/aac7fe}{doi:10.1088/1361-6587/aac7fe}
 \bibitem{zhu} J.X. Zhu \emph{et al.}, ``Hybrid deep-learning architecture for
 general disruption prediction across multiple tokamaks,'' \emph{Nucl.\ Fusion}
 \textbf{61}, 026007 (2021).
@@ -2368,6 +2386,10 @@ Eng.\ Des.} \textbf{227}, 115740 (2026).
 data with temporal, spatial, hierarchical, or phylogenetic structure,''
 \emph{Ecography} \textbf{40}, 913 (2017).
 \href{https://doi.org/10.1111/ecog.02881}{doi:10.1111/ecog.02881}
+\bibitem{leyland} M.J. Leyland \emph{et al.}, ``The H-mode pedestal structure
+and its role on confinement in JET with a carbon and metal wall,''
+\emph{Nucl.\ Fusion} \textbf{55}, 013019 (2015).
+\href{https://doi.org/10.1088/0029-5515/55/1/013019}{doi:10.1088/0029-5515/55/1/013019}
 \bibitem{breiman} L. Breiman, ``Random forests,'' \emph{Machine Learning}
 \textbf{45}, 5 (2001).
 \href{https://doi.org/10.1023/A:1010933404324}{doi:10.1023/A:1010933404324}
@@ -2397,6 +2419,12 @@ confinement,'' \emph{Nucl.\ Fusion} \textbf{17}, 1047 (1977).
 \bibitem{iter89p} P.N. Yushmanov \emph{et al.}, ``Scalings for tokamak energy
 confinement,'' \emph{Nucl.\ Fusion} \textbf{30}, 1999 (1990). ITER89-P.
 \href{https://doi.org/10.1088/0029-5515/30/10/001}{doi:10.1088/0029-5515/30/10/001}
+\bibitem{chilenski} M.A. Chilenski, M. Greenwald, Y. Marzouk, N.T. Howard,
+A.E. White, J.E. Rice and J.R. Walk, ``Improved profile fitting and
+quantification of uncertainty in experimental measurements of impurity transport
+coefficients using Gaussian process regression,'' \emph{Nucl.\ Fusion}
+\textbf{55}, 023012 (2015).
+\href{https://doi.org/10.1088/0029-5515/55/2/023012}{doi:10.1088/0029-5515/55/2/023012}
 \bibitem{gpml} C.E. Rasmussen and C.K.I. Williams, \emph{Gaussian Processes for
 Machine Learning}, MIT Press (2006).
 \href{https://doi.org/10.7551/mitpress/3206.001.0001}{doi:10.7551/mitpress/3206.001.0001}
