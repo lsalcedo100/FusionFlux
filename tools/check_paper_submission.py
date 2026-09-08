@@ -31,6 +31,12 @@ contributor cannot fix from a plain checkout:
   It is deliberately *not* part of the default rule set: `make check` must stay
   green on a machine with no `pdflatex`, and the release path is where this
   actually matters.
+* **A version DOI belonging to a different release.** The title page names a
+  release and links a DOI, and between bumping the version and publishing the
+  release those two describe different things. Neither is malformed, so nothing
+  else notices. `--check-provenance` reads `docs/releases.json`, which
+  `tools/bump_release.py` writes on both steps, and fails when the cited
+  version has no DOI recorded yet or has a different one from the one printed.
 * **A stale provenance pin.** The paper names the commit its numbers were
   produced at. Regenerating `results/` and committing leaves that hash behind,
   and the paper goes on naming a tree whose artifacts are no longer the ones it
@@ -44,6 +50,7 @@ which refuses to build the tarball if anything here fails.
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -301,6 +308,51 @@ def stale_provenance(paper: Path = PAPER, root: Path = ROOT) -> list[str]:
     return problems
 
 
+def mismatched_doi(paper: Path = PAPER, root: Path = ROOT) -> list[str]:
+    """Does the printed version DOI belong to the release the paper cites?
+
+    `stale_archive` asks whether the cited tag contains the pinned commit. It
+    cannot see this one, because a tag and a DOI are independent strings and a
+    paper carrying v0.4.4 alongside v0.4.3's DOI is well formed in every way
+    either check looks at. What settles it is the ledger `bump_release.py`
+    writes, which is the only place the two are recorded together.
+
+    Returns an empty list when there is no ledger, which covers a checkout
+    predating it and anyone building from an export. An unanswerable question is
+    not a defect in the paper.
+    """
+    ledger_path = root / "docs" / "releases.json"
+    if not ledger_path.exists():
+        return []
+    try:
+        versions = json.loads(ledger_path.read_text())["versions"]
+    except (ValueError, KeyError):
+        return ["docs/releases.json is unreadable; it records which DOI belongs to which release"]
+
+    latex = _strip_comments(paper.read_text())
+    cited = re.search(r"\(v([0-9]+\.[0-9]+\.[0-9]+); the DOI for all versions", latex)
+    printed = re.search(r"doi:(10\.5281/zenodo\.(?!22215142)\d+)", latex)
+    if cited is None or printed is None:
+        return []
+
+    version = cited.group(1)
+    recorded = versions.get(version, {}).get("doi")
+    if recorded is None:
+        return [
+            f"the paper cites release v{version}, which has no archive DOI recorded in "
+            f"docs/releases.json, but prints doi:{printed.group(1)}. That DOI belongs to "
+            "an earlier release: publish the release, then run "
+            f"`python3 tools/bump_release.py --doi 10.5281/zenodo.NNNNNNN`."
+        ]
+    if recorded != printed.group(1):
+        return [
+            f"the paper cites release v{version}, whose archive DOI is {recorded}, but "
+            f"prints doi:{printed.group(1)}. Repoint it with "
+            f"`python3 tools/bump_release.py --doi {recorded}`."
+        ]
+    return []
+
+
 def stale_archive(paper: Path = PAPER, root: Path = ROOT) -> list[str]:
     """Does the archived release actually contain the commit the paper pins?
 
@@ -363,6 +415,7 @@ def main(argv: list[str] | None = None) -> int:
     if "--check-provenance" in arguments:
         problems.extend(stale_provenance())
         problems.extend(stale_archive())
+        problems.extend(mismatched_doi())
 
     if "--check-pdf-fresh" in arguments:
         for source, pdf in ((PAPER, PDF), (SUPPLEMENT, SUPPLEMENT_PDF)):

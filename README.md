@@ -117,7 +117,7 @@ For a next-step device the point error is not the deliverable; the interval is. 
 | hist gradient boosting | 91% | 45% | **0%** |
 | random forest | 91% | 35% | **3%** |
 
-The control arm works: every model lands within a point of nominal where the exchangeability the method assumes actually holds, which is what licenses reading the rest. Out of distribution it does not. **The random forest's 90% interval covers 3% of the rows across the ITER-size-matched cut, and the histogram gradient booster's covers none of the 2730.** And the widths do not move: no model's interval changes width by more than 1.5% between the two arms. The intervals do not become vague out of distribution. They stay the same size and miss. See [Result 7](results/RESULTS.md#result-7-the-intervals-are-not-merely-wrong-they-are-confident).
+The control arm works: every model lands within a point of nominal where the exchangeability the method assumes actually holds, which is what licenses reading the rest. Out of distribution it does not. **The random forest's 90% interval covers 3% of the rows across the ITER-size-matched cut, and the histogram gradient booster's covers 8 of the 2730, which is 0.3%.** And the widths do not move: no model's interval changes width by more than 1.5% between the two arms. The intervals do not become vague out of distribution. They stay the same size and miss. See [Result 7](results/RESULTS.md#result-7-the-intervals-are-not-merely-wrong-they-are-confident).
 
 ### The collapse is repairable, and the repair stops exactly where the diagnosis says
 
@@ -190,31 +190,33 @@ The Biomass And Allometry Database can, because it records a ladder of predictor
 
 Which makes the reversal the *warning light* rather than the disease. It is what makes a flexible model look good enough to adopt in the first place. Below three predictors the danger is identical and the warning light is off. See [Result 15](results/RESULTS.md#result-15-the-reversal-needs-dimensionality-and-here-is-the-measurement).
 
-### And the diagnosis was half wrong: it was never flexibility, it was boundedness
+### And the diagnosis was half wrong: it was never flexibility, it was long-range saturation
 
 ![The kernel ladder](results/gp.png)
 
 Everything above says flexible models fail out of distribution. That conclusion is measured on one kind of flexibility, polynomial degree under a ridge penalty, and this repository's own limitations section names the missing test: a Gaussian process with a physically motivated kernel. Running it changes the explanation.
 
-Every model scored so far confounds two properties. **Flexibility** is how much structure a model can learn beyond a power law. **Boundedness** is what it does far outside the training data. A random forest is both flexible and bounded; ridge is neither; a degree-3 polynomial is flexible and unbounded but diverges. Nothing here was flexible, unbounded and well behaved at once. A kernel choice supplies exactly that, changing one property and nothing else:
+Every model scored so far confounds two properties. **Flexibility** is how much structure a model can learn beyond a power law. **Long-range saturation** is whether its predictions stop tracking the features once the input leaves the training support, either because they cannot leave a fixed range or because they revert to a fixed value. A random forest is both flexible and saturating; ridge is neither; a degree-3 polynomial is flexible and non-saturating but diverges. Nothing here was flexible, non-saturating and well behaved at once. A kernel choice supplies exactly that, changing one property and nothing else:
+
+The training-target bound of a tree is the strictest case of saturation and not the same thing, which matters because on these folds it is *active* on one held-out label of thirteen and across the size cut, while the forest loses worst on labels where its ceiling sits about three natural logs above anything the held-out machine reaches. Saturation covers those folds; the bound does not.
 
 | model | CV, by discharge | held-out machine | ITER-size-matched cut | rho(error, distance) |
 |---|---|---|---|---|
-| **GP, linear + RBF** (flexible, unbounded) | **0.112** | 0.218 | **0.191** | **-0.01** |
-| GP, RBF only (flexible, bounded) | 0.142 | 0.541 | **1.948** | +0.65 |
+| **GP, linear + RBF** (flexible, non-saturating) | **0.112** | 0.218 | **0.191** | **-0.01** |
+| GP, RBF only (flexible, saturating) | 0.142 | 0.541 | **1.948** | +0.65 |
 | GP, linear only (a power law) | 0.181 | 0.214 | 0.278 | -0.06 |
 | random forest | 0.128 | 0.465 | 0.938 | +0.85 |
 | IPB98(y,2), analytic (historical reference) | 0.199 | 0.188 | 0.194 | -0.49 |
 
 Same family, same optimizer, same rows, same splits. Only the kernel's long-range behaviour changes, and it spans a factor of **10** at the ITER-size-matched cut.
 
-**The bounded rung fails exactly like a tree.** `gp_rbf` beats the power law under cross-validation and then scores 1.948 at the ITER cut, *worse than predicting a constant*, with error tracking distance at +0.65. The mechanism is Result 4c's reached by different machinery: a tree averages training targets, an RBF kernel decays to zero so the posterior returns to its prior mean. Far enough out, the prediction is the training mean whatever the features say.
+**The saturating rung fails exactly like a tree.** `gp_rbf` beats the power law under cross-validation and then scores 1.948 at the ITER cut, *worse than predicting a constant*, with error tracking distance at +0.65. The mechanism is Result 4c's reached by different machinery: a tree averages training targets, an RBF kernel decays to zero so the posterior returns to its prior mean. Far enough out, the prediction is the training mean whatever the features say.
 
-**The same flexibility on an unbounded kernel is the best model in this repository.** `gp_linear_rbf` wins cross-validation outright at 0.112, beating the random forest's 0.128 that this README opens with, *and* scores 0.191 at the ITER-size-matched cut: 31% better than the plain power law, better than the analytic law fitted with those machines included, second only to Result 8's constrained fit at 0.183. Its error is flat against distance at rho = -0.01.
+**The same flexibility on a non-saturating kernel is the best model in this repository.** `gp_linear_rbf` wins cross-validation outright at 0.112, beating the random forest's 0.128 that this README opens with, *and* scores 0.191 at the ITER-size-matched cut: 31% better than the plain power law, better than the analytic law fitted with those machines included, second only to Result 8's constrained fit at 0.183. Its error is flat against distance at rho = -0.01.
 
-**So the reversal is not a fact about flexible models. It is a fact about bounded ones.** The best cross-validated model no longer has to be the worst on a new machine. Results 4 and 5 measure their zoo correctly; every flexible member of that zoo was bounded or divergent, and none separated the two properties. "Do not use a flexible model out of distribution" was the wrong lesson. "Do not use a model whose predictions are bounded by its training targets" is the right one.
+**So the reversal is not a fact about flexible models. It is a fact about saturating ones.** The best cross-validated model no longer has to be the worst on a new machine. Results 4 and 5 measure their zoo correctly; every flexible member of that zoo was saturating or divergent, and none separated the two properties. "Do not use a flexible model out of distribution" was the wrong lesson. "Do not use a model whose predictions stop tracking the features once the input leaves the training data" is the right one. A hard training-target bound is the strictest case of that and not the whole of it: on these folds it is active on one held-out label of thirteen and across the size cut, while the forest loses worst where its ceiling sits about three natural logs clear of anything the held-out machine reaches.
 
-It does not overturn the rest: the GP does not beat the power law on a held-out machine (0.218 against 0.214), and one line of dimensional analysis still wins the ITER cut for no hyperparameters at all. **And its own intervals hold where every calibrated one fails**: nominal 90%, the GP covers **92.5%** across the ITER-size-matched cut without recalibration, where Result 7's conformal intervals give the random forest 3% and the gradient booster 0%. The bounded rung is the instructive failure, the one model here that *does* go vague out of distribution, with a half-width four times anyone else's, and it still covers 16.7%. See [Result 14](results/RESULTS.md#result-14-it-was-never-flexibility-it-was-boundedness).
+It does not overturn the rest: the GP does not beat the power law on a held-out machine (0.218 against 0.214), and one line of dimensional analysis still wins the ITER cut for no hyperparameters at all. **And its own intervals hold where every calibrated one fails**: nominal 90%, the GP covers **92.5%** across the ITER-size-matched cut without recalibration, where Result 7's conformal intervals give the random forest 3% and the gradient booster 0%. The saturating rung is the instructive failure, the one model here that *does* go vague out of distribution, with a half-width four times anyone else's, and it still covers 16.7%. See [Result 14](results/RESULTS.md#result-14-it-was-never-flexibility-it-was-long-range-saturation).
 
 ### What it predicts for ITER, written down before the answer exists
 

@@ -72,18 +72,12 @@ results the main text states in prose: the three-kernel Gaussian-process ladder
 behind the mean-function ablation, the full model, kernel and split
 specification, and the per-label scores with the eligibility-threshold sweep.
 
-Those two need a word of justification to a fusion reader, because a scaling law
-for mammalian metabolic rate is not obviously anyone's business here. They exist
-because every other result in this work rests on a single ITPA file, and one of
-them establishes something the fusion data cannot. The nested predictor ladder
-of Sec.~\ref{sec:ladder} varies how many predictors the models see while holding
-the rows, the splits and the model specifications fixed, and finds the
-extrapolation failure at every rung, including the rungs where the flexible
-model has no interpolation advantage at all. That is the harder case and the
-one with no warning sign: a practitioner running the conventional comparison
-there sees nothing wrong and still cannot extrapolate. HDB5 cannot show it,
-because on these nine features the flexible model always wins the interpolation
-split. Neither replication is evidence the confinement result depends on.
+Why those two belong in a fusion paper is argued where they are first
+introduced, in the Discussion of the main text: HDB5 cannot separate the
+extrapolation failure from the ranking inversion, because on its nine features
+the flexible model always wins the interpolation split, and the nested predictor
+ladder of Sec.~\ref{sec:ladder} can. Neither replication is evidence the
+confinement result depends on.
 
 Section and equation numbers prefixed S refer to this document; unprefixed
 section names refer to the main text.
@@ -274,6 +268,23 @@ a quoted confinement time. Those are checks that the right machine is being
 described. None of the three has a \emph{measured} H-mode thermal confinement
 time at the operating point tabulated here, which is what makes these
 predictions rather than retrodictions.
+
+The ITER row is taken from the 1999 basis~\cite{ipb98}, and a forecast whose
+whole purpose is to be checkable later should say why it is locked against a
+document of that age. The eight engineering values it supplies for the $Q=10$
+inductive scenario, $R=\SI{6.2}{\metre}$, $a=\SI{2.0}{\metre}$,
+$I_p=\SI{15}{\mega\ampere}$, $B_t=\SI{5.3}{\tesla}$,
+$\bar{n}_e=\SI{10e19}{\per\cubic\metre}$, $P=\SI{87}{\mega\watt}$,
+$\kappa=1.7$ and $M=2.5$, are the ones the 2007 revision of the confinement and
+transport basis carries forward for the same scenario~\cite{doyle07}, so the
+choice is not a 1999 number that a 2007 number would replace. ITER's programme
+has since been rebaselined, and this forecast is therefore conditional on the
+operating point tabulated above rather than on ITER's current plan of record. It
+is not offered as a prediction of whatever ITER's first $Q=10$ discharge turns
+out to be. The complete input vector sits in \texttt{results/forecast.json}
+under the content digest quoted below, so a reader who prefers a different
+operating point can rescore every model at it without refitting anything, and
+the digest makes the substitution visible.
 
 \begin{table}[!ht]
 \centering
@@ -665,8 +676,8 @@ function class as well as changing the asymptote; what the comparison isolates
 is the availability of a continuing trend. It gives the best
 cross-validated score in this work, 0.112 against the random forest's 0.128; it
 scores 0.191 at the ITER-size-matched cut, better than the analytic law, which
-is a historical reference fitted to the DB2.8 predecessor and not refitted
-within these folds, and second only to the constrained fit of
+is a historical reference rather than a fold-fitted competitor, and second only
+to the constrained fit of
 the main text at 0.183; and its error is flat against distance at
 $\rho = -0.01$.
 
@@ -818,6 +829,10 @@ Physics Expert Group on Confinement Modelling and Database and ITER Physics
 Basis Editors, ``Chapter 2: Plasma confinement and transport,'' \emph{Nucl.\
 Fusion} \textbf{39}, 2175 (1999).
 \href{https://doi.org/10.1088/0029-5515/39/12/302}{doi:10.1088/0029-5515/39/12/302}
+\bibitem{doyle07} E. J. Doyle \emph{et al.}, ``Chapter 2: Plasma confinement
+and transport,'' \emph{Progress in the ITER Physics Basis}, \emph{Nucl.\
+Fusion} \textbf{47}, S18 (2007).
+\href{https://doi.org/10.1088/0029-5515/47/6/S02}{doi:10.1088/0029-5515/47/6/S02}
 \bibitem{creely} A.J. Creely \emph{et al.}, ``Overview of the SPARC tokamak,''
 \emph{J.\ Plasma Phys.} \textbf{86}, 865860502 (2020).
 \href{https://doi.org/10.1017/S0022377820001257}{doi:10.1017/S0022377820001257}

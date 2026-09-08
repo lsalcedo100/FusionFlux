@@ -45,49 +45,72 @@ GENERATIVE AI
 
 REFEREES
   NOMINATIONS
-    1. J. Hall           <affiliation> <email>   FILL-IN
+    1. J. Hall              <affiliation> <email>   FILL-IN
     2. O. J. W. F. Kardaun  <affiliation> <email>   FILL-IN
-    3. C. Angioni        <affiliation> <email>   FILL-IN
-    4. A. Murari         <affiliation> <email>   FILL-IN
+    3. C. Rea               <affiliation> <email>   FILL-IN
+    4. A. Murari            <affiliation> <email>   FILL-IN
 
   The four are chosen, the contact details are not: only you can supply an
   affiliation and an address you have checked, and a wrong one goes to a
-  stranger over your name.
+  stranger over your name. This is the last FILL-IN on the sheet, and it is a
+  FILL-IN because nothing in this repository can verify an email address.
+
+  Every name below is nominated, and every name nominated appears below. That
+  is worth keeping true: the sheet used to argue for S. M. Kaye in a list he
+  was not on.
 
   Hall is the closest existing work and the most likely to find an error.
   Kardaun is cited in Sec. 6 and in Limitations as the precursor on interval
   estimation for ITER and on errors in variables, so he is the person best
-  placed to say whether that treatment is fair. Angioni and Kaye are on the
-  database side; Murari is on machine learning for confinement scaling. Rea or
-  Granetz would serve if a reader less specialised in scaling laws is wanted.
+  placed to say whether that treatment is fair. Rea is the reader who is not a
+  scaling-law specialist, on machine learning applied to tokamak data more
+  broadly, and Murari is on machine-learning approaches to confinement scaling.
 
-  Hall and Angioni are co-authors with G. Verdoolaege on Ref. [15]. Say so in
-  the free-text box, along with the 6 September 2026 letter, so the editor
-  learns it from you rather than from the author list.
+  Hall is a co-author with G. Verdoolaege on Ref. [15]. Say so in the free-text
+  box, along with the 6 September 2026 letter, so the editor learns it from you
+  rather than from the author list. C. Angioni, also a Verdoolaege co-author on
+  that reference and previously nominated here, is deliberately not on the list
+  now: nominating two co-authors of the person you have just written to about a
+  negative result on his database reads narrower than it is, and one is enough
+  to have the database side represented.
 
   Do not oppose anyone. The paper criticises no individual study and says so
   explicitly, and an opposed-reviewer entry would contradict that in front of
   the editor who has just read it.
 
-  Candidates, taken from the works the manuscript engages with rather than from
-  a general list of the field. Pick three or four and write them above with
-  affiliation and email.
+  Substitutes, if one of the four declines or the editor asks for more, taken
+  from the works the manuscript engages with rather than from a general list of
+  the field.
 
-  - J. Hall, on machine-size confinement scaling in the updated database. The
-    closest existing work to this one and the most likely to find an error.
-  - O. J. W. Kardaun, on the statistical analysis of confinement databases,
-    which is the methodological ground the argument stands on.
-  - C. Angioni, on the confinement database and modelling side.
+  - C. Angioni, on the confinement database and modelling side, with the
+    disclosure above.
   - S. M. Kaye, likewise, and a co-author of the database paper.
-  - A. Murari, on machine-learning approaches to confinement scaling.
-  - C. Rea or R. S. Granetz, on machine learning applied to tokamak data more
-    broadly, for a reader who is not a scaling-law specialist.
+  - R. S. Granetz, in the same role as Rea.
 
   G. Verdoolaege led the database paper and is the obvious first name, but he
   was emailed about this work on 6 September 2026. Declare that correspondence
   if you nominate him, or leave him off and let the editor find him.
 
 FILES
-  manuscript.pdf ({{MANUSCRIPT_PAGES}} pp) and supplementary_material.pdf ({{SUPPLEMENT_PAGES}} pp), each submitted
-  as a single PDF with its figures and tables embedded, which is what NF asks
-  for. Use ./anonymous/ instead if you choose double-anonymous review.
+  Uploading the DOUBLE-ANONYMOUS build: ./anonymous/manuscript.pdf and
+  ./anonymous/supplementary_material.pdf, each a single PDF with its figures
+  and tables embedded, which is what NF asks for. Page counts are
+  {{MANUSCRIPT_PAGES}} pp and {{SUPPLEMENT_PAGES}} pp for the named build; the
+  anonymous pair differs only by the stripped front matter.
+
+  This is a decision rather than a default, so the reasoning is recorded here.
+  Double-anonymous is IOP's default across the portfolio and single-anonymous
+  is the opt-out. The argument for opting out was that this paper's
+  credibility rests on the analysis being checkable, and that naming the
+  repository is how a referee checks it. That argument is aimed at the editor,
+  who reads the cover letter under either model, and the cover letter carries
+  the repository URL and the version DOI explicitly for that reason. What the
+  referee loses is the link; what the referee also loses is the unaffiliated
+  author line that the objection this paper is most exposed to attaches to.
+  For a single author with no institution the second is worth more than the
+  first.
+
+  The named build under ./ is kept and stays current, both because IOP states
+  it will not reject a submission for including author information and because
+  the decision is worth being able to reverse at the upload form.
+  tools/make_submission.py writes both.

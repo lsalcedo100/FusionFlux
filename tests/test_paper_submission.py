@@ -558,3 +558,82 @@ def test_each_document_has_exactly_one_bibliography(document: str) -> None:
     source = (ROOT / document).read_text()
     assert source.count(r"\begin{thebibliography}") == 1
     assert source.count(r"\end{thebibliography}") == 1
+
+
+# --- the version DOI belongs to the version the paper cites ------------------
+#
+# `stale_archive` compares a tag against a commit and `stale_provenance` compares
+# a commit against results/. Neither can see the state between tagging a release
+# and publishing it, where the title page names v0.4.4 and links v0.4.3's DOI:
+# both strings are well formed, they simply describe different releases. The
+# ledger `tools/bump_release.py` writes is the only place the two are recorded
+# together, so `mismatched_doi` reads that.
+
+
+def _paper_with_doi(directory: Path, version: str, doi: str) -> Path:
+    paper = directory / "paper.tex"
+    paper.write_text(
+        f"(v{version}; the DOI for all versions is\n"
+        "\\href{https://doi.org/10.5281/zenodo.22215142}{10.5281/zenodo.22215142})\n"
+        f"\\href{{https://doi.org/{doi}}}{{doi:{doi}}}\n"
+    )
+    return paper
+
+
+def _with_ledger(directory: Path, versions: dict) -> Path:
+    import json
+
+    (directory / "docs").mkdir(parents=True, exist_ok=True)
+    (directory / "docs" / "releases.json").write_text(json.dumps({"versions": versions}))
+    return directory
+
+
+def test_a_doi_matching_the_cited_release_passes(tmp_path: Path) -> None:
+    _with_ledger(tmp_path, {"0.4.4": {"doi": "10.5281/zenodo.7"}})
+    paper = _paper_with_doi(tmp_path, "0.4.4", "10.5281/zenodo.7")
+    assert checker.mismatched_doi(paper, tmp_path) == []
+
+
+def test_the_previous_releases_doi_on_a_bumped_version_is_reported(tmp_path: Path) -> None:
+    """The exact half-done release this check exists for."""
+    _with_ledger(
+        tmp_path, {"0.4.3": {"doi": "10.5281/zenodo.6"}, "0.4.4": {"doi": None}}
+    )
+    paper = _paper_with_doi(tmp_path, "0.4.4", "10.5281/zenodo.6")
+    problems = checker.mismatched_doi(paper, tmp_path)
+    assert len(problems) == 1
+    assert "no archive DOI recorded" in problems[0]
+    assert "bump_release.py --doi" in problems[0]
+
+
+def test_a_doi_belonging_to_another_release_is_reported(tmp_path: Path) -> None:
+    _with_ledger(
+        tmp_path, {"0.4.3": {"doi": "10.5281/zenodo.6"}, "0.4.4": {"doi": "10.5281/zenodo.7"}}
+    )
+    paper = _paper_with_doi(tmp_path, "0.4.4", "10.5281/zenodo.6")
+    problems = checker.mismatched_doi(paper, tmp_path)
+    assert len(problems) == 1
+    assert "10.5281/zenodo.7" in problems[0]
+
+
+def test_the_concept_doi_is_not_read_as_the_version_doi(tmp_path: Path) -> None:
+    """It appears on the same line and never moves, so matching it would be wrong."""
+    _with_ledger(tmp_path, {"0.4.4": {"doi": "10.5281/zenodo.7"}})
+    paper = _paper_with_doi(tmp_path, "0.4.4", "10.5281/zenodo.7")
+    assert "10.5281/zenodo.22215142" in paper.read_text()
+    assert checker.mismatched_doi(paper, tmp_path) == []
+
+
+def test_no_ledger_is_not_a_defect_in_the_paper(tmp_path: Path) -> None:
+    """A source tarball carries no ledger, and an unanswerable question is not a fault."""
+    paper = _paper_with_doi(tmp_path, "0.4.4", "10.5281/zenodo.6")
+    assert checker.mismatched_doi(paper, tmp_path) == []
+
+
+def test_an_unreadable_ledger_is_reported_rather_than_ignored(tmp_path: Path) -> None:
+    (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "releases.json").write_text("{ not json")
+    paper = _paper_with_doi(tmp_path, "0.4.4", "10.5281/zenodo.6")
+    problems = checker.mismatched_doi(paper, tmp_path)
+    assert len(problems) == 1
+    assert "unreadable" in problems[0]

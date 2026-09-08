@@ -7,7 +7,10 @@ Each arm answers one objection that the headline comparison invites:
     ITPA20      IPB98(y,2) is the ITER reference, but it is not the newest
                 published scaling fitted to this database family. ITPA20 and
                 ITPA20-IL are, and they weaken the size dependence sharply.
-                Both are non-blind here for the same reason IPB98 is.
+                Both are non-blind here for the same reason IPB98 is. Each is
+                specified on the boundary elongation where the deposit delivers
+                the areal one, and the ``elongation`` arm bounds what that
+                substitution can be worth rather than leaving it as a caveat.
 
     correlation The claim that tree error tracks extrapolation distance rests on
                 a Spearman rho over 13 machines. This attaches a permutation
@@ -79,6 +82,24 @@ def _rmsle(actual: np.ndarray, predicted: np.ndarray) -> float:
     return float(np.sqrt(np.mean((np.log(predicted) - np.log(actual)) ** 2)))
 
 
+def _check_one_plus_delta(column: pd.Series) -> pd.Series:
+    """Fail loudly if ``DELTA1`` is not the (1 + triangularity) factor it should be.
+
+    A column of bare triangularities would pass silently through the power law
+    below and shift every ITPA20 prediction by about 21%, which is large enough
+    to reorder the published laws and small enough to look like a modelling
+    disagreement rather than a units error. So it is checked rather than
+    assumed.
+    """
+    if not float(column.min()) >= 1.0:
+        raise AssertionError(
+            f"DELTA1 has minimum {column.min():.4f}, below 1: it is being delivered as "
+            "the triangularity itself rather than as 1+delta, and the ITPA20 laws "
+            "below take the second."
+        )
+    return column
+
+
 def dataset_with_triangularity() -> pd.DataFrame:
     """The analysed frame, plus the DELTA1 column the ITPA20 scalings need.
 
@@ -86,6 +107,19 @@ def dataset_with_triangularity() -> pd.DataFrame:
     is not one of the nine engineering features, so it has to be carried across
     by reproducing the same cleaning mask rather than by joining on an index
     that ``reset_index`` has already discarded.
+
+    ``DELTA1`` is delivered as 1 + triangularity, not as the triangularity
+    itself, and 1 + triangularity is the form the ITPA20 laws take it in. So it
+    is carried across as delivered. Adding one to it, which is what this module
+    did until the correction, raised every ITPA20 prediction by a factor of
+    ((2 + d) / (1 + d)) ** 0.36, about 21% on these rows, and that is most of
+    what previously looked like a mismatch between the elongation the law was
+    fitted to and the one this database supplies. The column's own values settle
+    which reading is right: it is exactly 1.000 on ASDEX, PDX and TFTR, the
+    three circular-cross-section machines here, and reaches 1.906 on DIII-D,
+    which is a triangularity of 0.906 and not a value 1 + triangularity could
+    take if the column held the triangularity. ``_check_one_plus_delta`` refuses
+    a column that does not look like this one.
     """
     raw = hdb5.load_hdb5_dataframe()
     frame = pd.DataFrame(index=raw.index)
@@ -105,7 +139,7 @@ def dataset_with_triangularity() -> pd.DataFrame:
             "the cleaning mask reproduced here has drifted from map_to_canonical"
         )
     dataset = dataset.copy()
-    dataset["one_plus_delta"] = 1.0 + delta
+    dataset["one_plus_delta"] = _check_one_plus_delta(delta)
     return dataset
 
 
@@ -144,6 +178,102 @@ def score_published(dataset: pd.DataFrame) -> dict[str, Any]:
             "iter_matched_cut": _rmsle(tau[above_cut], predicted[above_cut]),
             "per_machine": per_machine,
         }
+    return out
+
+
+def areal_to_shape_elongation(triangularity: np.ndarray, *, n_points: int = 40001) -> np.ndarray:
+    """kappa / kappa_a for a Miller-shaped boundary of the given triangularity.
+
+    The delivered elongation column is the areal elongation
+    ``kappa_a = S / (pi a^2)``, which is what IPB98(y,2) was fitted to. The
+    ITPA20 laws are specified on the boundary elongation ``kappa = b / a``, and
+    the delivered columns do not carry the boundary shape needed to convert
+    exactly. What they do carry is the triangularity, and on the standard
+    parametrisation
+
+        R = R0 + a cos(t + d sin t),   Z = kappa a sin t,
+
+    the enclosed area is ``pi a^2 kappa`` times a factor that depends on ``d``
+    alone, so the ratio ``kappa / kappa_a`` is a function of the triangularity
+    and nothing else. Elongation cancels out of it exactly, which is why one
+    curve covers every row.
+
+    This is a shape model rather than the reconstruction each row actually came
+    from, so it is a bound on the conversion rather than the conversion. That is
+    all the comparison needs: it is used to show the substitution is worth less
+    than the differences being discussed, not to correct anyone's number.
+    """
+    if float(np.nanmin(triangularity)) < 0.0:
+        raise AssertionError("triangularity below zero; DELTA1 is not 1+delta here")
+    angle = np.linspace(0.0, 2.0 * np.pi, n_points)
+    # One curve evaluated on a grid and interpolated: the integral is smooth in
+    # d and 6228 quadratures of it would be the same numbers more slowly.
+    grid = np.linspace(0.0, float(np.nanmax(triangularity)), 60)
+    ratios = np.empty_like(grid)
+    for index, d in enumerate(grid):
+        radial = np.cos(angle + d * np.sin(angle))
+        vertical = np.sin(angle)
+        area = abs(
+            0.5
+            * np.trapezoid(
+                radial * np.gradient(vertical, angle) - vertical * np.gradient(radial, angle),
+                angle,
+            )
+        )
+        ratios[index] = np.pi / area
+    return np.interp(triangularity, grid, ratios)
+
+
+def elongation_convention(dataset: pd.DataFrame) -> dict[str, Any]:
+    """What the kappa against kappa_a substitution can be worth to the ITPA20 laws.
+
+    Every absolute level reported for ITPA20 and ITPA20-IL is scored with the
+    areal elongation the deposit supplies standing in for the boundary
+    elongation they were fitted to. That is a real mismatch and it cannot be
+    resolved from the delivered columns, so the question is not what the exact
+    correction is but how large it could be. Bounding it turns a caveat into a
+    measurement: if the substitution is worth less than the gaps being
+    discussed, the ordering does not depend on it.
+    """
+    tau = dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float)
+    labels = dataset[hdb5.TOKAMAK_LABEL_COLUMN].to_numpy()
+    eligible = hdb5.eligible_tokamaks(dataset, min_rows=hdb5.MIN_HELD_OUT_ROWS)
+    cut = hdb5.iter_matched_split(dataset, hdb5.size_ordered_splits(dataset))
+    above = np.isin(labels, list(cut.test_machines))
+
+    triangularity = dataset["one_plus_delta"].to_numpy(dtype=float) - 1.0
+    ratio = areal_to_shape_elongation(triangularity)
+
+    out: dict[str, Any] = {
+        "conversion_ratio": {
+            "median": float(np.median(ratio)),
+            "p95": float(np.percentile(ratio, 95)),
+            "max": float(np.max(ratio)),
+        },
+        "triangularity": {
+            "median": float(np.median(triangularity)),
+            "max": float(np.max(triangularity)),
+        },
+        "laws": {},
+    }
+    for name, law in PUBLISHED_SCALINGS.items():
+        delivered = published_prediction(dataset, name)
+        # kappa = ratio * kappa_a, and the law is a pure power in it.
+        converted = delivered * ratio ** float(law["kappa"])
+        scored: dict[str, dict[str, float]] = {}
+        for tag, predicted in (("kappa_a_as_delivered", delivered), ("shape_converted", converted)):
+            scored[tag] = {
+                "all_rows": _rmsle(tau, predicted),
+                "machine_equal": float(
+                    np.mean([_rmsle(tau[labels == m], predicted[labels == m]) for m in eligible])
+                ),
+                "iter_matched_cut": _rmsle(tau[above], predicted[above]),
+            }
+        largest = max(
+            abs(scored["shape_converted"][key] - scored["kappa_a_as_delivered"][key])
+            for key in ("all_rows", "machine_equal", "iter_matched_cut")
+        )
+        out["laws"][name] = {**scored, "largest_shift": largest}
     return out
 
 
@@ -262,6 +392,7 @@ def main() -> None:
     analysis: dict[str, Any] = {
         "n_rows": int(len(dataset)),
         "published_scalings": score_published(dataset),
+        "elongation_convention": elongation_convention(dataset),
         "correlation_uncertainty": correlation_uncertainty(report),
         "machine_equal_weighting": machine_equal_weighting(dataset),
         "errors_in_variables": errors_in_variables(dataset),
@@ -276,6 +407,17 @@ def main() -> None:
         print(
             f"  {name:12s} all rows={row['all_rows']:.4f}  "
             f"machine-equal={row['machine_equal']:.4f}  ITER cut={row['iter_matched_cut']:.4f}"
+        )
+    elongation = cast("dict[str, Any]", analysis["elongation_convention"])
+    print(
+        "\n--- kappa against kappa_a: conversion at most "
+        f"{elongation['conversion_ratio']['max']:.4f}x ---"
+    )
+    for name, row in cast("dict[str, Any]", elongation["laws"]).items():
+        print(
+            f"  {name:12s} as delivered={row['kappa_a_as_delivered']['iter_matched_cut']:.4f}  "
+            f"converted={row['shape_converted']['iter_matched_cut']:.4f}  "
+            f"largest shift anywhere={row['largest_shift']:.4f}"
         )
     print("\n--- error against extrapolation distance, 13 machines ---")
     for name, row in cast("dict[str, Any]", analysis["correlation_uncertainty"]).items():

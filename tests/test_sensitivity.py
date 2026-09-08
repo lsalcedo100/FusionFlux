@@ -199,6 +199,11 @@ def _dataset(n_per_machine: int = 45, seed: int = 7) -> pd.DataFrame:
     `dataset_with_triangularity` exists because `map_to_canonical` drops
     DELTA1, which the ITPA20 laws need. Building the frame the same way here
     lets the published-scaling arms be exercised without the real download.
+
+    DELTA1 is delivered as 1 + triangularity, so the synthetic column is drawn
+    on that scale. It used to be drawn as a bare triangularity, which is what
+    let the real column be read the same wrong way for as long as it was: the
+    fixture agreed with the bug instead of contradicting it.
     """
     rng = np.random.default_rng(seed)
     frames = []
@@ -214,7 +219,7 @@ def _dataset(n_per_machine: int = 45, seed: int = 7) -> pd.DataFrame:
         eps = rng.uniform(0.25, 0.35, n)
         kappa = rng.uniform(1.2, 2.0, n)
         meff = rng.uniform(1.5, 2.5, n)
-        delta = rng.uniform(0.1, 0.5, n)
+        one_plus_delta = 1.0 + rng.uniform(0.1, 0.5, n)
         tau = (
             0.0562 * ip**0.93 * bt**0.15 * nel**0.41 * plth**-0.69
             * rgeo**1.97 * eps**0.58 * kappa**0.78 * meff**0.19
@@ -226,13 +231,13 @@ def _dataset(n_per_machine: int = 45, seed: int = 7) -> pd.DataFrame:
                     "SHOT": rng.integers(index * 10_000, index * 10_000 + n // 3, n),
                     "TIME": rng.uniform(1.0, 5.0, n),
                     "TAUTH": tau, "IP": ip, "BT": bt, "NEL": nel, "PLTH": plth,
-                    "RGEO": rgeo, "DELTA1": delta, "KAPPAA": kappa, "EPS": eps, "MEFF": meff,
+                    "RGEO": rgeo, "DELTA1": one_plus_delta, "KAPPAA": kappa, "EPS": eps, "MEFF": meff,
                 }
             )
         )
     raw = pd.concat(frames, ignore_index=True)
     dataset = hdb5.build_features(hdb5.map_to_canonical(raw))
-    dataset["one_plus_delta"] = 1.0 + raw["DELTA1"].to_numpy()[: len(dataset)]
+    dataset["one_plus_delta"] = raw["DELTA1"].to_numpy()[: len(dataset)]
     return dataset
 
 
@@ -295,3 +300,59 @@ def test_machine_equal_weighting_reports_both_weightings() -> None:
     assert set(result) == {"unweighted", "machine_equal"}
     for arm in result.values():
         assert arm, "an empty weighting arm cannot support a comparison"
+
+
+# --- the units of DELTA1, which reordered the published laws when read wrong --
+
+
+def test_delta1_is_rejected_when_it_looks_like_a_bare_triangularity() -> None:
+    """The guard has to fire on the reading that was wrong, not merely on rubbish.
+
+    A column of bare triangularities is a perfectly ordinary-looking column. It
+    passes every range check the pipeline makes, and it shifts every ITPA20
+    prediction by about 21%, which is enough to put IPB98(y,2) ahead of both
+    newer laws and small enough to read as a disagreement between scalings.
+    """
+    with pytest.raises(AssertionError, match="1\\+delta|1\\+ *delta|below 1"):
+        asens._check_one_plus_delta(pd.Series([0.1, 0.25, 0.4]))
+
+
+def test_delta1_is_accepted_on_a_circular_machine() -> None:
+    """Zero triangularity is exactly 1.0 in this column, and must not be rejected."""
+    column = pd.Series([1.0, 1.25, 1.906])
+    assert asens._check_one_plus_delta(column).equals(column)
+
+
+def test_real_delta1_column_is_one_plus_delta() -> None:
+    """The three circular-cross-section machines pin the units on the real file.
+
+    ASDEX, PDX and TFTR ran circular plasmas, so a column holding 1 + delta is
+    exactly 1.0 on every one of their rows and a column holding delta would be
+    exactly 0.0. That is the whole argument for how this column is read, so it
+    is asserted rather than left in a comment.
+    """
+    if not hdb5.default_hdb5_path().exists():
+        pytest.skip("HDB5 STD5 not downloaded; run `python3 hdb5.py download`.")
+    raw = hdb5.load_hdb5_dataframe()
+    delta1 = pd.to_numeric(raw["DELTA1"], errors="coerce")
+    circular = raw["TOK"].astype(str).isin({"ASDEX", "PDX", "TFTR"})
+    assert circular.any()
+    assert (delta1[circular] == 1.0).all()
+    assert delta1[~circular].min() > 1.0
+
+
+def test_elongation_conversion_is_bounded_and_leaves_the_ordering(committed: dict) -> None:
+    """Sec. 4.2 states the conversion is worth two orders of magnitude less than the gaps.
+
+    The paper prints that bound, so the artifact has to keep supporting it: the
+    ratio is a shape factor near one, and substituting it moves no reported
+    level by anything that could reorder the laws.
+    """
+    elongation = committed["elongation_convention"]
+    assert 1.0 <= elongation["conversion_ratio"]["median"] < 1.05
+    assert elongation["conversion_ratio"]["max"] < 1.2
+    for name, law in elongation["laws"].items():
+        assert law["largest_shift"] < 0.01, name
+        delivered = law["kappa_a_as_delivered"]["iter_matched_cut"]
+        converted = law["shape_converted"]["iter_matched_cut"]
+        assert abs(delivered - converted) < 0.01

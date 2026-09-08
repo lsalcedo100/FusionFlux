@@ -147,11 +147,19 @@ def test_the_abstract_is_one_line(sheet: str) -> None:
 
 
 def test_the_author_line_is_readable(sheet: str) -> None:
-    """Deleting \\thanks{ once ran the name into the affiliation."""
-    assert "Liam Salcedo. Independent researcher" in sheet
-    assert "ORCID: 0009-0001-5039-8147" in sheet
+    """Deleting \\thanks{ once ran the name into the affiliation.
+
+    Read with runs of whitespace collapsed, because the sheet is hard-wrapped at
+    78 columns and where the wrap falls is not what this is checking. It used to
+    be read raw, and shortening the affiliation moved the wrap between "ORCID:"
+    and the identifier, which failed a test about the name running into the
+    affiliation.
+    """
+    flat = re.sub(r"\s+", " ", sheet)
+    assert "Liam Salcedo. Independent researcher" in flat
+    assert "ORCID: 0009-0001-5039-8147" in flat
     # The link text, not the URL spelled out beside it.
-    assert "https://orcid.org" not in sheet
+    assert "https://orcid.org" not in flat
 
 
 def test_the_commit_hash_does_not_survive_anonymisation(anonymous_paper: str) -> None:

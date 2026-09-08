@@ -51,6 +51,22 @@ IDENTIFYING = (
     "github.com/lsalcedo100",
 )
 
+# Every Zenodo DOI the source currently prints. The literals above are kept for
+# the reason stated there, and they are the DOIs of releases already made: the
+# moment the paper is repointed at a new one, the list guards a string the PDF
+# no longer contains and stops guarding the string it does. So the printed DOIs
+# are read out of the source as well, and both sets are checked.
+ZENODO_DOI = re.compile(r"10\.5281/zenodo\.\d+")
+
+
+def identifying_tokens(sources: "list[Path] | None" = None) -> tuple[str, ...]:
+    """`IDENTIFYING`, plus every Zenodo DOI the LaTeX sources print today."""
+    found = set()
+    for source in sources or (PAPER / "paper.tex", PAPER / "supplementary.tex"):
+        if source.exists():
+            found.update(ZENODO_DOI.findall(source.read_text()))
+    return tuple(dict.fromkeys((*IDENTIFYING, *sorted(found))))
+
 # Sections that exist to credit people and therefore cannot survive anonymisation.
 # `Funding`, `Competing interests` and `Data availability` stay: they carry no
 # identity and IOP wants them in the reviewed manuscript.
@@ -276,7 +292,7 @@ def verify_anonymous(pdfs: list[Path]) -> None:
     for pdf in pdfs:
         rendered = _rendered_text(pdf)
         text = rendered.lower()
-        for token in IDENTIFYING:
+        for token in identifying_tokens():
             if token.lower() in text:
                 failures.append(f"{pdf.name}: contains {token!r}")
         for found in set(COMMIT_HASH.findall(text)):

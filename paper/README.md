@@ -235,9 +235,15 @@ branch:
    because of it. **Tag the state you actually want archived**, since a DOI is
    permanent.
 
-   As released: `v0.4.0` is the current archive, and the paper cites its version
-   DOI `10.5281/zenodo.22545928`. The concept DOI `10.5281/zenodo.22215142`
-   resolves to whatever the latest version is and is the one the main README
+   Which release the paper cites, and which DOI belongs to it, are not repeated
+   here. Repeating them is what let this file go on naming `v0.4.0` through
+   three releases. They live in `docs/releases.json`, which
+   `tools/bump_release.py` writes on both steps and
+   `tools/check_paper_submission.py --check-provenance` reads: it refuses a
+   paper whose cited version has no DOI recorded yet, which is the state
+   between tagging a release and publishing it, or whose printed DOI belongs to
+   a different version. The concept DOI `10.5281/zenodo.22215142` resolves to
+   whatever the latest version is, never moves, and is the one the main README
    badge uses.
 4. Zenodo issues two DOIs: a **concept DOI** that always resolves to the latest
    version, and a **version DOI** fixed to that release. Cite the concept DOI in

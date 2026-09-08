@@ -156,3 +156,46 @@ def test_a_rewrapped_bibitem_still_bumps(sandbox: Path) -> None:
     paper.write_text(paper.read_text().replace("version v0.4.2,\nZenodo", "version v0.4.2, Zenodo"))
     assert _run(sandbox, "--version", "9.9.9").returncode == 0
     assert re.search(r"version v9\.9\.9,\s+Zenodo", paper.read_text())
+
+
+# --- the release ledger, which is what lets the checker see a half-done bump --
+
+
+def _ledger(sandbox: Path) -> dict:
+    import json
+
+    return json.loads((sandbox / "docs" / "releases.json").read_text())
+
+
+def test_a_version_bump_records_the_release_with_no_doi_yet(sandbox: Path) -> None:
+    """Tagging a release and publishing it are separate acts, days apart.
+
+    Between them the paper names one release and prints the previous release's
+    DOI, and both strings are well formed. The ledger is what makes that state
+    visible, so a bump has to write the version with a null DOI rather than
+    leaving it unrecorded.
+    """
+    assert _run(sandbox, "--version", "9.9.9").returncode == 0
+    assert _ledger(sandbox)["versions"]["9.9.9"] == {"doi": None}
+
+
+def test_minting_the_doi_fills_in_the_version_the_tree_is_at(sandbox: Path) -> None:
+    """`--doi` is run without `--version`, so the version comes from pyproject."""
+    assert _run(sandbox, "--version", "9.9.9").returncode == 0
+    assert _run(sandbox, "--doi", "10.5281/zenodo.99999999").returncode == 0
+    assert _ledger(sandbox)["versions"]["9.9.9"] == {"doi": "10.5281/zenodo.99999999"}
+
+
+def test_earlier_releases_stay_in_the_ledger(sandbox: Path) -> None:
+    """It is a record of which DOI belongs to which release, not of the latest one."""
+    _run(sandbox, "--version", "9.9.8")
+    _run(sandbox, "--doi", "10.5281/zenodo.88888888")
+    _run(sandbox, "--version", "9.9.9")
+    versions = _ledger(sandbox)["versions"]
+    assert versions["9.9.8"] == {"doi": "10.5281/zenodo.88888888"}
+    assert versions["9.9.9"] == {"doi": None}
+
+
+def test_both_steps_at_once_records_one_complete_entry(sandbox: Path) -> None:
+    assert _run(sandbox, "--version", "9.9.9", "--doi", "10.5281/zenodo.77777777").returncode == 0
+    assert _ledger(sandbox)["versions"] == {"9.9.9": {"doi": "10.5281/zenodo.77777777"}}

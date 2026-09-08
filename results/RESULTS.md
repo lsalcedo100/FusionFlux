@@ -1987,7 +1987,7 @@ enough to show that the extrapolation failure is not fusion-specific,
 and that the reversal needs a condition this dataset lacks; it is not
 enough to establish a rate at which either happens.
 
-## Result 14: it was never flexibility, it was boundedness
+## Result 14: it was never flexibility, it was long-range saturation
 
 Result 4d compares five model forms and concludes that flexibility costs the
 tail. Result 4e sweeps polynomial degree against nine decades of ridge penalty
@@ -2092,7 +2092,7 @@ targets" is the right one.
 Result 7 gives every model a nominal 90% split-conformal interval and finds that
 out of distribution they do not merely widen, they stay the same width and miss:
 across the ITER-size-matched cut the random forest covers 3% and the histogram
-gradient booster covers none of the 2730 rows. Result 10 repairs that by
+gradient booster covers 8 of the 2730 rows, which is 0.3%. Result 10 repairs that by
 calibrating on held-out machines, and finds the repair stops exactly where the
 diagnosis says it should, with the constrained power law the single exception.
 
@@ -2117,6 +2117,18 @@ that is nowhere near the answer. Width was never the problem, and this is the
 cleanest demonstration of it in the document.
 
 ### What Result 14 does not show
+
+Saturation is the property, and a hard training-target bound is only its
+strictest case. A random forest cannot leave the range of its training targets,
+a booster here never did, and a squared-exponential GP reverts to its prior
+mean; what those three share is that their predictions stop tracking the
+features outside the training support, not that any ceiling is in the way. On
+these folds the bound is *active* on exactly one held-out label of thirteen and
+across the size cut, and the forest loses worst on labels where its ceiling
+stands about three natural logs above anything the held-out machine reaches. So
+the bound cannot be what most of the failure is made of, and reading this result
+as "boundedness" understates it in one direction and overstates the bound's role
+in the other.
 
 The kernel hyperparameters are fitted by marginal likelihood on a seeded
 subsample of each training fold rather than on all of its rows, because an exact

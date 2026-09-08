@@ -14,17 +14,32 @@ The two are separate steps on purpose, because the DOI does not exist until the
 release is published, which happens after the version bump is committed and
 tagged. The concept DOI, which addresses every version at once, is never
 rewritten by either.
+
+The gap between those two steps is a state the paper can be submitted from and
+should not be: a bumped version alongside the previous release's DOI, so the
+title page names one release and links another. Nothing caught that, because
+neither value is wrong on its own. So both steps also write
+``docs/releases.json``, which records which DOI belongs to which version, and
+``tools/check_paper_submission.py`` refuses a paper whose cited version has no
+DOI recorded or has a different one.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
 CONCEPT_DOI = "10.5281/zenodo.22215142"
+
+# Which version DOI belongs to which release. Written by both steps and read by
+# the submission checker, so the window between bumping a version and minting
+# its DOI is a state the checker can see rather than one it cannot distinguish
+# from a correct release.
+RELEASES = "docs/releases.json"
 
 # (path, pattern, replacement template). The patterns are anchored on the field
 # rather than on the old value, so running this twice is not an error and a
@@ -56,6 +71,37 @@ DOI_SITES = (
     ),
     ("paper/references.bib", rf"doi       = \{{{_VERSION_DOI}\}}", "doi       = {{{d}}}"),
 )
+
+
+def _record(root: Path, *, version: str | None = None, doi: str | None = None) -> None:
+    """Note the version, its DOI, or both, in the release ledger.
+
+    A version arriving without a DOI is recorded with ``null``, which is the
+    honest description of a release that has been tagged and not yet published,
+    and is what the checker reads as "not archived yet".
+    """
+    path = root / RELEASES
+    ledger = json.loads(path.read_text()) if path.exists() else {"versions": {}}
+    versions = ledger.setdefault("versions", {})
+
+    if version is None:
+        version = _current_version(root)
+    entry = versions.setdefault(version, {"doi": None})
+    if doi is not None:
+        entry["doi"] = doi
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n")
+    print(f"  {RELEASES}: v{version} -> {entry['doi'] or 'no DOI yet'}")
+
+
+def _current_version(root: Path) -> str:
+    """The version the tree is at, read where the release workflow's guard reads it."""
+    text = (root / "pyproject.toml").read_text()
+    found = re.search(r'(?m)^version = "([^"]+)"', text)
+    if found is None:
+        raise SystemExit("no version in pyproject.toml; cannot record the DOI against one")
+    return found.group(1)
 
 
 def _apply(sites, value: str, field: str, root: Path = ROOT) -> int:
@@ -94,6 +140,7 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
             parser.error(f"expected X.Y.Z, got {args.version!r}")
         print(f"version -> {args.version}")
         _apply(VERSION_SITES, args.version, "version", root)
+        _record(root, version=args.version)
 
     if args.doi:
         if not re.fullmatch(r"10\.5281/zenodo\.\d+", args.doi):
@@ -102,6 +149,7 @@ def main(argv: list[str] | None = None, root: Path = ROOT) -> int:
             parser.error("that is the concept DOI, which addresses all versions and never moves")
         print(f"version DOI -> {args.doi}")
         _apply(DOI_SITES, args.doi, "DOI", root)
+        _record(root, version=args.version, doi=args.doi)
 
     print("\nRebuild the PDFs and re-run `make paper-fresh`, or the committed PDF")
     print("still carries the old version.")

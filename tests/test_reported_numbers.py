@@ -87,6 +87,11 @@ def artifacts() -> dict[str, object]:
         "gp": _json("gp.json"),
         "tree": _json("tree_allometry.json"),
         "tuned": _json("tuned.json"),
+        "sensitivity": _json("sensitivity.json"),
+        "mixed": _json("mixed_model.json"),
+        "boundedness": _json("boundedness.json"),
+        "per_machine": _csv("extrapolation_per_machine.csv", "tokamak"),
+        "conformal_per_machine": pd.read_csv(RESULTS / "conformal_per_machine.csv"),
     }
 
 
@@ -209,6 +214,38 @@ def _shift(a: dict, model: str, method: str, column: str) -> float:
     if row.empty:
         raise AssertionError(f"no coverage row for {model} under {method}")
     return float(row[column].iloc[0])
+
+
+def _published(a: dict, name: str, column: str) -> float:
+    return float(a["sensitivity"]["published_scalings"][name][column])
+
+
+def _gap(a: dict, label: str) -> float:
+    """The forest's margin over the power law on one held-out label.
+
+    Read as a difference rather than stored as one, because the artifact holds
+    the two scores and the paper prints the gap.
+    """
+    frame = a["per_machine"]
+    row = frame[frame.index == label]
+    scores = {name: float(value) for name, value in zip(row["model_name"], row["rmsle"], strict=True)}
+    return scores["random_forest"] - scores["ridge_loglinear"]
+
+
+def _headroom(a: dict, label: str) -> float:
+    """How far the largest held-out target sits below the forest's training ceiling."""
+    frame = a["per_machine"]
+    row = frame[(frame.index == label) & (frame["model_name"] == "random_forest")]
+    if row.empty:
+        raise AssertionError(f"no random forest row for {label}")
+    return float(row["log_target_headroom"].iloc[0])
+
+
+def _booster_rows_covered(a: dict) -> int:
+    """Rows of the size cut the booster's nominal 90% interval actually contains."""
+    frame = a["conformal_per_machine"]
+    cut = frame[(frame["split"] == "size_cut") & (frame["model_name"] == "hist_gradient_boosting")]
+    return int(round(float((cut["empirical_coverage"] * cut["n_rows"]).sum())))
 
 
 def _arm(a: dict, name: str) -> dict:
@@ -386,6 +423,125 @@ CLAIMS: tuple[Claim, ...] = (
         lambda a: _paired(a, "random_forest", "ridge_loglinear")["n_machines_a_worse"],
         lambda v: f"{v} of {v}",
         documents=(README, RESULTS_MD, PAPER, PAPER_PDF, ZENODO, SA_README),
+    ),
+    # -- Sec. 4.1: where the training-target bound is actually active ------
+    # The bound binds on JET and nowhere else among the thirteen, and the paper
+    # now says so and turns it into evidence. These bind the numbers that
+    # argument is made of, so a rerun that moved them could not leave the
+    # argument standing on stale figures.
+    Claim(
+        "rows above the training ceiling at the size cut",
+        "34%",
+        lambda a: a["boundedness"]["iter_matched_cut"]["target_above_train_max_fraction"],
+        _pct(0),
+        documents=(RESULTS_MD, PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "MAST headroom below the forest ceiling",
+        "3.27",
+        lambda a: _headroom(a, "MAST"),
+        lambda v: f"{-v:.2f}",
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "JET-ILW headroom below the forest ceiling",
+        "1.31",
+        lambda a: _headroom(a, "JETILW"),
+        lambda v: f"{-v:.2f}",
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "forest margin on NSTX",
+        "+0.568",
+        lambda a: _gap(a, "NSTX"),
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "forest margin on PBX-M",
+        "+0.453",
+        lambda a: _gap(a, "PBXM"),
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "forest margin on MAST",
+        "+0.427",
+        lambda a: _gap(a, "MAST"),
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "forest margin on JET, the one fold the bound binds on",
+        "+0.280",
+        lambda a: _gap(a, "JET"),
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF),
+    ),
+    # -- Sec. 4.2: the newer published laws, and the elongation bound ------
+    Claim(
+        "ITPA20 at the ITER-size-matched cut",
+        "0.165",
+        lambda a: _published(a, "ITPA20", "iter_matched_cut"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "ITPA20 over all rows",
+        "0.181",
+        lambda a: _published(a, "ITPA20", "all_rows"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF, ZENODO),
+    ),
+    Claim(
+        "largest elongation conversion ratio",
+        "1.110",
+        lambda a: a["sensitivity"]["elongation_convention"]["conversion_ratio"]["max"],
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "what the elongation conversion is worth to ITPA20",
+        "0.0007",
+        lambda a: a["sensitivity"]["elongation_convention"]["laws"]["ITPA20"]["largest_shift"],
+        _r(4),
+        documents=(PAPER, PAPER_PDF, ZENODO),
+    ),
+    # -- Sec. 4.2: the deployment-matched estimator ------------------------
+    Claim(
+        "mixed model, leave-one-label-out",
+        "0.264",
+        lambda a: a["mixed"]["leave_one_label_out"]["reml"]["mean_rmsle"],
+        _r(3),
+        documents=(PAPER, PAPER_PDF, ZENODO),
+    ),
+    Claim(
+        "mixed model, leave-one-device-out",
+        "0.829",
+        lambda a: a["mixed"]["leave_one_device_out"]["reml"]["mean_rmsle"],
+        _r(3),
+        documents=(PAPER, PAPER_PDF, ZENODO),
+    ),
+    Claim(
+        "mixed model, best variance ratio in hindsight over labels",
+        "0.2127",
+        lambda a: a["mixed"]["leave_one_label_out"]["variance_ratio_sweep"]["best_mean_rmsle"],
+        _r(4),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "mixed model at the ITER-size-matched cut",
+        "0.255",
+        lambda a: a["mixed"]["iter_matched_cut"]["reml_rmsle"],
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    # -- Sec. 6: the coverage that is close enough to zero to look like a bug --
+    Claim(
+        "rows the booster's interval covers at the size cut",
+        "8",
+        _booster_rows_covered,
+        documents=(README, RESULTS_MD, PAPER, PAPER_PDF),
     ),
     Claim(
         "paired gap, forest against power law",
@@ -927,3 +1083,34 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
     """A regex that matched nothing would pass the check above silently."""
     found = sum(len(MARGIN_CLAIM.findall(re.sub(r"\s+", " ", p.read_text()))) for p in _source_files())
     assert found >= 4, f"only {found} margin claims found in the source headers"
+
+
+# --- the paper's own count of these claims -----------------------------------
+#
+# The paper prints how many of its numbers are bound here. That sentence is
+# itself a claim about this file, and it is the one claim nothing was checking:
+# it was typed by hand and stayed right only for as long as nobody added a
+# claim. Spelled out in the prose, so the numerals are written here.
+
+SPELLED = {
+    75: "Seventy-five",
+    99: "ninety-nine",
+}
+
+
+def test_the_paper_states_how_many_of_its_numbers_are_bound(documents: dict) -> None:
+    in_paper = sum(1 for claim in CLAIMS if PAPER in claim.documents)
+    in_both = sum(
+        1 for claim in CLAIMS if PAPER in claim.documents or SUPPLEMENTARY in claim.documents
+    )
+    text = documents[PAPER]
+    for count in (in_paper, in_both):
+        spelled = SPELLED.get(count)
+        assert spelled is not None, (
+            f"{count} claims are bound to the paper and no spelling for it is recorded "
+            "here. Add one and update the sentence in the Data availability section."
+        )
+        assert spelled in text, (
+            f"the paper should say {spelled!r} ({count} claims bound to it), and does not. "
+            "Update the sentence in the Data availability section."
+        )
