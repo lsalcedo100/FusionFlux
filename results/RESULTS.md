@@ -1334,11 +1334,11 @@ The distance from a set of exponents to a constraint surface is
 genuine Euclidean distance in exponent space rather than a quantity whose size
 depends on how the rows were scaled.
 
-| surface | IPB98(y,2), published | free refit (Result 2) |
-|---|---|---|
-| kadomtsev | **0.00096** | 0.0031 |
-| collisionless | **0.0045** | 0.064 |
-| electrostatic | 0.501 | 0.817 |
+| surface | IPB98(y,2), published | free refit (Result 2) | ITPA20 | ITPA20-IL |
+|---|---|---|---|---|
+| kadomtsev | **0.00096** | 0.0031 | 0.0147 | 0.0142 |
+| collisionless | **0.0045** | 0.064 | 0.089 | 0.106 |
+| electrostatic | 0.501 | 0.817 | 0.745 | 0.853 |
 
 IPB98(y,2)'s exponents are published to two decimal places, so a residual of
 0.001 is *inside the rounding of the law's own coefficients*. A scaling written
@@ -1347,6 +1347,16 @@ beta and nu* is not something a mistaken derivation does by accident, and it is
 the check that licenses everything below. The third surface is genuinely
 violated by both, so the hierarchy discriminates rather than being satisfied by
 everything.
+
+The two right-hand columns are the counterexample the paper reports rather than
+leaves to a referee. ITPA20 and ITPA20-IL were fitted to selections out of
+DB5.2.3 and are the two best across the ITER-size-matched cut, at 0.177 and
+0.165 against IPB98(y,2)'s 0.194, and they are also the two furthest from every
+surface here. The free refit is closer to the kadomtsev surface than either and
+scores 0.279, the worst of the four. So distance from a surface does not order
+these four by transfer, and nothing in Results 8 or 9 reads it as though it did:
+what the hierarchy measures is what a constraint buys *one* refit on *these*
+rows, with the constraint as the only difference.
 
 The interesting column is the second one. **The free refit satisfies the
 Kadomtsev constraint on its own**, at 0.0031, without being told to: the data

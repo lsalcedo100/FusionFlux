@@ -1004,6 +1004,42 @@ CLAIMS: tuple[Claim, ...] = (
         _r(4),
         documents=LATE_RESULTS,
     ),
+    # The rest of the Kadomtsev column of Table 9. The section argues that
+    # proximity to a surface does not order these four, which is a claim about
+    # exactly these three numbers beside IPB98's 0.00096 above, so all four are
+    # bound rather than only the one that flatters the derivation.
+    Claim(
+        "free refit distance from the Kadomtsev surface",
+        "0.0031",
+        lambda a: _constraint(a, "free_refit", "kadomtsev"),
+        _r(4),
+        documents=(PAPER, PAPER_PDF),
+        # The PDF sets "refit" with an fi ligature, so the row label cannot carry
+        # the phrase; "(this database)" is ligature-free and just as specific.
+        phrases=lambda literal: (f"(this database) & {literal}", f"(this database) {literal}"),
+    ),
+    Claim(
+        "ITPA20 distance from the Kadomtsev surface",
+        "0.0147",
+        lambda a: _constraint(a, "itpa20_published", "kadomtsev"),
+        _r(4),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (
+            f"ITPA20, published & \\textbf{{{literal}}}",
+            f"ITPA20, published {literal}",
+        ),
+    ),
+    Claim(
+        "ITPA20-IL distance from the Kadomtsev surface",
+        "0.0142",
+        lambda a: _constraint(a, "itpa20_il_published", "kadomtsev"),
+        _r(4),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (
+            f"ITPA20-IL, published & \\textbf{{{literal}}}",
+            f"ITPA20-IL, published {literal}",
+        ),
+    ),
     Claim(
         "unconstrained fit, in sample",
         "0.1808",
@@ -1365,8 +1401,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    97: "Ninety-seven",
-    127: "one hundred and twenty-seven",
+    100: "One hundred",
+    130: "one hundred and thirty",
 }
 
 

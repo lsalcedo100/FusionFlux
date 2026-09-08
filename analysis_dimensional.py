@@ -67,6 +67,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+import analysis_sensitivity as asens
 import dimensional as dm
 import hdb5
 import scaling_law as sl
@@ -196,17 +197,32 @@ class DimensionalAnalysis:
 def constraint_distance_table(dataset: pd.DataFrame) -> list[ConstraintDistance]:
     """Result 8a: where the published law and the free refit sit, per surface.
 
-    Two sources are compared. The published IPB98(y,2) exponents are the check
+    Four sources are compared. The published IPB98(y,2) exponents are the check
     on the derivation itself: a law written down in 1999 landing on a surface
     derived here from the definitions of rho*, beta and nu* is not something a
     mistaken derivation produces. The free refit of Result 2 is the measurement:
     it says which physics this database declines to obey when nothing makes it.
+
+    ITPA20 and ITPA20-IL are here because the section makes a claim about *why*
+    a published law transfers, and those two are the counterexample to test it
+    against: both were fitted to DB5.2.3 and both beat IPB98(y,2) across the
+    ITER-size-matched cut. Their distance from these surfaces is the quantity
+    that says whether constraint proximity is what orders the three, and it is
+    not a quantity this analysis should decline to compute about its own thesis.
+
+    Their triangularity term is dimensionless and so contributes no column to C;
+    only the eight exponents the constraint is written over are read.
     """
     refit = dm.fit_constrained_power_law(dataset, hdb5.TARGET_COLUMN, "free")
     sources = {
         "ipb98y2_published": sl.IPB98Y2_EXPONENTS,
         "free_refit": {name: refit[name] for name in dm.CONSTRAINED_FEATURE_COLUMNS},
     }
+    for published, exponents in asens.PUBLISHED_SCALINGS.items():
+        key = published.lower().replace("-", "_")
+        sources[f"{key}_published"] = {
+            name: float(exponents.get(name, 0.0)) for name in dm.CONSTRAINED_FEATURE_COLUMNS
+        }
     rows: list[ConstraintDistance] = []
     for source_name, exponents in sources.items():
         table = dm.constraint_residuals(exponents)

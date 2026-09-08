@@ -45,6 +45,48 @@
       "n_constraints": 3,
       "residual_norm": 0.8166906341923642,
       "max_abs_violation": 0.6208957923963215
+    },
+    {
+      "exponent_source": "itpa20_published",
+      "constraint_model": "kadomtsev",
+      "n_constraints": 1,
+      "residual_norm": 0.014654742163883683,
+      "max_abs_violation": 0.014654742163883683
+    },
+    {
+      "exponent_source": "itpa20_published",
+      "constraint_model": "collisionless",
+      "n_constraints": 2,
+      "residual_norm": 0.08863991472671102,
+      "max_abs_violation": 0.08831055399122506
+    },
+    {
+      "exponent_source": "itpa20_published",
+      "constraint_model": "electrostatic",
+      "n_constraints": 3,
+      "residual_norm": 0.745285851200732,
+      "max_abs_violation": 0.5781999999999997
+    },
+    {
+      "exponent_source": "itpa20_il_published",
+      "constraint_model": "kadomtsev",
+      "n_constraints": 1,
+      "residual_norm": 0.014175829021273179,
+      "max_abs_violation": 0.014175829021273179
+    },
+    {
+      "exponent_source": "itpa20_il_published",
+      "constraint_model": "collisionless",
+      "n_constraints": 2,
+      "residual_norm": 0.10554031751273843,
+      "max_abs_violation": 0.10481135847674544
+    },
+    {
+      "exponent_source": "itpa20_il_published",
+      "constraint_model": "electrostatic",
+      "n_constraints": 3,
+      "residual_norm": 0.8527083648912771,
+      "max_abs_violation": 0.6605333333333331
     }
   ],
   "in_sample_rmsle": {
