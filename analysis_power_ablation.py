@@ -34,6 +34,7 @@ from typing import Any
 
 import pandas as pd
 
+import gp
 import hdb5
 from storage import write_dataframe_csv_atomic, write_json_strict
 
@@ -92,10 +93,57 @@ def _arm(dataset: pd.DataFrame, features: tuple[str, ...]) -> dict[str, Any]:
     }
 
 
-def analyze(dataset: pd.DataFrame) -> dict[str, Any]:
-    baseline = _arm(dataset, hdb5.BLIND_FEATURE_COLUMNS)
-    ablated = _arm(dataset, ABLATED_FEATURE_COLUMNS)
-    return {"baseline": baseline, "ablated": ablated}
+def _interval_arm(dataset: pd.DataFrame, features: tuple[str, ...]) -> dict[str, Any]:
+    """Does the interval collapse need P? It is the strongest result in the paper.
+
+    Nothing about a conformal interval involves the target's definition, so the
+    expectation is that it does not, but expecting is not measuring.
+    """
+    _, in_distribution = hdb5.conformal_coverage_grouped_cv(dataset, feature_columns=features)
+    _, held_out = hdb5.conformal_coverage_leave_one_tokamak_out(dataset, feature_columns=features)
+
+    def coverage(frame: pd.DataFrame) -> dict[str, float]:
+        """The pooled row, not the per-machine ones: the paper quotes pooled."""
+        pooled = frame[frame["scope"] == "__pooled__"].set_index("model_name")
+        return {
+            name: float(pooled.loc[name, "empirical_coverage"])
+            for name in (POWER_LAW, FOREST, BOOSTER)
+            if name in pooled.index
+        }
+
+    return {"grouped_cv": coverage(in_distribution), "leave_one_label_out": coverage(held_out)}
+
+
+def _kernel_arm(dataset: pd.DataFrame, features: tuple[str, ...]) -> dict[str, Any]:
+    """The mechanism claim, which is what the objection actually threatens.
+
+    If the bounded kernel still fails and the unbounded one still does not, the
+    long-range-saturation reading holds whether or not P is a feature.
+    """
+    models = gp.build_gp_models()
+    per_label = hdb5.leave_one_tokamak_out(
+        dataset, feature_columns=features, extra_models=models
+    )
+    summary = hdb5.summarize_leave_one_tokamak_out(per_label).set_index("model_name")
+    return {
+        name: float(summary.loc[name, "mean_rmsle"])
+        for name in summary.index
+        if name.startswith("gp_") or name in (POWER_LAW, FOREST)
+    }
+
+
+def analyze(dataset: pd.DataFrame, *, with_kernels: bool = True) -> dict[str, Any]:
+    arms: dict[str, Any] = {}
+    for name, features in (
+        ("baseline", hdb5.BLIND_FEATURE_COLUMNS),
+        ("ablated", ABLATED_FEATURE_COLUMNS),
+    ):
+        arm = _arm(dataset, features)
+        arm["conformal_coverage"] = _interval_arm(dataset, features)
+        if with_kernels:
+            arm["kernel_ladder_lolo"] = _kernel_arm(dataset, features)
+        arms[name] = arm
+    return arms
 
 
 def _report(arms: dict[str, Any]) -> None:
@@ -111,6 +159,13 @@ def _report(arms: dict[str, Any]) -> None:
             f"  forest worse on {label['n_worse']} of {label['n_units']} labels,"
             f" {device['n_worse']} of {device['n_units']} devices"
         )
+        cover = arm.get("conformal_coverage", {}).get("leave_one_label_out", {})
+        if cover:
+            spelled = "  ".join(f"{k.split('_')[0]} {v:.0%}" for k, v in cover.items())
+            print(f"  held-out coverage at nominal 90%: {spelled}")
+        ladder = arm.get("kernel_ladder_lolo", {})
+        for name in sorted(ladder):
+            print(f"  LOLO {name:26s} {ladder[name]:.4f}")
 
 
 def main() -> None:
