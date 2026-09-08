@@ -1108,10 +1108,104 @@ CLAIMS: tuple[Claim, ...] = (
         lambda a, _m="powerlaw_free": _device(a, _m),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=lambda literal, _t="0.214 & {0} & 0.279", _p="0.214 {0} 0.279": (
+        phrases=lambda literal, _t="0.214 & {0} & 8/11", _p="0.214 {0} 8/11": (
             _t.format(literal),
             _p.format(literal),
         ),
+    ),
+    # --- the win-count column, added beside it -----------------------------
+    # Table 7 grew a per-device win count because this paper counts wins
+    # wherever it criticises a model and did not count them for the models it
+    # recommends. Every cell is bound, and so are the three effect sizes the
+    # paragraph under the table turns on, including the self-comparison that
+    # calibrates the column.
+    Claim(
+        "worse-on count, collisionless",
+        "5",
+        lambda a, _m="powerlaw_collisionless": _device(a, _m, "n_worse_than_power_law"),
+        _r(0),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"0.203 & {n}/11", f"0.203 {n}/11"),
+    ),
+    Claim(
+        "worse-on count, IPB98 analytic",
+        "4",
+        lambda a, _m="ipb98y2_analytic": _device(a, _m, "n_worse_than_power_law"),
+        _r(0),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"0.184 & {n}/11", f"0.184 {n}/11"),
+    ),
+    Claim(
+        "worse-on count, bounded hybrid",
+        "5",
+        lambda a, _m="hybrid_gbm_s1": _device(a, _m, "n_worse_than_power_law"),
+        _r(0),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"0.246 & {n}/11", f"0.246 {n}/11"),
+    ),
+    Claim(
+        "worse-on count, electrostatic",
+        "8",
+        lambda a, _m="powerlaw_electrostatic": _device(a, _m, "n_worse_than_power_law"),
+        _r(0),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"0.226 & {n}/11", f"0.226 {n}/11"),
+    ),
+    Claim(
+        "worse-on count, Kadomtsev",
+        "7",
+        lambda a, _m="powerlaw_kadomtsev": _device(a, _m, "n_worse_than_power_law"),
+        _r(0),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"0.211 & {n}/11", f"0.211 {n}/11"),
+    ),
+    Claim(
+        "worse-on count, unconstrained (the calibration)",
+        "8",
+        lambda a, _m="powerlaw_free": _device(a, _m, "n_worse_than_power_law"),
+        _r(0),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"0.212 & {n}/11", f"0.212 {n}/11"),
+    ),
+    Claim(
+        "worse-on count, Kadomtsev, in prose",
+        "7",
+        lambda a, _m="powerlaw_kadomtsev": _device(a, _m, "n_worse_than_power_law"),
+        _r(0),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"unconstrained one on \\textbf{{{n}}} of them", f"unconstrained one on {n} of them"),
+    ),
+    Claim(
+        "worse-on count, collisionless, in prose",
+        "5",
+        lambda a, _m="powerlaw_collisionless": _device(a, _m, "n_worse_than_power_law"),
+        _r(0),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"is worse on \\textbf{{{n}}}, at", f"is worse on {n}, at"),
+    ),
+    Claim(
+        "Kadomtsev mean paired gain per device",
+        "0.001",
+        lambda a, _m="powerlaw_kadomtsev": _device(a, _m, "mean_difference_vs_power_law"),
+        lambda v: f"{abs(v):.3f}",
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (f"of {literal} in its favour",),
+    ),
+    Claim(
+        "collisionless mean paired gain per device",
+        "0.009",
+        lambda a, _m="powerlaw_collisionless": _device(a, _m, "mean_difference_vs_power_law"),
+        lambda v: f"{abs(v):.3f}",
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (f", at {literal}",),
+    ),
+    Claim(
+        "the two solvers' per-device separation",
+        "0.00008",
+        lambda a, _m="powerlaw_free": _device(a, _m, "mean_difference_vs_power_law"),
+        lambda v: f"{v:.5f}",
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (f"separated by {literal} per device",),
     ),
     Claim(
         "device arm, constant mean",
@@ -1585,8 +1679,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    110: "One hundred and ten",
-    147: "one hundred and forty-seven",
+    121: "One hundred and twenty-one",
+    158: "one hundred and fifty-eight",
 }
 
 
