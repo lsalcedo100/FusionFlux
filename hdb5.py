@@ -620,7 +620,14 @@ def train_confinement_model(
     import joblib
 
     dataset = prepare_dataset(path)
-    scores = evaluate_models(dataset, n_splits=n_splits)
+    # Spelled out rather than left to the default, which is the same ten columns.
+    # This is the one place in the repository that *wants* the analytic IPB98
+    # column as a feature: nothing here is a held-out score, so the prior is an
+    # ordinary input to a model meant to be deployed rather than a leak. Leaving
+    # it implicit is what let the stored-energy arm score its cross-validation
+    # column on a different feature set from its own held-out columns, so the
+    # choice is stated where the fit six lines below already states it.
+    scores = evaluate_models(dataset, n_splits=n_splits, feature_columns=MODEL_FEATURE_COLUMNS)
 
     baseline = next(score for score in scores if score.model_name == "ipb98y2_analytic")
     trainable = [score for score in scores if score.model_name != "ipb98y2_analytic"]
