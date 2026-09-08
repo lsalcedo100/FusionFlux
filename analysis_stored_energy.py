@@ -125,7 +125,17 @@ def _arm(dataset: pd.DataFrame, target: str) -> tuple[dict[str, Any], pd.DataFra
     # arm carries it: this comparison is between fitted models only.
     per_label = hdb5.leave_one_tokamak_out(framed, include_ipb98_reference=False)
     per_device = hdb5.leave_one_tokamak_out(by_device, include_ipb98_reference=False)
-    cross_validated = {s.model_name: float(s.cv_rmsle) for s in hdb5.evaluate_models(framed)}
+    # `evaluate_models` defaults to the ten-column matrix, which carries the
+    # analytic IPB98 prediction as a feature; the three arms above default to the
+    # nine blind columns. Left implicit, this arm's cross-validation column came
+    # from a different feature set than its own held-out columns, and from a
+    # feature the paper says twice is excluded throughout. The ridge cannot see
+    # the difference, since that column is an exact log-linear combination of the
+    # other eight, so only the tree ensembles were being helped by it.
+    cross_validated = {
+        s.model_name: float(s.cv_rmsle)
+        for s in hdb5.evaluate_models(framed, feature_columns=hdb5.BLIND_FEATURE_COLUMNS)
+    }
 
     split = hdb5.iter_matched_split(framed, hdb5.size_ordered_splits(framed))
     cut = (

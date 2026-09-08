@@ -594,6 +594,36 @@ CLAIMS: tuple[Claim, ...] = (
         lambda a: a["stored"]["n_rows"],
         documents=(PAPER, PAPER_PDF),
     ),
+    # The two cross-validation scores were the only numbers in this arm that
+    # nothing bound, and that is how `analysis_stored_energy` came to compute
+    # them on the ten-column matrix while the held-out columns beside them used
+    # the nine blind ones. A claim on the win counts cannot see a feature-set
+    # difference, because the win counts never came from the wrong call.
+    Claim(
+        "forest cross-validation on stored energy",
+        "0.123",
+        lambda a: _stored(a, "cv_rmsle", "random_forest"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF, RESULTS_MD),
+        # A bare "0.123" is Table 2's CV score on the 13 scored labels as well,
+        # so both spellings carry the words around them.
+        phrases=lambda literal: (
+            f"cross-validation, {literal} against",
+            f"ordinary predictor) | {literal} /",
+        ),
+    ),
+    Claim(
+        "power law cross-validation on stored energy",
+        "0.193",
+        lambda a: _stored(a, "cv_rmsle", "ridge_loglinear"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF, RESULTS_MD),
+        # Not "the power law's 0.193": the source writes an ASCII apostrophe and
+        # the PDF a typeset one, so a spelling carrying it matches the tex and
+        # fails the PDF. Anchor on the words after the number instead, and avoid
+        # "leave-one-label-out", which the PDF hyphenates across a line break.
+        phrases=lambda literal: (f"{literal}. Under", f"/ {literal} | 0.468"),
+    ),
     Claim(
         "forest against the power law on stored energy, by label",
         "9 of 13",
@@ -1335,8 +1365,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    95: "Ninety-five",
-    125: "one hundred and twenty-five",
+    97: "Ninety-seven",
+    127: "one hundred and twenty-seven",
 }
 
 

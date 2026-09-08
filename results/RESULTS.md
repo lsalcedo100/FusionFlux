@@ -2291,8 +2291,8 @@ quartiles 0.981 and 1.000.
 
 | target | CV | LOLO | LODO | ITER cut | forest worse |
 |---|---|---|---|---|---|
-| tau_th (as published) | 0.119 / 0.181 | 0.465 / 0.214 | 0.527 / 0.211 | 0.923 / 0.278 | 13 of 13, 11 of 11 |
-| W_th (P an ordinary predictor) | 0.121 / 0.193 | 0.468 / 0.247 | 0.596 / 0.249 | **1.081** / 0.289 | 9 of 13, 9 of 11 |
+| tau_th (as published) | 0.129 / 0.181 | 0.465 / 0.214 | 0.527 / 0.211 | 0.923 / 0.278 | 13 of 13, 11 of 11 |
+| W_th (P an ordinary predictor) | 0.123 / 0.193 | 0.468 / 0.247 | 0.596 / 0.249 | **1.081** / 0.289 | 9 of 13, 9 of 11 |
 
 Each cell is forest / power law. The direction and most of the magnitude
 survive: the mean paired gap is +0.220 by label and **+0.348** by device, the

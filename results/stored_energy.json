@@ -12,9 +12,9 @@
     "confinement_time": {
       "target": "tau_th_s",
       "cv_rmsle": {
-        "hist_gradient_boosting": 0.11875610930422832,
-        "random_forest": 0.11892789955495273,
-        "ridge_loglinear": 0.18116680943897184,
+        "hist_gradient_boosting": 0.12922228506114863,
+        "random_forest": 0.12922752006615118,
+        "ridge_loglinear": 0.18116699494524838,
         "ipb98y2_analytic": 0.19932029810234295,
         "mean_baseline": 0.8694547860807613
       },
@@ -73,9 +73,9 @@
     "stored_energy": {
       "target": "w_th_j",
       "cv_rmsle": {
-        "random_forest": 0.120926265617909,
-        "hist_gradient_boosting": 0.1255932163871725,
-        "ridge_loglinear": 0.19317179534348553,
+        "random_forest": 0.12294500591556888,
+        "hist_gradient_boosting": 0.12411392568939265,
+        "ridge_loglinear": 0.19317165905358363,
         "mean_baseline": 1.3947074520683842,
         "ipb98y2_analytic": 15.639117100695517
       },
