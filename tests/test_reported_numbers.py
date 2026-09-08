@@ -91,6 +91,7 @@ def artifacts() -> dict[str, object]:
         "mixed": _json("mixed_model.json"),
         "robustness": _json("robustness.json"),
         "device_arm": _json("device_arm.json"),
+        "referee": _json("referee_robustness.json"),
         "boundedness": _json("boundedness.json"),
         "stored": _json("stored_energy.json"),
         "dimensionless": _json("dimensionless.json"),
@@ -1024,6 +1025,21 @@ CLAIMS: tuple[Claim, ...] = (
         _r(4),
         documents=LATE_RESULTS,
     ),
+    # How often the two ensembles keep the order the headline needs. The
+    # per-seed scores were already in the artifact and nothing read them, which
+    # is how "the exact reverse" survived: it holds in 2 of 10 partitions.
+    Claim(
+        "partitions where the forest leads the booster",
+        "2 of 10",
+        lambda a: sum(
+            1
+            for r in a["referee"]["repeated_grouped_cv"]["per_seed"]
+            if r["cv_rmsle_random_forest"] < r["cv_rmsle_hist_gradient_boosting"]
+        ),
+        lambda v: f"{int(v)} of 10",
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"ahead of the booster in {literal}", f"in only {literal}"),
+    ),
     # The two exponents that show what the stored-energy control actually does
     # to the log-linear model: shift one coefficient by one, not remove a term.
     Claim(
@@ -1566,8 +1582,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    116: "One hundred and sixteen",
-    146: "one hundred and forty-six",
+    117: "One hundred and seventeen",
+    147: "one hundred and forty-seven",
 }
 
 

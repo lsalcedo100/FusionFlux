@@ -254,7 +254,7 @@ unseen conditions and report that cross-machine transfer is harder.
 
 So the contribution is not the first report of a reversal. It is that the
 reversal is measured with the device as the held-out unit, on every device the
-database can score; that the ranking inverts exactly rather than narrowing;
+database can score; that the ranking inverts rather than narrowing;
 that the calibrated interval is measured at the same time and fails without any
 signal in its width; and that flexibility and long-range saturation are
 separated, which says which property to avoid rather than which model. Accuracy
@@ -313,7 +313,7 @@ device, and the same models are scored under each. A fourth comparison holds out
 entire size range; its held-out side is 96\% one physical machine, so it is
 reported as a stress test across one large jump rather than as a fourth rung of
 the same ladder, and no claim here rests on it alone. Under the second step the
-ranking of the three primary fitted models is the exact reverse of their ranking
+ranking of the three primary fitted models reverses against their ranking
 under grouped cross-validation, and the best cross-validated model \emph{of
 those three} loses to a log-linear power law on all 13 held-out database labels
 and all 11 physical devices. That qualifier is load-bearing: the best
@@ -585,9 +585,21 @@ IPB98(y,2), analytic     & 0.199 & 0.188 & 1.0$\times$ & n/a & n/a \\
 
 Table~\ref{tab:reversal} is the central result. Among the three primary
 models, a power law, a random forest and a gradient booster, the order under
-one split is the exact reverse of the order under the other. The random forest
+one split reverses against the order under the other. The random forest
 is the best of the three primary models under cross-validation and the worst of
-the three on a label it has not seen. It is not the best model in the paper: the
+the three on a label it has not seen.
+
+How much of that ordering is resolved is worth separating, because one part of
+it is not. What holds in every partition tested is the reversal itself: the
+power law is last of the three under cross-validation and first under
+leave-one-out, and the forest runs the other way. What does not hold is the
+order of the two ensembles between themselves. They are separated here by 0.002,
+which is inside the resolution Sec.~\ref{sec:limitations} states for this
+database, and over the ten shuffled partitions of Sec.~\ref{sec:robustness}
+the forest is ahead of the booster in 2 of 10. The deterministic
+partition is one of the two. So this table should be read as the power law and
+the ensembles trading places, which is what the paper's argument uses, and not
+as a resolved three-way ordering reversing term by term. It is not the best model in the paper: the
 Gaussian process of Sec.~\ref{sec:gp} scores 0.112. Nor does that model reverse.
 On a held-out label it scores 0.218 against the power law's 0.214, which is a
 tie and not a win, but it is nothing like the forest's 0.465, and across the
@@ -1952,6 +1964,7 @@ ranking inversion appears only where the flexible model first wins the
 interpolation split. Secs.~S4 and~S5 carry the construction and the caveats.
 
 \section{Limitations}
+\label{sec:limitations}
 
 What this database can resolve is worth stating once, because several
 comparisons above are close. Two models whose per-label scores differ by less
@@ -2294,8 +2307,8 @@ outputs under \texttt{results/} also record the digest they verified, which
 carries that provenance into the artefact itself.
 
 The prose is bound to those artefacts in the same way.
-\textbf{One hundred and sixteen} of the numbers printed above, and \textbf{one
-hundred and forty-six} across this paper and its Supplementary Material, are tied by test
+\textbf{One hundred and seventeen} of the numbers printed above, and \textbf{one
+hundred and forty-seven} across this paper and its Supplementary Material, are tied by test
 to the field of the generated file they came from, in both directions: if an analysis is rerun and its output moves, the
 rendered value stops matching the printed one and the suite fails; if a number
 in the text is edited, it stops matching the artefact. A figure that disagrees

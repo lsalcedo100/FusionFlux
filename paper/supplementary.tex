@@ -975,6 +975,15 @@ sits just above that range, so the reported margin is if anything mildly
 favourable to the forest, and the interpolation win it later gives up is a
 property of the comparison rather than of one fold assignment.
 
+One ordering inside that sweep is not resolved and the main text says so. The
+two ensembles are separated by 0.002 in Table~1 of the main text, and across
+these ten partitions the forest is ahead of the gradient booster in only 2 of
+10, and the deterministic partition is one of the two. What every partition
+agrees on is the power law's position, last of the three under cross-validation
+and first under leave-one-out, which is the comparison the paper's argument
+rests on. Which of the two ensembles is nominally best under cross-validation is
+a coin the partition tosses, and no claim here turns on it.
+
 \paragraph{Tuning the flexible models.} Every score above uses the
 prespecified, untuned settings of Sec.~2 of the main text, which leaves open
 whether the ensembles lost only because they were not hyperparameter-tuned. That is tested by giving both a grid search
