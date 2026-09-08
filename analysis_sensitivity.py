@@ -82,6 +82,11 @@ PUBLISHED_SCALINGS: dict[str, dict[str, float]] = {
 # that rather than on a substitute for it.
 BOUNDARY_ELONGATION = "kappa_boundary"
 
+# Boundary indentation, which DB5.2.3 carries and STD5 does not. A boundary with
+# any of it is not convex, and the inequality kappa_a <= kappa that makes a
+# sub-unity ratio look like a data defect holds only for convex boundaries.
+INDENTATION = "indentation"
+
 # The upper bound the superseded shape model gave for kappa/kappa_a. Kept as a
 # constant so the fraction of rows that exceed it is a measured number the paper
 # can quote, rather than a claim about a model nobody can rerun.
@@ -153,11 +158,13 @@ def dataset_with_triangularity() -> pd.DataFrame:
         )
     dataset = dataset.copy()
     dataset["one_plus_delta"] = _check_one_plus_delta(delta)
-    dataset[BOUNDARY_ELONGATION] = pd.to_numeric(
-        replication.db523_columns(("KAPPA",))["KAPPA"], errors="coerce"
-    )
+    carried = replication.db523_columns(("KAPPA", "INDENT"))
+    dataset[BOUNDARY_ELONGATION] = pd.to_numeric(carried["KAPPA"], errors="coerce")
     if dataset[BOUNDARY_ELONGATION].isna().any():
         raise AssertionError("DB5.2.3 did not supply a boundary elongation for every analysed row")
+    # Indentation is what decides whether a boundary is convex, and therefore
+    # whether kappa < kappa_a is possible at all. PBX-M ran bean-shaped.
+    dataset[INDENTATION] = pd.to_numeric(carried["INDENT"], errors="coerce")
     return dataset
 
 
@@ -234,6 +241,8 @@ def elongation_convention(dataset: pd.DataFrame) -> dict[str, Any]:
     above = np.isin(labels, list(cut.test_machines))
 
     ratio = (dataset[BOUNDARY_ELONGATION] / dataset["kappa"]).to_numpy(dtype=float)
+    indentation = dataset[INDENTATION].to_numpy(dtype=float)
+    indented = np.isfinite(indentation) & (indentation > 0.0)
     per_label_ratio = {
         str(machine): float(np.median(ratio[labels == machine])) for machine in sorted(set(labels))
     }
@@ -243,9 +252,24 @@ def elongation_convention(dataset: pd.DataFrame) -> dict[str, Any]:
             "min": float(np.min(ratio)),
             "max": float(np.max(ratio)),
             "fraction_below_one": float(np.mean(ratio < 1.0)),
+            "fraction_below_one_beyond_rounding": float(np.mean(ratio < 1.0 - 5e-4)),
             "fraction_above_shape_model_ceiling": float(np.mean(ratio > SHAPE_MODEL_CEILING)),
             "shape_model_ceiling": SHAPE_MODEL_CEILING,
             "per_label_median": per_label_ratio,
+        },
+        # Where a sub-unity ratio comes from. A convex boundary cannot produce
+        # one, so the rows that do are either wrong or not convex, and the
+        # database says which.
+        "indentation": {
+            "n_rows_indented": int(indented.sum()),
+            "median_ratio_where_indented": float(np.median(ratio[indented])) if indented.any() else None,
+            "labels_indented": sorted(
+                {str(m) for m in dataset[hdb5.TOKAMAK_LABEL_COLUMN].to_numpy()[indented]}
+            ),
+            "per_label_median": {
+                str(machine): float(np.nanmedian(indentation[labels == machine]))
+                for machine in sorted(set(labels))
+            },
         },
         "laws": {},
     }
@@ -404,7 +428,15 @@ def main() -> None:
     print(
         f"\n--- measured kappa/kappa_a: median {elongation['conversion_ratio']['median']:.4f}, "
         f"max {elongation['conversion_ratio']['max']:.4f}, "
-        f"{elongation['conversion_ratio']['fraction_below_one']:.1%} below unity ---"
+        f"{elongation['conversion_ratio']['fraction_below_one']:.1%} below unity, "
+        f"{elongation['conversion_ratio']['fraction_below_one_beyond_rounding']:.1%} of them "
+        f"beyond rounding ---"
+    )
+    indentation = cast("dict[str, Any]", elongation["indentation"])
+    print(
+        f"  indented rows: {indentation['n_rows_indented']} on "
+        f"{indentation['labels_indented']}, median ratio "
+        f"{indentation['median_ratio_where_indented']:.3f}"
     )
     for name, row in cast("dict[str, Any]", elongation["laws"]).items():
         print(

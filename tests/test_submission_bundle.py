@@ -134,10 +134,22 @@ def test_the_abstract_keeps_its_symbols(sheet: str) -> None:
     previous version of this.
     """
     abstract = sheet.split("ABSTRACT")[1].split("KEYWORDS")[0]
-    assert "ρ" in abstract, "the correlations lost their rho"
-    assert "×" in abstract, "a multiplication sign was dropped"
+    assert "rho" in abstract, "the correlations lost their rho"
+    assert "1.82x" in abstract, "a multiplication sign was dropped"
     for command in ("\\rho", "\\times", "\\textbf", "$"):
         assert command not in abstract, f"{command} survived into the plain-text abstract"
+
+
+def test_the_pasted_sheet_is_ascii(sheet: str) -> None:
+    """ScholarOne's fields are not Unicode-safe, and the abstract is pasted whole.
+
+    A rho or a multiplication sign that arrives as a replacement character turns
+    the first thing an editor reads into "at ?=+0.85". The whole sheet is
+    checked, not only the abstract, because the same box takes the title and
+    keywords.
+    """
+    offending = sorted({character for character in sheet if ord(character) > 127})
+    assert not offending, f"non-ASCII characters in the pasted sheet: {offending}"
 
 
 def test_the_abstract_matches_the_paper(sheet: str) -> None:

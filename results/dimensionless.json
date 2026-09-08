@@ -68,5 +68,132 @@
       }
     }
   },
+  "device_identity": {
+    "within_device_variance": {
+      "log_ip_ma": 0.1799481023540619,
+      "log_bt_t": 0.3414614830522151,
+      "log_ne_line_1e19_m3": 0.5705638737091269,
+      "log_p_loss_mw": 0.34099040951271997,
+      "log_r_m": 0.000960462390560239,
+      "log_kappa": 0.061165544822903095,
+      "log_inverse_aspect_ratio": 0.049011197873097614,
+      "log_m_eff_amu": 0.7196868814500917,
+      "log_a_m": 0.01079983199849883,
+      "log_rho_star": 0.2655857471674261,
+      "log_beta": 0.35366968115977754,
+      "log_nu_star": 0.6655869945641272,
+      "log_q_cyl": 0.7040360964952321
+    },
+    "device_recovery": {
+      "accuracy": 0.9993562922433216,
+      "majority_baseline": 0.42291599613775344
+    },
+    "arms": {
+      "nine_engineering_features": {
+        "n_features": 9,
+        "features": [
+          "log_ip_ma",
+          "log_bt_t",
+          "log_ne_line_1e19_m3",
+          "log_p_loss_mw",
+          "log_r_m",
+          "log_kappa",
+          "log_inverse_aspect_ratio",
+          "log_m_eff_amu",
+          "log_a_m"
+        ],
+        "target": "tau_th_s",
+        "cv_rmsle": {
+          "hist_gradient_boosting": 0.12922228506114863,
+          "random_forest": 0.12922752006615118,
+          "ridge_loglinear": 0.18116699494524838,
+          "ipb98y2_analytic": 0.19932029810234295,
+          "mean_baseline": 0.8694547860807613
+        },
+        "cv_gain_of_forest": 0.2866939140586515,
+        "by_label": {
+          "n_units": 13,
+          "n_forest_worse": 13,
+          "mean_difference": 0.25093190708930335,
+          "forest_mean_rmsle": 0.46482885913315636,
+          "power_law_mean_rmsle": 0.21389695204385298
+        },
+        "by_device": {
+          "n_units": 11,
+          "n_forest_worse": 11,
+          "mean_difference": 0.3150635057690184,
+          "forest_mean_rmsle": 0.5264647040633513,
+          "power_law_mean_rmsle": 0.21140119829433282
+        }
+      },
+      "within_device_features_only": {
+        "n_features": 4,
+        "features": [
+          "log_ip_ma",
+          "log_bt_t",
+          "log_ne_line_1e19_m3",
+          "log_p_loss_mw"
+        ],
+        "target": "tau_th_s",
+        "cv_rmsle": {
+          "random_forest": 0.1565881254609474,
+          "hist_gradient_boosting": 0.1610509119840613,
+          "ipb98y2_analytic": 0.19932029810234295,
+          "ridge_loglinear": 0.31510405445803435,
+          "mean_baseline": 0.8694547860807613
+        },
+        "cv_gain_of_forest": 0.503058995130125,
+        "by_label": {
+          "n_units": 13,
+          "n_forest_worse": 6,
+          "mean_difference": -0.03340923474300236,
+          "forest_mean_rmsle": 0.44381347135321064,
+          "power_law_mean_rmsle": 0.47722270609621315
+        },
+        "by_device": {
+          "n_units": 11,
+          "n_forest_worse": 5,
+          "mean_difference": -0.01811441809322033,
+          "forest_mean_rmsle": 0.5008000646805469,
+          "power_law_mean_rmsle": 0.5189144827737674
+        }
+      },
+      "dimensionless_groups": {
+        "n_features": 7,
+        "features": [
+          "log_rho_star",
+          "log_beta",
+          "log_nu_star",
+          "log_q_cyl",
+          "log_inverse_aspect_ratio",
+          "log_kappa",
+          "log_m_eff_amu"
+        ],
+        "target": "b_tau",
+        "cv_rmsle": {
+          "random_forest": 0.22891169927749902,
+          "hist_gradient_boosting": 0.23660157123319664,
+          "ridge_loglinear": 0.3219072679120257,
+          "ipb98y2_analytic": 0.7801460769282462,
+          "mean_baseline": 1.0803703067930284
+        },
+        "cv_gain_of_forest": 0.28888931038345333,
+        "by_label": {
+          "n_units": 13,
+          "n_forest_worse": 11,
+          "mean_difference": 0.07354164315513384,
+          "forest_mean_rmsle": 0.5122573369516299,
+          "power_law_mean_rmsle": 0.4387156937964961
+        },
+        "by_device": {
+          "n_units": 11,
+          "n_forest_worse": 9,
+          "mean_difference": 0.1301531539347136,
+          "forest_mean_rmsle": 0.5711024110821169,
+          "power_law_mean_rmsle": 0.4409492571474033
+        }
+      }
+    }
+  },
   "dataset_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b"
 }

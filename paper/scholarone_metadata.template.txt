@@ -139,6 +139,13 @@ FILES
   BEFORE UPLOADING rather than trusting this paragraph, which is what the
   previous one earned.
 
+  UPLOAD THE LINE-NUMBERED BUILD. `make review-pdf` writes build/review/, which
+  is these two documents with lineno switched on. Referees on a manuscript this
+  long will want to write "p. 23, line 6" and cannot without them. The committed
+  PDFs deliberately have no line numbers, because the same source produces the
+  PDF the DOI archives, where numbered lines are wrong; the review target
+  switches them on without touching either committed file.
+
   ./anonymous/ is still written and still verified clean, because the check
   that it is anonymous is worth keeping green and because a revision could go
   to a journal that wants it. It is not what you upload here.

@@ -167,3 +167,81 @@ def test_the_size_cut_is_reported_as_separated_in_dimensionless_space(committed:
     assert groups["log_nu_star"]["fraction_of_a_training_sd"] > 0.5
     # Beta is the one that does stay put, which is why it is named separately.
     assert groups["log_beta"]["iqr_overlap_fraction"] > 0.5
+
+
+# --- does the reversal need a coordinate that names the machine? ------------
+#
+# This is the objection that would have explained Table 1 without any appeal to
+# long-range behaviour, and the module answers it with three arms rather than
+# one. The middle arm exists to be reported as inconclusive, so a test that only
+# checked the conclusion would miss the point of it.
+
+
+def test_the_engineering_features_really_do_name_the_machine(committed: dict) -> None:
+    identity = committed["device_identity"]
+    variance = identity["within_device_variance"]
+    assert variance["log_r_m"] < 0.01
+    assert variance["log_a_m"] < 0.05
+    recovery = identity["device_recovery"]
+    assert recovery["accuracy"] > 0.95
+    assert recovery["accuracy"] > 2 * recovery["majority_baseline"]
+
+
+def test_the_dimensionless_groups_do_not(committed: dict) -> None:
+    """The premise of the third arm: these coordinates move inside a device."""
+    variance = committed["device_identity"]["within_device_variance"]
+    for group in ("log_rho_star", "log_beta", "log_nu_star", "log_q_cyl"):
+        assert variance[group] > 0.2, group
+
+
+def test_deleting_the_device_constant_features_is_inconclusive(committed: dict) -> None:
+    """It kills the reversal, and it kills the power law's size dependence with it.
+
+    Reported because it looks decisive and is not. The assertion is both halves:
+    the reversal goes, and the power law gets much worse, which is why the arm
+    cannot separate leakage from physics.
+    """
+    arms = committed["device_identity"]["arms"]
+    trimmed = arms["within_device_features_only"]
+    full = arms["nine_engineering_features"]
+    assert trimmed["by_device"]["mean_difference"] < 0
+    assert (
+        trimmed["by_device"]["power_law_mean_rmsle"]
+        > 2 * full["by_device"]["power_law_mean_rmsle"]
+    )
+
+
+def test_the_reversal_survives_in_dimensionless_coordinates(committed: dict) -> None:
+    """The claim Sec. 4.2 makes, and the one the paper's headline now rests on.
+
+    Direction and counts have to hold, and the margin is allowed to be smaller:
+    the paper says explicitly that part of the engineering-space gap is device
+    identity and that this is the conservative reading.
+    """
+    arms = committed["device_identity"]["arms"]
+    groups = arms["dimensionless_groups"]
+    full = arms["nine_engineering_features"]
+
+    assert groups["cv_gain_of_forest"] > 0.2
+    for unit in ("by_label", "by_device"):
+        assert groups[unit]["mean_difference"] > 0
+        assert groups[unit]["n_forest_worse"] > groups[unit]["n_units"] / 2
+        assert groups[unit]["mean_difference"] < full[unit]["mean_difference"]
+
+
+def test_the_dimensionless_target_is_the_dimensionless_confinement_time() -> None:
+    """B*tau, not tau: regressing tau on dimensionless groups mixes the two."""
+    if not hdb5.default_hdb5_path().exists():
+        pytest.skip("HDB5 STD5 not downloaded; run `python3 hdb5.py download`.")
+    framed = ad.with_dimensionless_regression_columns(_framed())
+    expected = framed["bt_t"] * framed[hdb5.TARGET_COLUMN]
+    assert framed[ad.DIMENSIONLESS_TARGET].to_numpy() == pytest.approx(expected.to_numpy())
+
+
+def test_the_safety_factor_is_not_another_device_name() -> None:
+    """q completes the group list and would be useless if it were device-constant."""
+    if not hdb5.default_hdb5_path().exists():
+        pytest.skip("HDB5 STD5 not downloaded; run `python3 hdb5.py download`.")
+    framed = ad.with_dimensionless_regression_columns(_framed())
+    share = ad.within_device_variance(framed, ("log_q_cyl",))["log_q_cyl"]
+    assert share > 0.5

@@ -156,8 +156,7 @@ of it, tree ensembles included, and the random forest goes from 35\% to 88\%.
 Across the size cut none does. Neither recalibration procedure tested restores
 near-nominal coverage there, because every calibration unit is smaller than
 every test unit, and scaling the interval by extrapolation distance recovers
-only part of the gap (3\% to 40\% for the forest). A repair that stops exactly where the diagnosis says it should is
-stronger evidence for the diagnosis than one that worked everywhere would be.
+only part of the gap (3\% to 40\% for the forest).
 
 \paragraph{The same calibration over physical devices.} The scheme above
 calibrates on database labels, so for a target of JET-ILW the calibration set
@@ -759,6 +758,7 @@ equal-tailed posterior intervals on $\log\tau$ that include the fitted
 observation-noise term, exponentiated to $\tau$.
 
 \section{Per-label scores and the eligibility-threshold sweep}
+\label{supp:permachine}
 
 Both results are stated in prose in the main text. The tables are here for a
 reader who wants the per-unit numbers behind them:
@@ -945,6 +945,140 @@ correlated through the training set even where the held-out devices are
 distinct. The descriptive statement carries the claim on its own. The forest is
 worse on every physical device scored, and the paired interval on the per-device
 difference excludes zero.
+
+\section{Four choices that do not carry the reversal}
+\label{supp:choices}
+
+\paragraph{Where the row threshold is set.} The 13-of-13 count is reported at a
+30-row eligibility threshold, which is a choice, so it is swept.
+Sec.~\ref{supp:permachine} scores leave-one-label-out at 10, 20,
+30 and 50 rows. Only which labels are \emph{scored} changes: every label stays in every
+training fold at every threshold, so the models being compared do not change.
+The power law wins every scored label at 20, 30 and 50 rows, and 14 of 15 at 10
+rows, where the exception is TCV. TCV carries 11 rows, which is why it sits
+below the threshold in the first place, and a per-label log-RMSE over 11 rows
+is not a quantity this paper would report on its own. The mean gap moves between
+$+0.211$ and $+0.251$ across the four thresholds and the sign test stays below
+$10^{-3}$ throughout, so the headline does not depend on where the line is
+drawn.
+
+\paragraph{One partition, or any partition.} The cross-validation column comes
+from a single deterministic \texttt{GroupKFold} assignment of discharges to five
+folds. Since this paper is about validation protocol, whether the 29\% margin is
+peculiar to that one partition is a fair question. Repeating the comparison over
+ten shuffled assignments of the same discharges into the same number of folds
+gives a mean forest advantage of 27.8\% over the power law, ranging from 27.0\%
+to 28.5\%, with the forest ahead in all ten. The deterministic partition's 29.5\%
+sits just above that range, so the reported margin is if anything mildly
+favourable to the forest, and the interpolation win it later gives up is a
+property of the comparison rather than of one fold assignment.
+
+\paragraph{Tuning the flexible models.} Every score above uses the
+prespecified, untuned settings of Sec.~2 of the main text, which leaves open
+whether the ensembles lost only because they were not hyperparameter-tuned. That is tested by giving both a grid search
+nested inside each training fold: three grouped inner folds by discharge over
+the training rows only, so the held-out discharge fold, label or size cut
+never takes part in choosing a hyperparameter. The forest searched
+\texttt{max\_features} over $\{1.0, 0.5, \text{sqrt}\}$ and
+\texttt{min\_samples\_leaf} over $\{1, 5\}$, the booster
+\texttt{learning\_rate} over $\{0.05, 0.1\}$ and \texttt{max\_leaf\_nodes} over
+$\{15, 31\}$.
+
+The search does real work on the forest and changes nothing about the
+conclusion. It moved away from the baseline \texttt{max\_features}~$=1.0$,
+\texttt{min\_samples\_leaf}~$=1$ setting in 13 of the 19 folds, and it helps where
+the paper says a flexible model should help: cross-validation improves from
+0.128 to 0.126 and the leave-one-label-out mean from 0.465 to 0.403. At the
+ITER-size-matched cut it makes the forest \emph{worse}, 0.938 to 1.121, against the
+power law's 0.278. The booster's search returned scikit-learn's defaults in all
+19 folds, so its numbers are unchanged.
+
+The inner folds above group by discharge, which is how a practitioner would
+ordinarily tune. Grouping them by whole machine instead matches the way the
+model is deployed, and it helps both models: the forest falls to 0.376 and the
+booster to 0.350. Both remain well above the power law's 0.214, so the reversal
+survives either selection procedure.
+
+Tuning therefore widens the interpolation margin that later inverts and does
+not repair the extrapolation failure, which is what the training-target bound
+predicts: no setting of these hyperparameters moves a ceiling that comes from
+averaging training targets.
+
+\paragraph{Two conventions this paper does not follow.} Neither the population
+nor the weighting used above matches how the ITPA scalings were produced, and
+both are choices rather than findings, so both are measured.
+
+IPB98(y,2) was fitted on a selection that excluded spherical tokamaks; this
+database does not, and MAST and NSTX are two of the 13 scored labels and two of
+the four most distant. the ITER-size-matched cut of the main text controls for this only at the size
+cut. Dropping every label whose median inverse aspect ratio exceeds 0.5, which
+removes MAST, NSTX and START and 232 rows, from training and scoring alike,
+leaves the reversal intact: the forest is worse than the power law on all 11
+remaining labels, mean gap $+0.182$, exact $p=9.8\times10^{-4}$, at 0.395
+against the power law's 0.212. The inversion is not an artifact of including
+the spherical devices.
+
+The weighting arm is the one that qualifies the headline. Every fit above
+weights rows equally, so JET and ASDEX Upgrade, which supply 77\% of them, set
+most of what each model learns. Refitting every model with each label weighted
+equally hurts the power law more than the forest, 0.214 to 0.259 against 0.465
+to 0.447, and the win count falls from 13 of 13 to \textbf{12 of 13}
+($p=3.4\times10^{-3}$, mean gap $+0.188$). The label that changes hands is
+AUG-W, whose unweighted margin was the second narrowest of the thirteen at
+$+0.012$, behind JT-60U's $+0.006$ which does not change hands, and
+which moves to $-0.067$. The direction and its significance survive the
+reweighting; unanimity does not, and the 13 of 13 quoted throughout is the
+unweighted count.
+
+\section{The same distance in dimensionless coordinates}
+\label{supp:dimensionless}
+
+ Organising anything
+in this field by engineering variables invites one objection, and it is the
+objection Hall \emph{et al.}~\cite{hall26} have raised in a conference presentation: the weak size dependence in
+this database may come from a subset localised in \emph{dimensionless} space
+rather than from size, in which case a distance in engineering space measures a
+shadow of the thing that matters. That is checkable here rather than only
+citable. The Connor--Taylor constraints of Sec.~8 of the main text are
+derived in code from the scalings of $\rho^{*}$, $\beta$ and $\nu^{*}$, so the
+group definitions are already written down, and the stored energy joined across
+in Sec.~4.2 of the main text supplies the temperature they need. Placing every
+row by
+\begin{equation}
+\rho^{*}\sim T^{1/2}B^{-1}L^{-1},\qquad
+\beta\sim nTB^{-2},\qquad
+\nu^{*}\sim nLT^{-2},
+\label{eq:supp-groups-empirical}
+\end{equation}
+with $T\sim W_{\mathrm{th}}/(nV)$ and $V\sim Ra^{2}\kappa$, and repeating the
+distance construction above on those three coordinates instead of the nine,
+gives a second ranking of the 13 labels. Multiplicative constants are dropped
+throughout and cannot matter, since every quantity here is a difference of mean
+log-vectors.
+
+The two rankings agree at $\rho=+0.78$, and the diagnosis does not depend on
+which is used. On the 6214 rows a dimensionless placement is possible for, the
+forest's per-label error tracks dimensionless distance at $\rho=+0.77$ against
+$+0.79$ for engineering distance, the booster at $+0.35$ against $+0.51$, and
+the power law is flat against both, $-0.04$ and $-0.06$. The headline $+0.85$ is
+the engineering figure on all 6228 rows; dropping the 14 rows with no stored
+energy moves it to $+0.79$, and the coordinate change then moves it by 0.02.
+The distance reading above survives translation into the coordinates the
+objection is stated in.
+
+The size cut does not fare as well, and this is where the objection lands. At
+the ITER-size-matched cut the two sides are separated in dimensionless space as
+well as in size: the interquartile ranges of $\log\rho^{*}$ do not overlap at
+all and its median moves by 1.21 training standard deviations, $\log\nu^{*}$
+overlaps by 0.26 at 0.85 standard deviations, and only $\log\beta$ stays put,
+overlapping by 0.69 at 0.22. Larger machines in this database run at smaller
+normalised gyroradius and lower collisionality, which is physics rather than an
+artefact, and it means the cut is not a size boundary with everything else held
+fixed. Every result scored across it is therefore transfer across a joint
+displacement in size, $\rho^{*}$ and $\nu^{*}$, and the paper says so rather
+than describing it as a size extrapolation alone. The leave-one-device-out
+comparison of Sec.~4 of the main text carries no such confound, which is the
+second reason it and not the cut is the claim this paper rests on.
 
 \begin{thebibliography}{99}
 \small\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}

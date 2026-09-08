@@ -71,6 +71,7 @@
       "min": 0.6708110161613257,
       "max": 1.3413209183590709,
       "fraction_below_one": 0.06679511881824021,
+      "fraction_below_one_beyond_rounding": 0.019588953114964676,
       "fraction_above_shape_model_ceiling": 0.16441875401412973,
       "shape_model_ceiling": 1.11,
       "per_label_median": {
@@ -92,6 +93,34 @@
         "TCV": 1.0310765786422045,
         "TDEV": 0.973386717224269,
         "TFTR": 1.000092164150026
+      }
+    },
+    "indentation": {
+      "n_rows_indented": 60,
+      "median_ratio_where_indented": 0.7395702986574471,
+      "labels_indented": [
+        "D3D",
+        "PBXM"
+      ],
+      "per_label_median": {
+        "ASDEX": 0.0,
+        "AUG": 0.0,
+        "AUGW": 0.0,
+        "CMOD": 0.0,
+        "COMPASS": 0.0,
+        "D3D": 0.0,
+        "JET": 0.0,
+        "JETILW": -9999999.0,
+        "JFT2M": 0.0,
+        "JT60U": 0.0,
+        "MAST": 0.0,
+        "NSTX": 0.0,
+        "PBXM": 0.1538,
+        "PDX": 0.0,
+        "START": 0.0,
+        "TCV": 0.0,
+        "TDEV": 0.0,
+        "TFTR": 0.0
       }
     },
     "laws": {

@@ -387,3 +387,52 @@ def test_both_newer_laws_beat_the_reference_at_the_size_cut(committed: dict) -> 
     reference = published["IPB98(y,2)"]["iter_matched_cut"]
     for name in ("ITPA20", "ITPA20-IL"):
         assert published[name]["iter_matched_cut"] < reference
+
+
+def test_the_sub_unity_elongation_ratios_are_indentation_not_a_data_defect(
+    committed: dict,
+) -> None:
+    """A boundary elongation below the areal one looks like a defect and is not.
+
+    The inequality kappa_a <= kappa holds for a *convex* boundary. PBX-M ran
+    indented, bean-shaped plasmas, so it is not convex, and DB5.2.3 records the
+    indentation that says so. This is asserted because the natural reading of
+    the ratio is that the column is wrong, and acting on that reading would mean
+    reporting a defect to the database group that is not there.
+    """
+    elongation = committed["elongation_convention"]
+    indentation = elongation["indentation"]
+    assert "PBXM" in indentation["labels_indented"]
+    assert indentation["per_label_median"]["PBXM"] > 0.1
+    assert indentation["median_ratio_where_indented"] < 0.8
+
+    # Everything else below unity is rounding on machines that ran circular.
+    ratio = elongation["conversion_ratio"]
+    assert ratio["fraction_below_one_beyond_rounding"] < ratio["fraction_below_one"] / 2
+
+
+def test_only_indented_machines_have_a_ratio_meaningfully_below_one() -> None:
+    """The claim in prose, checked against the rows rather than asserted."""
+    if not hdb5.default_hdb5_path().exists():
+        pytest.skip("HDB5 STD5 not downloaded; run `python3 hdb5.py download`.")
+    dataset = asens.dataset_with_triangularity()
+    ratio = (dataset[asens.BOUNDARY_ELONGATION] / dataset["kappa"]).to_numpy()
+    indentation = dataset[asens.INDENTATION].to_numpy()
+    labels = dataset[hdb5.TOKAMAK_LABEL_COLUMN].to_numpy()
+
+    # Materially below unity, not merely below it: the threshold is 5%, because
+    # the rows that are below by less than that sit on near-circular machines and
+    # are within what the two columns' precision explains. Every row past it must
+    # be on a machine the database records as indented.
+    material = ratio < 0.95
+    assert material.any()
+    indented_labels = {
+        str(label)
+        for label in labels[np.isfinite(indentation) & (indentation > 0.0)]
+    }
+    assert {str(label) for label in labels[material]} <= indented_labels
+
+    # And the rest really are small: nothing else is more than 5% below.
+    others = ratio[(ratio < 1.0) & ~material]
+    assert others.size > 0
+    assert others.min() > 0.95

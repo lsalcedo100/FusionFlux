@@ -189,14 +189,30 @@ FIGURES = _included_figures()
 
 TEMPLATE = PAPER / "scholarone_metadata.template.txt"
 
-# The abstract's whole mathematical vocabulary. Unicode rather than a spelled-out
-# name, because the field renders it and "rho" beside "=+0.85" reads as a typo.
-# The abstract's whole mathematical vocabulary. Unicode rather than a spelled-out
-# name, because the field renders it and "rho" beside "=+0.85" reads as a typo.
+# The abstract's whole mathematical vocabulary, spelled out in ASCII. It used to
+# render as Unicode, on the reasoning that the field displays it and "rho"
+# beside "=+0.85" reads as a typo. That was the wrong trade: ScholarOne's
+# abstract box is not a Unicode-safe field, and a rho or a multiplication sign
+# that arrives as a replacement character turns the first thing an editor reads
+# into "at ?=+0.85". A spelled-out symbol is ugly and survives.
+#
 # The keys are escaped before use: as a regex, "\\rho" is a carriage return
 # followed by "ho" and matches nothing, which is how an earlier version of this
 # silently dropped every symbol in the abstract.
-MATHS = {r"\rho": "\u03c1", r"\times": "\u00d7"}
+MATHS = {r"\rho": "rho", r"\times": "x"}
+
+# Everything else the LaTeX can produce that is not ASCII. En dashes come from
+# "--" in names like Connor--Taylor, and the typeset minus is not a hyphen.
+NON_ASCII = {
+    "\u2013": "-",
+    "\u2014": "--",
+    "\u2212": "-",
+    "\u2018": "'",
+    "\u2019": "'",
+    "\u201c": '"',
+    "\u201d": '"',
+    "\u00a0": " ",
+}
 
 
 def _plain(latex: str) -> str:
@@ -216,7 +232,9 @@ def _plain(latex: str) -> str:
     # Emptied, not spaced: "\\texttt{addr}." must not become "addr ."
     latex = re.sub(r"[{}]", "", latex)
     latex = latex.replace("``", '"').replace("''", '"')
-    latex = latex.replace("---", "\u2014").replace("--", "\u2013")
+    latex = latex.replace("---", "--").replace("--", "-")
+    for glyph, plain in NON_ASCII.items():
+        latex = latex.replace(glyph, plain)
     return re.sub(r"\s+", " ", latex).strip()
 
 

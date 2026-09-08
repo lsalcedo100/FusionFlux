@@ -2402,6 +2402,72 @@ after a `StandardScaler`. Run through the same pipeline as its siblings it
 scored 2.97 at the size cut instead of 0.186, and looked like a finding.
 `tests/test_mechanism.py` pins the pipeline choice for that reason.
 
+## Result 20: do the features name the machine?
+
+`analysis_dimensionless.py`, `results/dimensionless.json`.
+
+The objection this answers would explain Result 4 without any appeal to
+long-range behaviour. Four of the nine features barely move once a device is
+fixed: major radius carries **0.1%** of its log variance within devices, minor
+radius 1.1%, aspect ratio 4.9%, elongation 6.1%. A random forest classifier
+recovers the device from the nine log features at **99.9%** under the same
+discharge-grouped split used throughout, against a 42.3% majority baseline. So
+under grouped CV a tree can split on those coordinates and fit a per-device
+offset, which is a lookup table: worth a great deal in sample, worth nothing on
+a machine not in it.
+
+Three arms, and the middle one is reported because it looks decisive and is not.
+
+| features | target | CV gain | forest worse, labels | forest worse, devices |
+|---|---|---|---|---|
+| nine engineering | tau | +28.7% | 13/13 (+0.251) | 11/11 (+0.315) |
+| four that vary within a device | tau | +50.3% | 6/13 (-0.033) | 5/11 (-0.018) |
+| seven dimensionless groups | B*tau | **+28.9%** | **11/13 (+0.074)** | **9/11 (+0.130)** |
+
+**Deleting the device-constant features kills the reversal and cannot settle
+it.** Those columns carry the size dependence, and the size dependence is what
+the power law extrapolates through, so the control removes the suspected leak
+and the physics under test together. The power law's held-out score more than
+doubles, 0.214 to 0.477. The arm shows the reversal needs features carrying
+size. It cannot show whether that is because they carry size or because they
+name the machine.
+
+**The dimensionless coordinates separate exactly those two things.** In
+(rho*, beta, nu*, q, eps, kappa, M) the size, field and density dependence is
+retained and no coordinate is a device label: rho* moves 26.6% within a device,
+beta 35.4%, nu* 66.6%, q 70.4%, against major radius's 0.1%. Regressing B*tau on
+those seven groups, the forest wins cross-validation by 28.9%, against 28.7% on
+the engineering features, and loses on 11 of 13 labels and 9 of 11 devices.
+
+So the reversal is not an artifact of the features naming the machine, and it is
+not established at the strength the engineering-space numbers suggest. Part of
++0.315 is device identity; +0.130 is what survives where identity is
+unavailable. Both are reported and the dimensionless one is the conservative
+reading. Two limits: the temperature comes from the stored energy of Result 16,
+so this is scored on 6214 rows; and eps and kappa still move only 5% and 6%
+within a device, so these coordinates are cleaner than the engineering ones
+rather than clean.
+
+## Result 21: the sub-unity elongation ratios are indentation
+
+`analysis_sensitivity.py`, `results/sensitivity.json`.
+
+Result 16's elongation check found 7% of rows with a boundary elongation below
+the areal one, which is impossible for a **convex** boundary and reads as a
+defect in the delivered column. It is not one.
+
+Only 2.0% are below unity by more than rounding, and all but PBX-M's 59 rows sit
+within 3.5% of unity on near-circular machines. PBX-M runs 0.67 to 0.80, median
+**0.739**. PBX-M ran indented, bean-shaped plasmas: its boundary is not convex
+and the inequality does not apply to it. DB5.2.3 records this directly. Of the
+analysed rows, PBX-M is the only label with a median indentation above zero, at
+**0.154**, and the 60 rows carrying any indentation have a median ratio of
+**0.740**.
+
+The column is not defective on those rows. The parametrised boundary is the
+wrong shape for them, which is the same point the ratio makes everywhere else
+and is here checkable against a third column.
+
 ## Limitations
 
 - **The refit population is not IPB98's population.** No ITPA standard-set

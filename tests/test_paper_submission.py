@@ -305,6 +305,8 @@ EXPECTED_POINTERS = {
     8: "Per-label scores and the eligibility-threshold sweep",
     9: "A power law with a bounded correction",
     10: "The estimator this split design is usually paired with",
+    11: "Four choices that do not carry the reversal",
+    12: "The same distance in dimensionless coordinates",
 }
 
 

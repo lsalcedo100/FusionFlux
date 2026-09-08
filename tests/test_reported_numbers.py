@@ -673,7 +673,7 @@ CLAIMS: tuple[Claim, ...] = (
             a, "iter_matched_cut", "groups", "log_rho_star", "fraction_of_a_training_sd"
         ),
         _r(2),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     # -- Sec. 11.1: the third mean function, which stops the ablation being an identity --
     Claim(
@@ -704,6 +704,79 @@ CLAIMS: tuple[Claim, ...] = (
         lambda a: _forecast(a, "ipb98y2_analytic"),
         _r(3),
         documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+    ),
+    # -- Sec. 4.2: do the features name the machine? -----------------------
+    Claim(
+        "major radius, share of log variance within a device",
+        "0.1%",
+        lambda a: _dimensionless(a, "device_identity", "within_device_variance", "log_r_m"),
+        _pct(1),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "device recovered from the nine features",
+        "99.9%",
+        lambda a: _dimensionless(a, "device_identity", "device_recovery", "accuracy"),
+        _pct(1),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "forest interpolation gain in dimensionless coordinates",
+        "28.9%",
+        lambda a: _dimensionless(
+            a, "device_identity", "arms", "dimensionless_groups", "cv_gain_of_forest"
+        ),
+        _pct(1),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "labels the forest loses in dimensionless coordinates",
+        "11 of 13",
+        lambda a: _dimensionless(
+            a, "device_identity", "arms", "dimensionless_groups", "by_label", "n_forest_worse"
+        ),
+        lambda v: f"{int(v)} of 13",
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "devices the forest loses in dimensionless coordinates",
+        "9 of 11",
+        lambda a: _dimensionless(
+            a, "device_identity", "arms", "dimensionless_groups", "by_device", "n_forest_worse"
+        ),
+        lambda v: f"{int(v)} of 11",
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "forest interpolation gain on the within-device features only",
+        "50.3%",
+        lambda a: _dimensionless(
+            a, "device_identity", "arms", "within_device_features_only", "cv_gain_of_forest"
+        ),
+        _pct(1),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    # -- Sec. 4.2: the sub-unity elongation ratios are indentation ---------
+    Claim(
+        "PBX-M median indentation",
+        "0.154",
+        lambda a: a["sensitivity"]["elongation_convention"]["indentation"]["per_label_median"]["PBXM"],
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "elongation ratio where the boundary is indented",
+        "0.740",
+        lambda a: a["sensitivity"]["elongation_convention"]["indentation"]["median_ratio_where_indented"],
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+    ),
+    Claim(
+        "rows below unity beyond rounding",
+        "2.0%",
+        lambda a: _elongation(a, "conversion_ratio", "fraction_below_one_beyond_rounding"),
+        _pct(1),
+        documents=(PAPER, PAPER_PDF),
     ),
     # -- Sec. 6: the coverage that is close enough to zero to look like a bug --
     Claim(
@@ -739,7 +812,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.126",
         lambda a: _tuned(a, "random_forest", "cv"),
         _r(3),
-        documents=(RESULTS_MD, PAPER, PAPER_PDF),
+        documents=(RESULTS_MD, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     Claim(
         "tuned forest, leave-one-machine-out",
@@ -753,7 +826,7 @@ CLAIMS: tuple[Claim, ...] = (
         "1.121",
         lambda a: _tuned(a, "random_forest", "iter_matched_cut"),
         _r(3),
-        documents=(RESULTS_MD, PAPER, PAPER_PDF),
+        documents=(RESULTS_MD, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     Claim(
         "tuned forest, inner folds by machine",
@@ -767,7 +840,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.350",
         lambda a: _tuned(a, "hist_gradient_boosting", "leave_one_machine_out_inner_machine"),
         _r(3),
-        documents=(RESULTS_MD, PAPER, PAPER_PDF),
+        documents=(RESULTS_MD, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     # -- Result 5: the ITER-matched size cut -------------------------------
     # The five model scores at the cut are the paper's central comparison and
@@ -1262,8 +1335,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    90: "Ninety",
-    116: "one hundred and sixteen",
+    95: "Ninety-five",
+    125: "one hundred and twenty-five",
 }
 
 
