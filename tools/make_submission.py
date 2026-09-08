@@ -67,6 +67,7 @@ def identifying_tokens(sources: "list[Path] | None" = None) -> tuple[str, ...]:
             found.update(ZENODO_DOI.findall(source.read_text()))
     return tuple(dict.fromkeys((*IDENTIFYING, *sorted(found))))
 
+
 # Sections that exist to credit people and therefore cannot survive anonymisation.
 # `Funding`, `Competing interests` and `Data availability` stay: they carry no
 # identity and IOP wants them in the reviewed manuscript.
@@ -105,30 +106,18 @@ def anonymise(text: str) -> str:
     if n != 1:
         raise SystemExit("could not find the title-page availability block")
 
-    # The generative-AI declaration sits inside Acknowledgments, so stripping
-    # that section takes a disclosure IOP requires and that names no one. Lift
-    # it out first and re-emit it as a section of its own. Anchored on explicit
-    # comment markers rather than on a heading: it was anchored on a \paragraph
-    # once, and moving the declaration inside the section broke the strip
-    # without breaking anything that would have said so.
-    ai_block = re.search(
-        r"% BEGIN generative-AI declaration.*?\n(.*?)% END generative-AI declaration",
-        text,
-        re.DOTALL,
-    )
-    if ai_block is None:
-        raise SystemExit("could not find the generative-AI declaration")
-
+    # The generative-AI declaration used to sit inside Acknowledgments, which
+    # anonymisation strips, so it was lifted out by comment marker and re-emitted
+    # as a section of its own. It is now a top-level section in paper.tex, so
+    # stripping Acknowledgments leaves it alone and nothing has to be lifted.
+    # This is checked rather than assumed: the declaration is required and it
+    # disappearing is the kind of loss that does not announce itself.
     for title in ANONYMISE_SECTIONS:
         if f"\\section*{{{title}}}" in text:
             text = _strip_section(text, title)
 
-    # A function replacement, not a string: the lifted block is LaTeX, and every
-    # backslash in it would otherwise be read as a regex escape.
-    reinstated = "\\section*{Use of generative AI}\n" + ai_block.group(1).strip() + "\n\n\\section*{Funding}"
-    text, n = re.subn(r"\\section\*\{Funding\}", lambda _: reinstated, text, count=1)
-    if n != 1:
-        raise SystemExit("could not reinsert the generative-AI declaration")
+    if "\\section*{Use of generative AI}" not in text:
+        raise SystemExit("anonymisation removed the generative-AI declaration")
 
     # The code-availability paragraph and the Zenodo bibitem survive in shape but
     # not in content: a referee still needs to know the code is public and pinned.
@@ -172,6 +161,7 @@ def anonymise_supplement(text: str) -> str:
 # fields that hold no markup. Retyping them is how a submitted abstract comes to
 # differ from the one in the PDF beside it, so they are extracted here. The
 # judgement-carrying entries, referee policy and the like, stay in the template.
+
 
 # The figures both documents include, resolved to the vector copy. Kept as a
 # derived list rather than a literal so a new figure cannot be left out of the
