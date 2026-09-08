@@ -154,6 +154,17 @@ def test_the_author_line_is_readable(sheet: str) -> None:
     assert "https://orcid.org" not in sheet
 
 
+def test_the_commit_hash_does_not_survive_anonymisation(anonymous_paper: str) -> None:
+    """GitHub indexes commits, so a 40-character pin is a search away from the author."""
+    assert not make_submission.COMMIT_HASH.search(anonymous_paper)
+    assert "[commit hash withheld for anonymous review]" in anonymous_paper
+
+
+def test_the_identified_paper_does_carry_a_commit_hash() -> None:
+    """Otherwise the check above passes because there was nothing to strip."""
+    assert make_submission.COMMIT_HASH.search(PAPER.read_text())
+
+
 def test_the_bundle_is_not_written_under_build() -> None:
     """tests/test_packaging.py removes build/, so a bundle there is temporary.
 

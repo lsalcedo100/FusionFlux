@@ -137,8 +137,8 @@ arxiv: paper/paper.tex paper/supplementary.tex
 	@python3 tools/check_paper_submission.py --check-provenance
 	@rm -rf build/arxiv && mkdir -p build/arxiv
 	@cp paper/paper.tex paper/supplementary.tex build/arxiv/
-	@cp results/extrapolation.pdf results/size_extrapolation.pdf results/dimensional.pdf results/allometry.pdf results/tree_allometry.pdf results/gp.pdf results/conformal.pdf results/extrapolation.png results/size_extrapolation.png results/dimensional.png results/allometry.png results/tree_allometry.png results/gp.png results/conformal.png build/arxiv/
-	@cd build/arxiv && tar czf ../arxiv-submission.tar.gz paper.tex supplementary.tex *.pdf *.png
+	@cp results/extrapolation.pdf results/size_extrapolation.pdf results/dimensional.pdf results/allometry.pdf results/tree_allometry.pdf results/gp.pdf results/conformal.pdf build/arxiv/
+	@cd build/arxiv && tar czf ../arxiv-submission.tar.gz paper.tex supplementary.tex *.pdf
 	@echo "wrote build/arxiv-submission.tar.gz"
 	@echo "Build it exactly as arXiv will, from the flat directory:"
 	@echo "    cd build/arxiv && pdflatex paper.tex && pdflatex paper.tex"

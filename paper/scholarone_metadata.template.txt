@@ -44,7 +44,26 @@ GENERATIVE AI
   reference against its published record, and takes full responsibility.
 
 REFEREES
-  NOMINATIONS: FILL-IN
+  NOMINATIONS
+    1. J. Hall           <affiliation> <email>   FILL-IN
+    2. O. J. W. F. Kardaun  <affiliation> <email>   FILL-IN
+    3. C. Angioni        <affiliation> <email>   FILL-IN
+    4. A. Murari         <affiliation> <email>   FILL-IN
+
+  The four are chosen, the contact details are not: only you can supply an
+  affiliation and an address you have checked, and a wrong one goes to a
+  stranger over your name.
+
+  Hall is the closest existing work and the most likely to find an error.
+  Kardaun is cited in Sec. 6 and in Limitations as the precursor on interval
+  estimation for ITER and on errors in variables, so he is the person best
+  placed to say whether that treatment is fair. Angioni and Kaye are on the
+  database side; Murari is on machine learning for confinement scaling. Rea or
+  Granetz would serve if a reader less specialised in scaling laws is wanted.
+
+  Hall and Angioni are co-authors with G. Verdoolaege on Ref. [15]. Say so in
+  the free-text box, along with the 6 September 2026 letter, so the editor
+  learns it from you rather than from the author list.
 
   Do not oppose anyone. The paper criticises no individual study and says so
   explicitly, and an opposed-reviewer entry would contradict that in front of

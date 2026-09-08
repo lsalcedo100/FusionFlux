@@ -45,7 +45,7 @@ IDENTIFYING = (
     "Montclair",
     "0009-0001-5039-8147",
     "orcid",
-    "10.5281/zenodo.22562235",  # version DOI
+    "10.5281/zenodo.22651178",  # version DOI, v0.4.3
     "10.5281/zenodo.22215142",  # concept DOI, a different \href spelling
     "zenodo",
     "github.com/lsalcedo100",
@@ -89,10 +89,17 @@ def anonymise(text: str) -> str:
     if n != 1:
         raise SystemExit("could not find the title-page availability block")
 
-    # The generative-AI declaration is a \paragraph inside Acknowledgments, so
-    # stripping that section takes a disclosure IOP requires and that names no
-    # one. Lift it out first and re-emit it as a section of its own.
-    ai_block = re.search(r"\\paragraph\{Use of generative AI\.\}(.*?)(?=\\section\*\{)", text, re.DOTALL)
+    # The generative-AI declaration sits inside Acknowledgments, so stripping
+    # that section takes a disclosure IOP requires and that names no one. Lift
+    # it out first and re-emit it as a section of its own. Anchored on explicit
+    # comment markers rather than on a heading: it was anchored on a \paragraph
+    # once, and moving the declaration inside the section broke the strip
+    # without breaking anything that would have said so.
+    ai_block = re.search(
+        r"% BEGIN generative-AI declaration.*?\n(.*?)% END generative-AI declaration",
+        text,
+        re.DOTALL,
+    )
     if ai_block is None:
         raise SystemExit("could not find the generative-AI declaration")
 
@@ -120,6 +127,12 @@ def anonymise(text: str) -> str:
         text,
         flags=re.DOTALL,
     )
+    # The provenance pin is a 40-character commit hash of a public repository,
+    # which GitHub indexes: pasting it into a search box is a short route back
+    # to the author, and it is the one identifying string that does not look
+    # like one.
+    text = re.sub(r"[0-9a-f]{40}", "[commit hash withheld for anonymous review]", text)
+
     # Whatever is left is a spelling this function does not know about.
     for token in ("Salcedo", "liamsalcedo", "0009-0001-5039", "zenodo.2"):
         text = re.sub(re.escape(token), "", text, flags=re.IGNORECASE)
@@ -143,6 +156,20 @@ def anonymise_supplement(text: str) -> str:
 # fields that hold no markup. Retyping them is how a submitted abstract comes to
 # differ from the one in the PDF beside it, so they are extracted here. The
 # judgement-carrying entries, referee policy and the like, stay in the template.
+
+# The figures both documents include, resolved to the vector copy. Kept as a
+# derived list rather than a literal so a new figure cannot be left out of the
+# bundle while the document that needs it ships.
+def _included_figures() -> tuple[str, ...]:
+    names: list[str] = []
+    for document in (PAPER / "paper.tex", PAPER / "supplementary.tex"):
+        for name in re.findall(r"\\includegraphics\[[^]]*\]\{([^}]+)\}", document.read_text()):
+            if f"{name}.pdf" not in names:
+                names.append(f"{name}.pdf")
+    return tuple(names)
+
+
+FIGURES = _included_figures()
 
 TEMPLATE = PAPER / "scholarone_metadata.template.txt"
 
@@ -236,13 +263,24 @@ def _page_count(pdf: Path) -> int:
     return len(pypdf.PdfReader(pdf).pages)
 
 
+# Any 40-character hex string, which is what a git commit looks like. Checked as
+# a pattern rather than as a literal in IDENTIFYING: the pin moves whenever
+# results/ is regenerated, and a guard naming one particular hash goes stale
+# exactly when it is needed. GitHub indexes commits in public repositories, so
+# this is a short search away from the author.
+COMMIT_HASH = re.compile(r"\b[0-9a-f]{40}\b")
+
+
 def verify_anonymous(pdfs: list[Path]) -> None:
     failures = []
     for pdf in pdfs:
-        text = _rendered_text(pdf).lower()
+        rendered = _rendered_text(pdf)
+        text = rendered.lower()
         for token in IDENTIFYING:
             if token.lower() in text:
                 failures.append(f"{pdf.name}: contains {token!r}")
+        for found in set(COMMIT_HASH.findall(text)):
+            failures.append(f"{pdf.name}: contains the commit hash {found}")
     if failures:
         raise SystemExit("anonymised build is not anonymous:\n  " + "\n  ".join(failures))
 
@@ -274,7 +312,19 @@ def main() -> int:  # pragma: no cover - builds PDFs and writes the bundle
     shutil.copy2(PAPER / "supplementary.pdf", OUT / "supplementary_material.pdf")
     shutil.copy2(PAPER / "paper.tex", OUT / "paper.tex")
     shutil.copy2(PAPER / "supplementary.tex", OUT / "supplementary_material.tex")
+    # Kept, against the advice to drop it as unread: neither document runs it,
+    # but a journal's production style file wants a .bib, which is why it
+    # exists. It had drifted, missing the supplement's four keys, because the
+    # test that guards it read paper.tex alone. Both are fixed rather than the
+    # file deleted.
     shutil.copy2(PAPER / "references.bib", OUT / "references.bib")
+
+    # The figures, so the sources build outside this repository. Without them a
+    # reviewer or a production editor unpacking submission/ hits a missing-file
+    # error on the first \includegraphics, and IOP asks for source plus figures
+    # at revision. \graphicspath's flat-directory entry resolves them here.
+    for figure in FIGURES:
+        shutil.copy2(ROOT / "results" / figure, OUT / figure)
 
     pages = [_page_count(OUT / "manuscript.pdf"), _page_count(OUT / "supplementary_material.pdf")]
     (OUT / "scholarone_metadata.txt").write_text(scholarone_metadata((PAPER / "paper.tex").read_text(), *pages))
@@ -282,10 +332,10 @@ def main() -> int:  # pragma: no cover - builds PDFs and writes the bundle
     with tempfile.TemporaryDirectory() as tmp:
         work = Path(tmp)
         # Figures resolve through \graphicspath's flat-directory entry.
-        for figure in (ROOT / "results").glob("*.pdf"):
-            shutil.copy2(figure, work / figure.name)
-        for figure in (ROOT / "results").glob("*.png"):
-            shutil.copy2(figure, work / figure.name)
+        for artwork in (ROOT / "results").glob("*.pdf"):
+            shutil.copy2(artwork, work / artwork.name)
+        for artwork in (ROOT / "results").glob("*.png"):
+            shutil.copy2(artwork, work / artwork.name)
 
         (work / "paper.tex").write_text(anonymise((PAPER / "paper.tex").read_text()))
         (work / "supplementary.tex").write_text(anonymise_supplement((PAPER / "supplementary.tex").read_text()))

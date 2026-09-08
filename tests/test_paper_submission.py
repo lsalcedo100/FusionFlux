@@ -532,3 +532,29 @@ def test_a_paper_with_no_pin_is_reported(tmp_path: Path) -> None:
 def test_a_directory_git_cannot_answer_for_is_not_a_defect(tmp_path: Path) -> None:
     paper = _paper_citing(tmp_path, "0" * 40, "1.0.0")
     assert checker.stale_provenance(paper, tmp_path) == []
+
+
+# --- the reference list is the last thing in each document -------------------
+#
+# The supplement printed its bibliography on p.14 with Section S8 after it on
+# p.15, which is the most visible sloppiness signal a package can carry, and
+# nothing here caught it. The orphan and label tests ask whether floats are
+# referenced; neither asks where the bibliography sits.
+
+
+@pytest.mark.parametrize("document", DOCUMENTS)
+def test_the_bibliography_is_the_last_block(document: str) -> None:
+    source = (ROOT / document).read_text()
+    end = source.index(r"\end{thebibliography}")
+    trailing = source[end:]
+    assert r"\section" not in trailing, (
+        f"{document} has a \\section after its bibliography. The reference list "
+        "must be the last block before \\end{document}."
+    )
+
+
+@pytest.mark.parametrize("document", DOCUMENTS)
+def test_each_document_has_exactly_one_bibliography(document: str) -> None:
+    source = (ROOT / document).read_text()
+    assert source.count(r"\begin{thebibliography}") == 1
+    assert source.count(r"\end{thebibliography}") == 1

@@ -26,6 +26,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PAPER = ROOT / "paper" / "paper.tex"
+SUPPLEMENT = ROOT / "paper" / "supplementary.tex"
 BIB = ROOT / "paper" / "references.bib"
 
 # Entries that legitimately have no DOI: a 1975 Soviet journal that predates
@@ -36,7 +37,7 @@ BIB = ROOT / "paper" / "references.bib"
 # have no DOI either: the OSF deposit has none registered (checked against the
 # OSF API) and its GUID is the persistent identifier, and the BAAD archive is a
 # tagged software release whose data paper carries the DOI instead.
-NO_DOI = {"kadomtsev", "shiftcp", "ovadia", "hall", "hall26", "osfdb"}
+NO_DOI = {"kadomtsev", "shiftcp", "ovadia", "hall", "hall26", "osfdb", "jt60saplan"}
 
 
 def _strip_comments(text: str) -> str:
@@ -44,15 +45,23 @@ def _strip_comments(text: str) -> str:
 
 
 def printed_entries() -> dict[str, str]:
-    """Each `\\bibitem` key in the paper, mapped to the text of that entry."""
-    latex = _strip_comments(PAPER.read_text())
-    block = latex[latex.index(r"\begin{thebibliography}"):latex.index(r"\end{thebibliography}")]
-    chunks = re.split(r"(?=\\bibitem\{)", block)
-    return {
-        match.group(1): chunk
-        for chunk in chunks
-        if (match := re.match(r"\\bibitem\{([^}]+)\}", chunk))
-    }
+    """Every `\\bibitem` key in both documents, mapped to the text of that entry.
+
+    Both, because the supplement has its own reference list and reading only the
+    paper is how this drifted: `jt60saop1`, `jt60saop2`, `jt60saplan` and `wbe`
+    are cited in the supplement and were missing from the .bib for as long as
+    these tests looked at `paper.tex` alone. Every one of them passed.
+    """
+    entries: dict[str, str] = {}
+    for document in (PAPER, SUPPLEMENT):
+        latex = _strip_comments(document.read_text())
+        block = latex[
+            latex.index(r"\begin{thebibliography}") : latex.index(r"\end{thebibliography}")
+        ]
+        for chunk in re.split(r"(?=\\bibitem\{)", block):
+            if match := re.match(r"\\bibitem\{([^}]+)\}", chunk):
+                entries[match.group(1)] = chunk
+    return entries
 
 
 def bib_entries() -> dict[str, str]:
@@ -67,7 +76,7 @@ def bib_entries() -> dict[str, str]:
 def test_every_printed_reference_is_in_the_bib_file() -> None:
     missing = sorted(set(printed_entries()) - set(bib_entries()))
     assert not missing, (
-        f"cited in paper.tex but absent from references.bib: {missing}. "
+        f"cited in the manuscript but absent from references.bib: {missing}. "
         "A journal running the .bib through its own style file would drop them."
     )
 
@@ -75,7 +84,7 @@ def test_every_printed_reference_is_in_the_bib_file() -> None:
 def test_every_bib_entry_is_actually_cited() -> None:
     unused = sorted(set(bib_entries()) - set(printed_entries()))
     assert not unused, (
-        f"in references.bib but not cited in paper.tex: {unused}. "
+        f"in references.bib but cited in neither document: {unused}. "
         "Either cite them or drop them; an uncited entry is a leftover."
     )
 
