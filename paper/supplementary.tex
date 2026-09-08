@@ -926,10 +926,32 @@ the pooled fit's 0.279, which is the least-squares spelling of the ridge row's
 0.278, and it stays well above the constrained fit of
 Sec.~8 of the main text at 0.183 and the analytic law's 0.194. What has been ruled out is
 narrower than the class: this is a single random intercept and no random slopes,
-so a device-level \emph{level} shift is what fails to be the missing structure,
-and a richer hierarchical specification is untested. Eleven devices is also few
-enough that the variance component is poorly determined, which is why the sweep
-rather than the fit carries the conclusion. The specification and the full sweep
+so a device-level \emph{level} shift is what fails to be the missing structure.
+Eleven devices is also few enough that the variance component is poorly
+determined, which is why the sweep rather than the fit carries the conclusion.
+
+Random slopes are the obvious next specification and are worth saying something
+sharper about than ``untested''. On the features that carry the size dependence
+they are not identifiable at all. A device-specific slope is estimated from how
+the response moves with that feature \emph{within} the device, and Sec.~4.2 of
+the main text measures how little those features move: major radius carries
+0.1\% of its log variance within devices, minor radius 1.1\%, inverse aspect
+ratio 4.9\% and elongation 6.1\%. There is almost no within-device variation for
+such a slope to be fitted to, which is the same fact that makes those columns
+close to device labels, read from the other side.
+
+On the four features that do move within a device, plasma current, toroidal
+field, density and loss power, a random slope is identifiable, and two things
+stand against fitting one here. Eleven groups that already leave a single
+variance component spanning 2.0 to 143 will not determine a
+five-by-five covariance with fifteen free parameters. And the arithmetic that
+makes the intercept model no better than pooling on an unseen device applies
+unchanged: a device with no rows has no realised random effect, so it is
+predicted from the population-level slope whatever the random part is allowed to
+be, while the random part shifts the population estimate further toward
+within-device variation, which is the information a new machine cannot use. A
+richer covariance would have to help through that channel, and the sweep in this
+section already bounds what that channel can deliver. The specification and the full sweep
 are in \texttt{analysis\_mixed\_model.py} and
 \texttt{results/mixed\_model.json}.
 

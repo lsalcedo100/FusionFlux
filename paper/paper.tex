@@ -1441,18 +1441,21 @@ analysis; the collisionless row was selected on the scores in this table. LODO
 is the same held-out score over the 11 physical devices rather than the 13
 database labels, so it is the arm Sec.~\ref{sec:robustness} argues the paper
 rests on, applied here to the models this paper recommends rather than only to
-the ones it criticises.}
+the ones it criticises. \emph{Worse on} counts the physical devices in that arm
+on which a row scores above the unconstrained fit, and is the same per-unit
+statistic this paper counts with wherever it criticises a model; the last row
+calibrates it.}
 \label{tab:dimensional}
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrrrcr}
 \toprule
-Model & in sample & CV & LOLO & LODO & ITER cut \\
+Model & in sample & CV & LOLO & LODO & worse on & ITER cut \\
 \midrule
-power law, collisionless & 0.1818 & 0.182 & 0.206 & 0.203 & \textbf{0.183} \\
-IPB98(y,2), analytic$^{*}$ & n/a & 0.199 & 0.188 & 0.184 & 0.194 \\
-bounded hybrid (Sec.~\ref{sec:hybrid}) & n/a & 0.151 & 0.246 & 0.246 & 0.206 \\
-power law, electrostatic & 0.2245 & 0.225 & 0.241 & 0.226 & 0.237 \\
-power law, Kadomtsev & 0.1808 & 0.181 & 0.210 & 0.211 & 0.254 \\
-power law, unconstrained & 0.1808 & 0.181 & 0.214 & 0.212 & 0.279 \\
+power law, collisionless & 0.1818 & 0.182 & 0.206 & 0.203 & 5/11 & \textbf{0.183} \\
+IPB98(y,2), analytic$^{*}$ & n/a & 0.199 & 0.188 & 0.184 & 4/11 & 0.194 \\
+bounded hybrid (Sec.~\ref{sec:hybrid}) & n/a & 0.151 & 0.246 & 0.246 & 5/11 & 0.206 \\
+power law, electrostatic & 0.2245 & 0.225 & 0.241 & 0.226 & 8/11 & 0.237 \\
+power law, Kadomtsev & 0.1808 & 0.181 & 0.210 & 0.211 & 7/11 & 0.254 \\
+power law, unconstrained & 0.1808 & 0.181 & 0.214 & 0.212 & 8/11$^{\dagger}$ & 0.279 \\
 \bottomrule
 \end{tabular}
 \\[2pt]
@@ -1461,7 +1464,9 @@ this database~\cite{hdb5} and not refitted within these folds. The
 unconstrained row is the closed-form least-squares fit this section's solver
 produces, at 0.2790 across the size cut; the ridge spelling of the same power
 law reported elsewhere gives 0.2778, and Sec.~\ref{sec:rank} shows the choice
-between them carries nothing.}
+between them carries nothing. $^{\dagger}$This row's count is that same pair
+compared against each other, two solvers for one model, and is the calibration
+for the column rather than a result.}
 \end{table}
 
 Take the prospective rung first. The Kadomtsev constraint is \emph{free}: at
@@ -2060,8 +2065,11 @@ $\lambda$ anywhere between 2.0 and 143 depending on which device is held out.
 The sweep is reported for that reason and is what the conclusion rests on, since
 it does not depend on the optimiser. It also carries a single random intercept
 and no random slopes, so what has been ruled out is that a device-level
-\emph{level} shift is the missing structure, not that some richer hierarchical
-specification would fail the same way. More broadly, what the results above
+\emph{level} shift is the missing structure. Sec.~S10 of the Supplementary
+Material takes the next specification as far as this database allows: a random
+slope on the features carrying the size dependence is not identifiable, since
+those features barely vary within a device, and on the four that do vary an
+unseen machine is still predicted from the population-level slope. More broadly, what the results above
 establish is that the ordering of these models reverses and that nothing scored
 here displaces the pooled power law on an unseen device, which is not the same
 as its being the best available predictor of one.
@@ -2293,7 +2301,7 @@ this paper is archived with a persistent identifier~\cite{zenodo}. The analysis
 code is pinned as firmly as its inputs: every number and figure above was
 produced at commit
 \begin{center}\scriptsize
-\texttt{6854867466f08bfdcf902ddec6b59e813639ce16}
+\texttt{92cc20b9add63b4f9f97998b89f089a1068671a9}
 \end{center}
 \noindent Every script verifies that fingerprint against the pin as it loads
 the data and refuses to run when the two disagree, so no number above can have
