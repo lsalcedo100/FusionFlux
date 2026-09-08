@@ -57,9 +57,14 @@ def constructive_models() -> dict[str, Pipeline]:
     """Every model the paper offers as a repair, in one dictionary.
 
     The three Gaussian-process kernels, the four Connor--Taylor rungs including
-    the unconstrained one they are measured against, and the three mean
-    functions of the ablation. The tree ensembles and the plain power law come
+    the unconstrained one they are measured against, the three mean functions of
+    the ablation, and the one hybrid rung the main text tabulates. The tree
+    ensembles, the plain power law and the analytic IPB98(y,2) reference come
     from the standard zoo and are not repeated here.
+
+    Only ``hybrid_gbm_s1`` is carried, not the whole damping sweep: it is the
+    rung Table 6 prints, at fully undamped bounded correction, and scoring the
+    other seventeen would double the run to fill no cell in the paper.
     """
     models: dict[str, Pipeline] = {}
     models.update(gp.build_gp_models())
@@ -71,6 +76,8 @@ def constructive_models() -> dict[str, Pipeline]:
             "mean_ipb98_rbf": _wrapped(mech.FixedLawMeanGP()),
         }
     )
+    hybrids = hdb5.build_hybrid_models((1.0,), corrections=("gbm",))
+    models.update({name: _wrapped(est) for name, est in hybrids.items()})
     return models
 
 
@@ -97,7 +104,8 @@ def analyze(dataset: pd.DataFrame | None = None) -> dict[str, Any]:
 
     reference = _scores(per_device, baseline)
     comparison: dict[str, Any] = {}
-    for name in list(models) + [baseline, "random_forest", "hist_gradient_boosting"]:
+    zoo = [baseline, "random_forest", "hist_gradient_boosting", "ipb98y2_analytic"]
+    for name in list(models) + zoo:
         if name not in device_summary.index:
             continue
         scores = _scores(per_device, name)

@@ -85,6 +85,13 @@
       "n_worse_than_power_law": 3,
       "mean_difference_vs_power_law": -0.025419928527100562
     },
+    "hybrid_gbm_s1": {
+      "lodo_mean_rmsle": 0.24617475425262994,
+      "lolo_mean_rmsle": 0.2460628771204066,
+      "n_devices": 11,
+      "n_worse_than_power_law": 5,
+      "mean_difference_vs_power_law": 0.03469467169686538
+    },
     "ridge_loglinear": {
       "lodo_mean_rmsle": 0.2114800825557646,
       "lolo_mean_rmsle": 0.21407599766914132,
@@ -105,6 +112,13 @@
       "n_devices": 11,
       "n_worse_than_power_law": 10,
       "mean_difference_vs_power_law": 0.19724680018664548
+    },
+    "ipb98y2_analytic": {
+      "lodo_mean_rmsle": 0.1841250490757562,
+      "lolo_mean_rmsle": 0.18844349163138224,
+      "n_devices": 11,
+      "n_worse_than_power_law": 4,
+      "mean_difference_vs_power_law": -0.02735503348000839
     }
   },
   "dataset_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b"

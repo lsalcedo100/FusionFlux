@@ -1444,18 +1444,22 @@ reported. The prospective one comes first below.
 score at the ITER-size-matched cut. The only difference between the first and
 last rows is the constraint: same features, same solver, no hyperparameter. The
 Kadomtsev row is the prospective one, fixed by the literature before this
-analysis; the collisionless row was selected on the scores in this table.}
+analysis; the collisionless row was selected on the scores in this table. LODO
+is the same held-out score over the 11 physical devices rather than the 13
+database labels, so it is the arm Sec.~\ref{sec:robustness} argues the paper
+rests on, applied here to the models this paper recommends rather than only to
+the ones it criticises.}
 \label{tab:dimensional}
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Model & in sample & CV & LOLO & ITER cut \\
+Model & in sample & CV & LOLO & LODO & ITER cut \\
 \midrule
-power law, collisionless & 0.1818 & 0.182 & 0.206 & \textbf{0.183} \\
-IPB98(y,2), analytic$^{*}$ & n/a & 0.199 & 0.188 & 0.194 \\
-bounded hybrid (Sec.~\ref{sec:hybrid}) & n/a & 0.151 & 0.246 & 0.206 \\
-power law, electrostatic & 0.2245 & 0.225 & 0.241 & 0.237 \\
-power law, Kadomtsev & 0.1808 & 0.181 & 0.210 & 0.254 \\
-power law, unconstrained & 0.1808 & 0.181 & 0.214 & 0.279 \\
+power law, collisionless & 0.1818 & 0.182 & 0.206 & 0.203 & \textbf{0.183} \\
+IPB98(y,2), analytic$^{*}$ & n/a & 0.199 & 0.188 & 0.184 & 0.194 \\
+bounded hybrid (Sec.~\ref{sec:hybrid}) & n/a & 0.151 & 0.246 & 0.246 & 0.206 \\
+power law, electrostatic & 0.2245 & 0.225 & 0.241 & 0.226 & 0.237 \\
+power law, Kadomtsev & 0.1808 & 0.181 & 0.210 & 0.211 & 0.254 \\
+power law, unconstrained & 0.1808 & 0.181 & 0.214 & 0.212 & 0.279 \\
 \bottomrule
 \end{tabular}
 \\[2pt]
@@ -1714,14 +1718,16 @@ The constant-mean row reproduces the squared-exponential rung of Sec.~S6 of the
 Supplementary Material to six decimals, which is the control: the decomposition
 is the same model rewritten. Only the first row saturates. The other two both
 keep trending, and they do not agree, which is what makes this an ablation
-rather than an identity.}
-\begin{tabular}{lrrr}
+rather than an identity. The LODO column repeats the held-out score over the 11
+physical devices, where the three separate more widely than they do over the 13
+labels.}
+\begin{tabular}{lrrrr}
 \toprule
-$m(x)$ in Eq.~\eqref{eq:meanfunction} & CV & held-out & ITER cut \\
+$m(x)$ in Eq.~\eqref{eq:meanfunction} & CV & held-out & LODO & ITER cut \\
 \midrule
-constant & 0.142 & 0.541 & 1.948 \\
-fitted power law & 0.115 & 0.212 & 0.278 \\
-IPB98(y,2), unfitted & \textbf{0.112} & \textbf{0.189} & \textbf{0.186} \\
+constant & 0.142 & 0.541 & 0.693 & 1.948 \\
+fitted power law & 0.115 & 0.212 & 0.212 & 0.278 \\
+IPB98(y,2), unfitted & \textbf{0.112} & \textbf{0.189} & \textbf{0.186} & \textbf{0.186} \\
 \bottomrule
 \end{tabular}
 \label{tab:meanfunction}
@@ -1786,7 +1792,12 @@ lesson. ``Do not use a model whose predictions stop tracking the features once
 the input leaves the training data'' is the right one, and the random forest's
 training-target ceiling is its strictest case. This does not displace the constrained power law, which still wins
 the ITER-size-matched cut with no within-surface hyperparameter to tune, and the process does not beat the
-power law on a held-out label (0.218 against 0.214).
+power law on a held-out label (0.218 against 0.214). Held out one physical
+device at a time, which is the arm Sec.~\ref{sec:robustness} argues for, it
+scores 0.219 against the power law's 0.211 and is worse on 5 of the 11. So the
+process ties the power law under the stricter split as it does under the looser
+one, and the statement that it does not reverse is made on the split this paper
+says the claim belongs to rather than only on the finer partition.
 
 A Gaussian process also supplies an interval by construction rather than by
 calibration, so Sec.~\ref{sec:conformal}'s question
@@ -2271,8 +2282,8 @@ outputs under \texttt{results/} also record the digest they verified, which
 carries that provenance into the artefact itself.
 
 The prose is bound to those artefacts in the same way.
-\textbf{One hundred and four} of the numbers printed above, and \textbf{one
-hundred and thirty-four} across this paper and its Supplementary Material, are tied by test
+\textbf{One hundred and fourteen} of the numbers printed above, and \textbf{one
+hundred and forty-four} across this paper and its Supplementary Material, are tied by test
 to the field of the generated file they came from, in both directions: if an analysis is rerun and its output moves, the
 rendered value stops matching the printed one and the suite fails; if a number
 in the text is edited, it stops matching the artefact. A figure that disagrees

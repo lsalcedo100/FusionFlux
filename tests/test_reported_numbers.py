@@ -90,6 +90,7 @@ def artifacts() -> dict[str, object]:
         "sensitivity": _json("sensitivity.json"),
         "mixed": _json("mixed_model.json"),
         "robustness": _json("robustness.json"),
+        "device_arm": _json("device_arm.json"),
         "boundedness": _json("boundedness.json"),
         "stored": _json("stored_energy.json"),
         "dimensionless": _json("dimensionless.json"),
@@ -210,6 +211,16 @@ def _cov(a: dict, model: str, column: str) -> float:
 
 def _dim(a: dict, model: str, column: str) -> float:
     return float(a["dim_splits"].loc[model, column])
+
+
+def _device(a: dict, model: str, field: str = "lodo_mean_rmsle") -> float:
+    """One cell of the leave-one-device-out column, added in Result 19.
+
+    The whole column is bound rather than a chosen few. It is a new column in a
+    paper that argues this is the split that matters, so leaving most of it
+    unguarded would repeat the mistake that let Table 2's device cell drift.
+    """
+    return float(a["device_arm"]["models"][model][field])
 
 
 def _robustness(a: dict, arm: str, model: str, column: str) -> float:
@@ -1006,6 +1017,99 @@ CLAIMS: tuple[Claim, ...] = (
         _r(4),
         documents=LATE_RESULTS,
     ),
+    # --- Result 19: the leave-one-device-out column ------------------------
+    Claim(
+        "device arm, collisionless",
+        "0.203",
+        lambda a, _m="powerlaw_collisionless": _device(a, _m),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal, _t="0.206 & {0}", _p="0.206 {0}": (_t.format(literal), _p.format(literal)),
+    ),
+    Claim(
+        "device arm, IPB98 analytic",
+        "0.184",
+        lambda a, _m="ipb98y2_analytic": _device(a, _m),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal, _t="0.188 & {0}", _p="0.188 {0}": (_t.format(literal), _p.format(literal)),
+    ),
+    Claim(
+        "device arm, bounded hybrid",
+        "0.246",
+        lambda a, _m="hybrid_gbm_s1": _device(a, _m),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal, _t="0.246 & {0}", _p="0.246 {0}": (_t.format(literal), _p.format(literal)),
+    ),
+    Claim(
+        "device arm, electrostatic",
+        "0.226",
+        lambda a, _m="powerlaw_electrostatic": _device(a, _m),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal, _t="0.241 & {0}", _p="0.241 {0}": (_t.format(literal), _p.format(literal)),
+    ),
+    Claim(
+        "device arm, Kadomtsev",
+        "0.211",
+        lambda a, _m="powerlaw_kadomtsev": _device(a, _m),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal, _t="0.210 & {0}", _p="0.210 {0}": (_t.format(literal), _p.format(literal)),
+    ),
+    Claim(
+        "device arm, unconstrained",
+        "0.212",
+        lambda a, _m="powerlaw_free": _device(a, _m),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal, _t="0.214 & {0} & 0.279", _p="0.214 {0} 0.279": (
+            _t.format(literal),
+            _p.format(literal),
+        ),
+    ),
+    Claim(
+        "device arm, constant mean",
+        "0.693",
+        lambda a, _m="mean_constant_rbf": _device(a, _m),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal, _t="0.541 & {0}", _p="0.541 {0}": (_t.format(literal), _p.format(literal)),
+    ),
+    Claim(
+        "device arm, power-law mean",
+        "0.212",
+        lambda a, _m="mean_powerlaw_rbf": _device(a, _m),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal, _t="0.115 & 0.212 & {0}", _p="0.115 0.212 {0}": (
+            _t.format(literal),
+            _p.format(literal),
+        ),
+    ),
+    Claim(
+        "device arm, IPB98 mean",
+        "0.186",
+        lambda a, _m="mean_ipb98_rbf": _device(a, _m),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal, _t="\\textbf{{0.189}} & \\textbf{{{0}}}", _p="0.189 {0}": (
+            _t.format(literal),
+            _p.format(literal),
+        ),
+    ),
+    Claim(
+        "device arm, GP linear+RBF",
+        "0.219",
+        lambda a, _m="gp_linear_rbf": _device(a, _m),
+        _r(3),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal, _t="scores {0} against the power law", _p="scores {0} against the power law": (
+            _t.format(literal),
+            _p.format(literal),
+        ),
+    ),
     # The leave-one-device-out row of Table 2, all four cells. This is the row
     # the paper's device claim rests on and the row that carried the error.
     Claim(
@@ -1437,8 +1541,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    104: "One hundred and four",
-    134: "one hundred and thirty-four",
+    114: "One hundred and fourteen",
+    144: "one hundred and forty-four",
 }
 
 
