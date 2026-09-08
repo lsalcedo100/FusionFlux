@@ -688,3 +688,107 @@ def test_no_section_cross_references_itself() -> None:
                     f"{label}, so it renders as a pointer to where the reader "
                     "already is. Point it at the section that carries the material."
                 )
+
+
+# --- and the pointers that run the other way ---------------------------------
+#
+# EXPECTED_POINTERS above guards main text -> supplement. Nothing guarded
+# supplement -> main text, and the supplement carries ten of those: eight
+# section numbers and two table numbers, all typed by hand for the same reason
+# (the documents compile separately, so \ref cannot cross).
+#
+# That is how "Sec.~11.1 of the main text" came to name the locked forecast, a
+# section with no 11.1 at all, in a sentence about the mean-function ablation at
+# 12.1. Inserting one section anywhere above it silently redirects every pointer
+# below, and the reference still resolves, to the wrong place.
+
+BACK_POINTERS = {
+    "2": "Data and methods",
+    "4": "The ranking inversion",
+    "4.1": "Three diagnostics of the failure",
+    "4.2": "Sensitivity to population, aggregation, and device definition",
+    "8": "Dimensional constraints from Connor--Taylor similarity",
+    "12.1": "The same experiment with the nonlinear component specified identically",
+}
+
+BACK_TABLES = {
+    "1": "tab:reversal",
+    "2": "tab:robustness",
+}
+
+
+def _main_text_numbering() -> dict[str, str]:
+    """Every numbered section and subsection of paper.tex, keyed as LaTeX prints it."""
+    body = checker._strip_comments(checker.PAPER.read_text()).split(r"\begin{document}", 1)[1]
+    numbering: dict[str, str] = {}
+    section = subsection = 0
+    for match in re.finditer(r"\\(section|subsection)\{((?:[^{}]|\{[^{}]*\})*)\}", body):
+        title = re.sub(r"\s+", " ", match.group(2)).strip()
+        if match.group(1) == "section":
+            section += 1
+            subsection = 0
+            numbering[str(section)] = title
+        else:
+            subsection += 1
+            numbering[f"{section}.{subsection}"] = title
+    return numbering
+
+
+def _main_text_tables() -> dict[str, str]:
+    """Table number as LaTeX prints it, mapped to the label that table carries."""
+    body = checker._strip_comments(checker.PAPER.read_text()).split(r"\begin{document}", 1)[1]
+    tables: dict[str, str] = {}
+    count = 0
+    for match in re.finditer(r"\\begin\{table\}|\\label\{(tab:[^}]+)\}", body):
+        if match.group(1) is None:
+            count += 1
+        elif str(count) not in tables:
+            tables[str(count)] = match.group(1)
+    return tables
+
+
+def _supplement_back_pointers() -> tuple[set[str], set[str]]:
+    """The numbers the supplement hardcodes when it points at the main text.
+
+    Its own sections are reached by \\ref, so "Sec.~S1" never appears literally
+    and only main-text pointers are picked up here.
+    """
+    source = checker._strip_comments(checker.SUPPLEMENT.read_text())
+    sections = set(re.findall(r"Sec\.~(\d+(?:\.\d+)?)", source))
+    tables = set(re.findall(r"Table~(\d+)\b", source))
+    return sections, tables
+
+
+@pytest.mark.parametrize("number,expected", sorted(BACK_POINTERS.items()))
+def test_each_back_pointer_names_the_right_main_text_section(number: str, expected: str) -> None:
+    numbering = _main_text_numbering()
+    assert number in numbering, (
+        f"the supplement points at Sec. {number} of the main text; paper.tex has no such "
+        f"section. It has {sorted(numbering)}."
+    )
+    assert numbering[number] == expected, (
+        f"Sec. {number} of the main text is now {numbering[number]!r}, not {expected!r}. "
+        "A main-text section moved: fix the number in supplementary.tex and here."
+    )
+
+
+@pytest.mark.parametrize("number,expected", sorted(BACK_TABLES.items()))
+def test_each_back_table_pointer_names_the_right_table(number: str, expected: str) -> None:
+    tables = _main_text_tables()
+    assert tables.get(number) == expected, (
+        f"Table {number} of the main text is now {tables.get(number)!r}, not {expected!r}. "
+        "A table moved: fix the number in supplementary.tex and here."
+    )
+
+
+def test_every_back_pointer_in_the_supplement_is_covered_here() -> None:
+    """A new hardcoded pointer has to be added to the maps above, not left loose."""
+    sections, tables = _supplement_back_pointers()
+    assert sections == set(BACK_POINTERS), (
+        f"the supplement points at main-text sections {sorted(sections)}; "
+        f"BACK_POINTERS covers {sorted(BACK_POINTERS)}"
+    )
+    assert tables == set(BACK_TABLES), (
+        f"the supplement points at main-text tables {sorted(tables)}; "
+        f"BACK_TABLES covers {sorted(BACK_TABLES)}"
+    )

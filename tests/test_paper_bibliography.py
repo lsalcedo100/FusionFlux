@@ -112,3 +112,55 @@ def test_every_reference_without_a_doi_is_one_we_expect() -> None:
         "If an entry gained or lost a DOI, resolve it against Crossref and "
         "update NO_DOI here so the exception stays deliberate."
     )
+
+
+# --- each document has to stand on its own -----------------------------------
+#
+# `printed_entries` pools the two reference lists, which is right for the
+# checks above: a key belongs in the .bib if either document prints it. It is
+# wrong for the question a reader actually hits, because the two documents
+# compile separately and a \cite resolves only against its own
+# \begin{thebibliography}.
+#
+# That is how `wang`, `roberts` and `hall26` came to render as [?] three times
+# in the shipped supplement and in the anonymous build. All three had entries in
+# paper.tex, so the pooled set contained them and every test here passed. LaTeX
+# says "There were undefined references" and exits zero, and nothing read the
+# log.
+
+
+def _own_bibitems(document: Path) -> set[str]:
+    latex = _strip_comments(document.read_text())
+    block = latex[latex.index(r"\begin{thebibliography}") : latex.index(r"\end{thebibliography}")]
+    return set(re.findall(r"\\bibitem\{([^}]+)\}", block))
+
+
+def _own_citations(document: Path) -> set[str]:
+    latex = _strip_comments(document.read_text())
+    return {
+        key.strip()
+        for group in re.findall(r"\\cite[a-z]*\{([^}]*)\}", latex)
+        for key in group.split(",")
+        if key.strip()
+    }
+
+
+def test_every_citation_resolves_within_its_own_document() -> None:
+    for document in (PAPER, SUPPLEMENT):
+        dangling = sorted(_own_citations(document) - _own_bibitems(document))
+        assert not dangling, (
+            f"{document.name} cites {dangling} with no \\bibitem of its own, so each "
+            "renders as [?]. The two documents compile separately; an entry in the "
+            "other one does not help."
+        )
+
+
+def test_no_document_carries_a_bibitem_it_never_cites() -> None:
+    """The other direction, which is how a stale entry survives a rewrite."""
+    for document in (PAPER, SUPPLEMENT):
+        orphaned = sorted(_own_bibitems(document) - _own_citations(document))
+        assert not orphaned, (
+            f"{document.name} prints {orphaned} in its reference list and cites none of "
+            "them. Either cite them or drop them; a printed reference nothing points at "
+            "is a leftover a referee will notice before you do."
+        )
