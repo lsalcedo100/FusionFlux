@@ -586,7 +586,7 @@ def _place_labels_without_overlap(
     # rather than let that fallback stand. They are generated in a fixed order
     # from fixed constants, so the placement stays deterministic and the
     # reproduction check can still compare figures.
-    candidates = [
+    candidates: list[tuple[float, float]] = [
         (7, 3), (-7, 3), (7, -10), (-7, -10), (0, 10), (0, -14),
         (14, 9), (-14, 9), (14, -16), (-14, -16), (0, 18), (0, -22),
     ]
