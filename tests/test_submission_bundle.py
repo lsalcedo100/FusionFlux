@@ -275,6 +275,46 @@ def test_it_names_every_string_it_found(tmp_path: Path) -> None:
     assert len(reported) > 1
 
 
+# The same function also refuses a build whose citations did not survive the
+# rewrite. That guard exists because a shipped anonymous PDF once carried seven
+# literal [?] marks: the bibitem substitution ran to \end{thebibliography} and
+# swallowed the five entries after it, and verify_anonymous waved it through
+# because it only ever looked for names.
+
+
+@pytest.mark.parametrize(
+    "rendered",
+    [
+        "Kardaun [?] constructed intervals",
+        "the jackknife+ and CV+ family [ ?], would be",
+        "run on a machine [ ?, ?]. What is new",
+        "see Sec. ?? of the main text",
+    ],
+)
+def test_an_unresolved_reference_is_refused(rendered: str) -> None:
+    assert make_submission.unresolved_references(Path("m.pdf"), rendered)
+
+
+@pytest.mark.parametrize(
+    "rendered",
+    [
+        "Hall et al. [12] have raised",
+        "as reported in [12, 15] and [3]",
+        "Flexibility, or long-range saturation? That is the question.",
+    ],
+)
+def test_a_resolved_reference_is_not(rendered: str) -> None:
+    """A numeric citation and an ordinary question mark must not trip it."""
+    assert not make_submission.unresolved_references(Path("m.pdf"), rendered)
+
+
+def test_the_built_manuscript_resolves_every_reference() -> None:
+    if not IDENTIFIED.exists():
+        pytest.skip("paper/paper.pdf not built")
+    rendered = make_submission._rendered_text(IDENTIFIED)
+    assert not make_submission.unresolved_references(IDENTIFIED, rendered)
+
+
 def test_the_page_count_is_read_from_the_pdf() -> None:
     if not IDENTIFIED.exists():
         pytest.skip("paper/paper.pdf not built")

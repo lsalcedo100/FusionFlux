@@ -357,6 +357,32 @@ def _page_count(pdf: Path) -> int:
 COMMIT_HASH = re.compile(r"\b[0-9a-f]{40}\b")
 
 
+# A LaTeX \cite with no matching \bibitem renders as a literal [?], and a \ref
+# with no \label as ??. Both are silent: the build succeeds and the PDF looks
+# finished. The anonymous variant is rewritten by this script rather than
+# authored, so it is the build where a citation can go missing without anyone
+# having edited a bibliography, and it did: an earlier lookahead here ran from
+# \bibitem{zenodo} to \end{thebibliography} and swallowed the five entries after
+# it, shipping seven [?] marks in a PDF that verify_anonymous called clean.
+# Checked on the rendered text, because that is the only place the marks exist.
+# The bracket form allows commas and repeats, because a multi-key \cite renders
+# as one bracket: \cite{petty,luce} with neither key defined prints [?, ?], and
+# a pattern anchored on a single ? inside brackets walks straight past it. That
+# was one of the seven marks in the build this guard exists to have caught.
+UNRESOLVED = re.compile(r"\[[\s?,]*\?[\s?,]*\]|\?\?")
+
+
+def unresolved_references(pdf: Path, rendered: str) -> list[str]:
+    found = UNRESOLVED.findall(rendered)
+    if not found:
+        return []
+    return [
+        f"{pdf.name}: {len(found)} unresolved citation or cross-reference "
+        f"({', '.join(sorted(set(m.strip() for m in found)))}); "
+        "a \\cite or \\ref did not survive the rewrite"
+    ]
+
+
 def verify_anonymous(pdfs: list[Path]) -> None:
     failures = []
     for pdf in pdfs:
@@ -367,8 +393,12 @@ def verify_anonymous(pdfs: list[Path]) -> None:
                 failures.append(f"{pdf.name}: contains {token!r}")
         for found in set(COMMIT_HASH.findall(text)):
             failures.append(f"{pdf.name}: contains the commit hash {found}")
+        failures.extend(unresolved_references(pdf, rendered))
     if failures:
-        raise SystemExit("anonymised build is not anonymous:\n  " + "\n  ".join(failures))
+        # "not anonymous" stays in the header because it is still the failure
+        # this function exists for and the one a reader scanning output looks
+        # for; the unresolved-reference lines say plainly what they are.
+        raise SystemExit("anonymised build is not anonymous or not usable:\n  " + "\n  ".join(failures))
 
 
 def main() -> int:  # pragma: no cover - builds PDFs and writes the bundle
