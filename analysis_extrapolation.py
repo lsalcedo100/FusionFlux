@@ -23,12 +23,14 @@ The narrative built on these numbers is in ``results/RESULTS.md``.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
+from matplotlib.ticker import NullFormatter, ScalarFormatter
 
 import hdb5
 from figures import (
@@ -574,17 +576,45 @@ def _place_labels_without_overlap(
         artist.remove()
         return window.expanded(1.06, 1.14)
 
-    # Right first, so the uncrowded majority keeps the placement it had.
+    # Right first, so the uncrowded majority keeps the placement it had. The
+    # near ladder is tried before the wide one for the same reason.
+    #
+    # These twelve alone were not enough. Six labels and twelve markers compete
+    # for the patch between distance 1.1 and 2.5, where D3D, AUG, AUGW, JETILW,
+    # JET and JT60U sit; every candidate collided there, the least-bad fallback
+    # fired, and AUG printed across a marker. The rings below extend the search
+    # rather than let that fallback stand. They are generated in a fixed order
+    # from fixed constants, so the placement stays deterministic and the
+    # reproduction check can still compare figures.
     candidates = [
         (7, 3), (-7, 3), (7, -10), (-7, -10), (0, 10), (0, -14),
         (14, 9), (-14, 9), (14, -16), (-14, -16), (0, 18), (0, -22),
     ]
-    marker_radius = 7.0
+    for radius in (22.0, 30.0, 39.0):
+        for degrees in (0, -30, 30, -60, 60, 90, -90, 150, -150, 180, 120, -120):
+            angle = math.radians(float(degrees))
+            candidates.append(
+                (round(radius * math.cos(angle), 2), round(radius * math.sin(angle), 2))
+            )
+    marker_radius = 8.0
     obstacle_display = [to_display(o) for o in obstacles]
     placed: list[Any] = []
     chosen: dict[str, tuple[float, float]] = {}
 
     for x, y, text in points:
+        # The point being labelled is in `obstacles` too, and a label a few
+        # points from its own marker always overlaps it. Counting that put a
+        # floor of one under every candidate, so the zero-cost early exit below
+        # never fired and every label kept the first candidate: the search ran
+        # but decided nothing, and the cluster near the origin overlapped. Its
+        # own marker is dropped here; every other marker still counts, which is
+        # what the comment at the call site asks for.
+        anchor = to_display((x, y))
+        others = [
+            (ox, oy)
+            for ox, oy in obstacle_display
+            if abs(ox - anchor[0]) > 0.5 or abs(oy - anchor[1]) > 0.5
+        ]
         best, best_cost = candidates[0], None
         for offset in candidates:
             box = _box((x, y), offset, text)
@@ -593,7 +623,7 @@ def _place_labels_without_overlap(
             cx, cy = box.x0 + half_w, box.y0 + half_h
             cost += sum(
                 1
-                for ox, oy in obstacle_display
+                for ox, oy in others
                 if abs(cx - ox) < half_w + marker_radius
                 and abs(cy - oy) < half_h + marker_radius
             )
@@ -759,6 +789,22 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             markersize=7,
             label=f"{label}   (rho = {rho:+.2f})",
         )
+    # Log distance, set before the labels are placed because the placement
+    # search measures candidate boxes through transData and would otherwise
+    # solve the linear geometry and draw the log one.
+    #
+    # Six of the thirteen machines sit between distance 1.1 and 2.5 and the
+    # furthest is at 10.2, so on a linear axis half the sample is compressed
+    # into a fifth of the panel: twelve markers and six labels compete for that
+    # patch, the placement search has no free candidate anywhere in it, and its
+    # least-bad fallback printed AUG across JET-ILW's marker. Log spreads the
+    # cluster without dropping a label or hiding a point. The correlations in
+    # the legend are rank statistics, so none of them moves.
+    axes[1].set_xscale("log")
+    axes[1].set_xticks([1.0, 1.5, 2.0, 3.0, 5.0, 7.0, 10.0])
+    axes[1].xaxis.set_major_formatter(ScalarFormatter())
+    axes[1].xaxis.set_minor_formatter(NullFormatter())
+
     truncated = {finding.tokamak for finding in analysis.truncation}
     forest_rows = per_machine[per_machine["model_name"] == "random_forest"]
 
@@ -812,7 +858,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     # Open a band under the data for the caption rather than printing over points.
     axes[1].set_ylim(lowest - 0.10 * (highest - lowest), highest + 0.30 * (highest - lowest))
     axes[1].set_xlabel(
-        "Mahalanobis distance from training data",
+        "Mahalanobis distance from training data (log scale)",
         fontsize=FONT_LABEL,
         color=muted,
     )
