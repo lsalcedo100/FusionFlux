@@ -357,10 +357,13 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
                 color=MUTED,
             )
     axes[0].axhline(nominal, color=INK, linewidth=1.2, linestyle="--", zorder=4)
+    # Lifted clear of the bar value labels, which sit a few points above each
+    # bar and reach the nominal line wherever a model covers near 90%: at 4
+    # points this label and the rightmost "91" were printing side by side.
     axes[0].annotate(
         f"nominal {nominal * 100:.0f}%",
         xy=(len(models) - 0.5, nominal),
-        xytext=(0, 4),
+        xytext=(0, 13),
         textcoords="offset points",
         ha="right",
         fontsize=9,
@@ -373,7 +376,12 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
         ha="right",
         fontsize=8.5,
     )
-    axes[0].set_ylim(0, 1.0)
+    # Headroom above the tallest bar and its value label, so the legend has a
+    # band of its own. Placing it inside the data area needs a region the bars
+    # happen to leave empty, and which region that is changes every time a
+    # coverage does; the band above 1.0 is empty by construction, since these
+    # are proportions.
+    axes[0].set_ylim(0, 1.30)
     axes[0].set_ylabel(f"empirical coverage of {nominal * 100:.0f}% intervals", fontsize=10, color=INK)
     axes[0].set_title(
         "Calibrated only on the split it was calibrated on",
@@ -381,7 +389,16 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
         color=INK,
         loc="left",
     )
-    axes[0].legend(frameon=False, fontsize=8.5, loc="lower left")
+    axes[0].legend(
+        frameon=False,
+        fontsize=8.5,
+        loc="upper center",
+        ncol=3,
+        columnspacing=1.4,
+        handlelength=1.5,
+        handletextpad=0.5,
+        borderaxespad=0.1,
+    )
 
     # --- Bottom: coverage against extrapolation distance -------------------
     #
@@ -514,7 +531,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
     # A gutter below zero holds the machine names. Three of the machines sit
     # within 0.25 distance units of each other, so labels placed among the marks
     # collide with them and with each other whatever the rotation.
-    axes[1].set_ylim(-max(gutter_depth, 0.34), 1.08)
+    axes[1].set_ylim(-max(gutter_depth, 0.34), 1.42)
     axes[1].set_yticks(np.arange(0.0, 1.01, 0.2))
     axes[1].axhline(0.0, color=MUTED, linewidth=0.8, zorder=2)
     axes[1].set_xlabel(
@@ -529,8 +546,20 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
         color=INK,
         loc="left",
     )
-    # Centre right is the one region all three curves leave empty.
-    axes[1].legend(frameon=False, fontsize=8.5, loc="center right")
+    # Above the curves rather than among them. Coverage is a proportion, so
+    # nothing can be drawn above 1.0 and the band there is empty whatever the
+    # curves do; a legend placed in a gap between them survives only until a
+    # coverage moves into it, which is what happened to the previous placement.
+    axes[1].legend(
+        frameon=False,
+        fontsize=8.5,
+        loc="upper center",
+        ncol=3,
+        columnspacing=1.4,
+        handlelength=1.5,
+        handletextpad=0.5,
+        borderaxespad=0.1,
+    )
 
     figure.tight_layout()
     path = RESULTS_DIR / "conformal.png"
