@@ -44,8 +44,9 @@ GENERATIVE AI
   assisted with author-specified analysis code and with drafting and editing.
   OpenAI GPT-5.6 Sol critiqued drafts, supported the literature review and
   proposed robustness checks, several of which were adopted. Neither is an
-  author; the author specified and verified every analysis, checked every
-  reference against its published record, and takes full responsibility.
+  author. I specified and verified every analysis, checked every reference
+  against its published record, and take full responsibility for the content
+  and for any error in it.
 
 REFEREES
   NOMINATIONS
@@ -113,8 +114,8 @@ FREE-TEXT DISCLOSURE
   my suggested referees are co-authors with him on work cited in this
   manuscript: J. Hall on the machine-size scaling contribution, and O. J. W. F.
   Kardaun as fourth author of the database paper itself, which this manuscript
-  re-analyses. Neither has seen this work. I am declaring both so that the
-  editor learns them from me rather than from an author list.
+  re-analyses. Neither has seen this work. I would rather you heard that from
+  me than found it on an author list.
 
   CHECK THE FIRST TWO SENTENCES ON THE DAY. If he has replied before you upload,
   the second one is false and the Acknowledgments need revisiting too.
