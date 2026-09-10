@@ -664,8 +664,14 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     }
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    # The middle panel carries thirteen machine labels at FONT_SMALL, which the
+    # font policy holds at 8.3 pt so that it renders at IOP's 8 pt floor once
+    # \linewidth scales the figure by 0.967. Labels that size need vertical
+    # room to sit above and below their markers: at the previous height the
+    # placement search had none, and JET-ILW and AUG-W stacked on each other
+    # while ASDEX touched a marker. The extra inch goes to that panel.
     figure, axes = plt.subplots(
-        3, 1, figsize=(PAPER_WIDTH_IN, 8.4), gridspec_kw={"height_ratios": [1.2, 1.15, 1.0]}
+        3, 1, figsize=(PAPER_WIDTH_IN, 9.4), gridspec_kw={"height_ratios": [1.15, 1.6, 1.0]}
     )
     for axis in axes:
         axis.grid(alpha=0.25, linewidth=0.6)

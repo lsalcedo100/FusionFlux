@@ -52,7 +52,17 @@ import pandas as pd
 
 import hdb5
 from analysis_extrapolation import spearman
-from figures import PAPER_WIDTH_IN, apply_font_policy, save_figure
+from figures import (
+    FONT_ANNOTATION,
+    FONT_LABEL,
+    FONT_LEGEND,
+    FONT_SMALL,
+    FONT_TICK,
+    FONT_TITLE,
+    PAPER_WIDTH_IN,
+    apply_font_policy,
+    save_figure,
+)
 from storage import write_dataframe_csv_atomic, write_json_strict
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -353,7 +363,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
                 xytext=(0, 3),
                 textcoords="offset points",
                 ha="center",
-                fontsize=7.5,
+                fontsize=FONT_ANNOTATION,
                 color=MUTED,
             )
     axes[0].axhline(nominal, color=INK, linewidth=1.2, linestyle="--", zorder=4)
@@ -366,7 +376,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
         xytext=(0, 13),
         textcoords="offset points",
         ha="right",
-        fontsize=9,
+        fontsize=FONT_ANNOTATION,
         color=INK,
     )
     axes[0].set_xticks(positions)
@@ -374,7 +384,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
         [MODEL_LABELS.get(row.model_name, row.model_name) for row in models],
         rotation=18,
         ha="right",
-        fontsize=8.5,
+        fontsize=FONT_TICK,
     )
     # Headroom above the tallest bar and its value label, so the legend has a
     # band of its own. Placing it inside the data area needs a region the bars
@@ -382,16 +392,16 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
     # coverage does; the band above 1.0 is empty by construction, since these
     # are proportions.
     axes[0].set_ylim(0, 1.30)
-    axes[0].set_ylabel(f"empirical coverage of {nominal * 100:.0f}% intervals", fontsize=10, color=INK)
+    axes[0].set_ylabel(f"empirical coverage of {nominal * 100:.0f}% intervals", fontsize=FONT_LABEL, color=INK)
     axes[0].set_title(
         "Calibrated only on the split it was calibrated on",
-        fontsize=10.5,
+        fontsize=FONT_TITLE,
         color=INK,
         loc="left",
     )
     axes[0].legend(
         frameon=False,
-        fontsize=8.5,
+        fontsize=FONT_LEGEND,
         loc="upper center",
         ncol=3,
         columnspacing=1.4,
@@ -461,7 +471,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
             xy=(0.5, 0.5),
             xycoords="axes fraction",
             rotation=90,
-            fontsize=7,
+            fontsize=FONT_SMALL,
             alpha=0.0,
         )
         figure.canvas.draw()
@@ -504,7 +514,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
                 rotation=90,
                 ha="center",
                 va="top",
-                fontsize=7,
+                fontsize=FONT_SMALL,
                 color=MUTED,
             )
 
@@ -513,7 +523,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
         # `depth` points below zero out of a total range of `top + gutter` gives
         # gutter * height / (top + gutter) >= depth, hence the closed form.
         depth_points = 4.0 + row_pitch_points * (len(row_last_x) - 1) + label_length_points
-        top = 1.08
+        top = 1.42
         headroom = axis_height_points - depth_points
         gutter_depth = top * depth_points / headroom if headroom > 0 else top
 
@@ -525,7 +535,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
         xytext=(0, 5),
         textcoords="offset points",
         ha="right",
-        fontsize=9,
+        fontsize=FONT_ANNOTATION,
         color=INK,
     )
     # A gutter below zero holds the machine names. Three of the machines sit
@@ -535,14 +545,14 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
     axes[1].set_yticks(np.arange(0.0, 1.01, 0.2))
     axes[1].axhline(0.0, color=MUTED, linewidth=0.8, zorder=2)
     axes[1].set_xlabel(
-        "Mahalanobis distance of the machine from the training data", fontsize=10, color=INK
+        "Mahalanobis distance of the machine from the training data", fontsize=FONT_LABEL, color=INK
     )
     axes[1].set_ylabel(
-        f"empirical coverage of {nominal * 100:.0f}% intervals", fontsize=10, color=INK
+        f"empirical coverage of {nominal * 100:.0f}% intervals", fontsize=FONT_LABEL, color=INK
     )
     axes[1].set_title(
         "Coverage against extrapolation distance",
-        fontsize=10.5,
+        fontsize=FONT_TITLE,
         color=INK,
         loc="left",
     )
@@ -552,7 +562,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
     # coverage moves into it, which is what happened to the previous placement.
     axes[1].legend(
         frameon=False,
-        fontsize=8.5,
+        fontsize=FONT_LEGEND,
         loc="upper center",
         ncol=3,
         columnspacing=1.4,

@@ -81,14 +81,20 @@ apply_font_policy()
 # of it, which leaves *more* room per panel than before while the type lands on
 # the page at the size it is written here. These sizes sit just under the 10 pt
 # body text, which is where figure lettering belongs.
+#
+# 8.3 pt is the floor, not a preference. IOP asks for 8 to 12 pt at *final*
+# figure size, and these are authored at 6.6 in but placed at \linewidth, which
+# is 6.38 in on a4paper with 2.4 cm margins: a 0.967 scale. Anything written
+# below 8.3 here renders under 8 pt on the page. The previous 7.5 pt ticks and
+# 7.0 pt small text landed at 7.25 and 6.77.
 PAPER_WIDTH_IN = 6.6
 
 FONT_TITLE = 10.0
 FONT_LABEL = 9.0
-FONT_TICK = 7.5
+FONT_TICK = 8.5
 FONT_LEGEND = 8.5
-FONT_ANNOTATION = 8.0
-FONT_SMALL = 7.0
+FONT_ANNOTATION = 8.5
+FONT_SMALL = 8.3
 
 # Marker and line style per model, so no figure carries its meaning in colour
 # alone. A reader printing the paper in grey, or one of the roughly one in twelve
