@@ -50,15 +50,25 @@ GENERATIVE AI
 
 REFEREES
   NOMINATIONS
-    1. J. Hall              <affiliation> <email>   FILL-IN
-    2. O. J. W. F. Kardaun  <affiliation> <email>   FILL-IN
-    3. C. Rea               <affiliation> <email>   FILL-IN
-    4. A. Murari            <affiliation> <email>   FILL-IN
+    1. J. Hall              Ghent University, Dept. of Applied Physics, Ghent,
+                            Belgium  [CHECK]          <email>   FILL-IN
+    2. O. J. W. F. Kardaun  Max Planck Institute for Plasma Physics, Garching,
+                            Germany  [CHECK]          <email>   FILL-IN
+    3. C. Rea               MIT Plasma Science and Fusion Center, Cambridge MA,
+                            USA  [CHECK]              <email>   FILL-IN
+    4. A. Murari            Consorzio RFX (CNR, ENEA, INFN, Univ. di Padova),
+                            35127 Padova, Italy  [CHECK]  <email>  FILL-IN
 
-  The four are chosen, the contact details are not: only you can supply an
-  affiliation and an address you have checked, and a wrong one goes to a
-  stranger over your name. This is the last FILL-IN on the sheet, and it is a
-  FILL-IN because nothing in this repository can verify an email address.
+  The affiliations above were read off public sources and are marked [CHECK]
+  rather than settled: Hall from the EPS paper as deposited in Ghent's
+  institutional repository, Kardaun and Murari from the affiliations printed on
+  their recent papers, Rea from the current MIT PSFC staff page. Each is
+  plausible and none was confirmed against the person. Delete the [CHECK] marker
+  as you verify each one.
+
+  The addresses are a different matter and are still FILL-IN, because nothing in
+  this repository can verify an email address and a wrong one goes to a stranger
+  over your name. Departmental directory pages for all four carry them.
 
   Every name below is nominated, and every name nominated appears below. That
   is worth keeping true: the sheet used to argue for S. M. Kaye in a list he
