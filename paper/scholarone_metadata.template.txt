@@ -50,62 +50,77 @@ GENERATIVE AI
 
 REFEREES
   NOMINATIONS
-    1. J. Hall              Ghent University, Dept. of Applied Physics, Ghent,
-                            Belgium  [CHECK]          <email>   FILL-IN
-    2. O. J. W. F. Kardaun  Max Planck Institute for Plasma Physics, Garching,
-                            Germany  [CHECK]          <email>   FILL-IN
-    3. C. Rea               MIT Plasma Science and Fusion Center, Cambridge MA,
-                            USA  [CHECK]              <email>   FILL-IN
-    4. A. Murari            Consorzio RFX (CNR, ENEA, INFN, Univ. di Padova),
-                            35127 Padova, Italy  [CHECK]  <email>  FILL-IN
+    1. Joseph Hall          Ghent University, Dept. of Applied Physics,
+                            Research Unit Nuclear Fusion, Ghent, Belgium
+                            joseph.hall@ugent.be
+    2. C. Rea               MIT Plasma Science and Fusion Center, Cambridge MA,
+                            USA
+                            crea@mit.edu
+    3. Andrea Murari        Consorzio RFX (CNR, ENEA, INFN, Univ. di Padova),
+                            Corso Stati Uniti 4, 35127 Padova, Italy
+                            andrea.murari@istp.cnr.it
 
-  The affiliations above were read off public sources and are marked [CHECK]
-  rather than settled: Hall from the EPS paper as deposited in Ghent's
-  institutional repository, Kardaun and Murari from the affiliations printed on
-  their recent papers, Rea from the current MIT PSFC staff page. Each is
-  plausible and none was confirmed against the person. Delete the [CHECK] marker
-  as you verify each one.
+  Three, not four, and that is deliberate. IOP states that suggesting reviewers
+  is welcome but not required, so a thin fourth name is worth less than three
+  that hold up.
 
-  The addresses are a different matter and are still FILL-IN, because nothing in
-  this repository can verify an email address and a wrong one goes to a stranger
-  over your name. Departmental directory pages for all four carry them.
+  Every address comes from the person's own institutional record. Hall from
+  Ghent's Infusion unit listing, which also gives his full first name and
+  confirms he is tenured academic staff rather than a student. Rea from the MIT
+  PSFC researcher page, which lists her as Principal Research Scientist and head
+  of the Data Science Division. Murari from the corresponding-author line of his
+  2025 paper in Plasma Phys. Control. Fusion, an IOP journal, where he is listed
+  at andrea.murari@istp.cnr.it with ORCID 0000-0002-3932-3865. Note the domain:
+  CNR folded the Istituto Gas Ionizzati into the Istituto per la Scienza e
+  Tecnologia dei Plasmi, so older papers print igi.cnr.it and the current
+  address is istp.cnr.it. He also holds a second affiliation at the University
+  of Rome Tor Vergata.
 
   Every name below is nominated, and every name nominated appears below. That
   is worth keeping true: the sheet used to argue for S. M. Kaye in a list he
   was not on.
 
-  Hall is the closest existing work and the most likely to find an error.
-  Kardaun is cited in Sec. {{SEC_KARDAUN}} and in Limitations as the precursor on interval
-  estimation for ITER and on errors in variables, so he is the person best
-  placed to say whether that treatment is fair. Rea is the reader who is not a
-  scaling-law specialist, on machine learning applied to tokamak data more
-  broadly, and Murari is on machine-learning approaches to confinement scaling.
+  Hall is the closest existing work and the most likely to find an error. Rea is
+  the reader who is not a scaling-law specialist, on machine learning applied to
+  tokamak data more broadly, and Murari is on machine-learning approaches to
+  confinement scaling and on the statistical formulation of scaling expressions.
 
-  Two of the four are Verdoolaege co-authors, and both go in the free-text box
-  along with the 6 September 2026 letter, so the editor learns it from you
+  O. J. W. F. Kardaun, cited in Sec. {{SEC_KARDAUN}} and in Limitations as the
+  precursor on interval estimation for ITER and on errors in variables, would be
+  the natural reviewer of that treatment and is deliberately not nominated. No
+  activity after the mid-2000s could be found: the paper cited here is from
+  1999, his book from 2005, and there is no current IPP directory entry. An
+  unreachable nomination wastes the slot. If the editor wants a fourth name,
+  C. Angioni sits in the substitutes below, and that gap is worth stating
+  plainly: with Kardaun off the list nobody nominated here is primarily a
+  statistician.
+
+  One of the three is a Verdoolaege co-author, and that goes in the free-text
+  box along with the 6 September 2026 letter, so the editor learns it from you
   rather than from the author list.
 
-    - J. Hall is a co-author on Refs. [{{REF_HALL}}] and [{{REF_HALL26}}].
-    - O. J. W. F. Kardaun is the fourth author of Ref. [{{REF_HDB5}}], the paper
-      describing the database this manuscript critiques. That is the closer
-      tie of the two.
+    - J. Hall is a co-author on Refs. [{{REF_HALL}}] and [{{REF_HALL26}}], and
+      is in Verdoolaege's own research unit at Ghent.
 
-  Kardaun's tie went undeclared here while C. Angioni was dropped to the
-  substitutes for having a weaker one, which is the wrong way round and reads
-  worse than either name would on its own. Declaring both is the fix; dropping
-  a third name is not.
+  The closer tie that used to sit here belonged to Kardaun, the fourth author of
+  Ref. [{{REF_HDB5}}], the paper describing the database this manuscript
+  critiques. It leaves the sheet with him, and nothing is being quietly dropped:
+  he is off the list because he appears to be inactive, not because of the tie.
+  C. Angioni, third author of the same reference, remains in the substitutes.
 
   Do not oppose anyone. The paper criticises no individual study and says so
   explicitly, and an opposed-reviewer entry would contradict that in front of
   the editor who has just read it.
 
-  Substitutes, if one of the four declines or the editor asks for more, taken
+  Substitutes, if one of the three declines or the editor asks for more, taken
   from the works the manuscript engages with rather than from a general list of
   the field.
 
   - C. Angioni, on the confinement database and modelling side, with the
-    disclosure above.
-  - S. M. Kaye, likewise, and a co-author of the database paper.
+    disclosure above. The first name to promote if a fourth is wanted.
+  - S. M. Kaye, likewise, and a co-author of the database paper. He is also a
+    co-author of Butt et al., which this manuscript now cites and which holds
+    out whole machines on this database, so the tie is closer than it was.
   - R. S. Granetz, in the same role as Rea.
 
   G. Verdoolaege led the database paper and is the obvious first name, but he
