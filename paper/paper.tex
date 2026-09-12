@@ -68,25 +68,28 @@ Archived at \href{https://doi.org/10.5281/zenodo.22699942}{doi:10.5281/zenodo.22
 On the ITPA Global H-mode Confinement Database (HDB5, STD5; 6228 slices, 18 labels),
 under cross-validation grouped by discharge, a random forest cuts log error by
 29\% against a power law refitted in the same folds and 36\% against published
-IPB98(y,2). Held out one device at a time the ordering reverses, so selecting a
-confinement model on its cross-validated score does not merely fail to inform
-about extrapolation: over the three models compared here it picks the worst
-extrapolator. Two controls bound that. Regressing the stored energy, which moves
-only the identity $\tau=W/P$ and leaves the loss power among the features,
-leaves the forest worse on \textbf{9 of 13} labels and 9 of 11 devices at a mean
-gap of $+0.220$; in dimensionless coordinates, where no feature is a device
-label but each is built from the target, it is 11 of 13 and 9 of 11. On the
-confinement time and the engineering features it is 13 of 13 and 11 of 11. The
-forest's error tracks the held-out label's Mahalanobis distance from the
-training at $\rho=+0.85$, against $-0.06$ for the power law. At a cut
-reproducing ITER's $1.82\times$ jump in major radius the trees land nearer a
-constant predictor than the power law, and 90\% split-conformal intervals fall
-to 3\% and 0\% coverage at unchanged width. Two repairs help, both supplying
-long-range structure rather than capacity: Connor--Taylor constraints, whose
-Kadomtsev rung is free in sample, and a Gaussian process with a linear kernel
-component, this work's best cross-validated model, which does not reverse.
+IPB98(y,2). Held out one device at a time that ordering reverses: the best
+cross-validated of the three is its worst extrapolator, so where every flexible
+candidate saturates, cross-validation selects against the property the law is
+bought for. The candidate set fails, not the score: this work's best
+cross-validated model, a linear-plus-RBF Gaussian process, does not reverse.
+Two controls bound the inversion, regressing the stored energy instead and
+regressing in dimensionless coordinates where no feature is a device label,
+which leave the forest worse on 9 of 13 and 11 of 13 labels against
+\textbf{13 of 13} on the engineering features. The interval is the sharper failure. At a cut reproducing ITER's $1.82\times$ jump in
+major radius, nominal 90\% split-conformal intervals calibrated on held-out
+discharges cover \textbf{3\%} and \textbf{0\%} of held-out rows at a width that
+moves by under 1.5\%. That invariance is forced: a
+split-conformal half-width is a rank statistic of the calibration residuals and
+cannot respond to the test distribution, so the interval carries no signal that
+it has stopped covering, and its width is no evidence that it survived the
+boundary. The forest's error does track the held-out label's Mahalanobis
+distance, at $\rho=+0.85$ against $-0.06$ for the power law, so the warning the
+interval withholds is available in advance. Two repairs
+help, both supplying long-range structure rather than capacity: Connor--Taylor
+constraints, whose Kadomtsev rung is free in sample, and that same process.
 Holding nonlinear capacity fixed and varying only the long-range mean isolates
-the mechanism: the failure tracks saturation rather than flexibility.
+the mechanism: saturation, not flexibility.
 \end{abstract}
 
 \begin{center}\small
@@ -737,14 +740,6 @@ scores, where every label counts once. And JET and JET-ILW are one physical
 tokamak either side of a wall change, as are AUG and AUGW, so holding out
 JET-ILW while training on JET does not hold out an unseen device.
 
-\paragraph{The labels too small to score.} Five labels hold fewer than 30 rows
-and none can carry a held-out score of its own, but all five stay in every
-training fold, since the threshold governs scoring rather than training. They
-are among the most unusual points in the feature space, so whether a flexible
-model exploits them is a fair question; dropping them from training as well
-leaves the ordering over the 13 held-out labels unchanged, and Sec.~S11 of the
-Supplementary Material gives the arm.
-
 \begin{table}[t]
 \centering
 \small
@@ -829,7 +824,17 @@ held-out score more than doubles, from 0.214 to 0.477. It tells us that the
 reversal needs features carrying size. It cannot tell us whether it needs them
 because they carry size or because they name the machine.
 
-The dimensionless coordinates separate exactly those two things. In
+The dimensionless coordinates separate exactly those two things, and they are
+not coordinates constructed here. Fitting this database in them is established
+practice on the regression side as well as the experimental one: Cordey
+\emph{et al.}~\cite{cordey} fit the confinement time against $\beta$ and
+collisionality directly, and the reference description of the revision analysed
+here~\cite{hdb5} reports that transforming an engineering-variable scaling into
+dimensionless form leaves large error bars on the result, proposes regression in
+the space of dimensionless variables as the alternative, and carries it out.
+What this arm adds is not the coordinates but the use they are put to: a
+control on the device-label pathway, scored under the held-out-device split
+against the same models the engineering features were scored on. In
 $(\rho^{*},\beta,\nu^{*},q,\epsilon,\kappa,M)$ the size, field and density
 dependence is retained while no coordinate is a device label: $\rho^{*}$ moves
 26.6\% within a device, $\beta$ 35.4\%, $\nu^{*}$ 66.6\% and $q$ 70.4\%, against
@@ -865,13 +870,15 @@ rather than a stricter version of the same one, and nothing below reads it as
 the stricter one. The specification is in
 \texttt{analysis\_dimensionless.py}.
 
-\paragraph{Four choices that do not carry it.} Four more arms vary choices the
+\paragraph{Choices that do not carry it.} Further arms vary choices the
 comparison had to make and that a reader could reasonably suspect of carrying
 it. Sec.~S11 of the Supplementary Material gives each in full; the outcomes are
 that none of them does. Sweeping the 30-row eligibility threshold over 10, 20,
 30 and 50 rows changes only which labels are scored and never which are trained
 on, and the power law wins every scored label at 20, 30 and 50 and 14 of 15 at
-10. Repeating the cross-validation over ten shuffled fold assignments puts the
+10; the five labels below the threshold stay in every training fold either way,
+and dropping them from training as well leaves the ordering over the 13
+held-out labels unchanged. Repeating the cross-validation over ten shuffled fold assignments puts the
 forest's interpolation margin between 27.0\% and 28.5\%, with the deterministic
 partition's 29.5\% just above that range, so the margin it later gives up is not
 a property of one partition. A nested hyperparameter search moves the forest's
@@ -1071,11 +1078,12 @@ random forest from 0.938 to 0.936, so the effect is not driven by including the
 spherical devices; other shape or regime covariates that track size are not
 ruled out by this control.
 
-\section{A power law with a bounded correction}
+\subsection{A power law with a bounded correction}
 \label{sec:hybrid}
 
-The diagnosis in Sec.~\ref{sec:mechanisms} suggests a repair that Sec.~S9 of the
-Supplementary Material builds and scores: fit the power law, learn a correction
+This is a supporting result and it is reported at that weight: it is built and
+scored in Sec.~S9 of the Supplementary Material, and what follows is the
+summary. The diagnosis in Sec.~\ref{sec:mechanisms} suggests the repair: fit the power law, learn a correction
 on its log residuals, and damp it, so that what the tree ensemble is bounded on
 is a residual centred on zero rather than a target that grows with machine size.
 Across the ITER-size-matched cut a bounded correction takes the power law from
@@ -1084,8 +1092,7 @@ Across the ITER-size-matched cut a bounded correction takes the power law from
 machines and the correction points the right way and is largest where the bias
 is largest.
 
-Two limits keep this a supporting result rather than a recommendation, and both
-are why it sits in the supplement. Cross-validation selects the most heavily
+Two limits keep it from being a recommendation. Cross-validation selects the most heavily
 corrected rung in both families while the rung that transfers is the uncorrected
 one, so a practitioner tuning on the split they would ordinarily use does not
 arrive at it. And over the whole size sweep the bounded hybrid wins 5 of 8
@@ -1289,7 +1296,12 @@ Eq.~\eqref{eq:groups} alone, and their numerical rows are in
 Constraining a confinement scaling this way is not new, and IPB98(y,2) is
 itself an instance of it: the high-$\beta$ Kadomtsev constraint was enforced
 when it was fitted, alongside a magnetic-field exponent fixed at
-0.15~\cite{ipb98,hdb5}. Its exponents accordingly land on the Kadomtsev
+0.15~\cite{ipb98,hdb5}. Neither is fitting this database in the groups of
+Eq.~\eqref{eq:groups}, which Sec.~\ref{sec:robustness} attributes where it
+uses them: Cordey \emph{et al.}~\cite{cordey} fit it against $\beta$ and
+collisionality directly, and the reference description of this
+revision~\cite{hdb5} proposes and performs the regression in dimensionless
+variables. Its exponents accordingly land on the Kadomtsev
 surface~\cite{kadomtsev} derived here at a distance of 0.00096, and on the
 collisionless surface at 0.0045. The first of those is expected rather than
 surprising, and it is used only as a check that the surfaces derived in code
@@ -1799,9 +1811,9 @@ directions. A gain reported under the first is not evidence about the second.
 
 This is the selection argument of Sec.~\ref{sec:intro}, now measured, and it
 has to be stated at the width the evidence carries. Over the three primary models
-scored here, all of which saturate, the convention does not merely fail to
-inform about extrapolation: it picks the worst of the three extrapolators on
-offer, and the more carefully it is followed the more confidently it does so.
+scored here, whose two flexible members both saturate, the convention does not
+merely fail to inform about extrapolation: it picks the worst of the three
+extrapolators on offer, and the more carefully it is followed the more confidently it does so.
 How far that generalises depends on how much of the literature on this database
 also fits saturating models, and this paper does not measure that. Tree
 ensembles are fitted to it~\cite{xiong}; whether a variational or
@@ -2384,6 +2396,10 @@ Abstr.\ \textbf{47A}, P1.024 (2023).
 energy confinement database,'' poster P2.1097, \emph{52nd EPS Conf.\ on Plasma
 Physics}, Edinburgh (2026). Conference presentation; not published in refereed
 form at the time of writing.
+\bibitem{cordey} J. G. Cordey \emph{et al.}, ``Scaling of the energy confinement
+time with $\beta$ and collisionality approaching ITER conditions,'' \emph{Nucl.\
+Fusion} \textbf{45}, 1078 (2005).
+\href{https://doi.org/10.1088/0029-5515/45/9/007}{doi:10.1088/0029-5515/45/9/007}
 \bibitem{conformal} V. Vovk, A. Gammerman and G. Shafer,
 \emph{Algorithmic Learning in a Random World}, Springer (2005).
 \href{https://doi.org/10.1007/b106715}{doi:10.1007/b106715}
@@ -2440,10 +2456,6 @@ Released CC0.
 \bibitem{felsenstein} J. Felsenstein, ``Phylogenies and the comparative
 method,'' \emph{Am.\ Nat.} \textbf{125}, 1 (1985).
 \href{https://doi.org/10.1086/284325}{doi:10.1086/284325}
-\bibitem{cordey} J. G. Cordey \emph{et al.}, ``Scaling of the energy confinement
-time with $\beta$ and collisionality approaching ITER conditions,'' \emph{Nucl.\
-Fusion} \textbf{45}, 1078 (2005).
-\href{https://doi.org/10.1088/0029-5515/45/9/007}{doi:10.1088/0029-5515/45/9/007}
 \bibitem{gls} G. Verdoolaege, A. Shabbir and G. Hornung, ``Robust analysis of
 trends in noisy tokamak confinement data using geodesic least squares
 regression,'' \emph{Rev.\ Sci.\ Instrum.} \textbf{87}, 11D423 (2016).

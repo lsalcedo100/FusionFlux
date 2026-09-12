@@ -693,8 +693,8 @@ BACK_POINTERS = {
     "4": "The ranking inversion",
     "4.1": "Three diagnostics of the failure",
     "4.2": "Sensitivity to population, aggregation, and device definition",
-    "8": "Dimensional constraints from Connor--Taylor similarity",
-    "12.1": "The same experiment with the nonlinear component specified identically",
+    "7": "Dimensional constraints from Connor--Taylor similarity",
+    "11.1": "The same experiment with the nonlinear component specified identically",
 }
 
 BACK_TABLES = {
