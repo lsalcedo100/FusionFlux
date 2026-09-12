@@ -96,8 +96,8 @@ REFEREES
   statistician.
 
   One of the three is a Verdoolaege co-author, and that goes in the free-text
-  box along with the 6 September 2026 letter, so the editor learns it from you
-  rather than from the author list.
+  box along with the 6 and 9 September 2026 letters, so the editor learns it
+  from you rather than from the author list.
 
     - J. Hall is a co-author on Refs. [{{REF_HALL}}] and [{{REF_HALL26}}], and
       is in Verdoolaege's own research unit at Ghent.
@@ -128,22 +128,41 @@ REFEREES
   if you nominate him, or leave him off and let the editor find him.
 
 FREE-TEXT DISCLOSURE
-  Paste this into the free-text box beside the nominations. It is written out
-  rather than described because everything else on this sheet is paste-ready and
-  this was not, and because the cover letter and this box are different fields
-  that an editor may not both read.
+  THERE IS NO FREE-TEXT BOX ON STEP 5. Checked on the live form, 11 September
+  2026: Nuclear Fusion's referee step is the nominations table and an Add
+  Referee button, nothing else. This sheet used to say "paste this into the
+  free-text box beside the nominations" and sent the author looking for a field
+  that is not there.
+
+  So the cover letter is the field that carries this to the editor, and
+  docs/cover-letter.local.md already says the same thing in its own words. Paste
+  the paragraph below only if Step 1 or Step 6 turns out to offer a
+  comments-to-editor box, in which case it is worth having in both, since an
+  editor may read one field and not the other. If neither does, the cover letter
+  alone is sufficient and nothing here is owed.
 
   On 6 September 2026 I wrote to Professor G. Verdoolaege, who leads the group
   maintaining the ITPA global H-mode confinement database, describing this
-  result and inviting correction. I have had no reply as of submission. Two of
-  my suggested referees are co-authors with him on work cited in this
-  manuscript: J. Hall on the machine-size scaling contribution, and O. J. W. F.
-  Kardaun as fourth author of the database paper itself, which this manuscript
-  re-analyses. Neither has seen this work. I would rather you heard that from
-  me than found it on an author list.
+  result and inviting correction, and on 9 September I sent him an unprompted
+  correction to one claim in that letter, which a rescoring of the ITPA20 laws
+  had made untrue. I have had no reply as of submission. One of the three
+  referees I suggest, J. Hall, is a co-author with him on the machine-size
+  scaling contribution cited here and works in his research unit at Ghent. A
+  second tie is not on the list and I would still rather you had it from me:
+  O. J. W. F. Kardaun, fourth author of the database paper this manuscript
+  re-analyses, would have been the natural referee for its interval estimation,
+  and I left him off only because I could find no activity of his after the
+  mid-2000s. Neither has seen this work. I would rather you heard all of this
+  from me than found it on an author list.
 
-  CHECK THE FIRST TWO SENTENCES ON THE DAY. If he has replied before you upload,
-  the second one is false and the Acknowledgments need revisiting too.
+  CHECK THE NO-REPLY SENTENCE ON THE DAY. Confirmed still true on 11 September
+  2026. If he has replied before you upload, it is false and the Acknowledgments
+  need revisiting too.
+
+  The names in this box and the names in the referee table must match. They did
+  not once: this paragraph claimed two suggested referees when only Hall was
+  nominated, because it was written while Kardaun was still on the list. If you
+  change the nominations, change this.
 
 FILES
   Uploading the NAMED build: ./manuscript.pdf ({{MANUSCRIPT_PAGES}} pp) and

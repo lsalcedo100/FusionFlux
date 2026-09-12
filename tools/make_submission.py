@@ -227,7 +227,7 @@ TEMPLATE = PAPER / "scholarone_metadata.template.txt"
 # The keys are escaped before use: as a regex, "\\rho" is a carriage return
 # followed by "ho" and matches nothing, which is how an earlier version of this
 # silently dropped every symbol in the abstract.
-MATHS = {r"\rho": "rho", r"\times": "x"}
+MATHS = {r"\rho": "rho", r"\tau": "tau", r"\times": "x"}
 
 # Everything else the LaTeX can produce that is not ASCII. En dashes come from
 # "--" in names like Connor--Taylor, and the typeset minus is not a hyphen.
@@ -247,6 +247,19 @@ def _plain(latex: str) -> str:
     """LaTeX to the plain text a form field will hold."""
     for command, glyph in MATHS.items():
         latex = re.sub(re.escape(command) + r"(?![a-zA-Z])", glyph, latex)
+    # Anything still commanded inside math is about to be deleted by the
+    # catch-all below, which is how "the identity $\tau=W/P$" reached a live
+    # submission as "the identity =W/P". Unmapped is a bug in MATHS, not text
+    # to drop: say so rather than emit a field with a hole in it.
+    unmapped = sorted({
+        command
+        for segment in re.findall(r"\$[^$]*\$", latex)
+        for command in re.findall(r"\\[a-zA-Z]+", segment)
+    })
+    if unmapped:
+        raise ValueError(
+            "no ASCII spelling for " + ", ".join(unmapped) + "; add it to MATHS"
+        )
     latex = re.sub(r"\\cite\{[^}]*\}", "", latex)
     # A link's text is what a reader sees; its URL is the same thing spelled long.
     latex = re.sub(r"\\href\{[^}]*\}\{([^}]*)\}", r"\1", latex)
