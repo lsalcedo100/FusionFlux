@@ -15,8 +15,11 @@ abstract: >-
   law refitted inside the same folds by 29% in log-RMSE, and on the published
   IPB98(y,2) scaling law by 36%. Holding out an entire tokamak instead
   reverses the ranking of the three fitted models exactly, and the failure is
-  shown to be a measurable function of extrapolation distance and of the
-  training-range bound inherent to tree ensembles. Imposing the Connor-Taylor
+  shown to be a measurable function of extrapolation distance. Split-conformal
+  intervals calibrated on held-out discharges and carried across a device
+  boundary report 90% and deliver 3%, at a width that cannot respond to the
+  shift because it is a rank statistic of the calibration residuals, so the
+  interval carries no signal that it has stopped covering. Imposing the Connor-Taylor
   dimensional constraints as linear equalities on the exponents repairs it
   and gives the lowest error of any fold-fitted model at a size cut matched
   to ITER's, with no hyperparameter, on a constraint rung selected after
@@ -27,9 +30,10 @@ abstract: >-
   set of woody plants shows the extrapolation failure is unconditional while
   the ranking reversal is not: the reversal requires the flexible model to
   win the interpolation split first, making it the warning sign rather than
-  the hazard. And separating flexibility from boundedness with a Gaussian
-  process shows the failure belongs to boundedness: a bounded kernel scores
-  worse than a constant at the ITER-matched cut, while adding a linear term
+  the hazard. And separating flexibility from long-range saturation with a Gaussian
+  process shows the failure belongs to saturation, to predictions that stop
+  tracking the features once the input leaves the training support: a bounded
+  kernel scores worse than a constant at the ITER-matched cut, while adding a linear term
   to it gives the best cross-validated score in the study together with
   intervals that reach nominal coverage out of distribution without
   recalibration. Includes a
@@ -50,7 +54,7 @@ keywords:
   - allometry
   - model selection
 license: MIT
-version: 0.4.11
+version: 0.4.12
 doi: 10.5281/zenodo.22215142
 references:
   - type: article
