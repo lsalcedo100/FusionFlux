@@ -305,9 +305,14 @@ EXPECTED_POINTERS = {
     8: "Per-label scores and the eligibility-threshold sweep",
     9: "A power law with a bounded correction",
     10: "The estimator this split design is usually paired with",
-    11: "Four choices that do not carry the reversal",
+    11: "Choices that do not carry the reversal",
     12: "The same distance in dimensionless coordinates",
     13: "What the elongation substitution costs",
+    # S14 to S16 were appended when the main text was shortened, so that no
+    # existing pointer above had to move.
+    14: "The design matrix and the refit",
+    15: "The Connor--Taylor hierarchy",
+    16: "Errors in variables",
 }
 
 
@@ -690,11 +695,12 @@ def test_no_section_cross_references_itself() -> None:
 
 BACK_POINTERS = {
     "2": "Data and methods",
-    "4": "The ranking inversion",
-    "4.1": "Three diagnostics of the failure",
-    "4.2": "Sensitivity to population, aggregation, and device definition",
-    "7": "Dimensional constraints from Connor--Taylor similarity",
-    "11.1": "The same experiment with the nonlinear component specified identically",
+    "3": "The ranking inversion",
+    "3.1": "Three diagnostics of the failure",
+    "3.2": "Sensitivity to population, aggregation, and device definition",
+    "4": "A size-extrapolation stress test matched to ITER",
+    "6": "Dimensional constraints from Connor--Taylor similarity",
+    "8.1": "The same experiment with the nonlinear component specified identically",
 }
 
 BACK_TABLES = {

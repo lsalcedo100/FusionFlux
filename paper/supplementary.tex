@@ -53,9 +53,10 @@ ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}
 \maketitle
 
 \begin{center}\small
-\textbf{Description.} Supporting analyses for the main text: interval
-recalibration, rows outside the standard analysis set, a locked device forecast,
-and two replications on allometric scaling laws outside fusion.
+\textbf{Description.} Supporting analyses for the main text: interval repair,
+excluded rows, a locked forecast, two allometric replications, model
+specification, robustness, mixed-model, dimensionless, elongation, design-matrix,
+constraint-hierarchy and errors-in-variables checks.
 \end{center}
 
 \vspace{0.4em}
@@ -73,9 +74,14 @@ replications outside fusion. Sections~S6 to~S8 are supporting material for
 results the main text states in prose: the three-kernel Gaussian-process ladder
 behind the mean-function ablation, the full model, kernel and split
 specification, and the per-label scores with the eligibility-threshold sweep.
-Sections~S9 and~S10 are two results the main text summarises in a paragraph
-each: a power law with a bounded correction, and the mixed model the
-clustered-validation literature pairs with this split design.
+Sections~S9 to~S16 are results the main text summarises in a paragraph or a
+sentence each: a power law with a bounded correction; the mixed model the
+clustered-validation literature pairs with this split design; the choices that
+do not carry the reversal; the distance diagnostic in dimensionless
+coordinates; what substituting the boundary elongation for the areal one costs
+the ITPA20 laws; the rank audit of the design matrix and the refit of the
+published exponents; the Connor--Taylor hierarchy and a shrinkage prior in
+place of the constraint; and the errors-in-variables refit.
 
 Why those two belong in a fusion paper is argued where they are first
 introduced, in the Discussion of the main text: HDB5 cannot separate the
@@ -278,7 +284,7 @@ whole purpose is to be checkable later should say why it is locked against a
 document of that age. The eight engineering values it supplies for the $Q=10$
 inductive scenario, $R=\SI{6.2}{\metre}$, $a=\SI{2.0}{\metre}$,
 $I_p=\SI{15}{\mega\ampere}$, $B_t=\SI{5.3}{\tesla}$,
-$\bar{n}_e=\SI{10e19}{\per\cubic\metre}$, $P=\SI{87}{\mega\watt}$,
+$\bar{n}_e=\SI{1.0e20}{\per\cubic\metre}$, $P=\SI{87}{\mega\watt}$,
 $\kappa=1.7$ and $M=2.5$, are the ones the 2007 revision of the confinement and
 transport basis carries forward for the same scenario~\cite{doyle07}, so the
 choice is not a 1999 number that a 2007 number would replace. ITER's programme
@@ -832,7 +838,7 @@ trees do not recover.}
 \section{A power law with a bounded correction}
 \label{supp:hybrid}
 
-The diagnosis in Sec.~4.1 of the main text suggests a specific repair. Fit the
+The diagnosis in Sec.~3.1 of the main text suggests a specific repair. Fit the
 power law, learn a correction on its log residuals, and damp it by $\lambda$:
 \begin{equation}
 \log\tau = \underbrace{f_{\text{ridge}}(x)}_{\text{unbounded, log-linear}}
@@ -846,7 +852,7 @@ long-range behaviour of the correction: one corrector is a degree-2 log
 polynomial, which is unbounded, and the other is depth-2 boosted trees, which
 never left the residual range they were trained on here. The two families differ
 in more than that, and the controlled version of the comparison is
-Sec.~11.1 of the main text. The damping factor is swept over nine values from 0
+Sec.~8.1 of the main text. The damping factor is swept over nine values from 0
 to 1, both correctors carry deliberately strong penalties so that $\lambda$
 rather than their own regularisation does the damping, neither corrector's
 hyperparameters are tuned, and the whole estimator is refitted from scratch
@@ -875,7 +881,11 @@ not.
 Two limits qualify every later summary of this section. Cross-validation selects
 $\lambda=1$ in both families while the rung best on a held-out label is
 $\lambda=0$, so a practitioner tuning on the split they would ordinarily use
-does not arrive at the rung that transfers. And scored at every rung of the size
+does not arrive at the rung that transfers to an unseen label. That is a
+statement about the held-out-label arm: across the ITER-size-matched cut the
+selected rung is also the best one for the bounded family, at 0.206, and the
+worst one for the polynomial family, at 0.356, so whether tuning on
+cross-validation helps or hurts there depends on the family. And scored at every rung of the size
 sweep rather than only the matched one, the bounded hybrid wins at 5 of 8
 well-powered cuts, not all, with no rule over those eight points separating wins
 from losses. The claim that survives is narrow: at the cut matching the jump to
@@ -924,7 +934,7 @@ unseen device even when its one free quantity is chosen against the score it is
 being judged on. Across the ITER-size-matched cut it does help, at 0.255 against
 the pooled fit's 0.279, which is the least-squares spelling of the ridge row's
 0.278, and it stays well above the constrained fit of
-Sec.~7 of the main text at 0.183 and the analytic law's 0.194. What has been ruled out is
+Sec.~6 of the main text at 0.183 and the analytic law's 0.194. What has been ruled out is
 narrower than the class: this is a single random intercept and no random slopes,
 so a device-level \emph{level} shift is what fails to be the missing structure.
 Eleven devices is also few enough that the variance component is poorly
@@ -933,7 +943,7 @@ determined, which is why the sweep rather than the fit carries the conclusion.
 Random slopes are the obvious next specification and are worth saying something
 sharper about than ``untested''. On the features that carry the size dependence
 they are not identifiable at all. A device-specific slope is estimated from how
-the response moves with that feature \emph{within} the device, and Sec.~4.2 of
+the response moves with that feature \emph{within} the device, and Sec.~3.2 of
 the main text measures how little those features move: major radius carries
 0.1\% of its log variance within devices, minor radius 1.1\%, inverse aspect
 ratio 4.9\% and elongation 6.1\%. There is almost no within-device variation for
@@ -971,7 +981,7 @@ distinct. The descriptive statement carries the claim on its own. The forest is
 worse on every physical device scored, and the paired interval on the per-device
 difference excludes zero.
 
-\section{Four choices that do not carry the reversal}
+\section{Choices that do not carry the reversal}
 \label{supp:choices}
 
 \paragraph{The labels too small to score at all.} Five labels hold fewer than
@@ -1089,10 +1099,10 @@ objection Hall \emph{et al.}~\cite{hall26} have raised in a conference presentat
 this database may come from a subset localised in \emph{dimensionless} space
 rather than from size, in which case a distance in engineering space measures a
 shadow of the thing that matters. That is checkable here rather than only
-citable. The Connor--Taylor constraints of Sec.~7 of the main text are
+citable. The Connor--Taylor constraints of Sec.~6 of the main text are
 derived in code from the scalings of $\rho^{*}$, $\beta$ and $\nu^{*}$, so the
 group definitions are already written down, and the stored energy joined across
-in Sec.~4.2 of the main text supplies the temperature they need. Placing every
+in Sec.~3.2 of the main text supplies the temperature they need. Placing every
 row by
 \begin{equation}
 \rho^{*}\sim T^{1/2}B^{-1}L^{-1},\qquad
@@ -1127,7 +1137,7 @@ artefact, and it means the cut is not a size boundary with everything else held
 fixed. Every result scored across it is therefore transfer across a joint
 displacement in size, $\rho^{*}$ and $\nu^{*}$, and the paper says so rather
 than describing it as a size extrapolation alone. The leave-one-device-out
-comparison of Sec.~4 of the main text carries no such confound, which is the
+comparison of Sec.~3 of the main text carries no such confound, which is the
 second reason it and not the cut is the claim this paper rests on.
 
 \section{What the elongation substitution costs}
@@ -1135,7 +1145,7 @@ second reason it and not the cut is the claim this paper rests on.
 
 ITPA20 and ITPA20-IL are written on the areal elongation $\kappa_a =
 S/(\pi a^2)$, the variable IPB98(y,2) uses and the one STD5 delivers as
-\texttt{KAPPAA}~\cite{hdb5}, and Sec.~4.2 of the main text scores all three
+\texttt{KAPPAA}~\cite{hdb5}, and Sec.~3.2 of the main text scores all three
 laws on that column. The full DB5.2.3 revision also carries the boundary
 elongation $\kappa$, the plasma's height over its width at the separatrix, and
 on most rows the two are close enough that one is easily taken for the other.
@@ -1167,10 +1177,146 @@ a third column.
 
 Scoring on the boundary column rather than the areal one moves ITPA20 by up
 to 0.018 and ITPA20-IL by up to 0.022, all of it for the worse: on every arm
-of Sec.~4.2 each law fits the variable it is written on better than the
+of Sec.~3.2 each law fits the variable it is written on better than the
 substitute, which is the direction that confirms which column that is. The
 shift is twenty to thirty times what the shape model would predict. Where a
 column exists, a model of it is not evidence about it.
+
+\section{The design matrix and the refit}
+\label{supp:rank}
+
+Three column counts appear in the main text and they are not the same set. The
+models see nine log engineering features. Adding the analytic IPB98 prediction
+gives the ten-column matrix examined here, and the refit of
+Eq.~(1) of the main text in Sec.~\ref{supp:refit} drops both redundant columns and
+uses nine, eight independent variables plus an intercept, which is why its
+condition number is a healthy 10.7.
+
+Standardised, the ten-feature matrix has rank 8, with the last two singular
+values at $4.9\times10^{-14}$ and $2.4\times10^{-14}$. Projecting candidate
+vectors onto the null space confirms two exact dependencies at relative
+residuals of order $10^{-16}$: minor radius is derived as $a=\epsilon R$ during
+cleaning, and the IPB98 prediction is a fixed log-linear combination of the
+other eight features. The second is the substantive one. Adding a published
+physics scaling as a model feature feels like adding knowledge; in log space it
+provably is not, and it contributes exactly nothing to a log-linear fit.
+
+Neither the redundant column nor the estimator is load-bearing. Dropping
+\texttt{log\_a\_m} and refitting on eight independent columns leaves the
+log-linear scores unchanged to four decimals under all three splits, moves the
+tree ensembles by at most 0.035, and changes no ordering anywhere. Ordinary
+least squares on those same eight columns reproduces the reported ridge to six
+decimals under cross-validation and to 0.0012 at the size cut, so the ridge here
+is a numerically stable spelling of the least-squares power law rather than a
+regularised alternative to it.
+
+\subsection{Refitted exponents and a weakly identified direction}
+\label{supp:refit}
+
+Refitting Eq.~(1) of the main text on all STD5 rows (design matrix
+$6228\times9$, condition number 10.7) gives $I_p$ 1.08 against the published
+0.93 and $R$ 1.58 against 1.97, while $P$ and $B_t$ return almost exactly. The
+disagreement is expected: IPB98 was fitted to a selected ITER-relevant subset,
+whereas this fit applies no selection criteria and includes the spherical
+tokamaks, and a refit on a different population is a different regression. It is
+not a solver artefact either; independent implementations by the normal
+equations, by QR and by the SVD pseudoinverse agree to $7.6\times10^{-13}$.
+Decomposing the difference between the exponent vectors along the singular
+directions of the design matrix, 77\% of it lies in the single weakest
+direction, which carries 0.3\% of the matrix's variance, while the three
+strongest directions carry 82\% of the variance and account for 0.75\% of the
+disagreement. That weak direction is plasma current traded against machine size,
+and it is weak for a structural reason: tokamaks are not designed to vary the
+two independently, so more shots at the operating points these machines already
+run would not separate it, though shots deliberately placed to break the
+correlation could.
+
+Why the size dependence in this database is weaker than IPB98(y,2)'s is itself
+an active question, and Hall \emph{et al.}~\cite{hall} attack it directly on
+DB5.2.3, treating the multicollinearity among the predictors explicitly and
+searching for the smallest subset of points that most reduces the fitted
+major-radius exponent. A continuation~\cite{hall26} argues, in a conference
+presentation, that the weak size dependence is attributable predominantly to a
+subset of discharges localised in dimensionless space, distinguished by
+normalised pressure, collisionality, normalised gyroradius and safety factor
+rather than by any single device or by metallic walls, and reports that
+excluding it recovers a major-radius dependence broadly consistent with
+IPB98(y,2). That is a different question from the one asked here, and the two
+bear on each other through the size-ordered cut of Sec.~4 of the main text, which
+measures transfer across a boundary those authors would draw differently. That
+is a caveat on how much weight that one axis can carry, and not on the ranking
+reversal, which is measured per unit rather than per size.
+
+\section{The Connor--Taylor hierarchy, and a prior in place of the constraint}
+\label{supp:hierarchy}
+
+Sec.~6 of the main text imposes the Connor--Taylor similarity constraints as
+linear equalities on the exponents, one row of $C$ per admissible scale
+transformation. Table~\ref{tab:hierarchy} sets out the hierarchy it uses.
+
+\begin{table}[!ht]
+\centering
+\small
+\caption{The Connor--Taylor hierarchy. Each row fixes a set of dimensionless
+groups and contributes one linear equation in the exponents per admissible
+scale transformation, so fixing fewer groups imposes more constraints.}
+\label{tab:hierarchy}
+\begin{tabular}{lcc}
+\toprule
+constraint & groups held fixed & rows of $C$ \\
+\midrule
+Kadomtsev~\cite{kadomtsev} & $\rho^{*}$, $\beta$, $\nu^{*}$ & 1 \\
+collisionless & $\rho^{*}$, $\beta$ & 2 \\
+electrostatic & $\rho^{*}$ & 3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Fixing fewer groups admits more transformations and therefore imposes
+more constraints, which is why the hierarchy runs the way it does. $C$ and $d$
+are built by \texttt{dimensional.constraint\_matrix} from
+Eq.~(3) of the main text alone, and their numerical rows are in
+\texttt{results/dimensional.json}.
+
+It matters that this is a constraint and not a prior. Supplying the same physics
+as a Gaussian prior instead, shrunk along the weak singular direction of
+Sec.~\ref{supp:refit}, is worth much less. That comparison sweeps three
+shrinkage geometries (isotropic, spectral and truncated) over the same nine
+penalty strengths $10^{-3}, 10^{-2}, \dots, 10^{5}$, tabulated in full in
+\texttt{results/dimensional\_prior\_sweep.csv}. Targeting the shrinkage beats
+isotropic shrinkage at every one of those matched penalty strengths, which is a
+real effect, but nothing in that family beats simply adopting IPB98's published
+exponents outright. The hard
+constraint used here restricts the fit to a surface the Connor--Taylor
+similarity assumptions permit, where
+the Gaussian prior tested here favours a location and a direction in parameter
+space, and in this experiment the surface transfers better. That is a statement
+about these two families rather than about priors in general: a prior can favour
+a subspace, and approaches a hard constraint as its variance goes to zero.
+
+\section{Errors in variables}
+\label{supp:eiv}
+
+This section gives the refit behind the statement in the Limitations of the
+main text that no errors-in-variables fit is offered. Every power-law fit here
+treats the engineering parameters as measured without error, which the
+confinement-scaling literature has objected to for as long as these fits have
+been published, because the predictors carry real measurement uncertainty. Kardaun~\cite{kardaun} treats the problem directly,
+Cordey~\emph{et al.}~\cite{cordey} refit the database under it, and
+Verdoolaege~\emph{et al.}~\cite{gls} give a geodesic least-squares regression
+built to be robust to exactly the noise an ordinary least-squares fit assumes
+away. None of the three is attempted here. Refitting Eq.~(1) of the main text by
+orthogonal distance regression, which spreads the error across the predictors
+instead, moves the exponents enormously: up to 5.6 on the inverse aspect ratio,
+with the major radius going from 1.58 to 5.40, and it more than doubles the
+in-sample error, 0.454 against 0.181. Both are symptoms of one thing rather than
+a better fit. With no per-variable measurement uncertainties published for this
+database, an errors-in-variables estimator has nothing pinning it down along the
+weak singular direction of Sec.~\ref{supp:refit}, which carries 0.3\% of the
+design's variance, and it runs away along exactly that direction. So these are
+least-squares exponents, an errors-in-variables fit would differ, and what is
+reported here is a fact about the naive estimator rather than an answer to what
+a credible measurement-error fit would give.
 
 \begin{thebibliography}{99}
 \small\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
@@ -1239,6 +1385,24 @@ data with temporal, spatial, hierarchical, or phylogenetic structure,''
 energy confinement database,'' poster P2.1097, \emph{52nd EPS Conf.\ on Plasma
 Physics}, Edinburgh (2026). Conference presentation; not published in refereed
 form at the time of writing.
+\bibitem{hall} J. Hall, P. Zhang and G. Verdoolaege, ``Confinement scaling with
+machine size in the updated ITPA global H-mode energy confinement database,'' in
+\emph{Proc.\ 49th EPS Conf.\ on Plasma Physics}, Bordeaux, Europhys.\ Conf.\
+Abstr.\ \textbf{47A}, P1.024 (2023).
+\bibitem{kadomtsev} B.B. Kadomtsev, ``Tokamaks and dimensional analysis,''
+\emph{Sov.\ J.\ Plasma Phys.} \textbf{1}, 295 (1975).
+\bibitem{kardaun} O. J. W. F. Kardaun, ``Interval estimation of global H-mode
+energy confinement in ITER,'' \emph{Plasma Phys.\ Control.\ Fusion} \textbf{41},
+429 (1999).
+\href{https://doi.org/10.1088/0741-3335/41/4/001}{doi:10.1088/0741-3335/41/4/001}
+\bibitem{cordey} J. G. Cordey \emph{et al.}, ``Scaling of the energy confinement
+time with $\beta$ and collisionality approaching ITER conditions,'' \emph{Nucl.\
+Fusion} \textbf{45}, 1078 (2005).
+\href{https://doi.org/10.1088/0029-5515/45/9/007}{doi:10.1088/0029-5515/45/9/007}
+\bibitem{gls} G. Verdoolaege, A. Shabbir and G. Hornung, ``Robust analysis of
+trends in noisy tokamak confinement data using geodesic least squares
+regression,'' \emph{Rev.\ Sci.\ Instrum.} \textbf{87}, 11D423 (2016).
+\href{https://doi.org/10.1063/1.4960069}{doi:10.1063/1.4960069}
 \end{thebibliography}
 
 \end{document}
