@@ -17,6 +17,11 @@ import hdb5
 
 @pytest.fixture(scope="module")
 def dataset() -> pd.DataFrame:
+    # The same guard every other dataset-backed test module carries. Without
+    # it these three tests error rather than skip on a runner that has not
+    # downloaded STD5, which is what turned the CI badge red.
+    if not hdb5.default_hdb5_path().exists():
+        pytest.skip("HDB5 STD5 not downloaded; run `python3 hdb5.py download`.")
     return hdb5.prepare_dataset()
 
 

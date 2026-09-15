@@ -65,31 +65,31 @@ Archived at \href{https://doi.org/10.5281/zenodo.22728492}{doi:10.5281/zenodo.22
 
 \begin{abstract}
 \noindent
-On the ITPA Global H-mode Confinement Database (HDB5, STD5; 6228 slices, 18 labels),
-under cross-validation grouped by discharge, a random forest cuts log error by
-29\% against a power law refitted in the same folds and 36\% against published
-IPB98(y,2). Held out one device at a time that ordering reverses: the best
-cross-validated of the three is its worst extrapolator, so where every flexible
-candidate saturates, cross-validation selects against the property the law is
-bought for. The candidate set fails, not the score: this work's best
-cross-validated model, a linear-plus-RBF Gaussian process, does not reverse.
-Two controls bound the inversion, regressing the stored energy instead and
-regressing in dimensionless coordinates where no feature is a device label,
-which leave the forest worse on 9 of 13 and 11 of 13 labels against
-\textbf{13 of 13} on the engineering features. The interval is the sharper failure. At a cut reproducing ITER's $1.82\times$ jump in
-major radius, nominal 90\% split-conformal intervals calibrated on held-out
-discharges cover \textbf{3\%} and \textbf{0\%} of held-out rows at a width that
-moves by under 1.5\%. That invariance is forced: a
-split-conformal half-width is a rank statistic of the calibration residuals and
-cannot respond to the test distribution, so the interval carries no signal that
-it has stopped covering, and its width is no evidence that it survived the
-boundary. The forest's error does track the held-out label's Mahalanobis
-distance, at $\rho=+0.85$ against $-0.06$ for the power law, so the warning the
-interval withholds is available in advance. Two repairs
-help, both supplying long-range structure rather than capacity: Connor--Taylor
-constraints, whose Kadomtsev rung is free in sample, and that same process.
-Holding nonlinear capacity fixed and varying only the long-range mean isolates
-the mechanism: saturation, not flexibility.
+Confinement scalings are fitted across existing tokamaks to size machines not
+yet built, so validation must measure performance on an unseen device. On the
+ITPA Global H-mode Confinement Database (HDB5, STD5; 6228 slices, 18 labels),
+the conventional cross-validation grouped by discharge scores a random forest
+29\% better in log error than a power law refitted in the same folds and 36\%
+better than published IPB98(y,2). Holding out one device at a time reverses
+the order of the three primary models: the two tree ensembles that win
+cross-validation extrapolate worst, and the forest loses to that power law on
+\textbf{13 of 13} labels. Regressing the stored energy instead, or in
+dimensionless coordinates that identify no device, leaves the forest worse on
+9 of 13 and 11 of 13 labels. The intervals fail more sharply. At a cut inside
+the database reproducing ITER's $1.82\times$ jump in major radius, nominal
+90\% split-conformal intervals calibrated on held-out discharges cover
+\textbf{3\%} and \textbf{0\%} of held-out rows for both ensembles at a width
+moving under 1.5\%. The width cannot respond: a split-conformal half-width is
+a rank statistic of the calibration residuals, so the interval carries no
+warning that it has stopped covering. The warning does exist: the forest's
+error tracks the held-out label's Mahalanobis distance from the training data
+at $\rho=+0.85$, against $-0.06$ for the power law. The fault is the candidate
+set, not cross-validation: a linear-plus-RBF Gaussian process, the best
+cross-validated model, keeps trending outside the data and does not reverse.
+At the size cut, that process and Connor--Taylor similarity constraints on the
+exponents, whose Kadomtsev rung costs nothing in sample, both improve
+extrapolation. Varying only the long-range mean, with the nonlinear part
+fixed, identifies the mechanism as saturation rather than flexibility.
 \end{abstract}
 
 \begin{center}\small
@@ -204,9 +204,12 @@ machine being held out contributed to the data IPB98(y,2)'s exponents were
 fitted on, and no claim here treats it as a fold-specific comparator fitted
 without the held-out rows. The power law refitted inside each fold is the
 like-for-like baseline, and the reversal below is stated against it. Every
-number in this paper is scored on the nine engineering features; the
-ten-column matrix of Sec.~\ref{sec:rank}, which adds IPB98(y,2)'s own
-prediction to them, is reported there as a control and nowhere else. Because the
+headline number in this paper is scored on the nine engineering features, and
+the exceptions are labelled where they appear: the ten-column matrix of
+Sec.~\ref{sec:rank}, which adds IPB98(y,2)'s own prediction to them and is
+reported there as a control, and the controls of Sec.~\ref{sec:robustness}
+that delete a feature, change the target or move to dimensionless coordinates
+on purpose. Because the
 result is a negative one about a common practice, every number and figure here
 regenerates from the published OSF deposit at the single commit named in Data
 availability, which also gives the pinning and the test binding that hold the
@@ -248,14 +251,17 @@ Butt \emph{et al.}~\cite{butt} do hold out whole machines on this same DB5.2.3
 standard set, refitting a fixed power-law form on the machines admissible below
 each target in a chosen ordering, with extrapolation as the explicit design
 criterion. They score no flexible model, so no ranking between model families is
-at stake there. So the
+at stake there; but what they do report, that adding parameters to the power
+law beyond a low order improves the in-sample fit and worsens extrapolation
+under machine holdout, is the same phenomenon inside the power-law family, and
+it is read here as such rather than as a separate finding. So the
 contribution is neither the first report of a reversal nor the first
-machine-level holdout on this database. It is that the reversal is
-measured with the device as the held-out unit, on every device the database can
-score; that the ranking inverts rather than narrowing; that the calibrated
-interval is measured at the same time and fails without any signal in its width;
-and that flexibility and long-range saturation are separated, which says which
-property to avoid rather than which model. None of these works is the target of
+machine-level holdout on this database. The increment is that the held-out
+unit is the device and the candidates are flexible models, so the inversion is
+between model families rather than between orders of one form; that the
+calibrated interval is measured at the same time and fails without any signal
+in its width; and that flexibility and long-range saturation are separated,
+which says which property to avoid rather than which model. None of these works is the target of
 a criticism here; what any of them reports is what its split measures, and no
 better predictor is proposed here.
 
@@ -309,7 +315,10 @@ contains 6228 rows from 4471 discharges across 18 database device/wall labels,
 which correspond to 16 physical devices once the two JET entries and the two
 ASDEX Upgrade entries are each collapsed. The cleaning rule below requires
 finiteness and positivity in every used column; on this file it removes no rows,
-so all 6228 delivered rows are analysed. The target is the thermal confinement
+so all 6228 delivered rows are analysed. Ref.~\cite{hdb5} describes STD5 as
+7537 points from 18 machines; the file the OSF deposit delivers under that name
+has 6228, and it is analysed as delivered, so the difference is in what the
+deposit supplies and not in any selection applied here. The target is the thermal confinement
 time \texttt{TAUTH}. No synthetic data appears in any result. The analysed file
 is pinned by SHA-256 and verified on load, so every number below refers to one
 specific set of bytes rather than to whatever the host currently serves.
@@ -774,23 +783,25 @@ almost unmoved by any of it, 0.188 to 0.184 per unit.
 \paragraph{A newer published law.} IPB98(y,2) is the ITER reference but not the
 most recent scaling fitted to this database family. ITPA20 and
 ITPA20-IL~\cite{hdb5} were derived from DB5.2.3 and weaken the size dependence
-considerably. Each is specified on the separatrix elongation at the geometric
-axis, $\kappa$, where the delivered file carries the areal elongation
-$\kappa_a = S/(\pi a^2)$ that IPB98(y,2) was fitted to. That mismatch is
-measured rather than modelled: the full DB5.2.3 revision this paper already pins
-carries \texttt{KAPPA} on every analysed row, so each law is scored on the
-elongation it was fitted to, which is what makes the three comparable.
-Substituting the delivered column instead moves ITPA20 by up to 0.018 and
-ITPA20-IL by up to 0.022, enough to reorder ITPA20 against IPB98(y,2) per label;
-Sec.~S13 of the Supplementary Material measures that cost and says why a shape
-model is the wrong way to find it.
+considerably. Both are written on the engineering variables of
+Eq.~\eqref{eq:powerlaw} with a triangularity factor added, and the elongation
+in both is the areal elongation $\kappa_a = S/(\pi a^2)$, the variable
+IPB98(y,2) uses and the one the delivered file carries as
+\texttt{KAPPAA}~\cite{hdb5}. Each law is therefore evaluated on the column it
+was fitted to, which is what makes the three comparable. The full DB5.2.3
+revision this paper already pins also carries the boundary elongation
+$\kappa$, and the two columns are not interchangeable: substituting the
+boundary column for the areal one moves ITPA20 by up to 0.018 and ITPA20-IL by
+up to 0.022, all of it for the worse, and enough to reorder ITPA20 against
+IPB98(y,2) per label. Sec.~S13 of the Supplementary Material measures that
+cost and says why a shape model is the wrong way to find it.
 
-Evaluated analytically on the rows analysed here, ITPA20 scores 0.188 over all
-rows, 0.191 per label and \textbf{0.177} across the ITER-size-matched cut;
-ITPA20-IL scores 0.237, 0.269 and \textbf{0.165}, against IPB98(y,2)'s 0.199,
+Evaluated analytically on the rows analysed here, ITPA20 scores 0.181 over all
+rows, 0.173 per label and \textbf{0.165} across the ITER-size-matched cut;
+ITPA20-IL scores 0.226, 0.247 and \textbf{0.158}, against IPB98(y,2)'s 0.199,
 0.188 and 0.194. Both are below the power law refitted inside these folds at
 that cut, which scores 0.278, and against the random forest's 0.938 and the
-gradient booster's 1.072 there ITPA20 is better by factors of 5.3 and 6.1. The
+gradient booster's 1.072 there ITPA20 is better by factors of 5.7 and 6.5. The
 row is not blind and is not offered as one: both were fitted to selections out
 of DB5.2.3, so at the size cut they had seen the large machines the fitted
 models are being asked to reach. What it carries is that no published power law
@@ -840,8 +851,9 @@ dependence is retained while no coordinate is a device label: $\rho^{*}$ moves
 26.6\% within a device, $\beta$ 35.4\%, $\nu^{*}$ 66.6\% and $q$ 70.4\%, against
 major radius's 0.1\%. Regressing $B\tau_{E}$ on those seven groups, with the
 same models and the same splits, the reversal survives. The forest wins
-cross-validation by \textbf{28.9\%}, against 28.7\% on the engineering features,
-and loses on \textbf{11 of 13} labels and \textbf{9 of 11} devices, at mean gaps
+cross-validation by \textbf{28.9\%}, against 28.7\% on the engineering features
+over the same 6214 rows (the 29\% quoted elsewhere is 29.5\% on all 6228,
+rounded), and loses on \textbf{11 of 13} labels and \textbf{9 of 11} devices, at mean gaps
 of $+0.074$ and $+0.130$. The margins are smaller than the engineering-space
 ones and the direction and the counts are the same.
 
@@ -880,7 +892,8 @@ on, and the power law wins every scored label at 20, 30 and 50 and 14 of 15 at
 and dropping them from training as well leaves the ordering over the 13
 held-out labels unchanged. Repeating the cross-validation over ten shuffled fold assignments puts the
 forest's interpolation margin between 27.0\% and 28.5\%, with the deterministic
-partition's 29.5\% just above that range, so the margin it later gives up is not
+partition's 29.5\%, the unrounded value of the 29\% quoted throughout, just
+above that range, so the margin it later gives up is not
 a property of one partition. A nested hyperparameter search moves the forest's
 settings in 13 of 19 folds and improves its held-out label score from 0.465 to
 0.403, or 0.376 with the inner folds grouped by machine to match deployment,
@@ -1334,15 +1347,15 @@ exponents & Kadomtsev & collisionless & electrostatic & ITER cut \\
 \midrule
 IPB98(y,2), published      & \textbf{0.00096} & 0.0045 & 0.501 & 0.194 \\
 free refit (this database) & 0.0031 & 0.064 & 0.817 & 0.279 \\
-ITPA20, published          & \textbf{0.0147} & 0.089 & 0.745 & \textbf{0.177} \\
-ITPA20-IL, published       & \textbf{0.0142} & 0.106 & 0.853 & \textbf{0.165} \\
+ITPA20, published          & \textbf{0.0147} & 0.089 & 0.745 & \textbf{0.165} \\
+ITPA20-IL, published       & \textbf{0.0142} & 0.106 & 0.853 & \textbf{0.158} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 Proximity to a surface therefore does not order these four, and no claim here
 rests on reading it that way. ITPA20 sits fifteen times further from the
-Kadomtsev surface than IPB98(y,2) and scores 0.177 against 0.194 at the cut, and
+Kadomtsev surface than IPB98(y,2) and scores 0.165 against 0.194 at the cut, and
 the free refit sits closer to that surface than either ITPA20 law while scoring
 0.279, the worst of the four. A small residual is not a predictor of transfer on
 this evidence.
@@ -1460,7 +1473,7 @@ prospective, and the disclosure stands as written.
 At the ITER-size-matched cut the collisionless power law scores \textbf{0.183}, the
 lowest held-out error of any model fitted here without using the held-out rows
 (Table~\ref{tab:dimensional}). That qualifier excludes the published laws, and
-two of them are lower: ITPA20-IL scores 0.165 there and ITPA20 0.177
+two of them are lower: ITPA20-IL scores 0.158 there and ITPA20 0.165
 (Sec.~\ref{sec:robustness}), both having been fitted to selections out of the
 revision analysed here and so having seen the machines above the cut. Nothing
 below is a claim to have beaten them. The fit is blind to the held-out rows; the
@@ -1935,7 +1948,7 @@ than about 0.01 in log-RMSE should be read as tied here, which is roughly the
 spread the bootstrap puts on a single label's score and roughly what a fold
 assignment moves the cross-validated margin by. On that reading the Gaussian
 process at 0.218 and the power law at 0.214 are tied, as the text says; ITPA20's
-0.191 and IPB98(y,2)'s 0.188 are tied; and the orderings the paper does claim,
+0.165 and ITPA20-IL's 0.158 across the size cut are tied; and the orderings the paper does claim,
 the forest's 0.465 against 0.214 and the size cut's 0.938 against 0.278, are an
 order of magnitude clear of it. No ordering finer than 0.01 is asserted
 anywhere, and none should be read into a table.
@@ -2053,8 +2066,9 @@ as its being the best available predictor of one.
 Every fit also weights
 rows equally, so JET and ASDEX Upgrade set most of what each model learns even
 though the target is transfer to a device neither resembles. Refitting every
-model with each label weighted equally, reported in Sec.~\ref{sec:robustness},
-costs the power law more than the forest and takes the win count to 12 of 13.
+model with each label weighted equally, reported in Sec.~S11 of the
+Supplementary Material, costs the power law more than the forest and takes the
+win count to 12 of 13.
 The row imbalance is therefore not the source of the power law's advantage, but
 it is not irrelevant to its size either, and one weighting is not a
 characterisation of how the result behaves under reweighting in general.
@@ -2266,7 +2280,7 @@ this paper is archived with a persistent identifier~\cite{zenodo}. The analysis
 code is pinned as firmly as its inputs: every number and figure above was
 produced at commit
 \begin{center}\scriptsize
-\texttt{0e81f8d5c517f263db3d406ae1f0abc6a59753bc}
+\texttt{98f61b78ad29a2cf9ed7d474af6239dd7238efae}
 \end{center}
 \noindent Every script verifies that fingerprint against the pin as it loads
 the data and refuses to run when the two disagree, so no number above can have

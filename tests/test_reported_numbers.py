@@ -577,30 +577,35 @@ CLAIMS: tuple[Claim, ...] = (
         documents=(PAPER, PAPER_PDF),
     ),
     # -- Sec. 4.2: the newer published laws, and the elongation bound ------
+    # Both laws are written on the areal elongation kappa_a, which STD5
+    # delivers as KAPPAA (Verdoolaege et al. 2021, eqs. 5 and 7), and these are
+    # the scores on that column. An earlier revision scored them on the
+    # boundary elongation from DB5.2.3 instead, which is what the elongation
+    # arm now reports as the substitution's cost rather than as the headline.
     Claim(
         "ITPA20 at the ITER-size-matched cut",
-        "0.177",
+        "0.165",
         lambda a: _published(a, "ITPA20", "iter_matched_cut"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
     ),
     Claim(
         "ITPA20 over all rows",
-        "0.188",
+        "0.181",
         lambda a: _published(a, "ITPA20", "all_rows"),
         _r(3),
         documents=(PAPER, PAPER_PDF, ZENODO),
     ),
     Claim(
         "ITPA20 per label",
-        "0.191",
+        "0.173",
         lambda a: _published(a, "ITPA20", "machine_equal"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
     ),
     Claim(
         "ITPA20-IL at the ITER-size-matched cut",
-        "0.165",
+        "0.158",
         lambda a: _published(a, "ITPA20-IL", "iter_matched_cut"),
         _r(3),
         documents=(PAPER, PAPER_PDF),

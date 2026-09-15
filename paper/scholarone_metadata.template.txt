@@ -159,6 +159,11 @@ FREE-TEXT DISCLOSURE
   2026. If he has replied before you upload, it is false and the Acknowledgments
   need revisiting too.
 
+  The 9 September correction itself needs correcting: it evaluated the ITPA20
+  laws on the boundary elongation, and they are written on the areal one. A
+  third note is drafted in docs/outreach.local.md and the cover letter says it
+  has been sent. Send it before uploading, or the cover letter overstates.
+
   The names in this box and the names in the referee table must match. They did
   not once: this paragraph claimed two suggested referees when only Hall was
   nominated, because it was written while Kardaun was still on the list. If you

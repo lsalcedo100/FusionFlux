@@ -15,12 +15,20 @@ while only the long-range mean changes. It closes on the replication over
 STD5-disjoint rows and the locked device forecast.
 
 `supplementary.tex` is a standalone document with its own reference list and
-carries eight sections. S1 to S3 are fusion analyses whose headline numbers stay
+carries thirteen sections. S1 to S3 are fusion analyses whose headline numbers stay
 in the main text while their construction, tables and caveats moved here when
 the paper was shortened: the interval repair, the STD5-disjoint replication and
 the locked forecast. S4 and S5 are the two replications outside fusion. S6 is
 the three-kernel Gaussian-process ladder, S7 the full model, kernel and split
 specification, and S8 the per-label scores and the eligibility-threshold sweep.
+S9 to S13 are supporting results the main text summarises in a sentence or two:
+the bounded correction on a power law, the mixed model the clustered-validation
+literature pairs with this split design, the choices that do not carry the
+reversal (including the equal-weighting refit), the distance diagnostic in
+dimensionless coordinates, and what substituting the boundary elongation for
+the areal one costs the ITPA20 laws. The count here is checked by nothing, so
+`EXPECTED_POINTERS` in `tests/test_paper_submission.py` is the authority when
+the two disagree.
 Result 9's prior-shrinkage control is reported as a paragraph rather than a
 section, since its finding is a negative one about an alternative to Result 8
 rather than a result in its own right.
