@@ -284,3 +284,35 @@ def test_the_shift_the_paper_quotes_keeps_the_full_tolerance(pair: tuple[Path, P
     _write(left, "sensitivity.json", {"errors_in_variables": {"max_abs_exponent_shift": 5.606}})
     _write(right, "sensitivity.json", {"errors_in_variables": {"max_abs_exponent_shift": 5.6061}})
     assert any("max_abs_exponent_shift" in p for p in compare_directories(left, right))
+
+
+# --- the command-line entry point, which the reproduce workflow actually calls --
+
+
+def test_main_reports_agreement_and_exits_zero(pair: tuple[Path, Path], capsys: pytest.CaptureFixture[str]) -> None:
+    """`make reproduce` reads the exit code, so the clean path has to return 0."""
+    from tools.compare_results import main
+
+    left, right = pair
+    _write(left, "a.json", {"x": 1.0})
+    _write(right, "a.json", {"x": 1.0 + 1e-9})
+
+    assert main([str(left), str(right)]) == 0
+    assert "results reproduce" in capsys.readouterr().out
+
+
+def test_main_lists_differences_truncates_and_exits_one(
+    pair: tuple[Path, Path], capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A moved digit fails the gate, and a long list is cut at --max-report."""
+    from tools.compare_results import main
+
+    left, right = pair
+    _write(left, "a.json", {"x": 1.0, "y": 2.0, "z": 3.0})
+    _write(right, "a.json", {"x": 1.1, "y": 2.2, "z": 3.3})
+
+    assert main([str(left), str(right), "--max-report", "1"]) == 1
+    printed = capsys.readouterr().out
+    assert "results changed: 3 value(s)" in printed
+    assert "... and 2 more" in printed
+    assert "Rerun the owning analysis" in printed

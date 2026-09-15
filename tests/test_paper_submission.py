@@ -776,3 +776,71 @@ def test_every_back_pointer_in_the_supplement_is_covered_here() -> None:
     assert tables == set(BACK_TABLES), (
         f"the supplement points at main-text tables {sorted(tables)}; BACK_TABLES covers {sorted(BACK_TABLES)}"
     )
+
+
+# --- the command-line entry point `make paper-fresh` and `make arxiv` call ----
+
+
+def test_main_reports_ready_when_every_check_is_clean(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """With the flag given, all three provenance checks are consulted."""
+    consulted: list[str] = []
+
+    def clean(name: str):
+        def _check() -> list[str]:
+            consulted.append(name)
+            return []
+
+        return _check
+
+    monkeypatch.setattr(checker, "check", clean("check"))
+    monkeypatch.setattr(checker, "stale_provenance", clean("stale_provenance"))
+    monkeypatch.setattr(checker, "stale_archive", clean("stale_archive"))
+    monkeypatch.setattr(checker, "mismatched_doi", clean("mismatched_doi"))
+
+    assert checker.main(["--check-provenance"]) == 0
+    assert "ready to submit" in capsys.readouterr().out
+    assert consulted == ["check", "stale_provenance", "stale_archive", "mismatched_doi"]
+
+
+def test_main_lists_every_problem_on_stderr_and_exits_one(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(checker, "check", lambda: ["a placeholder author line"])
+    monkeypatch.setattr(checker, "stale_provenance", lambda: ["the pin is stale"])
+    monkeypatch.setattr(checker, "stale_archive", lambda: [])
+    monkeypatch.setattr(checker, "mismatched_doi", lambda: [])
+
+    assert checker.main(["--check-provenance"]) == 1
+    captured = capsys.readouterr()
+    assert "not ready to submit" in captured.err
+    assert "a placeholder author line" in captured.err
+    assert "the pin is stale" in captured.err
+    assert captured.out == ""
+
+
+def test_main_reports_a_stale_pdf_without_a_tex_toolchain(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The --check-pdf-fresh branch names the missing section and the source to rebuild."""
+    monkeypatch.setattr(checker, "check", lambda: [])
+    monkeypatch.setattr(
+        checker,
+        "stale_pdf_sections",
+        lambda source, pdf: ["Introduction"] if source == checker.PAPER else [],
+    )
+
+    assert checker.main(["--check-pdf-fresh"]) == 1
+    err = capsys.readouterr().err
+    assert "does not contain 'Introduction'" in err
+    assert "rebuild it from paper.tex" in err
+
+
+def test_main_reads_sys_argv_when_called_without_arguments(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(sys, "argv", ["check_paper_submission.py"])
+    monkeypatch.setattr(checker, "check", lambda: [])
+    assert checker.main() == 0
+    assert "ready to submit" in capsys.readouterr().out
