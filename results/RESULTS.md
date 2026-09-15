@@ -45,7 +45,10 @@ answer to a question it was built to answer positively.
 tokamaks (JET, ASDEX Upgrade, DIII-D, JT-60U, C-Mod, NSTX, MAST, START and
 others). Third-party scientific data, fetched from OSF rather than
 redistributed here; `python3 hdb5.py download` retrieves it. No synthetic data
-appears anywhere in this document.
+appears anywhere in this document. Verdoolaege et al. (2021) describe STD5 as
+7537 points from 18 machines; the file the OSF deposit delivers under that name
+has 6228, and it is analysed as delivered, with no selection applied here that
+removes a row.
 
 Every number below is a statement about one specific file that this repository
 does not contain and does not control, so that file is **pinned by content
@@ -1350,8 +1353,9 @@ everything.
 
 The two right-hand columns are the counterexample the paper reports rather than
 leaves to a referee. ITPA20 and ITPA20-IL were fitted to selections out of
-DB5.2.3 and are the two best across the ITER-size-matched cut, at 0.177 and
-0.165 against IPB98(y,2)'s 0.194, and they are also the two furthest from every
+DB5.2.3 and are the two best across the ITER-size-matched cut, at 0.165 and
+0.158 against IPB98(y,2)'s 0.194 (both scored on the areal elongation `KAPPAA`
+they are written on, as IPB98(y,2) is), and they are also the two furthest from every
 surface here. The free refit is closer to the kadomtsev surface than either and
 scores 0.279, the worst of the four. So distance from a surface does not order
 these four by transfer, and nothing in Results 8 or 9 reads it as though it did:

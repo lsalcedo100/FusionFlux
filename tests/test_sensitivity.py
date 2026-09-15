@@ -240,10 +240,11 @@ def _dataset(n_per_machine: int = 45, seed: int = 7) -> pd.DataFrame:
     raw = pd.concat(frames, ignore_index=True)
     dataset = hdb5.build_features(hdb5.map_to_canonical(raw))
     dataset["one_plus_delta"] = raw["DELTA1"].to_numpy()[: len(dataset)]
-    # DB5.2.3 supplies the boundary elongation the ITPA20 laws are specified on,
-    # and STD5 supplies only the areal one, so the analysed frame now carries
-    # both. Here it is drawn a few per cent above the areal column, which is the
-    # relation the real files show on most rows.
+    # The ITPA20 laws are written on the areal elongation, which is the `kappa`
+    # column; DB5.2.3 also supplies the boundary elongation, which the analysed
+    # frame carries only so that substituting it can be costed. Here it is drawn
+    # a few per cent above the areal column, which is the relation the real
+    # files show on most rows.
     dataset[asens.BOUNDARY_ELONGATION] = dataset["kappa"] * rng.uniform(0.98, 1.15, len(dataset))
     return dataset
 
@@ -364,20 +365,39 @@ def test_the_elongation_ratio_is_measured_not_modelled(committed: dict) -> None:
 def test_the_published_laws_are_scored_on_the_elongation_they_were_fitted_to(
     committed: dict,
 ) -> None:
-    """Sec. 4.2 prints the measured-kappa row, so that is what must be reported.
+    """Sec. 4.2 prints the kappa_a row, so that is what must be reported.
 
-    Scoring ITPA20 on the delivered areal elongation instead moves it by nearly
-    0.02, which is enough to reorder it against IPB98(y,2) per label. The choice
-    is therefore load-bearing and is asserted rather than assumed.
+    Both laws are written on the areal elongation kappa_a (Verdoolaege et al.
+    2021, eqs. 5 and 7), which is the column STD5 delivers. An earlier revision
+    scored them on the boundary elongation instead, which moves ITPA20 by nearly
+    0.02 and is enough to reorder it against IPB98(y,2) per label. The choice is
+    therefore load-bearing and is asserted rather than assumed.
     """
     laws = committed["elongation_convention"]["laws"]
     published = committed["published_scalings"]
     for name, law in laws.items():
         assert law["largest_shift"] > 0.01, name
-        # The headline row is the measured one.
+        # The headline row is the one on the law's own variable.
         for column in ("all_rows", "machine_equal", "iter_matched_cut"):
-            assert published[name][column] == pytest.approx(law["measured_kappa"][column], rel=1e-9), (
-                f"{name}/{column} is not the measured-kappa score"
+            assert published[name][column] == pytest.approx(law["kappa_a"][column], rel=1e-9), (
+                f"{name}/{column} is not the kappa_a score"
+            )
+
+
+def test_substituting_the_boundary_elongation_costs_both_laws_on_every_arm(
+    committed: dict,
+) -> None:
+    """A law evaluated on its own variable should fit better than on a stand-in.
+
+    This is the check that the premise is the right way round: if the laws
+    were written on the boundary elongation, scoring them on it would help,
+    not hurt. On the real rows it hurts on all three arms for both laws.
+    """
+    laws = committed["elongation_convention"]["laws"]
+    for name, law in laws.items():
+        for column in ("all_rows", "machine_equal", "iter_matched_cut"):
+            assert law["boundary_kappa"][column] > law["kappa_a"][column], (
+                f"{name}/{column}: the boundary-elongation substitution did not cost accuracy"
             )
 
 

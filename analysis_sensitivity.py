@@ -7,11 +7,13 @@ Each arm answers one objection that the headline comparison invites:
     ITPA20      IPB98(y,2) is the ITER reference, but it is not the newest
                 published scaling fitted to this database family. ITPA20 and
                 ITPA20-IL are, and they weaken the size dependence sharply.
-                Both are non-blind here for the same reason IPB98 is. Each is
-                specified on the boundary elongation, which STD5 does not
-                deliver and DB5.2.3 does, so each is scored on the measured
-                column and the ``elongation`` arm reports what the delivered
-                one would have cost.
+                Both are non-blind here for the same reason IPB98 is. Both are
+                written on the areal elongation kappa_a, the same variable
+                IPB98(y,2) uses and the one STD5 delivers as ``KAPPAA``
+                (Verdoolaege et al. 2021, eqs. 5 and 7 and table 2), so each
+                is scored on the delivered column. The ``elongation`` arm
+                scores them on the boundary elongation ``KAPPA`` from DB5.2.3
+                as well and reports what that substitution would cost.
 
     correlation The claim that tree error tracks extrapolation distance rests on
                 a Spearman rho over 13 machines. This attaches a permutation
@@ -45,10 +47,14 @@ RESULTS_DIR = Path(__file__).resolve().parent / "results"
 CONTENDERS = ("ridge_loglinear", "random_forest", "hist_gradient_boosting")
 
 # Published scalings, as exponents on (Ip [MA], Bt [T], n [1e19 m^-3],
-# P [MW], R [m], 1+delta, kappa, epsilon, M). Both are cross-checked against
-# the UKAEA PROCESS systems-code documentation and, for ITPA20-IL, against an
-# independent transcription; neither is fitted here, and both saw every machine
-# in this database when they were derived.
+# P [MW], R [m], 1+delta, kappa_a, epsilon, M). The elongation both are written
+# on is the areal one, kappa_a = V / (2 pi R_geo pi a^2) in Verdoolaege et al.
+# 2021, which is the ``KAPPAA`` column STD5 delivers and the ``kappa`` column
+# of the analysed frame; the exponent is therefore applied to that column and
+# not to the boundary elongation. Both are cross-checked against the UKAEA
+# PROCESS systems-code documentation and, for ITPA20-IL, against an independent
+# transcription; neither is fitted here, and both saw every machine in this
+# database when they were derived.
 PUBLISHED_SCALINGS: dict[str, dict[str, float]] = {
     "ITPA20": {
         "coefficient": 0.053,
@@ -76,10 +82,12 @@ PUBLISHED_SCALINGS: dict[str, dict[str, float]] = {
     },
 }
 
-# The elongation the ITPA20 laws are specified on. STD5 delivers only the areal
-# elongation KAPPAA; the full DB5.2.3 revision this repository already pins
-# carries the boundary elongation KAPPA on every row, and Sec. 4.2 is scored on
-# that rather than on a substitute for it.
+# The boundary elongation, which the ITPA20 laws are *not* written on. STD5
+# delivers only the areal elongation KAPPAA, which is the variable both laws
+# take; the full DB5.2.3 revision this repository already pins carries the
+# boundary elongation KAPPA on every row as well. It is carried across so that
+# the cost of substituting one for the other can be measured rather than
+# modelled, and for no other reason: nothing in Sec. 4.2 is scored on it.
 BOUNDARY_ELONGATION = "kappa_boundary"
 
 # Boundary indentation, which DB5.2.3 carries and STD5 does not. A boundary with
@@ -190,14 +198,16 @@ def score_published(dataset: pd.DataFrame) -> dict[str, Any]:
 
     out: dict[str, Any] = {}
     for name in (*PUBLISHED_SCALINGS, "IPB98(y,2)"):
-        # IPB98(y,2) was fitted to the areal elongation the deposit delivers;
-        # the ITPA20 laws were not, and are scored on the boundary elongation
-        # DB5.2.3 measures. Scoring each on the column it was fitted to is the
-        # comparison; `elongation_convention` reports what the choice is worth.
+        # All three laws are written on the areal elongation the deposit
+        # delivers, so all three are evaluated on it. An earlier revision of
+        # this arm scored the two ITPA20 laws on the boundary elongation from
+        # DB5.2.3 instead, on the mistaken premise that they were specified on
+        # it; `elongation_convention` keeps that scoring as the reported
+        # alternative and measures what the substitution costs.
         predicted = (
             dataset["ipb98y2_tau_s"].to_numpy(dtype=float)
             if name == "IPB98(y,2)"
-            else published_prediction(with_boundary_elongation(dataset), name)
+            else published_prediction(dataset, name)
         )
         per_machine = {str(m): _rmsle(tau[labels == m], predicted[labels == m]) for m in eligible}
         out[name] = {
@@ -211,28 +221,37 @@ def score_published(dataset: pd.DataFrame) -> dict[str, Any]:
 
 
 def with_boundary_elongation(dataset: pd.DataFrame) -> pd.DataFrame:
-    """The same rows with `kappa` set to the elongation the ITPA20 laws want."""
+    """The same rows with `kappa` replaced by the boundary elongation.
+
+    This is the substitution, not the convention: the ITPA20 laws are written
+    on the areal elongation, which is what `kappa` already holds. The frame
+    this returns exists so that the cost of evaluating them on the wrong
+    column can be measured in `elongation_convention`.
+    """
     return dataset.assign(kappa=dataset[BOUNDARY_ELONGATION])
 
 
 def elongation_convention(dataset: pd.DataFrame) -> dict[str, Any]:
-    """What the areal-against-boundary elongation substitution is worth.
+    """What substituting the boundary elongation for the areal one would cost.
 
-    ITPA20 and ITPA20-IL are specified on the boundary elongation
-    ``kappa = b / a``. STD5 delivers only the areal elongation
-    ``kappa_a = S / (pi a^2)``, which is what IPB98(y,2) was fitted to, so
-    scoring the newer laws on the delivered column substitutes one for the
-    other.
+    ITPA20 and ITPA20-IL are written on the areal elongation
+    ``kappa_a = V / (2 pi R_geo pi a^2)``, the variable IPB98(y,2) uses and
+    the one STD5 delivers as ``KAPPAA`` (Verdoolaege et al. 2021, eqs. 5 and 7
+    and table 2). Evaluating them on the boundary elongation ``kappa = b / a``
+    instead, which DB5.2.3 carries as ``KAPPA``, substitutes one variable for
+    the other. An earlier revision of this analysis made exactly that
+    substitution, on the premise that the laws were specified on the boundary
+    column, so the cost is measured here and reported beside the headline
+    rather than assumed small.
 
-    This used to be bounded with a shape model: on a parametrised boundary the
-    ratio depends on triangularity alone, which put it at a median of 1.008 and
-    a maximum of 1.110 and made the substitution worth 0.0007. The model was
-    wrong, and it was the wrong kind of thing to reach for. DB5.2.3 carries the
-    measured ``KAPPA`` on every analysed row, and the measured ratio has a
-    median of 1.083 and a maximum of 1.341, with 16% of rows above what the
-    model gave as an upper bound and 7% below unity, which no boundary of that
-    family can produce at all. PBX-M sits at 0.739. The laws are now scored on
-    the measured column and the delivered one is reported beside it.
+    The two columns are not interchangeable and no shape model converts one
+    into the other. On a parametrised boundary the ratio depends on
+    triangularity alone, which would put it at a median of 1.008 and a maximum
+    of 1.110; the measured ratio has a median of 1.083 and a maximum of 1.341,
+    with 16% of rows above that ceiling and 7% below unity, which no boundary
+    of that family can produce at all. PBX-M sits at 0.739 because it ran
+    indented plasmas. Both scorings are recorded: ``kappa_a`` is the headline
+    row Sec. 4.2 prints, and ``boundary_kappa`` is the substitution.
     """
     tau = dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float)
     labels = dataset[hdb5.TOKAMAK_LABEL_COLUMN].to_numpy()
@@ -273,10 +292,10 @@ def elongation_convention(dataset: pd.DataFrame) -> dict[str, Any]:
         },
         "laws": {},
     }
-    measured = with_boundary_elongation(dataset)
+    substituted = with_boundary_elongation(dataset)
     for name in PUBLISHED_SCALINGS:
         scored = {}
-        for tag, frame in (("kappa_a_as_delivered", dataset), ("measured_kappa", measured)):
+        for tag, frame in (("kappa_a", dataset), ("boundary_kappa", substituted)):
             predicted = published_prediction(frame, name)
             scored[tag] = {
                 "all_rows": _rmsle(tau, predicted),
@@ -286,7 +305,7 @@ def elongation_convention(dataset: pd.DataFrame) -> dict[str, Any]:
                 "iter_matched_cut": _rmsle(tau[above], predicted[above]),
             }
         largest = max(
-            abs(scored["measured_kappa"][key] - scored["kappa_a_as_delivered"][key])
+            abs(scored["boundary_kappa"][key] - scored["kappa_a"][key])
             for key in ("all_rows", "machine_equal", "iter_matched_cut")
         )
         out["laws"][name] = {**scored, "largest_shift": largest}
@@ -440,8 +459,8 @@ def main() -> None:
     )
     for name, row in cast("dict[str, Any]", elongation["laws"]).items():
         print(
-            f"  {name:12s} on kappa_a={row['kappa_a_as_delivered']['iter_matched_cut']:.4f}  "
-            f"on measured kappa={row['measured_kappa']['iter_matched_cut']:.4f}  "
+            f"  {name:12s} on kappa_a={row['kappa_a']['iter_matched_cut']:.4f}  "
+            f"on boundary kappa={row['boundary_kappa']['iter_matched_cut']:.4f}  "
             f"largest shift anywhere={row['largest_shift']:.4f}"
         )
     print("\n--- error against extrapolation distance, 13 machines ---")
