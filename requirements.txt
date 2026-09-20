@@ -3,6 +3,7 @@ jupyter
 matplotlib
 mypy
 numpy
+openpyxl
 pandas
 pytest
 ruff

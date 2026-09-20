@@ -373,6 +373,52 @@ def test_on_all_nine_features_the_cleaning_is_hdb5s_own() -> None:
         assert np.allclose(observed[column], expected[column], rtol=0, atol=1e-12), column
 
 
+def test_a_workbook_is_read_as_delivered_and_freezes_the_plan_a_csv_would(tmp_path: Path) -> None:
+    """The real file may be a workbook with a title above its header, on a named sheet.
+
+    The lock has the delivered bytes pinned and analysed, so the workbook is read
+    directly. Nothing about the plan may depend on which container the same
+    numbers arrived in.
+    """
+    pytest.importorskip("openpyxl")
+    deposit = synthetic_deposit()
+    workbook = tmp_path / "ciclop_db.xlsx"
+    with pd.ExcelWriter(workbook) as writer:
+        pd.DataFrame({"note": ["not the database"]}).to_excel(writer, sheet_name="README", index=False)
+        deposit.to_excel(writer, sheet_name="DB v7.3", index=False, startrow=1)
+
+    mapping = mapping_for_the_deposit()
+    mapping["read"] = {"sheet": "DB v7.3", "header_row": 1}
+    from_workbook = ciclop.freeze_plan(workbook, mapping)
+    from_csv = ciclop.freeze_plan(_deposit_on_disk(tmp_path, deposit), mapping_for_the_deposit())
+
+    assert from_workbook["file"]["name"] == "ciclop_db.xlsx"
+    for key in ("frozen_features", "n_complete_rows", "complete_rows_per_device", "eligible_devices", "evaluable"):
+        assert from_workbook[key] == from_csv[key], key
+    assert from_workbook["usability"] == pytest.approx(from_csv["usability"])
+
+
+def test_a_workbook_in_an_environment_without_a_reader_names_the_fix(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    workbook = tmp_path / "ciclop_db.xlsx"
+    workbook.write_bytes(b"not read: the reader is missing")
+
+    def _no_reader(*args: object, **kwargs: object) -> None:
+        raise ImportError("Missing optional dependency 'openpyxl'.")
+
+    monkeypatch.setattr(pd, "read_excel", _no_reader)
+    with pytest.raises(ImportError, match="Do not export the sheet to CSV by hand"):
+        ciclop.load_ciclop_raw(workbook)
+
+
+def test_a_file_that_is_neither_a_table_nor_a_workbook_is_refused(tmp_path: Path) -> None:
+    other = tmp_path / "ciclop_db.pdf"
+    other.write_bytes(b"%PDF")
+    with pytest.raises(ValueError, match="unrecognised CICLOP file type"):
+        ciclop.load_ciclop_raw(other)
+    with pytest.raises(FileNotFoundError, match="NUCLEUS login"):
+        ciclop.load_ciclop_raw(tmp_path / "absent.csv")
+
+
 # --- the guard ---------------------------------------------------------------
 
 

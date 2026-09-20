@@ -139,9 +139,9 @@ def load_ciclop_raw(path: Path | str, read: dict[str, Any] | None = None) -> pd.
     """Read the delivered file as it is, by extension.
 
     ``read`` carries what the schema pass found about its layout: the sheet, the
-    header row, and any rows to skip. No Excel reader is a dependency of this
-    repository, so a workbook fails with the fix named instead of a traceback
-    from inside pandas.
+    header row, and any rows to skip. A workbook is read through ``openpyxl``,
+    which the ``study`` extra installs. An environment without it gets the fix
+    named instead of a traceback from inside pandas.
     """
     resolved = Path(path).expanduser().resolve()
     if not resolved.exists():
@@ -161,9 +161,9 @@ def load_ciclop_raw(path: Path | str, read: dict[str, Any] | None = None) -> pd.
             return pd.read_excel(resolved, sheet_name=options.get("sheet", 0), header=header, skiprows=skip)
         except ImportError as error:
             raise ImportError(
-                f"{resolved.name} is a workbook and no Excel reader is installed. Either export "
-                "the sheet to CSV and pin the CSV, or add openpyxl to requirements.txt and "
-                "constraints.txt. Whichever is done, the pinned bytes are the file that is read."
+                f"{resolved.name} is a workbook and openpyxl is not installed. Install the "
+                "analysis environment with `pip install -e '.[study]' -c constraints.txt`. "
+                "Do not export the sheet to CSV by hand: the pinned bytes are the file as delivered."
             ) from error
     raise ValueError(f"unrecognised CICLOP file type {suffix!r}; expected a CSV or a workbook")
 
@@ -584,10 +584,15 @@ def main(argv: list[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
     if args.command == "schema":
         fingerprint = hdb5.fingerprint_file(args.path, read_shape=False)
-        raw = load_ciclop_raw(args.path, {"sheet": args.sheet, "header_row": args.header_row})
-        report: dict[str, object] = {
-            "file": {"name": args.path.name, "sha256": fingerprint.sha256, "n_bytes": fingerprint.n_bytes}
-        }
+        # argparse hands back a string; "1" means the second sheet, not a sheet named 1.
+        sheet = int(args.sheet) if str(args.sheet).isdigit() else args.sheet
+        raw = load_ciclop_raw(args.path, {"sheet": sheet, "header_row": args.header_row})
+        described: dict[str, object] = {"name": args.path.name, "sha256": fingerprint.sha256, "n_bytes": fingerprint.n_bytes}
+        if args.path.suffix.lower() in {".xlsx", ".xlsm", ".xls"}:
+            # Named up front, because the database need not be the first sheet.
+            described["sheets"] = [str(name) for name in pd.ExcelFile(args.path).sheet_names]
+            described["sheet_read"] = sheet
+        report: dict[str, object] = {"file": described}
         report.update(schema_report(raw))
         print(json.dumps(report, indent=2, default=str))
         if args.out is not None:

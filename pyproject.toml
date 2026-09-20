@@ -32,6 +32,10 @@ dependencies = [
 study = [
     "joblib",
     "matplotlib",
+    # Reads the IAEA/IEA CICLOP database if it is delivered as a workbook. The
+    # lock has that file analysed as delivered and pinned by its bytes, and a
+    # sheet exported to CSV by hand would be neither.
+    "openpyxl",
     "scikit-learn",
     "seaborn",
 ]
