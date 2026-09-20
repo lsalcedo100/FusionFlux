@@ -464,10 +464,9 @@ def per_device_table(analysis: dict[str, Any]) -> pd.DataFrame:
 def plot_ciclop(analysis: dict[str, Any], path: Path | None = None) -> Path | None:
     """Two panels: both splits for both datasets, then holdout error against distance.
 
-    The ridge and the forest keep the colours they have in the paper's first
-    figure. The booster is the secondary comparison and is drawn in grey: its
-    colour there sits too close to the forest's to tell apart (Delta E 8.6, and
-    0.9 under deuteranopia), so here marker, dash and a direct label carry it.
+    Every model keeps the colour, marker and line style it has in the paper's
+    first figure, all three read from ``figures``, so a reader who has met the
+    forest as a dotted orange diamond there meets the same one here.
     """
     try:
         import matplotlib
@@ -484,6 +483,7 @@ def plot_ciclop(analysis: dict[str, Any], path: Path | None = None) -> Path | No
         FONT_TITLE,
         PAPER_WIDTH_IN,
         apply_font_policy,
+        model_color,
         model_style,
         save_figure,
     )
@@ -493,7 +493,7 @@ def plot_ciclop(analysis: dict[str, Any], path: Path | None = None) -> Path | No
         return None
     apply_font_policy()
     ink, muted = "#0b0b0b", "#52514e"
-    style = {RIDGE: ("#2a78d6", "ridge, log-linear"), FOREST: ("#eb6834", "random forest"), BOOSTER: ("#8a8985", "hist gradient boosting")}
+    style = {RIDGE: (model_color(RIDGE), "ridge, log-linear"), FOREST: (model_color(FOREST), "random forest"), BOOSTER: (model_color(BOOSTER), "hist gradient boosting")}
 
     import analysis_extrapolation as ae
 
