@@ -72,7 +72,8 @@ FusionFlux/
 │   └── neutron-yield-pipeline.md    # operating detail for the synthetic-data infrastructure
 ├── tools/
 │   ├── check_paper_submission.py    # the gate the paper has to pass before it leaves the repository
-│   └── compare_results.py           # numeric diff of a regenerated results/ against the committed one
+│   ├── compare_results.py           # numeric diff of a regenerated results/ against the committed one
+│   └── ciclop_tables.py             # every CICLOP number the manuscript may print, generated; and the scan that enforces it
 │
 │   # shared plumbing, used by both pipelines
 ├── config.py                        # paths, column config, physics constants and tolerances
