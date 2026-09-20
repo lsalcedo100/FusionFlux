@@ -51,6 +51,11 @@ data/raw/allometry_bmr.txt
 # GitHub release v1.0.1, CC0
 # (python3 -c "import tree_allometry; tree_allometry.download_baad()")
 data/raw/baad_data.zip
+# The IAEA/IEA CICLOP database, for the prospectively locked replication
+# (docs/ciclop-replication-lock.md). It sits behind an IAEA NUCLEUS login, so
+# there is no fetch command: a person downloads it, and it is pinned by SHA-256
+# in ciclop.py once the plan is frozen.
+data/raw/ciclop*
 site/index.html
 
 # Copied into the package at build time from results/predictor.json by
