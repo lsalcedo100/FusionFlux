@@ -106,6 +106,27 @@ FONT_SMALL = 8.3
 # The pairs are chosen to stay distinct at the printed size: a filled circle, a
 # square and an open triangle read apart at 4 pt in a way that, say, a circle and
 # an octagon do not.
+# One colour per model, for every figure that draws them. Four analysis scripts
+# used to carry their own copy of this table, and the copies had drifted into a
+# palette that did not separate. The forest's orange and the booster's old
+# `#c8873a` sat 8.6 apart in OKLab Delta E for a reader with full colour vision,
+# under the 15 at which two series start to read as one, and 0.9 apart under
+# deuteranopia. Separately, the old IPB98(y,2) green `#3f8f5c` sat 4.6 from that
+# orange under protanopia, which is the ordinary red-green confusion.
+#
+# The ridge and the forest keep the colours they have always had here, because
+# that pair is the result. The booster and the published law were re-chosen by
+# search over OKLCH, keeping only colours that clear every pair among the four:
+# the worst pair is now 23.0 for full colour vision and 8.6 under any of the
+# three deficiencies, against a target of 8. The markers and line styles below
+# still carry every distinction a second time.
+MODEL_COLORS = {
+    "ridge_loglinear": "#2a78d6",
+    "random_forest": "#eb6834",
+    "hist_gradient_boosting": "#8b3473",
+    "ipb98y2_analytic": "#0da26b",
+}
+
 MODEL_MARKERS = {
     "ipb98y2_analytic": "s",
     "ridge_loglinear": "o",
@@ -121,6 +142,11 @@ MODEL_LINESTYLES = {
     "random_forest": ":",
     "mean_baseline": "-.",
 }
+
+
+def model_color(name: str) -> str:
+    """Colour for a model. A name without one is an error, not a silent grey."""
+    return MODEL_COLORS[name]
 
 
 def model_style(name: str) -> tuple[str, str]:
