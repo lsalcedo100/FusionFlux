@@ -27,17 +27,19 @@ from pathlib import Path
 
 import pandas as pd
 
+from figures import model_color
+
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
 # Matches analysis_extrapolation.py, so the summary does not recolour models the
 # reader has already met elsewhere.
-BLUE, ORANGE, GREEN = "#2a78d6", "#eb6834", "#3f8f5c"
+BLUE, ORANGE, GREEN = (model_color(n) for n in ("ridge_loglinear", "random_forest", "ipb98y2_analytic"))
 INK, MUTED = "#0b0b0b", "#52514e"
 STYLE: dict[str, tuple[str, str]] = {
     "ipb98y2_analytic": (GREEN, "IPB98(y,2), analytic"),
     "powerlaw_collisionless": ("#7a5cc0", "power law, collisionless"),
     "ridge_loglinear": (BLUE, "ridge, log-linear"),
-    "hist_gradient_boosting": ("#c8873a", "hist gradient boosting"),
+    "hist_gradient_boosting": (model_color("hist_gradient_boosting"), "hist gradient boosting"),
     "random_forest": (ORANGE, "random forest"),
 }
 
