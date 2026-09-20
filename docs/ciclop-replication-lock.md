@@ -90,9 +90,14 @@ the counterpart of CICLOP's injected additional power is the sum
 `PINJ + PINJ2 + PICRHC + PECRHC`, with a missing or negative entry counted as
 zero. On the STD5 rows that sum is positive on 6196 of 6228 and its median ratio
 to `PLTH` is 1.04. `PINJ` alone is one neutral beam system and is not the total.
+A plasma with no auxiliary heating has zero injected power and no logarithm, so
+the cleaning rule of section 2 removes it. On STD5 that is 32 rows, 23 of them
+the ohmic H-modes of COMPASS and TCV, which takes both devices below ten rows.
+The same holds for any CICLOP pulse without auxiliary heating.
+
 HDB5 scores are already known, so this rerun can happen before CICLOP is scored
-without unblinding anything. The rerun holds out physical devices, and it is reported at the 10-row
-threshold CICLOP is scored at and at the manuscript's 30.
+without unblinding anything. The rerun holds out physical devices, and it is
+reported at the 10-row threshold CICLOP is scored at and at the manuscript's 30.
 
 The column mapping is written by hand during the schema pass, from column names,
 units and label values, following the orders of preference above. It is recorded
@@ -314,3 +319,4 @@ below, and none of them after it.
 | Date | What changed | Why | Before or after the first score |
 | --- | --- | --- | --- |
 | 19 September 2026 | Section 4 and closed decision 6: the HDB5 counterpart of injected power is `PINJ + PINJ2 + PICRHC + PECRHC`, where the lock as first committed named `PINJ` alone. | Measured on the STD5 rows while building the pipeline, `PINJ` has a median ratio to `PLTH` of 0.66 and is zero on 361 rows heated by radio frequency alone, so it is one beam system and not the total. The check used HDB5 only. | Before. No CICLOP file had been obtained. |
+| 19 September 2026 | Section 4 states a consequence of the injected-power definition: a plasma with no auxiliary heating is removed by the cleaning rule. No rule changed. | Found when the HDB5 rerun was first exercised: its 10-row and 30-row arms held out the same 11 devices, because 32 STD5 rows have zero injected power. | Before. No CICLOP file had been obtained. |
