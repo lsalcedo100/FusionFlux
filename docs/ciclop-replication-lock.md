@@ -178,7 +178,7 @@ The first condition that holds gives the verdict.
    unusable, or fewer than six of the nine features are usable, or fewer than
    100 tokamak rows survive cleaning, or k is below 5.
 2. Reproduces the inversion. `cv_forest < cv_ridge`, `lodo_forest > lodo_ridge`,
-   and W is more than half of k.
+   W is more than half of k, and D is at least 1.5.
 3. Contradicts the original result. `lodo_forest < lodo_ridge`, W is less than
    half of k, and D is at most 1.
 4. Degradation without a literal inversion. D is at least 1.5.
@@ -187,6 +187,13 @@ The first condition that holds gives the verdict.
 If verdict 1 holds for a reason that still lets the models be fitted, such as k
 of 4, the scores are computed and reported as descriptive, and the verdict stays
 "cannot be evaluated".
+
+Verdict 2 carries the same size requirement as verdict 4. Without it, a forest
+that won cross-validation by 0.0001 and lost the holdout by 0.0001 on four of
+seven devices would count as a reproduction, and the manuscript itself treats a
+gap of 0.002 as inside its resolution. A literal crossing with D below 1.5 falls
+through to verdict 5, and the text then says that the ranks crossed and that the
+crossing was small.
 
 The 1.5 is a judgement made in advance: it is about a third of the nine-feature
 HDB5 effect on a log scale. It does not move when the feature-matched HDB5 value
@@ -237,6 +244,12 @@ verdict.
   labelled as using injected power if the file has no loss power
 - the count of (facility, pulse) pairs that also appear in DB5.2.3, and the
   primary analysis with those rows removed
+- if the file carries a pulse date, the primary analysis with the
+  cross-validation folds grouped by device and calendar year and not by pulse.
+  CICLOP is a database of record pulses, so one device's pulses from one campaign
+  are often repeats of one scenario, and a fold boundary between two repeats
+  flatters any model that interpolates. If the file carries no date, this is
+  reported as not computable
 - outputs 1 and 2 over the devices HDB5 does not contain, which on the published
   counts are EAST, KSTAR, and Tore Supra with WEST. This is descriptive, because
   at most three devices can be scored
@@ -253,7 +266,13 @@ wherever it appears.
    `analysis_robustness` functions the manuscript's numbers come from, in the
    way `replication.py` does for DB5.2.3.
 3. The author obtains the file. Its SHA-256, byte count, version, access date
-   and terms of use are committed before any model is run on it.
+   and terms of use are committed before any model is run on it. Access was
+   requested from the site's owners on 20 September 2026. If it has not been
+   granted by 18 October 2026, the manuscript is submitted without CICLOP, and
+   its Limitations says that a candidate external database could not be obtained
+   in time. That date governs the submission and not the replication: this lock
+   stays in force, and if access comes later the analysis is run under it
+   unchanged and reported, whatever it shows, at revision or on its own.
 4. A schema pass reads column names, units, per-column summaries, missingness
    and counts. It computes nothing that joins the target to a feature, fits
    nothing, and evaluates no published scaling law.
@@ -320,3 +339,6 @@ below, and none of them after it.
 | --- | --- | --- | --- |
 | 19 September 2026 | Section 4 and closed decision 6: the HDB5 counterpart of injected power is `PINJ + PINJ2 + PICRHC + PECRHC`, where the lock as first committed named `PINJ` alone. | Measured on the STD5 rows while building the pipeline, `PINJ` has a median ratio to `PLTH` of 0.66 and is zero on 361 rows heated by radio frequency alone, so it is one beam system and not the total. The check used HDB5 only. | Before. No CICLOP file had been obtained. |
 | 19 September 2026 | Section 4 states a consequence of the injected-power definition: a plasma with no auxiliary heating is removed by the cleaning rule. No rule changed. | Found when the HDB5 rerun was first exercised: its 10-row and 30-row arms held out the same 11 devices, because 32 STD5 rows have zero injected power. | Before. No CICLOP file had been obtained. |
+| 20 September 2026 | Section 9: verdict 2 also requires D of at least 1.5. | A critical re-read found that "reproduces the inversion" had no size requirement while verdicts 4 and 5 did, so a crossing inside the noise would have counted as a reproduction. The change makes the favourable verdict harder to reach. | Before. No CICLOP file had been obtained. |
+| 20 September 2026 | Section 11: a conditional secondary analysis with cross-validation folds grouped by device and calendar year. It cannot change the verdict. | Near-repeat pulses within a campaign are the bias the audit expects most, and nothing in the lock measured it. | Before. No CICLOP file had been obtained. |
+| 20 September 2026 | Section 12, step 3: a date, 18 October 2026, after which the manuscript is submitted without CICLOP. The lock stays in force past it. | Access is granted by the site's owners and may take weeks or be declined. | Before. No CICLOP file had been obtained. |

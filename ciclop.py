@@ -126,6 +126,7 @@ H_MODE_COLUMN = "is_h_mode"
 IN_HDB5_COLUMN = "device_in_hdb5"
 SPLIT_DEVICE_COLUMN = "device_if_split"
 PULSE_COLUMN = "pulse"
+YEAR_COLUMN = "year"
 
 
 class PlanNotFrozenError(RuntimeError):
@@ -213,8 +214,9 @@ def validate_mapping(mapping: dict[str, Any], raw_columns: list[str]) -> None:
     for role in ("facility", "pulse"):
         if identity.get(role) not in present:
             problems.append(f"identity.{role} names {identity.get(role)!r}, which is not a column")
-    if identity.get("regime") is not None and identity["regime"] not in present:
-        problems.append(f"identity.regime names {identity['regime']!r}, which is not a column")
+    for role in ("regime", "date"):
+        if identity.get(role) is not None and identity[role] not in present:
+            problems.append(f"identity.{role} names {identity[role]!r}, which is not a column")
 
     never = set(mapping.get("never_features", []))
     target = mapping.get("target", {})
@@ -278,6 +280,18 @@ def _effective_mass(raw: pd.DataFrame, entry: dict[str, Any]) -> pd.Series:
     return mass
 
 
+def pulse_year(values: pd.Series) -> pd.Series:
+    """The calendar year of each pulse, from whatever the date column holds.
+
+    A year on its own, an ISO date, a day-first date and a workbook timestamp all
+    carry four digits beginning 19 or 20, and that is all this reads. It does
+    not go through ``pd.to_datetime``, which reads the bare number 2021 as 2021
+    nanoseconds after 1970. A value with no such year is left missing.
+    """
+    text = values.astype(str).str.strip().str.replace(r"\.0$", "", regex=True)
+    return text.str.extract(r"(?<!\d)((?:19|20)\d{2})(?!\d)")[0].astype(float)
+
+
 def canonical_frame(raw: pd.DataFrame, mapping: dict[str, Any]) -> pd.DataFrame:
     """Every delivered row in the study's variables. No row is dropped here.
 
@@ -319,6 +333,9 @@ def canonical_frame(raw: pd.DataFrame, mapping: dict[str, Any]) -> pd.DataFrame:
         {name: bool(entry.get("hdb5_tok")) for name, entry in mapping["facilities"].items()}
     ).astype(bool)
     frame[hdb5.GROUP_COLUMN] = facility + "::" + pulse
+    frame[YEAR_COLUMN] = (
+        pulse_year(raw[identity["date"]]) if identity.get("date") is not None else np.nan
+    )
     if identity.get("regime") is not None:
         regime = raw[identity["regime"]].astype(str).str.strip()
         frame[REGIME_COLUMN] = regime

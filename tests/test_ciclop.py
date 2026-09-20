@@ -96,6 +96,7 @@ def synthetic_deposit(seed: int = 7) -> pd.DataFrame:
                 "Facility": facility,
                 "Pulse": 50000 + pulse,
                 "Regime": "H-mode" if pulse % 3 else "L-mode",
+                "Date": f"{2015 + pulse % 6}-03-{1 + pulse % 27:02d}",
                 "Fuel": "D",
                 "Ip [MA]": -ip if pulse % 2 else ip,
                 "Bt [T]": bt,
@@ -123,7 +124,7 @@ def mapping_for_the_deposit() -> dict[str, Any]:
     return {
         "file": {"version": "synthetic", "access_date": "never", "terms": "none"},
         "read": {"header_row": 0},
-        "identity": {"facility": "Facility", "pulse": "Pulse", "regime": "Regime"},
+        "identity": {"facility": "Facility", "pulse": "Pulse", "regime": "Regime", "date": "Date"},
         "h_mode_values": ["H-mode"],
         "never_features": ["H98", "Duration [s]"],
         "facilities": {
@@ -240,6 +241,32 @@ def test_fuel_labels_become_the_masses_the_lock_fixed() -> None:
     mapping["quantities"]["m_eff_amu"]["tritium_fraction_column"] = "T fraction"
     weighted = ciclop.canonical_frame(deposit, mapping)["m_eff_amu"]
     assert weighted.iloc[2] == 2.5 and weighted.iloc[3] == pytest.approx(2.8)
+
+
+def test_the_year_of_a_pulse_is_read_from_whatever_the_date_column_holds() -> None:
+    """A bare year must not go through a datetime parser, which reads 2021 as 2021 ns after 1970."""
+    dates = pd.Series([2021, 2021.0, "2019-11-03", "03/11/2019", pd.Timestamp("2023-05-17"), "campaign C38, 2016", "15/03/21", None, "n/a"])
+    years = ciclop.pulse_year(dates)
+    assert years.iloc[:6].tolist() == [2021.0, 2021.0, 2019.0, 2019.0, 2023.0, 2016.0]
+    assert years.iloc[6:].isna().all()
+
+
+def test_a_file_with_no_date_column_has_no_years() -> None:
+    mapping = mapping_for_the_deposit()
+    del mapping["identity"]["date"]
+    frame = ciclop.canonical_frame(synthetic_deposit(), mapping)
+    assert frame[ciclop.YEAR_COLUMN].isna().all()
+    assert ac.grouped_by_device_and_year(frame) is None
+
+
+def test_grouping_by_campaign_keeps_a_devices_year_in_one_fold() -> None:
+    frame = ciclop.canonical_frame(synthetic_deposit(), mapping_for_the_deposit())
+    frame.loc[0, ciclop.YEAR_COLUMN] = np.nan
+    grouped = ac.grouped_by_device_and_year(frame)
+    assert grouped is not None and grouped.loc[1, hdb5.GROUP_COLUMN] == "JET::2016"
+    # A pulse with no readable year stays its own group, as it was.
+    assert grouped.loc[0, hdb5.GROUP_COLUMN] == frame.loc[0, hdb5.GROUP_COLUMN] == "JET-C::50000"
+    assert grouped[hdb5.GROUP_COLUMN].nunique() < frame[hdb5.GROUP_COLUMN].nunique()
 
 
 def test_a_mapping_can_name_a_species_and_cannot_name_a_mass() -> None:
@@ -491,6 +518,8 @@ def test_the_analysis_script_refuses_to_run_in_this_repository_until_the_plan_is
 CASES = {
     "the HDB5 pattern": ((0.124, 0.465, 0.187, 0.214, 7, 7), ac.REPRODUCES_INVERSION),
     "inversion on a bare majority": ((0.10, 0.30, 0.15, 0.20, 4, 7), ac.REPRODUCES_INVERSION),
+    "the ranks cross inside the noise": ((0.2000, 0.2101, 0.2010, 0.2100, 4, 7), ac.NO_IMPORTANT_DEGRADATION),
+    "the ranks cross on every device and the effect is small": ((0.19, 0.24, 0.20, 0.21, 7, 7), ac.NO_IMPORTANT_DEGRADATION),
     "the means invert and one device carries it": ((0.10, 0.30, 0.15, 0.20, 3, 7), ac.DEGRADATION_WITHOUT_INVERSION),
     "exactly half the devices is not a majority": ((0.10, 0.30, 0.15, 0.20, 3, 6), ac.DEGRADATION_WITHOUT_INVERSION),
     "the forest never won interpolation": ((0.20, 0.50, 0.15, 0.20, 7, 7), ac.DEGRADATION_WITHOUT_INVERSION),
@@ -535,7 +564,7 @@ def test_every_outcome_gets_exactly_one_verdict_and_it_means_what_it_says() -> N
         seen.add(label)
         d = ac.differential_degradation(cv_f, lodo_f, cv_r, lodo_r)
         if label == ac.REPRODUCES_INVERSION:
-            assert cv_f < cv_r and lodo_f > lodo_r and worse > k / 2
+            assert cv_f < cv_r and lodo_f > lodo_r and worse > k / 2 and d >= ciclop.DEGRADATION_BOUNDARY
         elif label == ac.CONTRADICTS:
             assert lodo_f < lodo_r and worse < k / 2 and d <= 1.0
         elif label == ac.DEGRADATION_WITHOUT_INVERSION:
@@ -629,6 +658,13 @@ def test_the_secondary_arms_are_reported_and_cannot_reach_the_verdict(planted: d
 
     absent = secondary["devices_absent_from_hdb5"]
     assert absent["devices"] == ["Tore Supra and WEST", "EAST", "KSTAR"]
+
+    # Cutting the folds between campaigns changes cross-validation and nothing else.
+    by_campaign = secondary["cv_grouped_by_device_and_year"]
+    assert by_campaign["scored"] and by_campaign["eligible_devices"] == planted["primary"]["eligible_devices"]
+    for name in ac.RANKED_MODELS:
+        assert by_campaign["models"][name]["lodo"] == pytest.approx(planted["primary"]["models"][name]["lodo"])
+    assert by_campaign["models"][ac.FOREST]["cv_matched"] != planted["primary"]["models"][ac.FOREST]["cv_matched"]
 
     assert secondary["ipb98y2_on_h_mode_rows"]["computed"]
     assert secondary["ipb98y2_on_h_mode_rows"]["power"] == "injected additional power"

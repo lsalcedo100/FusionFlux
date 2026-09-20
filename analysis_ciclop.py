@@ -108,12 +108,16 @@ def verdict(
     if not_evaluable:
         return CANNOT_BE_EVALUATED
     half = n_devices / 2
-    if cv_flexible < cv_ridge and lodo_flexible > lodo_ridge and n_devices_flexible_worse > half:
-        return REPRODUCES_INVERSION
     degradation = differential_degradation(cv_flexible, lodo_flexible, cv_ridge, lodo_ridge)
+    important = degradation >= ciclop.DEGRADATION_BOUNDARY
+    crossed = cv_flexible < cv_ridge and lodo_flexible > lodo_ridge
+    # A crossing alone is not a reproduction: the ranks can trade places inside
+    # the noise. It has to come with the same size of effect verdict 4 asks for.
+    if crossed and n_devices_flexible_worse > half and important:
+        return REPRODUCES_INVERSION
     if lodo_flexible < lodo_ridge and n_devices_flexible_worse < half and degradation <= 1.0:
         return CONTRADICTS
-    if degradation >= ciclop.DEGRADATION_BOUNDARY:
+    if important:
         return DEGRADATION_WITHOUT_INVERSION
     return NO_IMPORTANT_DEGRADATION
 
@@ -341,6 +345,21 @@ def db523_overlap(dataset: pd.DataFrame, plan: dict[str, Any]) -> pd.Series | No
     )
 
 
+def grouped_by_device_and_year(dataset: pd.DataFrame) -> pd.DataFrame | None:
+    """The same rows, with cross-validation folds cut between campaigns and not between pulses.
+
+    CICLOP is a database of record pulses, and one device's pulses from one
+    campaign are often repeats of one scenario. Grouping by pulse lets a fold
+    boundary fall between two repeats, which flatters any model that
+    interpolates. A pulse with no readable year keeps itself as its group.
+    """
+    year = dataset[ciclop.YEAR_COLUMN]
+    if not year.notna().any():
+        return None
+    campaign = dataset[hdb5.TOKAMAK_LABEL_COLUMN].astype(str) + "::" + year.map(lambda y: "" if pd.isna(y) else str(int(y)))
+    return dataset.assign(**{hdb5.GROUP_COLUMN: campaign.where(year.notna(), dataset[hdb5.GROUP_COLUMN])})
+
+
 def absent_from_hdb5(arm: dict[str, Any], plan: dict[str, Any]) -> dict[str, Any]:
     """Outputs 1 and 2 over the devices HDB5 does not contain. Descriptive: at most three devices."""
     if not arm.get("scored"):
@@ -389,8 +408,14 @@ def analyze(plan: dict[str, Any], dataset: pd.DataFrame, *, with_hdb5: bool = Tr
     h_mode_reasons = floor_reasons(int(len(h_mode)), len(h_mode_eligible))
     split = dataset.assign(**{hdb5.TOKAMAK_LABEL_COLUMN: dataset[ciclop.SPLIT_DEVICE_COLUMN]})
     overlap = db523_overlap(dataset, plan)
+    by_campaign = grouped_by_device_and_year(dataset)
 
     secondaries: dict[str, Any] = {
+        "cv_grouped_by_device_and_year": (
+            secondary(by_campaign)
+            if by_campaign is not None
+            else {"scored": False, "not_evaluable_because": ["the file carries no pulse date"]}
+        ),
         "min_rows_30": secondary(dataset, min_rows=ciclop.SENSITIVITY_MIN_ROWS),
         # The lock runs this arm only if the subset clears the floors, and marks it otherwise.
         "h_mode_only": secondary(h_mode) if not h_mode_reasons else {"scored": False, "not_evaluable_because": h_mode_reasons},

@@ -195,7 +195,7 @@ def facts(analysis: dict[str, Any]) -> dict[str, str]:
         out.update(_arm_facts(f"hdb5.{name}", arm))
 
     secondary = analysis.get("secondary", {})
-    for name in ("min_rows_30", "h_mode_only", "tore_supra_and_west_split"):
+    for name in ("min_rows_30", "h_mode_only", "tore_supra_and_west_split", "cv_grouped_by_device_and_year"):
         if secondary.get(name, {}).get("eligible_devices") is not None:
             out.update(_arm_facts(f"secondary.{name}", secondary[name]))
     overlap = secondary.get("db523_overlap", {})
