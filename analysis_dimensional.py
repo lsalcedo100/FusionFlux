@@ -78,6 +78,7 @@ from figures import (
     FONT_ANNOTATION,
     FONT_LEGEND,
     PAPER_WIDTH_IN,
+    SEPARABLE_GREEN,
     save_figure,
 )
 from storage import write_dataframe_csv_atomic, write_json_strict
@@ -482,9 +483,11 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
 
     sweep = analysis.size_sweep
     palette = {
-        "powerlaw_free": ("#888888", "o", "unconstrained"),
+        # Dark, not mid, grey: at the green's lightness a grey and that green are
+        # one colour to a deuteranope (Delta E 3.9), and this is 20 from anything.
+        "powerlaw_free": ("#555555", "o", "unconstrained"),
         "powerlaw_kadomtsev": ("#2a78d6", "s", "Kadomtsev"),
-        "powerlaw_collisionless": ("#1a9850", "D", "collisionless"),
+        "powerlaw_collisionless": (SEPARABLE_GREEN, "D", "collisionless"),
         "powerlaw_electrostatic": ("#eb6834", "^", "electrostatic"),
         "ipb98y2_analytic": ("#000000", None, "IPB98(y,2), not blind"),
     }
@@ -502,7 +505,9 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
     top.set_ylim(0.0, 0.75)
     top.axvline(
         analysis.iter_matched_size_ratio,
-        color="#c0392b",
+        # Ink, as in the size-cut figure: a reference line is not a series, and
+        # red beside the electrostatic orange read as a fifth one.
+        color="#0b0b0b",
         linestyle=":",
         linewidth=1.4,
     )
@@ -513,7 +518,7 @@ def plot_dimensional(analysis: DimensionalAnalysis) -> Path | None:
         "ITER-size-matched",
         xy=(analysis.iter_matched_size_ratio, 0.97),
         xycoords=("data", "axes fraction"),
-        color="#c0392b",
+        color="#0b0b0b",
         va="top",
         ha="left",
         fontsize=FONT_ANNOTATION,

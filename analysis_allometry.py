@@ -36,6 +36,7 @@ from figures import (
     FONT_TICK,
     FONT_TITLE,
     PAPER_WIDTH_IN,
+    model_color,
     save_figure,
 )
 from storage import write_dataframe_csv_atomic, write_json_strict
@@ -272,10 +273,10 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
 
     ink, muted = "#0b0b0b", "#52514e"
     style = {
-        "kleiber": ("#3f8f5c", "Kleiber, 3/4"),
-        "ols_loglinear": ("#2a78d6", "power law, free"),
-        "random_forest": ("#eb6834", "random forest"),
-        "hist_gradient_boosting": ("#c8873a", "hist grad boosting"),
+        "kleiber": (model_color("ipb98y2_analytic"), "Kleiber, 3/4"),
+        "ols_loglinear": (model_color("ridge_loglinear"), "power law, free"),
+        "random_forest": (model_color("random_forest"), "random forest"),
+        "hist_gradient_boosting": (model_color("hist_gradient_boosting"), "hist grad boosting"),
     }
     # No panel here should depend on colour alone; see figures.MODEL_MARKERS.
     shape = {

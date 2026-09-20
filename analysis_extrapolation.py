@@ -41,6 +41,7 @@ from figures import (
     FONT_TICK,
     FONT_TITLE,
     PAPER_WIDTH_IN,
+    model_color,
     model_style,
     save_figure,
 )
@@ -654,11 +655,11 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     except ImportError:  # pragma: no cover - plotting is optional
         return None
 
-    blue, orange, green = "#2a78d6", "#eb6834", "#3f8f5c"
+    blue, orange, green = (model_color(n) for n in ("ridge_loglinear", "random_forest", "ipb98y2_analytic"))
     ink, muted = "#0b0b0b", "#52514e"
     style = {
         "random_forest": (orange, "random forest"),
-        "hist_gradient_boosting": ("#c8873a", "hist gradient boosting"),
+        "hist_gradient_boosting": (model_color("hist_gradient_boosting"), "hist gradient boosting"),
         "ridge_loglinear": (blue, "ridge, log-linear"),
         "ipb98y2_analytic": (green, "IPB98(y,2), analytic"),
     }

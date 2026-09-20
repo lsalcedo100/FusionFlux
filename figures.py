@@ -106,6 +106,49 @@ FONT_SMALL = 8.3
 # The pairs are chosen to stay distinct at the printed size: a filled circle, a
 # square and an open triangle read apart at 4 pt in a way that, say, a circle and
 # an octagon do not.
+# One colour per model, for every figure that draws them. Four analysis scripts
+# used to carry their own copy of this table, and the copies had drifted into a
+# palette that did not separate. The forest's orange and the booster's old
+# `#c8873a` sat 8.6 apart in OKLab Delta E for a reader with full colour vision,
+# under the 15 at which two series start to read as one, and 0.9 apart under
+# deuteranopia. Separately, the old IPB98(y,2) green `#3f8f5c` sat 4.6 from that
+# orange under protanopia, which is the ordinary red-green confusion.
+#
+# The ridge and the forest keep the colours they have always had here, because
+# that pair is the result. The booster and the published law were re-chosen by
+# search over OKLCH, keeping only colours that clear every pair among the four:
+# the worst pair is now 23.0 for full colour vision and 8.6 under any of the
+# three deficiencies, against a target of 8. The markers and line styles below
+# still carry every distinction a second time.
+# The green that stays apart from the forest's orange under protanopia. It is
+# IPB98(y,2)'s colour, and figures that draw no published law borrow it for
+# their own third series, so it has one name and one value.
+SEPARABLE_GREEN = "#0da26b"
+
+MODEL_COLORS = {
+    "ridge_loglinear": "#2a78d6",
+    "random_forest": "#eb6834",
+    "hist_gradient_boosting": "#8b3473",
+    "ipb98y2_analytic": SEPARABLE_GREEN,
+}
+
+# A series that is on a panel for comparison and is not the panel's subject.
+# Dark enough to read in print: the pale greys this replaces were 1.9:1 against
+# the page, and this is 4.4:1.
+CONTEXT_GREY = "#77767a"
+
+# The three splits are an escalation, from a held-out discharge to a held-out
+# device to a held-out size range, so they take one hue running light to dark
+# and not three unrelated hues. The steps sit 19 apart in OKLab Delta E. It also
+# keeps the split colours off the model colours, which matters in the one figure
+# that draws both: blue used to mean "cross-validation" in its top panel and
+# "the ridge" in its bottom one.
+SPLIT_RAMP = {
+    "grouped_cv": "#9fadc6",
+    "leave_one_tokamak_out": "#5f7396",
+    "size_cut": "#2b3c59",
+}
+
 MODEL_MARKERS = {
     "ipb98y2_analytic": "s",
     "ridge_loglinear": "o",
@@ -121,6 +164,11 @@ MODEL_LINESTYLES = {
     "random_forest": ":",
     "mean_baseline": "-.",
 }
+
+
+def model_color(name: str) -> str:
+    """Colour for a model. A name without one is an error, not a silent grey."""
+    return MODEL_COLORS[name]
 
 
 def model_style(name: str) -> tuple[str, str]:
