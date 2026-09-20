@@ -83,26 +83,30 @@ def test_the_mapping_table_says_which_rank_each_quantity_took(generated: tuple) 
 
 
 # --- the scan -------------------------------------------------------------------
+#
+# Every test of the scan brings its own facts. The fixture above generates a few
+# hundred, from a model fitted on whatever platform the suite runs on, so a
+# number typed into a test can turn out to be one of them by coincidence: a test
+# here once expected 0.999 to be caught, and on Linux a generated error rounded
+# to exactly 0.999. The scan was right and the test was wrong.
+
+FACTS = {"forest.lodo": "0.325", "gap": "+0.101", "rho": "-0.46", "devices": "7"}
 
 
-def test_a_number_nobody_generated_is_caught(generated: tuple) -> None:
-    _, _, facts = generated
-    lodo = facts["ciclop.random_forest.lodo"]
-    assert ct.unbound_numerals(_block(f"The forest scores {lodo}."), facts) == []
-    assert ct.unbound_numerals(_block(f"The forest scores {lodo}, against 0.999 before."), facts) == ["0.999"]
+def test_a_number_nobody_generated_is_caught() -> None:
+    assert ct.unbound_numerals(_block("The forest scores 0.325 on 7 devices."), FACTS) == []
+    assert ct.unbound_numerals(_block("The forest scores 0.325, against 0.999 before."), FACTS) == ["0.999"]
+    assert ct.unbound_numerals(_block("It lost on 6 of 7 devices."), FACTS) == ["6"]
 
 
-def test_a_sign_is_optional_in_prose_and_a_wrong_sign_is_not(generated: tuple) -> None:
-    _, _, facts = generated
-    gap = facts["ciclop.random_forest_vs_ridge_loglinear.gap"]
-    assert gap.startswith("+")
-    assert ct.unbound_numerals(_block(f"a mean gap of ${gap}$, or {gap[1:]} in words"), facts) == []
-    assert ct.unbound_numerals(_block(f"a mean gap of $-{gap[1:]}$"), facts) == [f"-{gap[1:]}"]
+def test_a_sign_is_optional_in_prose_and_a_wrong_sign_is_not() -> None:
+    assert ct.unbound_numerals(_block("a mean gap of $+0.101$, or 0.101 in words, and $\\rho=-0.46$"), FACTS) == []
+    assert ct.unbound_numerals(_block("a mean gap of $-0.101$"), FACTS) == ["-0.101"]
+    assert ct.unbound_numerals(_block("$\\rho=+0.46$ and $\\rho=0.46$"), FACTS) == ["+0.46", "0.46"]
 
 
-def test_a_number_outside_a_marked_passage_is_not_this_tests_business(generated: tuple) -> None:
-    _, _, facts = generated
-    assert ct.unbound_numerals("The forest is 29\\% better on HDB5, 0.128 against 0.181.", facts) == []
+def test_a_number_outside_a_marked_passage_is_not_this_tests_business() -> None:
+    assert ct.unbound_numerals("The forest is 29\\% better on HDB5, 0.128 against 0.181.", FACTS) == []
 
 
 def test_names_and_units_that_contain_digits_are_not_numbers() -> None:
@@ -117,15 +121,15 @@ def test_a_fitted_exponent_is_data_and_is_not_waved_through_as_a_unit() -> None:
     assert ct.unbound_numerals(_block(r"$\tau \propto R^{1.97}$ and $I_p^{0.93}$"), {"only": "0.5"}) == ["1.97", "0.93"]
 
 
-def test_layout_that_carries_digits_is_not_data(generated: tuple) -> None:
-    _, _, facts = generated
+def test_layout_that_carries_digits_is_not_data() -> None:
     latex = "\n".join([
         r"\begin{table}[t]", r"\begin{tabular}{lrrrr}", r"\multicolumn{6}{l}{\emph{reference}} \\",
         r"\cmidrule(lr){2-3}", r"\label{tab:ciclop2}", r"Table~\ref{tab:ciclop2} and Ref.~\cite{litaudon24}.",
         r"\includegraphics[width=0.9\linewidth]{ciclop}", r"\href{https://doi.org/10.1088/1741-4326/ae89cc}{doi}",
         r"\subsection{Primary result}", "% a comment with 12345 in it",
     ])
-    assert ct.unbound_numerals(_block(latex), facts) == []
+    # None of 6, 2, 3, 0.9 or 12345 is a fact here, so an empty list means each was set aside as layout.
+    assert ct.unbound_numerals(_block(latex), FACTS) == []
 
 
 def test_a_hash_a_version_and_a_date_are_matched_whole() -> None:
