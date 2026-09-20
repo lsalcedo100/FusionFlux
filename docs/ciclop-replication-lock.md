@@ -84,10 +84,14 @@ aggregation, and the CICLOP result is compared with that rerun. The manuscript's
 nine-feature headline is not the comparator unless all nine survive. Where
 CICLOP's definition of a quantity differs from STD5's and DB5.2.3 carries the
 matching column, the rerun uses the matching column, joined through
-`replication.db523_columns`. Power is the case that matters: DB5.2.3 has the
-injected power `PINJ` beside the loss power `PLTH`. HDB5 scores are already
-known, so this rerun can happen before CICLOP is scored without unblinding
-anything. The rerun holds out physical devices, and it is reported at the 10-row
+`replication.db523_columns`. Power is the case that matters. DB5.2.3 records the
+power each heating system injected or coupled, beside the loss power `PLTH`, and
+the counterpart of CICLOP's injected additional power is the sum
+`PINJ + PINJ2 + PICRHC + PECRHC`, with a missing or negative entry counted as
+zero. On the STD5 rows that sum is positive on 6196 of 6228 and its median ratio
+to `PLTH` is 1.04. `PINJ` alone is one neutral beam system and is not the total.
+HDB5 scores are already known, so this rerun can happen before CICLOP is scored
+without unblinding anything. The rerun holds out physical devices, and it is reported at the 10-row
 threshold CICLOP is scored at and at the manuscript's 30.
 
 The column mapping is written by hand during the schema pass, from column names,
@@ -291,8 +295,9 @@ draft proceed, and each was closed at the draft's default.
 3. Ten rows as the primary threshold, with 30 as a sensitivity (section 8).
 4. The floors in verdict 1: five devices, 100 rows, six of nine features.
 5. The 1.5 boundary between verdicts 4 and 5.
-6. The HDB5 rerun matches CICLOP's power definition through `PINJ` where CICLOP
-   carries injected power (section 4).
+6. The HDB5 rerun matches CICLOP's power definition where CICLOP carries
+   injected power, through the sum of injected and coupled powers given in
+   section 4.
 
 Two items from the draft were not decisions about the analysis. The brief that
 asked for this lock arrived cut off, and its remainder was never received, so
@@ -306,7 +311,6 @@ below, and none of them after it.
 
 ## Deviations log
 
-None.
-
 | Date | What changed | Why | Before or after the first score |
 | --- | --- | --- | --- |
+| 19 September 2026 | Section 4 and closed decision 6: the HDB5 counterpart of injected power is `PINJ + PINJ2 + PICRHC + PECRHC`, where the lock as first committed named `PINJ` alone. | Measured on the STD5 rows while building the pipeline, `PINJ` has a median ratio to `PLTH` of 0.66 and is zero on 361 rows heated by radio frequency alone, so it is one beam system and not the total. The check used HDB5 only. | Before. No CICLOP file had been obtained. |
