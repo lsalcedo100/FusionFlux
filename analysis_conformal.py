@@ -60,7 +60,10 @@ from figures import (
     FONT_TICK,
     FONT_TITLE,
     PAPER_WIDTH_IN,
+    SPLIT_RAMP,
     apply_font_policy,
+    model_color,
+    model_style,
     save_figure,
 )
 from storage import write_dataframe_csv_atomic, write_json_strict
@@ -290,15 +293,12 @@ def analyze_conformal(
 
 # --- Figure -----------------------------------------------------------------
 
-# Three splits, three hues, validated as an adjacent-separable set under
-# simulated colour-vision deficiency.
-CV_HUE, LOMO_HUE, SIZE_HUE = "#2a78d6", "#eb6834", "#7d5bbe"
+# The splits take the shared light-to-dark ramp and the models take the shared
+# model colours. This figure used to reuse three hues for both, which drew the
+# gradient booster in the forest's orange and the forest in purple, the reverse
+# of every other figure in the paper.
 INK, MUTED = "#0b0b0b", "#52514e"
-SPLIT_HUES = {
-    "grouped_cv": CV_HUE,
-    "leave_one_tokamak_out": LOMO_HUE,
-    "size_cut": SIZE_HUE,
-}
+SPLIT_HUES = SPLIT_RAMP
 
 
 def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
@@ -351,6 +351,9 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
             values,
             width * 0.92,
             color=SPLIT_HUES[split],
+            # The lightest step is close to the page, so every bar gets an edge.
+            edgecolor=SPLIT_HUES["size_cut"],
+            linewidth=0.6,
             label=SPLIT_LABELS[split],
             zorder=3,
         )
@@ -416,10 +419,9 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
     # in the top panel are the control for this panel; drawing the per-machine
     # CV curves here as well put two nearly coincident lines on top of the
     # result and made the panel harder to read, not more complete.
-    distance_models = (
-        ("ridge_loglinear", CV_HUE, "o-"),
-        ("hist_gradient_boosting", LOMO_HUE, "^--"),
-        ("random_forest", SIZE_HUE, "s--"),
+    distance_models = tuple(
+        (name, model_color(name), "".join(model_style(name)))
+        for name in ("ridge_loglinear", "hist_gradient_boosting", "random_forest")
     )
     rho_by_model = {row.model_name: row.distance_spearman for row in analysis.collapse}
     ordered_machines: pd.DataFrame | None = None

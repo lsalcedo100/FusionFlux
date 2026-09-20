@@ -49,9 +49,11 @@ import gp
 import hdb5
 from analysis_extrapolation import spearman
 from figures import (
+    CONTEXT_GREY,
     FONT_ANNOTATION,
     FONT_SMALL,
     PAPER_WIDTH_IN,
+    SEPARABLE_GREEN,
     save_figure,
 )
 from storage import write_dataframe_csv_atomic, write_json_strict
@@ -348,9 +350,12 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
     palette = {
         "gp_rbf": ("#d6301f", "o", "GP, RBF (bounded)"),
         "gp_linear": ("#2a78d6", "s", "GP, linear (a power law)"),
-        "gp_linear_rbf": ("#1a9850", "D", "GP, linear + RBF"),
-        "random_forest": ("#bbbbbb", "^", "random forest"),
-        "hist_gradient_boosting": ("#999999", "v", "hist gradient boosting"),
+        "gp_linear_rbf": (SEPARABLE_GREEN, "D", "GP, linear + RBF"),
+        # The two ensembles are context here, so they share one grey and are told
+        # apart by marker and by the value printed beside each. The pale greys
+        # they had were 1.9:1 against the page and did not survive printing.
+        "random_forest": (CONTEXT_GREY, "^", "random forest"),
+        "hist_gradient_boosting": (CONTEXT_GREY, "v", "hist gradient boosting"),
         "ridge_loglinear": ("#000000", "x", "ridge, log-linear"),
     }
     positions = [0, 1]

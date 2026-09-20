@@ -29,7 +29,11 @@ HEX = re.compile(r"#[0-9a-fA-F]{6}\b")
 # Two series start to read as one below this, for a reader with full colour vision.
 NORMAL_VISION_FLOOR = 15.0
 # The colours this palette replaced, which no script may reintroduce.
-RETIRED = {"#c8873a": "the booster's old colour", "#3f8f5c": "the old IPB98(y,2) green"}
+RETIRED = {
+    "#c8873a": "the booster's old colour",
+    "#3f8f5c": "the old IPB98(y,2) green",
+    "#7d5bbe": "the purple that stood for a split in one panel and for the forest in the next",
+}
 
 
 def _oklab(colour: str) -> np.ndarray:
@@ -80,8 +84,31 @@ def test_every_model_with_a_marker_and_a_colour_has_both() -> None:
         figures.model_color("a_model_nobody_coloured")
 
 
+def test_the_splits_run_light_to_dark_in_steps_a_reader_can_see() -> None:
+    """The splits are an escalation, so their ramp has to be ordered and each step visible."""
+    ramp = [figures.SPLIT_RAMP[name] for name in ("grouped_cv", "leave_one_tokamak_out", "size_cut")]
+    lightness = [float(_oklab(colour)[0]) for colour in ramp]
+    assert lightness == sorted(lightness, reverse=True)
+    assert all(_delta_e(a, b) >= NORMAL_VISION_FLOOR for a, b in zip(ramp, ramp[1:], strict=False))
+
+
+def test_a_context_series_is_dark_enough_to_print() -> None:
+    def luminance(colour: str) -> float:
+        srgb = np.array([int(colour[i : i + 2], 16) for i in (1, 3, 5)]) / 255.0
+        linear = np.where(srgb <= 0.04045, srgb / 12.92, ((srgb + 0.055) / 1.055) ** 2.4)
+        return float(linear @ np.array([0.2126, 0.7152, 0.0722]))
+
+    contrast = (luminance("#fcfcfb") + 0.05) / (luminance(figures.CONTEXT_GREY) + 0.05)
+    assert contrast >= 3.0, f"{figures.CONTEXT_GREY} is {contrast:.2f}:1 against the page"
+
+
 def test_no_script_carries_its_own_copy_of_a_model_colour() -> None:
-    palette = {colour.lower() for colour in figures.MODEL_COLORS.values()} | set(RETIRED)
+    palette = (
+        {colour.lower() for colour in figures.MODEL_COLORS.values()}
+        | {colour.lower() for colour in figures.SPLIT_RAMP.values()}
+        | {figures.CONTEXT_GREY.lower()}
+        | set(RETIRED)
+    )
     # The tree-ensemble colours are what drifted. The ridge blue and the forest
     # orange double as generic accent colours in figures that draw no models.
     watched = palette - {figures.MODEL_COLORS["ridge_loglinear"], figures.MODEL_COLORS["random_forest"]}
