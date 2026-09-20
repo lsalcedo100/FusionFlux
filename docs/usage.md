@@ -159,6 +159,18 @@ python3 analysis_replication.py                                 # Result 11: bot
 
 Fetches the full database revision from the same OSF project, verifies its own SHA-256, and runs Result 4's protocol on the 5358 H-mode rows STD5 does not contain and on 3860 ohmic and L-mode rows scored against ITER89-P. See [Result 11](../results/RESULTS.md#result-11-the-reversal-reproduces-on-rows-this-database-never-contained).
 
+### Replicate on a separately assembled database, under rules fixed in advance
+
+```bash
+python3 ciclop.py schema data/raw/ciclop_db.csv --out results/ciclop_schema.json    # what the file contains; fits nothing
+python3 ciclop.py freeze data/raw/ciclop_db.csv --mapping ciclop_mapping.json      # writes ciclop_analysis_plan.json
+python3 analysis_ciclop.py                                                         # refuses until the plan is pinned
+```
+
+The IAEA/IEA CICLOP database sits behind an IAEA NUCLEUS login, so there is no fetch command: download it from the [CICLOP page](https://nucleus.iaea.org/sites/fusion-portal/ciclop/SitePages/CICLOP-DB.aspx) into `data/raw/`, which is gitignored for it. A workbook needs `openpyxl`, which this repository does not depend on, so either export the sheet to CSV or add the dependency, and pin whichever file is read.
+
+The order matters and the code enforces it. [The lock](ciclop-replication-lock.md) fixed the rules before the file was obtained. `schema` reports one column at a time and never joins the target to a feature. The mapping is then written by hand from that report: which column stands for each of the study's quantities, in what unit, and at which rank of the lock's orders of preference. `tests/test_ciclop.py` carries a complete example in `mapping_for_the_deposit`. `freeze` computes everything that follows from the mapping and prints three pins. Set them in `ciclop.py` and commit them together with `ciclop_analysis_plan.json` before running the analysis, because that commit is what the manuscript cites when it calls the replication prospectively specified. The first run of `analysis_ciclop.py` on the real file is the run of record.
+
 ### Run the same audit on a scaling law from another science
 
 ```bash

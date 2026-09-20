@@ -339,6 +339,7 @@ The real-data confinement study is the whole of the argument above:
 - `dimensional.py` derives the Connor-Taylor constraint hierarchy from the definitions of rho*, beta and nu* and fits under it; `spectral.py` is the prior-shrinkage family it is measured against.
 - `conformal_shift.py` is the machine-level and distance-scaled interval calibration of Result 10.
 - `replication.py` assembles the two STD5-disjoint populations of Result 11 from the full DB5.2.3 revision, pinned by its own SHA-256.
+- `ciclop.py` and `analysis_ciclop.py` are the external replication on the IAEA/IEA CICLOP database. Its rules were fixed in `docs/ciclop-replication-lock.md` before the data was obtained, and the analysis refuses to run until the frozen plan is pinned. No CICLOP result exists yet.
 - `forecast.py` holds the three device design points and writes the locked prediction record.
 - `allometry.py` is Result 13's second domain: mammalian metabolic rate against body mass, pinned by SHA-256, with Kleiber's published 3/4 exponent as the baseline. It is the one analysis here with no plasma physics in it.
 - `fusionflux/` is the installable package, and the only thing `pip install fusionflux` puts in your environment. `fusionflux/predictor.py` is the study made callable: a point estimate, a calibrated interval, an extrapolation distance and a refusal, read from `results/predictor.json` so it needs no download and unpickles nothing. `fusionflux/cli.py` is the `fusionflux` command over it. Everything else in this list is run from a checkout.
