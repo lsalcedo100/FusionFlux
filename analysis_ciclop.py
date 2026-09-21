@@ -486,7 +486,13 @@ def per_device_table(analysis: dict[str, Any]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def plot_ciclop(analysis: dict[str, Any], path: Path | None = None) -> Path | None:
+def plot_ciclop(
+    analysis: dict[str, Any],
+    path: Path | None = None,
+    *,
+    dataset_label: str = "CICLOP",
+    open_marker_label: str | None = "open: a device HDB5 lacks",
+) -> Path | None:
     """Two panels: both splits for both datasets, then holdout error against distance.
 
     Every model keeps the colour, marker and line style it has in the paper's
@@ -523,7 +529,7 @@ def plot_ciclop(analysis: dict[str, Any], path: Path | None = None) -> Path | No
     import analysis_extrapolation as ae
 
     figure, axes = plt.subplots(1, 2, figsize=(PAPER_WIDTH_IN, 3.7), constrained_layout=True)
-    panels = [("CICLOP", primary)]
+    panels = [(dataset_label, primary)]
     comparator = analysis["hdb5_feature_matched"].get("arms", {}).get(f"min_rows_{ciclop.MIN_HELD_OUT_ROWS}")
     if comparator and comparator.get("scored"):
         panels.append(("HDB5, same features", comparator))
@@ -552,12 +558,15 @@ def plot_ciclop(analysis: dict[str, Any], path: Path | None = None) -> Path | No
         rho = primary["distance"].get("spearman", {}).get(name)
         tagged = label if rho is None else f"{label} ($\\rho$ = {rho:+.2f})"
         for device in devices:
-            known = bool(analysis["plan"]["device_in_hdb5"].get(device, False))
+            # With no open-marker legend entry there is no such distinction to draw,
+            # which is the second replication: none of its devices is in HDB5.
+            known = open_marker_label is None or bool(analysis["plan"]["device_in_hdb5"].get(device, False))
             axes[1].plot(distances[device], primary["models"][name]["lodo_per_device"][device], marker=marker, linestyle="none",
                          markersize=7, color=colour, markerfacecolor=colour if known else "white", markeredgecolor=colour, markeredgewidth=1.4)
         axes[1].plot([], [], marker=marker, linestyle="none", color=colour, markersize=7, label=tagged)
-    axes[1].plot([], [], marker="o", linestyle="none", markersize=7, markerfacecolor="white", markeredgecolor=muted,
-                 markeredgewidth=1.4, label="open: a device HDB5 lacks")
+    if open_marker_label is not None:
+        axes[1].plot([], [], marker="o", linestyle="none", markersize=7, markerfacecolor="white", markeredgecolor=muted,
+                     markeredgewidth=1.4, label=open_marker_label)
     axes[1].set_xlabel("Mahalanobis distance from the training rows", fontsize=FONT_LABEL, color=muted)
     axes[1].set_ylabel("log-RMSE on the held-out device", fontsize=FONT_LABEL, color=muted)
     axes[1].set_title("Holdout error against distance", fontsize=FONT_TITLE, color=ink, loc="left")

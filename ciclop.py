@@ -415,13 +415,13 @@ def _omission_reason(column: str, share: float, mapping: dict[str, Any]) -> str:
     return f"finite and positive on {share:.0%} of tokamak rows, below {USABLE_FRACTION:.0%}"
 
 
-def _lock_commit() -> str | None:
-    """The commit that last touched the lock, if this is a checkout. Recorded, never required."""
+def _lock_commit(document: str = LOCK_DOCUMENT) -> str | None:
+    """The commit that last touched a lock document, if this is a checkout. Recorded, never required."""
     import subprocess
 
     try:
         done = subprocess.run(
-            ["git", "log", "-1", "--format=%H", "--", LOCK_DOCUMENT],
+            ["git", "log", "-1", "--format=%H", "--", document],
             cwd=config.PROJECT_ROOT, capture_output=True, text=True, check=True, timeout=20,
         )
     except (OSError, subprocess.SubprocessError):
@@ -519,49 +519,72 @@ def sha256_of_plan(path: Path | None = None) -> str:
     return hashlib.sha256(target.read_bytes()).hexdigest()
 
 
-def load_frozen_plan(
-    plan_path: Path | None = None, *, data_path: Path | str | None = None
+def verify_frozen_plan(
+    plan_path: Path,
+    data_path: Path | str | None,
+    *,
+    dataset: str,
+    module: str,
+    lock_document: str,
+    file_sha256: str | None,
+    file_n_bytes: int | None,
+    plan_sha256: str | None,
 ) -> tuple[dict[str, Any], Path]:
-    """The plan and the data file, or an error saying which step was skipped.
+    """The only door to a score, for any replication that is locked this way.
 
-    This is the only door to a score. It opens when the plan exists, both pins
-    are set, the plan on disk is the pinned plan, and the data file is the
-    pinned file. Each failure names the step of the lock's order of operations
-    that has not happened, because the likeliest cause is an honest attempt to
-    run things out of order.
+    It opens when the plan exists, both pins are set, the plan on disk is the
+    pinned plan, and the data file is the pinned file. Each failure names the
+    step of the lock's order of operations that has not happened, because the
+    likeliest cause is an honest attempt to run things out of order. The pins
+    are passed in and not read from a module, so a second locked dataset goes
+    through this function and not through a copy of it.
     """
-    target = default_plan_path() if plan_path is None else plan_path
-    if not target.exists():
+    if not plan_path.exists():
         raise PlanNotFrozenError(
-            f"{target.name} does not exist. Run the schema pass, write the mapping, and freeze the "
-            f"plan first (steps 4 and 5 of {LOCK_DOCUMENT}). Nothing is scored before that."
+            f"{plan_path.name} does not exist. Run the schema pass and freeze the plan first "
+            f"(see the order of operations in {lock_document}). Nothing is scored before that."
         )
-    if CICLOP_PLAN_SHA256 is None or CICLOP_FILE_SHA256 is None:
+    if plan_sha256 is None or file_sha256 is None:
         raise PlanNotFrozenError(
-            "the plan exists but CICLOP_PLAN_SHA256 and CICLOP_FILE_SHA256 in ciclop.py are unset. "
-            "Set both in the commit that adds the plan, so the history shows it was frozen "
-            f"before the first score (step 5 of {LOCK_DOCUMENT})."
+            f"the plan exists but the {dataset} pins in {module} are unset. Set both in the commit "
+            "that adds the plan, so the history shows it was frozen before the first score "
+            f"(see {lock_document})."
         )
-    observed = sha256_of_plan(target)
-    if observed != CICLOP_PLAN_SHA256:
+    observed = hashlib.sha256(plan_path.read_bytes()).hexdigest()
+    if observed != plan_sha256:
         raise PlanNotFrozenError(
-            f"{target.name} has sha256 {observed}, and the pinned plan is {CICLOP_PLAN_SHA256}. "
+            f"{plan_path.name} has sha256 {observed}, and the pinned plan is {plan_sha256}. "
             "The plan was edited after it was frozen. Restore it, or enter the change in the "
-            f"deviations log of {LOCK_DOCUMENT} and re-pin."
+            f"deviations log of {lock_document} and re-pin."
         )
-    plan = json.loads(target.read_text(encoding="utf-8"))
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
     resolved = Path(data_path) if data_path is not None else config.get_data_raw_dir() / plan["file"]["name"]
     fingerprint = hdb5.fingerprint_file(resolved, read_shape=False)
-    expected = (CICLOP_FILE_SHA256, CICLOP_FILE_N_BYTES)
-    if (fingerprint.sha256, fingerprint.n_bytes) != expected or fingerprint.sha256 != plan["file"]["sha256"]:
+    if (fingerprint.sha256, fingerprint.n_bytes) != (file_sha256, file_n_bytes) or fingerprint.sha256 != plan["file"]["sha256"]:
         raise hdb5.DatasetIntegrityError(
-            f"CICLOP integrity check failed for {resolved}.\n"
-            f"  pinned   sha256 {CICLOP_FILE_SHA256} ({CICLOP_FILE_N_BYTES} bytes)\n"
+            f"{dataset} integrity check failed for {resolved}.\n"
+            f"  pinned   sha256 {file_sha256} ({file_n_bytes} bytes)\n"
             f"  plan     sha256 {plan['file']['sha256']}\n"
             f"  observed sha256 {fingerprint.sha256} ({fingerprint.n_bytes} bytes)\n"
             "The plan was frozen on one specific set of bytes and describes no other."
         )
     return plan, resolved
+
+
+def load_frozen_plan(
+    plan_path: Path | None = None, *, data_path: Path | str | None = None
+) -> tuple[dict[str, Any], Path]:
+    """The CICLOP plan and its data file, or an error saying which step was skipped."""
+    return verify_frozen_plan(
+        default_plan_path() if plan_path is None else plan_path,
+        data_path,
+        dataset="CICLOP",
+        module="ciclop.py",
+        lock_document=LOCK_DOCUMENT,
+        file_sha256=CICLOP_FILE_SHA256,
+        file_n_bytes=CICLOP_FILE_N_BYTES,
+        plan_sha256=CICLOP_PLAN_SHA256,
+    )
 
 
 def frame_from_plan(plan: dict[str, Any], data_path: Path | str) -> pd.DataFrame:
