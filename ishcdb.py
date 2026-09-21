@@ -56,8 +56,11 @@ PLAN_FILENAME = "ishcdb_analysis_plan.json"
 # The file pin is set when the file is first downloaded, in its own commit, before
 # the schema pass. The plan pin is set in the commit that adds the plan. Both
 # ship unset, and nothing is scored until both are set and both match.
-ISHCDB_SHA256: str | None = None
-ISHCDB_N_BYTES: int | None = None
+#
+# The file pin was taken on 21 September 2026 from two independent downloads of
+# ISHCDB_DOWNLOAD_URL that agreed, and committed before the file was opened.
+ISHCDB_SHA256: str | None = "3a9f857b768ebd601385a9d8e25ac7df4d48b3403795a43dc484ba6b17fc5f55"
+ISHCDB_N_BYTES: int | None = 3311757
 ISHCDB_PLAN_SHA256: str | None = None
 
 # --- Constants of the lock -----------------------------------------------------
