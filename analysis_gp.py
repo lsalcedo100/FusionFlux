@@ -398,7 +398,9 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
 
     spread = study.reversion.set_index("model_name")
     # Two of the three kernels land almost on top of each other, so labels
-    # alternate above and below their marker by rank in predicted spread.
+    # alternate above and below their marker by rank in predicted spread. The
+    # one that goes below goes far enough to clear the dotted diagonal, which at
+    # fifteen points ran straight through it.
     ranked = [
         model
         for model in spread.sort_values("predicted_spread", ascending=False).index
@@ -422,7 +424,7 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
             label,
             (float(row["actual_spread"]), float(row["predicted_spread"])),
             textcoords="offset points",
-            xytext=(-10, 8 if spread_order.get(model, 0) % 2 == 0 else -15),
+            xytext=(-10, 8 if spread_order.get(model, 0) % 2 == 0 else -30),
             ha="right",
             fontsize=FONT_SMALL,
             color=colour,

@@ -326,8 +326,12 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
     axes[1].set_ylabel("log-RMSE on that order", fontsize=FONT_LABEL, color=muted)
     axes[1].set_title("Error against extrapolation distance",
                       fontsize=FONT_TITLE, color=ink)
-    axes[1].legend(frameon=True, facecolor="white", edgecolor="none",
-        framealpha=0.82, fontsize=FONT_LEGEND, loc="upper left", labelcolor=muted)
+    # Four entries in a corner covered the cluster of orders near distance 0.85.
+    # Headroom above the data, and the legend laid across it in two columns.
+    drawn = report[report["estimator"].isin(list(style))]
+    axes[1].set_ylim(top=float(drawn["score"].max()) * 1.38)
+    axes[1].legend(frameon=True, facecolor="white", edgecolor="none", framealpha=0.82,
+        fontsize=FONT_LEGEND, loc="upper center", ncol=2, labelcolor=muted)
 
     # --- Right: the mass-ordered sweep, as in Result 5 ----------------------
     for name, (colour, label) in style.items():
