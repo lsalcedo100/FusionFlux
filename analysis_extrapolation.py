@@ -41,6 +41,7 @@ from figures import (
     FONT_TICK,
     FONT_TITLE,
     PAPER_WIDTH_IN,
+    model_color,
     model_style,
     save_figure,
 )
@@ -92,6 +93,14 @@ FLEXIBILITY_LADDER = (
 # claim is about how a model behaves on an unseen *machine*, and there are only
 # 13 of those, so resampling rows would return intervals that are far too narrow.
 N_BOOTSTRAP_RESAMPLES = 2000
+
+# Figure 1 has to fit on a page with its caption. At \linewidth the text block
+# leaves it 8.4 in at this width, and 9.4 in overflowed by 67 pt. These sum to
+# 8.15 in, which leaves room for one more line of caption than it has now;
+# tests/test_figure_fit.py does the same sum for every figure. The three panel
+# heights are in inches of figure, and they add up to the figure's height.
+PANEL_HEIGHTS_IN: tuple[float, float, float] = (2.40, 3.70, 2.05)
+FIGURE_HEIGHT_IN = sum(PANEL_HEIGHTS_IN)
 BOOTSTRAP_SEED = 20240617
 
 
@@ -654,11 +663,11 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     except ImportError:  # pragma: no cover - plotting is optional
         return None
 
-    blue, orange, green = "#2a78d6", "#eb6834", "#3f8f5c"
+    blue, orange, green = (model_color(n) for n in ("ridge_loglinear", "random_forest", "ipb98y2_analytic"))
     ink, muted = "#0b0b0b", "#52514e"
     style = {
         "random_forest": (orange, "random forest"),
-        "hist_gradient_boosting": ("#c8873a", "hist gradient boosting"),
+        "hist_gradient_boosting": (model_color("hist_gradient_boosting"), "hist gradient boosting"),
         "ridge_loglinear": (blue, "ridge, log-linear"),
         "ipb98y2_analytic": (green, "IPB98(y,2), analytic"),
     }
@@ -670,8 +679,16 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     # room to sit above and below their markers: at the previous height the
     # placement search had none, and JET-ILW and AUG-W stacked on each other
     # while ASDEX touched a marker. The extra inch goes to that panel.
+    #
+    # That inch also made the float too large for its page. At 9.4 in the figure
+    # is 23.1 cm tall at \linewidth, the text block is 24.9 cm, and the caption
+    # needs the difference and more: LaTeX reported the float 67 pt too large and
+    # set the page number on top of the caption's sixth line. Scaling the image
+    # down would have taken the labels under the 8 pt floor, so the height comes
+    # out of all three panels, least from the middle one, and the two spacings
+    # that were tuned to the old panel heights below now follow the new ones.
     figure, axes = plt.subplots(
-        3, 1, figsize=(PAPER_WIDTH_IN, 9.4), gridspec_kw={"height_ratios": [1.15, 1.6, 1.0]}
+        3, 1, figsize=(PAPER_WIDTH_IN, FIGURE_HEIGHT_IN), gridspec_kw={"height_ratios": list(PANEL_HEIGHTS_IN)}
     )
     for axis in axes:
         axis.grid(alpha=0.25, linewidth=0.6)
@@ -696,17 +713,29 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
     # displacement that leaves no two labels overlapping, whatever the data does.
     # The gap is in data units, taken as the share of the y-range that eleven
     # points of vertical space occupies at the printed panel height, which is
-    # what two lines of 8 pt type need.
+    # what two lines of 8 pt type need. That share was 0.075 when this panel was
+    # 2.88 in tall. Eleven points is a fixed length, so on a shorter panel it is
+    # a larger share, and the labels printed over each other until it followed.
     cv_values = sorted(t.cv_rmsle for t in plotted)
     lomo_values = [t.lomo_mean_rmsle for t in plotted]
     y_span = max(lomo_values + cv_values) - min(lomo_values + cv_values)
-    min_label_gap = 0.075 * y_span
+    min_label_gap = 0.075 * (2.88 / PANEL_HEIGHTS_IN[0]) * y_span
 
     cv_label_y: dict[str, float] = {}
     placed = -np.inf
     for transfer in sorted(plotted, key=lambda t: t.cv_rmsle):
         placed = max(transfer.cv_rmsle, placed + min_label_gap)
         cv_label_y[transfer.model_name] = placed
+
+    # The same walk on the right. The held-out scores are far enough apart that
+    # they never needed it at the old panel height; at this one the power law's
+    # 0.214 and the published law's 0.188 touch. Only the labels move: every
+    # marker stays on its value.
+    lomo_label_y: dict[str, float] = {}
+    placed = -np.inf
+    for transfer in sorted(plotted, key=lambda t: t.lomo_mean_rmsle):
+        placed = max(transfer.lomo_mean_rmsle, placed + min_label_gap)
+        lomo_label_y[transfer.model_name] = placed
 
     for transfer in plotted:
         color, label = style[transfer.model_name]
@@ -733,7 +762,7 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
             )
         axes[0].annotate(
             f"{transfer.lomo_mean_rmsle:.3f}",
-            xy=(1, transfer.lomo_mean_rmsle),
+            xy=(1, lomo_label_y[transfer.model_name]),
             xytext=(10, -3),
             textcoords="offset points",
             fontsize=FONT_ANNOTATION,
@@ -911,8 +940,10 @@ def plot_extrapolation(analysis: ExtrapolationAnalysis) -> Path | None:
                          markersize=14, markerfacecolor="none", markeredgecolor=ink,
                          markeredgewidth=1.4)
     axes[2].set_yscale("log")
-    # Headroom above the worst point so the two family labels sit in clear space.
-    axes[2].set_ylim(min(medians) * 0.6, max(worst) * 3.0)
+    # Headroom above the worst point so the legend sits in clear space, and room
+    # under the lowest median for the two family labels, which are two lines tall
+    # and sit on the floor of the panel.
+    axes[2].set_ylim(min(medians) * 0.4, max(worst) * 3.0)
     axes[2].set_xticks(positions)
     axes[2].set_xticklabels([label for _, label in rungs], rotation=0, ha="center",
                             fontsize=FONT_SMALL, color=ink)

@@ -54,42 +54,67 @@ def _device_labels(dataset: pd.DataFrame) -> np.ndarray:
     return np.array([PHYSICAL_DEVICE.get(str(label), str(label)) for label in labels])
 
 
-def _cross_validate(dataset: pd.DataFrame, units: np.ndarray) -> dict[str, dict[str, Any]]:
-    """Grouped CV by discharge, scored both pooled over rows and per unit."""
-    features = dataset[list(hdb5.BLIND_FEATURE_COLUMNS)]
+def _cross_validate(
+    dataset: pd.DataFrame,
+    units: np.ndarray,
+    *,
+    feature_columns: tuple[str, ...] = hdb5.BLIND_FEATURE_COLUMNS,
+    models: tuple[str, ...] = CONTENDERS,
+    zoo: dict[str, Any] | None = None,
+    reference_column: str | None = "ipb98y2_tau_s",
+) -> dict[str, dict[str, Any]]:
+    """Grouped CV by discharge, scored both pooled over rows and per unit.
+
+    The keyword arguments default to what this script reports. They exist for
+    ``analysis_ciclop``, which scores a second dataset on a feature subset and
+    has to do it through this function rather than a copy of it.
+    """
+    features = dataset[list(feature_columns)]
     tau = dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float)
     groups = dataset[hdb5.GROUP_COLUMN].to_numpy()
     n_splits = min(hdb5.N_CV_FOLDS, int(pd.Series(groups).nunique()))
-    zoo = hdb5._assemble_zoo()
+    zoo = hdb5._assemble_zoo() if zoo is None else zoo
 
-    predictions = {REFERENCE: dataset["ipb98y2_tau_s"].to_numpy(dtype=float)}
-    for name in CONTENDERS:
+    predictions: dict[str, np.ndarray] = {}
+    if reference_column is not None:
+        predictions[REFERENCE] = dataset[reference_column].to_numpy(dtype=float)
+    for name in models:
         predictions[name] = np.exp(hdb5._grouped_cv_predictions(zoo[name], features, np.log(tau), groups, n_splits))
     return _both_aggregations(tau, units, predictions)
 
 
-def _leave_one_unit_out(dataset: pd.DataFrame, units: np.ndarray) -> dict[str, dict[str, Any]]:
+def _leave_one_unit_out(
+    dataset: pd.DataFrame,
+    units: np.ndarray,
+    *,
+    feature_columns: tuple[str, ...] = hdb5.BLIND_FEATURE_COLUMNS,
+    models: tuple[str, ...] = CONTENDERS,
+    zoo: dict[str, Any] | None = None,
+    reference_column: str | None = "ipb98y2_tau_s",
+    min_rows: int = hdb5.MIN_HELD_OUT_ROWS,
+) -> dict[str, dict[str, Any]]:
     """Hold out each unit in turn, scored both pooled over rows and per unit."""
-    features = dataset[list(hdb5.BLIND_FEATURE_COLUMNS)]
+    features = dataset[list(feature_columns)]
     tau = dataset[hdb5.TARGET_COLUMN].to_numpy(dtype=float)
     log_tau = np.log(tau)
-    reference = dataset["ipb98y2_tau_s"].to_numpy(dtype=float)
 
-    eligible = [u for u in pd.unique(units) if (units == u).sum() >= hdb5.MIN_HELD_OUT_ROWS]
-    predictions = {name: np.full(len(dataset), np.nan) for name in (*CONTENDERS, REFERENCE)}
-    zoo = hdb5._assemble_zoo()
+    eligible = [u for u in pd.unique(units) if (units == u).sum() >= min_rows]
+    names = (*models, REFERENCE) if reference_column is not None else tuple(models)
+    predictions = {name: np.full(len(dataset), np.nan) for name in names}
+    zoo = hdb5._assemble_zoo() if zoo is None else zoo
     for unit in eligible:
         held = units == unit
         train_rows = np.flatnonzero(~held)
         held_rows = np.flatnonzero(held)
-        for name in CONTENDERS:
+        for name in models:
             model = hdb5.clone_pipeline(zoo[name])
             with hdb5._suppress_benign_matmul_warnings():
                 hdb5.fit_pipeline(model, features.iloc[train_rows], log_tau[train_rows])
                 predictions[name][held] = np.exp(model.predict(features.iloc[held_rows]))
-        predictions[REFERENCE][held] = reference[held]
+        if reference_column is not None:
+            predictions[REFERENCE][held] = dataset[reference_column].to_numpy(dtype=float)[held]
 
-    scored = ~np.isnan(predictions["random_forest"])
+    scored = ~np.isnan(predictions[models[0]])
     return _both_aggregations(
         tau[scored],
         units[scored],

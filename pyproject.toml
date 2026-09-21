@@ -32,6 +32,10 @@ dependencies = [
 study = [
     "joblib",
     "matplotlib",
+    # Reads the IAEA/IEA CICLOP database if it is delivered as a workbook. The
+    # lock has that file analysed as delivered and pinned by its bytes, and a
+    # sheet exported to CSV by hand would be neither.
+    "openpyxl",
     "scikit-learn",
     "seaborn",
 ]
@@ -145,6 +149,7 @@ source = [
     "allometry",
     "analysis_allometry",
     "analysis_boundedness",
+    "analysis_ciclop",
     "analysis_conformal",
     "analysis_conformal_shift",
     "analysis_dimensional",
@@ -162,6 +167,7 @@ source = [
     "analysis_summary_figure",
     "analysis_tree_allometry",
     "analysis_tuned",
+    "ciclop",
     "config",
     "conformal_shift",
     "dimensional",

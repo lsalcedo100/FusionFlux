@@ -36,6 +36,7 @@ from figures import (
     FONT_TICK,
     FONT_TITLE,
     PAPER_WIDTH_IN,
+    model_color,
     save_figure,
 )
 from storage import write_dataframe_csv_atomic, write_json_strict
@@ -272,10 +273,10 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
 
     ink, muted = "#0b0b0b", "#52514e"
     style = {
-        "kleiber": ("#3f8f5c", "Kleiber, 3/4"),
-        "ols_loglinear": ("#2a78d6", "power law, free"),
-        "random_forest": ("#eb6834", "random forest"),
-        "hist_gradient_boosting": ("#c8873a", "hist grad boosting"),
+        "kleiber": (model_color("ipb98y2_analytic"), "Kleiber, 3/4"),
+        "ols_loglinear": (model_color("ridge_loglinear"), "power law, free"),
+        "random_forest": (model_color("random_forest"), "random forest"),
+        "hist_gradient_boosting": (model_color("hist_gradient_boosting"), "hist grad boosting"),
     }
     # No panel here should depend on colour alone; see figures.MODEL_MARKERS.
     shape = {
@@ -325,8 +326,12 @@ def plot(payload: dict[str, Any], report: pd.DataFrame, sweep: pd.DataFrame) -> 
     axes[1].set_ylabel("log-RMSE on that order", fontsize=FONT_LABEL, color=muted)
     axes[1].set_title("Error against extrapolation distance",
                       fontsize=FONT_TITLE, color=ink)
-    axes[1].legend(frameon=True, facecolor="white", edgecolor="none",
-        framealpha=0.82, fontsize=FONT_LEGEND, loc="upper left", labelcolor=muted)
+    # Four entries in a corner covered the cluster of orders near distance 0.85.
+    # Headroom above the data, and the legend laid across it in two columns.
+    drawn = report[report["estimator"].isin(list(style))]
+    axes[1].set_ylim(top=float(drawn["score"].max()) * 1.38)
+    axes[1].legend(frameon=True, facecolor="white", edgecolor="none", framealpha=0.82,
+        fontsize=FONT_LEGEND, loc="upper center", ncol=2, labelcolor=muted)
 
     # --- Right: the mass-ordered sweep, as in Result 5 ----------------------
     for name, (colour, label) in style.items():

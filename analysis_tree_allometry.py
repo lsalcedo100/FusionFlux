@@ -56,6 +56,8 @@ import tree_allometry as ta
 from figures import (
     FONT_SMALL,
     PAPER_WIDTH_IN,
+    model_color,
+    model_style,
     save_figure,
 )
 from storage import write_dataframe_csv_atomic, write_json_strict
@@ -303,22 +305,22 @@ def plot_tree_allometry(study: LadderStudy) -> Path | None:
     figure, (left, right) = plt.subplots(2, 1, figsize=(PAPER_WIDTH_IN, 6.2))
     counts = [rung.n_features for rung in study.rungs]
 
+    # Each model as the paper's first figure draws it. This figure had the
+    # booster in the forest's orange and the forest in red, so a reader carrying
+    # the colours over from there read the two ensembles the wrong way round.
     palette = {
-        POWER_LAW: ("#000000", "x", "power law, log-linear"),
-        "random_forest": ("#d6301f", "o", "random forest"),
-        "hist_gradient_boosting": ("#eb6834", "v", "hist gradient boosting"),
+        POWER_LAW: ("ridge_loglinear", "power law, log-linear"),
+        "random_forest": ("random_forest", "random forest"),
+        "hist_gradient_boosting": ("hist_gradient_boosting", "hist gradient boosting"),
     }
-    for model, (colour, marker, label) in palette.items():
-        left.plot(
-            counts,
-            [rung.cv_rmsle[model] for rung in study.rungs],
-            "-", color=colour, marker=marker, label=label,
-        )
-        right.plot(
-            counts,
-            [rung.loo_rmsle[model] for rung in study.rungs],
-            "-", color=colour, marker=marker, label=label,
-        )
+    for model, (drawn_as, label) in palette.items():
+        marker, line = model_style(drawn_as)
+        for axis, scores in ((left, "cv_rmsle"), (right, "loo_rmsle")):
+            axis.plot(
+                counts,
+                [getattr(rung, scores)[model] for rung in study.rungs],
+                line, color=model_color(drawn_as), marker=marker, label=label,
+            )
 
     crossing = first_reversal_rung(study)
     for axis, title in (
@@ -326,12 +328,13 @@ def plot_tree_allometry(study: LadderStudy) -> Path | None:
         (right, "Extrapolation: an entire species held out\n(the analogue of leave-one-tokamak-out)"),
     ):
         if crossing is not None:
-            axis.axvline(crossing, color="#2a78d6", linestyle=":", linewidth=1.5)
+            # Muted ink: the power law is blue now, and a reference line is not a series.
+            axis.axvline(crossing, color="#52514e", linestyle=":", linewidth=1.5)
             axis.annotate(
                 f"crossing at {crossing}\nfeatures in this ladder",
                 (crossing, axis.get_ylim()[1]),
                 textcoords="offset points", xytext=(6, -28),
-                fontsize=FONT_SMALL, color="#2a78d6",
+                fontsize=FONT_SMALL, color="#52514e",
             )
         axis.set_xticks(counts)
         axis.set_xlabel("number of predictors the models may see")

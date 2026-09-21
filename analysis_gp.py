@@ -49,9 +49,11 @@ import gp
 import hdb5
 from analysis_extrapolation import spearman
 from figures import (
+    CONTEXT_GREY,
     FONT_ANNOTATION,
     FONT_SMALL,
     PAPER_WIDTH_IN,
+    SEPARABLE_GREEN,
     save_figure,
 )
 from storage import write_dataframe_csv_atomic, write_json_strict
@@ -348,9 +350,12 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
     palette = {
         "gp_rbf": ("#d6301f", "o", "GP, RBF (bounded)"),
         "gp_linear": ("#2a78d6", "s", "GP, linear (a power law)"),
-        "gp_linear_rbf": ("#1a9850", "D", "GP, linear + RBF"),
-        "random_forest": ("#bbbbbb", "^", "random forest"),
-        "hist_gradient_boosting": ("#999999", "v", "hist gradient boosting"),
+        "gp_linear_rbf": (SEPARABLE_GREEN, "D", "GP, linear + RBF"),
+        # The two ensembles are context here, so they share one grey and are told
+        # apart by marker and by the value printed beside each. The pale greys
+        # they had were 1.9:1 against the page and did not survive printing.
+        "random_forest": (CONTEXT_GREY, "^", "random forest"),
+        "hist_gradient_boosting": (CONTEXT_GREY, "v", "hist gradient boosting"),
         "ridge_loglinear": ("#000000", "x", "ridge, log-linear"),
     }
     positions = [0, 1]
@@ -393,7 +398,9 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
 
     spread = study.reversion.set_index("model_name")
     # Two of the three kernels land almost on top of each other, so labels
-    # alternate above and below their marker by rank in predicted spread.
+    # alternate above and below their marker by rank in predicted spread. The
+    # one that goes below goes far enough to clear the dotted diagonal, which at
+    # fifteen points ran straight through it.
     ranked = [
         model
         for model in spread.sort_values("predicted_spread", ascending=False).index
@@ -417,7 +424,7 @@ def plot_gp(study: GaussianProcessStudy) -> Path | None:
             label,
             (float(row["actual_spread"]), float(row["predicted_spread"])),
             textcoords="offset points",
-            xytext=(-10, 8 if spread_order.get(model, 0) % 2 == 0 else -15),
+            xytext=(-10, 8 if spread_order.get(model, 0) % 2 == 0 else -30),
             ha="right",
             fontsize=FONT_SMALL,
             color=colour,

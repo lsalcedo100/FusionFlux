@@ -27,10 +27,12 @@ FusionFlux/
 ├── conformal_shift.py               # machine-level and distance-scaled interval calibration
 ├── replication.py                   # DB5.2.3 revision, pinned; the two STD5-disjoint arms
 ├── forecast.py                      # device design points and the locked prediction record
+├── ciclop.py                        # CICLOP: schema pass, column mapping, frozen plan, the two pins
 ├── analysis_dimensional.py          # Results 8 and 9: physics as a constraint, then as a prior
 ├── analysis_conformal_shift.py      # Result 10: repairing the interval collapse, and its limit
 ├── analysis_replication.py          # Result 11: the reversal on rows STD5 does not contain
 ├── analysis_forecast.py             # Result 12: SPARC, JT-60SA and ITER, written down in advance
+├── analysis_ciclop.py               # the locked external replication; refuses to run until the plan is pinned
 ├── fusionflux/                      # the installable package: all `pip install fusionflux` ships
 │   ├── predictor.py                 # the study made callable: interval, distance, refusal
 │   └── cli.py                       # the `fusionflux` command; the study first, demo under `neutron`
@@ -70,7 +72,8 @@ FusionFlux/
 │   └── neutron-yield-pipeline.md    # operating detail for the synthetic-data infrastructure
 ├── tools/
 │   ├── check_paper_submission.py    # the gate the paper has to pass before it leaves the repository
-│   └── compare_results.py           # numeric diff of a regenerated results/ against the committed one
+│   ├── compare_results.py           # numeric diff of a regenerated results/ against the committed one
+│   └── ciclop_tables.py             # every CICLOP number the manuscript may print, generated; and the scan that enforces it
 │
 │   # shared plumbing, used by both pipelines
 ├── config.py                        # paths, column config, physics constants and tolerances
@@ -169,6 +172,8 @@ Real-data confinement study:
 - `conformal_shift.py` owns the two repaired interval schemes of Result 10, machine-level calibration and distance-scaled nonconformity. It delegates the `split` baseline to `hdb5._conformal_arm` rather than reimplementing it, so the comparison is against Result 7's exact procedure.
 - `replication.py` owns the full DB5.2.3 revision: its own SHA-256 pin, the unit conversions to STD5's units, the row match that establishes disjointness, and the ITER89-P L-mode baseline the non-H arm needs. It reuses `hdb5.map_to_canonical` for cleaning, because a replication that cleaned its data differently would not be replicating anything.
 - `forecast.py` owns the three device design points, the tree-ensemble bound check, and the locked prediction record with its content digest.
+- `ciclop.py` owns the IAEA/IEA CICLOP database as this study reads it, and it fits nothing. The replication is prospective: `docs/ciclop-replication-lock.md` fixed the rules before the file was obtained, and this module turns them into three stages that each stop short of a score. The schema pass reports one column at a time and never joins the target to a feature. The column mapping is the one input a person writes, from what the schema pass shows. The freeze computes everything the lock says follows from the mapping, which is the usable features, the complete rows, the eligible devices and whether the dataset clears the floors, and writes it to `ciclop_analysis_plan.json`. The file sits behind an IAEA login, so there is no download function. The module also owns the two pins, the SHA-256 of the data file and of the plan, which ship unset.
+- `analysis_ciclop.py` owns the replication itself: the five-way verdict rule, the matched scoring of both splits, the rerun of HDB5 on whatever feature subset CICLOP supports, and the secondary analyses, none of which can reach the verdict. It scores through `analysis_robustness._cross_validate` and `_leave_one_unit_out`, the functions the manuscript's own matched numbers come from, so a second dataset is not scored by a second implementation. It refuses to fit anything until both pins in `ciclop.py` are set and match, so the order the lock requires is enforced by the code and recorded by the history.
 - `fusionflux/predictor.py` owns the callable form of the study. It builds and reads ``results/predictor.json``, a service card of coefficients, calibration constants and thresholds, so a prediction is arithmetic rather than a model load: nothing is unpickled, the card is diffable, and a fresh checkout can predict without the dataset. It is also the only module that decides when *not* to answer, and both of its refusal conditions are derived from results elsewhere rather than chosen here.
 - `fusionflux/cli.py` owns the `fusionflux` console command. It exposes the study's prediction and card-building, and delegates `neutron` to `neutron_yield.fusionflux_cli` unchanged, so that pipeline's arguments and behaviour stay defined in one place. `card` and `neutron` both need a checkout and report that rather than failing on an import.
 - `lawson.py` owns the standalone triple-product and ignition-ratio calculation, and is the one physics utility both pipelines can borrow from.
