@@ -44,6 +44,7 @@ results:
 	python3 -c "import replication; replication.download_db523()"
 	python3 -c "import allometry; allometry.download_allometry()"
 	python3 -c "import tree_allometry; tree_allometry.download_baad()"
+	python3 ishcdb.py download
 	python3 analysis_scaling_law.py
 	python3 analysis_extrapolation.py
 	python3 analysis_boundedness.py
@@ -65,6 +66,7 @@ results:
 	python3 analysis_allometry.py
 	python3 analysis_tree_allometry.py
 	python3 analysis_gp.py
+	python3 analysis_ishcdb.py
 	python3 analysis_summary_figure.py
 	python3 -m fusionflux card
 	python3 site/build_page.py
