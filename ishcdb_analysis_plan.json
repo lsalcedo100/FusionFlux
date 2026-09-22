@@ -1,0 +1,174 @@
+{
+  "lock": {
+    "document": "docs/ishcdb-replication-lock.md",
+    "commit": "d8afd9b38174c803be1485bec03928fe6ae1b254"
+  },
+  "file": {
+    "name": "ishcdb_26.txt",
+    "sha256": "3a9f857b768ebd601385a9d8e25ac7df4d48b3403795a43dc484ba6b17fc5f55",
+    "n_bytes": 3311757,
+    "source": "https://ishpdb.ipp-hgw.mpg.de/ISS/ISHCDB_26.txt"
+  },
+  "read": {
+    "separator": ",",
+    "encoding": "utf-8-sig"
+  },
+  "column_overrides": {},
+  "rules": {
+    "usable_fraction": 0.9,
+    "min_held_out_rows": 30,
+    "sensitivity_min_rows": 10,
+    "min_evaluable_devices": 5,
+    "min_evaluable_rows": 100,
+    "min_evaluable_features": 5,
+    "degradation_boundary": 1.5,
+    "predictive_devices": [
+      "W7-X",
+      "ITER"
+    ],
+    "thermal_target_devices": [
+      "HELE",
+      "TJ-II"
+    ],
+    "feature_sources": {
+      "a_m": [
+        "AEFF",
+        1.0,
+        false
+      ],
+      "r_m": [
+        "RGEO",
+        1.0,
+        false
+      ],
+      "p_abs_mw": [
+        "PTOT",
+        1e-06,
+        false
+      ],
+      "ne_line_1e19_m3": [
+        "NEBAR",
+        1e-19,
+        false
+      ],
+      "bt_t": [
+        "BT",
+        1.0,
+        true
+      ],
+      "iota_23": [
+        "IOTA23",
+        1.0,
+        true
+      ]
+    },
+    "cv_folds": 5,
+    "random_state": 42
+  },
+  "population": {
+    "n_rows_delivered": 4940,
+    "n_predictive_rows": 76,
+    "rows_per_device_delivered": {
+      "LHD": 1362,
+      "W7-AS": 1156,
+      "TJ-II": 1132,
+      "HSX": 539,
+      "ATF": 234,
+      "CHS": 196,
+      "HELE": 121,
+      "HELJ": 111,
+      "W7-X": 75,
+      "W7-A": 13,
+      "ITER": 1
+    },
+    "rows_per_device_measured": {
+      "LHD": 1362,
+      "W7-AS": 1156,
+      "TJ-II": 1132,
+      "HSX": 539,
+      "ATF": 234,
+      "CHS": 196,
+      "HELE": 121,
+      "HELJ": 111,
+      "W7-A": 13
+    },
+    "rows_per_device_standard_set": {
+      "W7-AS": 629,
+      "TJ-II": 316,
+      "ATF": 229,
+      "CHS": 196,
+      "LHD": 162,
+      "HELE": 120,
+      "HELJ": 54,
+      "W7-A": 13
+    }
+  },
+  "usability": {
+    "tau_th_s": 1.0,
+    "a_m": 1.0,
+    "r_m": 1.0,
+    "p_abs_mw": 1.0,
+    "ne_line_1e19_m3": 1.0,
+    "bt_t": 1.0,
+    "iota_23": 0.38917975567190227
+  },
+  "frozen_features": [
+    "a_m",
+    "r_m",
+    "p_abs_mw",
+    "ne_line_1e19_m3",
+    "bt_t"
+  ],
+  "omitted_features": {
+    "iota_23": "finite and positive on 39% of rows, below 90%"
+  },
+  "n_complete_rows": 1719,
+  "complete_rows_per_device": {
+    "W7-AS": 629,
+    "TJ-II": 316,
+    "ATF": 229,
+    "CHS": 196,
+    "LHD": 162,
+    "HELE": 120,
+    "HELJ": 54,
+    "W7-A": 13
+  },
+  "n_complete_rows_all_measured": 4847,
+  "complete_rows_per_device_all_measured": {
+    "LHD": 1362,
+    "W7-AS": 1139,
+    "TJ-II": 1132,
+    "HSX": 539,
+    "ATF": 234,
+    "CHS": 196,
+    "HELE": 121,
+    "HELJ": 111,
+    "W7-A": 13
+  },
+  "eligible_devices": [
+    "W7-AS",
+    "TJ-II",
+    "ATF",
+    "CHS",
+    "LHD",
+    "HELE",
+    "HELJ"
+  ],
+  "eligible_devices_at_sensitivity_threshold": [
+    "W7-AS",
+    "TJ-II",
+    "ATF",
+    "CHS",
+    "LHD",
+    "HELE",
+    "HELJ",
+    "W7-A"
+  ],
+  "discharges": {
+    "n": 1450,
+    "n_with_more_than_one_row": 181,
+    "largest": 7
+  },
+  "evaluable": true,
+  "not_evaluable_because": []
+}

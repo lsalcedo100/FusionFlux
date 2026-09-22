@@ -61,7 +61,9 @@ PLAN_FILENAME = "ishcdb_analysis_plan.json"
 # ISHCDB_DOWNLOAD_URL that agreed, and committed before the file was opened.
 ISHCDB_SHA256: str | None = "3a9f857b768ebd601385a9d8e25ac7df4d48b3403795a43dc484ba6b17fc5f55"
 ISHCDB_N_BYTES: int | None = 3311757
-ISHCDB_PLAN_SHA256: str | None = None
+# The plan pin, set in the commit that adds ishcdb_analysis_plan.json, before
+# analysis_ishcdb.py had ever been run on the real file.
+ISHCDB_PLAN_SHA256: str | None = "eb6a9e7409e77f1b8bfd0ba4be68aa9643fa447076e0031a43b5d3a1356ac728"
 
 # --- Constants of the lock -----------------------------------------------------
 USABLE_FRACTION = ciclop.USABLE_FRACTION
