@@ -48,7 +48,7 @@ RESULTS = ROOT / "results" / "ciclop.json"
 OUTPUT_DIR = ROOT / "build" / "ciclop"
 DOCUMENTS = (ROOT / "paper" / "paper.tex", ROOT / "paper" / "supplementary.tex")
 
-BEGIN, END = "% ciclop:begin", "% ciclop:end"
+BEGIN, END = "% ciclop:begin", "% ciclop:end"  # kept for callers; see markers()
 
 MODEL_NAMES = {
     "ridge_loglinear": "ridge, log-linear",
@@ -302,25 +302,31 @@ _LAYOUT = (
 )
 
 
-def marked_blocks(latex: str) -> list[str]:
-    """The passages between ``% ciclop:begin`` and ``% ciclop:end`` lines."""
+def markers(tag: str = "ciclop") -> tuple[str, str]:
+    """The two comment lines that fence a dataset's passages: ``% <tag>:begin`` and ``% <tag>:end``."""
+    return f"% {tag}:begin", f"% {tag}:end"
+
+
+def marked_blocks(latex: str, tag: str = "ciclop") -> list[str]:
+    """The passages between the begin and end lines of one dataset's marker."""
+    begin, end = markers(tag)
     blocks: list[str] = []
     current: list[str] | None = None
     for line in latex.splitlines():
         stripped = line.strip()
-        if stripped == BEGIN:
+        if stripped == begin:
             if current is not None:
-                raise ValueError("a `% ciclop:begin` follows another with no `% ciclop:end` between them")
+                raise ValueError(f"a `{begin}` follows another with no `{end}` between them")
             current = []
-        elif stripped == END:
+        elif stripped == end:
             if current is None:
-                raise ValueError("a `% ciclop:end` has no `% ciclop:begin` before it")
+                raise ValueError(f"a `{end}` has no `{begin}` before it")
             blocks.append("\n".join(current))
             current = None
         elif current is not None:
             current.append(line)
     if current is not None:
-        raise ValueError("a `% ciclop:begin` is never closed")
+        raise ValueError(f"a `{begin}` is never closed")
     return blocks
 
 
@@ -331,13 +337,13 @@ def _readable(latex: str) -> str:
     return text
 
 
-def unbound_numerals(latex: str, known: dict[str, str]) -> list[str]:
+def unbound_numerals(latex: str, known: dict[str, str], tag: str = "ciclop") -> list[str]:
     """Numerals in the marked passages that are not among the generated facts."""
     allowed = {value.lstrip("+") for value in known.values()}
     # Long values first, so a hash or a date is removed whole before its digits are read.
     verbatim = sorted((v for v in known.values() if not NUMERAL.fullmatch(v)), key=len, reverse=True)
     loose = []
-    for block in marked_blocks(latex):
+    for block in marked_blocks(latex, tag):
         text = _readable(block)
         for value in verbatim:
             text = text.replace(value, " ")
@@ -345,16 +351,17 @@ def unbound_numerals(latex: str, known: dict[str, str]) -> list[str]:
     return loose
 
 
-def mentions_outside_blocks(latex: str) -> list[str]:
-    """Lines that name CICLOP outside a marked passage. The bibliography is exempt."""
+def mentions_outside_blocks(latex: str, names: tuple[str, ...] = ("CICLOP",), tag: str = "ciclop") -> list[str]:
+    """Lines that name the dataset outside a marked passage. The bibliography is exempt."""
+    begin, end = markers(tag)
     body = latex.split(r"\begin{thebibliography}")[0]
     inside = False
     found = []
     for number, line in enumerate(body.splitlines(), start=1):
         stripped = line.strip()
-        if stripped in (BEGIN, END):
-            inside = stripped == BEGIN
-        elif not inside and "CICLOP" in re.sub(r"(?<!\\)%.*", "", line):
+        if stripped in (begin, end):
+            inside = stripped == begin
+        elif not inside and any(name in re.sub(r"(?<!\\)%.*", "", line) for name in names):
             found.append(f"line {number}: {stripped[:90]}")
     return found
 

@@ -1,4 +1,9 @@
-# Putting the CICLOP result into the manuscript
+# Putting a locked replication's result into the manuscript
+
+Written for CICLOP, and followed for the stellarator replication on 22 September
+2026, which became Sec. S17 through `tools/ishcdb_tables.py` and its marker
+`% ishcdb:begin`. A CICLOP result would follow the same steps with the CICLOP
+tool and marker, and would be appended as S18.
 
 This is the procedure for the last step of
 [ciclop-replication-lock.md](ciclop-replication-lock.md), once

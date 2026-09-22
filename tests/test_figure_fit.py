@@ -96,7 +96,7 @@ def test_the_sum_reproduces_the_overflow_latex_reported() -> None:
 
 def test_every_figure_is_found() -> None:
     names = {name for _, name, _, _ in _figures()}
-    assert names == {"extrapolation", "conformal", "dimensional", "allometry", "tree_allometry", "gp", "size_extrapolation"}
+    assert names == {"extrapolation", "conformal", "dimensional", "allometry", "tree_allometry", "gp", "size_extrapolation", "ishcdb"}
 
 
 @pytest.mark.parametrize("document,name,aspect,characters", _figures(), ids=lambda value: str(value)[:24])

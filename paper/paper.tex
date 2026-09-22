@@ -50,7 +50,7 @@ model\\ rankings in tokamak energy-confinement scaling}}
 \author{Liam Salcedo\thanks{Independent researcher, Montclair, New Jersey, USA.
 \texttt{liamsalcedo100@gmail.com}.
 ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}}.}}
-\date{8 September 2026}
+\date{22 September 2026}
 
 \begin{document}
 \maketitle
@@ -65,23 +65,27 @@ Archived at \href{https://doi.org/10.5281/zenodo.22859310}{doi:10.5281/zenodo.22
 
 \begin{abstract}
 \noindent
-Confinement scalings are fitted across existing tokamaks to size machines not
-yet built, so validation must measure performance on an unseen device. On the
+Confinement scalings fitted across existing tokamaks size machines not yet
+built, so validation must measure performance on an unseen device. On the
 ITPA Global H-mode Confinement Database (HDB5, STD5; 6228 slices, 18 labels),
-the conventional cross-validation grouped by discharge scores a random forest
+conventional cross-validation grouped by discharge scores a random forest
 29\% better in log error than a power law refitted in the same folds and 36\%
 better than published IPB98(y,2). Holding out one device at a time reverses
 the order of the three primary models: the two tree ensembles that win
 cross-validation extrapolate worst, and the forest loses to that power law on
-\textbf{13 of 13} labels. Regressing the stored energy instead, or in
-dimensionless coordinates carrying far less device identity, leaves the forest worse on
-9 of 13 and 11 of 13 labels. The intervals fail more sharply. At a cut inside
+% ishcdb:begin
+\textbf{13 of 13} labels, and on \textbf{7 of 7} stellarators in a second
+database locked before its data were seen.
+% ishcdb:end
+Regressing the stored energy, or in
+dimensionless coordinates carrying less device identity, leaves the forest worse on
+9 of 13 and 11 of 13 labels. At a cut inside
 the database reproducing ITER's $1.82\times$ jump in major radius, nominal
 90\% split-conformal intervals calibrated on held-out discharges cover
 \textbf{3\%} and \textbf{0\%} of held-out rows for both ensembles at a width
-moving under 1.5\%. The width cannot respond: a split-conformal half-width is
+moving under 1.5\%. A split-conformal half-width is
 a rank statistic of the calibration residuals, so the interval carries no
-warning that it has stopped covering. The warning does exist: the forest's
+warning that it has stopped covering. The warning exists: the forest's
 error tracks the held-out label's Mahalanobis distance from the training data
 at $\rho=+0.85$, against $-0.06$ for the power law. The fault is the candidate
 set, not cross-validation: a linear-plus-RBF Gaussian process, the best
@@ -300,6 +304,13 @@ the selection claim: applied to those three the convention picks the one that
 extrapolates worst, but the best cross-validated model in this work is the
 Gaussian process of Sec.~\ref{sec:gp}, and it does not reverse, so widening the
 candidate set repairs the rule rather than replacing it.
+% ishcdb:begin
+The same comparison is then run, under rules fixed and archived before the data
+were downloaded, on the stellarator-heliotron confinement
+database~\cite{iss04}, which was assembled by a different collaboration and
+shares no device with the tokamak one; Sec.~S17 of the Supplementary Material
+reports it, and the inversion reproduces there on every held-out device.
+% ishcdb:end
 
 
 \section{Data and methods}
@@ -454,6 +465,22 @@ built to vary independently. Why the size dependence in this database is weaker
 than IPB98(y,2)'s is an active question that Hall \emph{et al.}~\cite{hall,hall26}
 attack directly on DB5.2.3, and Sec.~S14 says how it bears on the size-ordered
 cut of Sec.~\ref{sec:size}.
+
+% ishcdb:begin
+\paragraph{External replication.} One external replication was specified
+before any of its scores were seen. Its rules, the population, the target
+convention, the feature mapping, the eligibility threshold and a five-way
+verdict rule that includes ``cannot be evaluated'' and ``contradicts the
+original result'', were committed to the repository and archived before the
+data file was downloaded, and the analysis was run once. The dataset is the
+International Stellarator-Heliotron Confinement Database, the stellarator
+counterpart of the ITPA one and the database the ISS04 scaling~\cite{iss04}
+was fitted to; its primary analysis is that database's own standard set, on
+measured rows only, with the target and the regressors mapped as Sec.~S17 of
+the Supplementary Material documents. A stellarator has no plasma current, so
+the regressors are ISS04's rather than the nine above, and the comparison
+between the two databases is of the pattern and not of any number.
+% ishcdb:end
 
 \paragraph{Software.} Python 3.12.14, scikit-learn 1.7.2, NumPy 2.2.6, SciPy
 1.18.1 and pandas 2.3.3. The version of every library is pinned in the
@@ -944,6 +971,40 @@ published law in 19 of 24 and 10 of 10. Sec.~S2 of the Supplementary Material
 reports both arms with the checks on the row matcher. Neither arm is an
 independent database: both come from the same ITPA collection and the same
 devices, and the five-machine arm is too small to carry a claim alone.
+
+% ishcdb:begin
+\paragraph{A database with no device in common.} The stellarator-heliotron
+replication of Sec.~S17 of the Supplementary Material was locked before its data
+were downloaded, and the outcome was to be reported under a predeclared rule
+whichever way it fell. On the standard set, 1719
+rows over 7 devices scored at the same
+30-row threshold as above, with both splits scored per device
+and averaged, the random forest is better than the log-linear power law under
+cross-validation, 0.209 against
+0.288, and worse on
+\textbf{7 of
+7} held-out devices,
+0.814 against 0.442,
+a paired gap of $+0.373$
+$[+0.106,
++0.797]$, and degrades
+2.54 times as much
+between the splits. The booster is worse on
+7 of
+7. Under the
+rule fixed in advance that is a reproduction of the inversion, on devices HDB5
+does not contain, and the Gaussian process is again best under both splits and
+again does not reverse. Two things differ. The power law's error rises with
+distance there, at $\rho=+0.57$ against
+the forest's $\rho=+0.64$, where on HDB5 it
+is flat; the supplement traces that to the device-by-device constant ISS04
+itself needs, which is what the power law is missing on a held-out stellarator
+and all it is missing, since with that constant granted its error is unchanged
+between the splits and the forest's is not. And on every measured row, a
+secondary arm that adds the rows the database's curators excluded, the two
+models' holdout errors sit together and the arm is degradation without a
+literal inversion.
+% ishcdb:end
 
 \section{A size-extrapolation stress test matched to ITER}
 \label{sec:size}
@@ -1666,6 +1727,19 @@ survivors from the casualties is long-range saturation, which
 Sec.~\ref{sec:meanfunction} isolates and which can be read off an estimator
 before any device is held out.
 
+% ishcdb:begin
+The replication on the stellarator database bears on the first of those claims
+and not on the second. It says the inversion is not a property of one
+compilation, of the standard set's selection criteria or of the machines the
+ITPA database happens to hold, since it appears, under a rule written before
+the data were seen, on a database with no device in common. It does not
+establish a rate across confinement databases or across architectures: it is
+one more database and the same three models. And it leaves the mechanism
+claim where the Gaussian-process experiment put it, since that experiment was
+not run there, though the one model in the candidate set that keeps trending is
+again the one that does not reverse.
+% ishcdb:end
+
 \subsection{What this changes in practice}
 
 The consequence is primarily a reporting convention rather than a modelling one, and it is
@@ -1758,8 +1832,15 @@ from the training data than ITER, at a Mahalanobis distance of 6.9 against
 4.7, because its field is 2.1 times the largest in the database: size is not
 the only direction in which a next-step device leaves the data behind.
 
-None of this is settled by one database, and every fusion result above rests on
-one ITPA file. Two replications outside fusion, on Kleiber's
+% ishcdb:begin
+None of this is settled by one database. Every tokamak result above rests on one
+ITPA file, and the fusion evidence now spans two separately assembled
+multi-machine databases that share no device, but the second is a stellarator
+database, scored on the regressors of its own published law, and it reproduces
+the ranking pattern and not the distance diagnostic. The ITER-size-matched
+stress test, the interval collapse and the mechanism experiment rest on HDB5
+alone. Two replications outside fusion, on Kleiber's
+% ishcdb:end
 exponent~\cite{kleiber} and on the allometry of the BAAD
 compilation~\cite{baad}, reproduce the extrapolation failure in both while the
 ranking inversion appears only where the flexible model first wins the
@@ -1982,9 +2063,16 @@ authors of Ref.~\cite{hdb5}, for releasing the standard analysis set publicly:
 an independent recomputation of this kind is possible only because they did.
 The replications outside fusion use the BAAD compilation~\cite{baad}, released
 under CC0, and the metabolic-rate compilation deposited on Figshare that the
-Supplementary Material describes. Neither the ITPA group nor any contributing
+Supplementary Material describes.
+% ishcdb:begin
+The stellarator replication uses the International Stellarator-Heliotron
+Confinement Database, assembled under the IEA stellarator-heliotron
+collaboration by the teams operating the contributing devices and hosted by IPP
+Greifswald and NIFS; the author thanks them for keeping it open.
+Neither the ITPA group, the stellarator collaboration nor any contributing
 team has reviewed or endorsed this analysis, and its conclusions are the
 author's alone.
+% ishcdb:end
 
 % IOP puts the generative-AI disclosure, the funding statement, the competing
 % interests and the contributions inside Acknowledgements, and its policy names
@@ -2035,7 +2123,7 @@ administration.
 
 \section*{Data availability}
 
-Four third-party datasets underlie this work. None is redistributed here; each
+Five third-party datasets underlie this work. None is redistributed here; each
 is fetched from its public source by a script in the repository and verified
 against a pinned SHA-256 on load, so every number above refers to one specific
 set of bytes rather than to whatever a host currently serves.
@@ -2059,6 +2147,18 @@ Material. File \texttt{allometry\_bmr.txt}.
 data paper is Ref.~\cite{baad} and the archive analysed here is release
 v1.0.1~\cite{baadrelease}. Used in the Supplementary Material. File
 \texttt{baad\_data.zip}.
+% ishcdb:begin
+\item \textbf{International Stellarator-Heliotron Confinement Database,
+version 26.} The external replication of Sec.~S17 of the
+Supplementary Material. Maintained by the IEA stellarator-heliotron
+collaboration, described with the ISS04 scaling in Ref.~\cite{iss04}, and
+served from an open directory at IPP Greifswald
+(\url{https://ishpdb.ipp-hgw.mpg.de/ISS/}), so it is fetched unattended and its
+analysis is part of the reproduction run. The analysed file is
+\texttt{ISHCDB\_26.txt}, 3311757 bytes, pinned at SHA-256
+\texttt{3a9f857b768e\ldots}; the full digest, the frozen
+analysis plan and the lock that preceded the download are in the repository.
+% ishcdb:end
 \end{itemize}
 
 \noindent The pinned fingerprints are those of Table~\ref{tab:fingerprints}.
@@ -2101,7 +2201,7 @@ this paper is archived with a persistent identifier~\cite{zenodo}. The analysis
 code is pinned as firmly as its inputs: every number and figure above was
 produced at commit
 \begin{center}\scriptsize
-\texttt{22bff8cba9323118b22d90dfad5131c597fa0c95}
+\texttt{daa34b611680999bd7817aa8237a79c045fa9804}
 \end{center}
 \noindent Every script verifies that fingerprint against the pin as it loads
 the data and refuses to run when the two disagree, so no number above can have
@@ -2117,6 +2217,14 @@ rendered value stops matching the printed one and the suite fails; if a number
 in the text is edited, it stops matching the artefact. A figure that disagrees
 with the file behind it therefore cannot survive a test run, which is the check
 a reader would otherwise have to perform by hand.
+% ishcdb:begin
+The numbers of the stellarator replication are bound the other way round,
+because they were written after the rule and not before it: every value the
+generated file carries is formatted once by a script, every passage about that
+replication is fenced in the source, and the suite fails on any numeral inside a
+fence that the script did not produce, so no number in those passages was
+typed.
+% ishcdb:end
 
 \begin{thebibliography}{99}
 \small\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
@@ -2215,6 +2323,10 @@ materials discovery,'' \emph{Mol.\ Syst.\ Des.\ Eng.} \textbf{3}, 819 (2018).
 of machine learning models for materials science,'' \emph{Nat.\ Commun.}
 \textbf{11}, 4428 (2020).
 \href{https://doi.org/10.1038/s41467-020-17112-9}{doi:10.1038/s41467-020-17112-9}
+\bibitem{iss04} H. Yamada \emph{et al.}, ``Characterization of energy
+confinement in net-current free plasmas using the extended International
+Stellarator Database,'' \emph{Nucl.\ Fusion} \textbf{45}, 1684 (2005).
+\href{https://doi.org/10.1088/0029-5515/45/12/024}{doi:10.1088/0029-5515/45/12/024}
 \bibitem{breiman} L. Breiman, ``Random forests,'' \emph{Machine Learning}
 \textbf{45}, 5 (2001).
 \href{https://doi.org/10.1023/A:1010933404324}{doi:10.1023/A:1010933404324}

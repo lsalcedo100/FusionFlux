@@ -38,6 +38,8 @@
 \renewcommand{\thesection}{S\arabic{section}}
 \renewcommand{\thetable}{S\arabic{table}}
 \renewcommand{\thefigure}{S\arabic{figure}}
+% The rotational transform at two thirds of the minor radius, ISS04's regressor.
+\newcommand{\iotatwothirds}{\iota_{2/3}}
 
 % IOP asks each supplementary file for a title of at most 30 characters and a
 % description of at most 30 words. Those are the two lines directly below; the
@@ -47,7 +49,7 @@
 \author{Liam Salcedo\thanks{Independent researcher, Montclair, New Jersey, USA.
 \texttt{liamsalcedo100@gmail.com}.
 ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}}.}}
-\date{8 September 2026}
+\date{22 September 2026}
 
 \begin{document}
 \maketitle
@@ -221,6 +223,7 @@ intervals hold there under every scheme. IPB98(y,2) also holds at 88\%, but it
 is a historical reference rather than a fold-fitted competitor.
 
 \section{Robustness on rows the standard analysis set excludes}
+\label{supp:disjoint}
 
 Everything above rests on one file, which is a central limitation of the preceding analysis.
 The same OSF project publishes the full database revision, DB5.2.3, with 14153
@@ -602,6 +605,7 @@ whose loss would signal it.
 
 
 \section{The three-kernel Gaussian-process ladder}
+\label{supp:gpladder}
 
 The main text states the ordering across three Gaussian-process kernels and
 builds its mean-function ablation on it. The ladder itself is here: the same log
@@ -1318,6 +1322,338 @@ least-squares exponents, an errors-in-variables fit would differ, and what is
 reported here is a fact about the naive estimator rather than an answer to what
 a credible measurement-error fit would give.
 
+% ishcdb:begin
+\section{External replication on the stellarator-heliotron confinement database}
+\label{sec:ishcdb}
+
+Every fusion result above comes from one ITPA database family, and a reader can
+ask whether the ranking inversion belongs to that compilation. This section
+puts the same comparison to a database assembled by a different collaboration,
+on devices the tokamak database does not contain, under rules that were written
+down and archived before the file was downloaded. The question it answers is
+the one the main text asks: when the same broad model comparison is moved from
+validation within known devices to prediction of an entirely held-out device,
+how does model performance change? The outcome was to be reported whichever of
+five predeclared verdicts it landed on, one of which is that the database
+cannot be evaluated and another that it contradicts the original result.
+
+\subsection{Dataset and prospective specification}
+
+The International Stellarator-Heliotron Confinement Database (ISHCDB) is the
+stellarator counterpart of the ITPA confinement database: the same IEA lineage,
+column conventions inherited from it, and the database the ISS04
+scaling~\cite{iss04} was fitted to, as IPB98(y,2) was fitted to the ITPA one.
+Version 26 is public, in an open directory on the IPP
+Greifswald server (\url{https://ishpdb.ipp-hgw.mpg.de/ISS/}), so it is fetched by
+a script, pinned and verified on load like the other deposits, and never
+redistributed. The analysed file, \texttt{ISHCDB\_26.txt}, is
+3311757 bytes with SHA-256
+\begin{center}\scriptsize\texttt{3a9f857b768ebd601385a9d8e25ac7df4d48b3403795a43dc484ba6b17fc5f55}\end{center}
+\noindent taken from two independent downloads that agreed. It was assembled
+separately from the ITPA database and shares no device with it. It is not
+unrelated to it: both grew under the same IEA programme, and the column
+conventions of one are the other's.
+
+The rules were fixed in \texttt{docs/ishcdb-replication-lock.md} at commit
+\texttt{c5390bc}, written from the database's own documentation before the
+file was downloaded, and the repository's history and the host's push times
+record the order that followed: the pipeline built on synthetic data, the file's
+digest committed before the file was opened, one amendment, the analysis plan
+frozen and pinned at commit \texttt{7a0f179}, and the analysis run once. The
+amendment (commit \texttt{d8afd9b}) is in the lock's own log. The lock as
+first written named Heliotron E as the one device whose standard target is the
+thermal rather than the diamagnetic confinement time; the documentation says the
+same of TJ-II, in a section added with that device's data, and the file carries
+no diamagnetic time for TJ-II at all. The change rests on the documentation and
+on missingness, and was made after the file's columns had been counted and
+before any model was fitted. Every threshold below was fixed in the lock.
+
+The primary population is the database's standard set, the counterpart of the
+ITPA standard analysis set STD5, on measured rows only: the documentation calls
+the rows labelled W7-X and ITER predictive data, so they leave before anything
+else happens, training included. The manuscript's nine tokamak features do not
+apply, since a stellarator has no plasma current to scale with; the regressors
+are the six of ISS04, and whichever of them the file supports on
+90\% of rows, decided from missingness alone, is the frozen
+set. A device is scored if it has at least 30 rows after
+cleaning, the manuscript's own threshold, with 10
+as a sensitivity.
+
+\subsection{Target and feature mapping}
+
+\begin{table}[htbp]
+\centering\small
+\caption{ISS04's regressors and the confinement time, as ISHCDB delivers them.
+The rotational transform is present on 39\% of the
+standard set, so the 90\% rule fixed in advance dropped it
+for every model, and the frozen set has 5 of the
+6 regressors.}
+\label{tab:ishcdb-mapping}
+\begin{tabular}{p{3.4cm}p{3.6cm}p{3.0cm}p{3.6cm}}
+\toprule
+Quantity & column & conversion & status \\
+\midrule
+confinement time & \texttt{TAUEDIA}, or \texttt{TAUETH} for Heliotron E and TJ-II & s, as delivered & target \\
+effective minor radius & \texttt{AEFF} & m, as delivered & used \\
+major radius & \texttt{RGEO} & m, as delivered & used \\
+absorbed power & \texttt{PTOT} & W to MW & used \\
+line-averaged density & \texttt{NEBAR} & $\mathrm{m}^{-3}$ to $10^{19}\,\mathrm{m}^{-3}$ & used \\
+toroidal field & \texttt{BT} & T, absolute value & used \\
+rotational transform $\iotatwothirds$ & \texttt{IOTA23} & absolute value & omitted, finite and positive on 39\% of rows, below 90\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:ishcdb-mapping} gives the mapping. The target follows the standard set's own convention: the diamagnetic
+confinement time, and the thermal one for the two devices whose standard set is
+defined on it. ISS04 is
+$\tau = 0.134\, a^{2.28} R^{0.64}
+P^{-0.61} \bar{n}^{0.54}
+B^{0.84} \iotatwothirds^{0.41}$,
+with $P$ in megawatts and $\bar{n}$ in units of $10^{19}\,\mathrm{m}^{-3}$.
+Because the frozen set lacks the transform, the published law cannot be
+evaluated on it, and this replication has no analytic reference outside the
+ranking where the main text has IPB98(y,2). Nor is there a feature-matched rerun
+of HDB5: the tokamak set has no counterpart of $\iotatwothirds$, so the two would
+not be the same experiment, and the comparison between the databases is of the
+pattern, as it is for the two allometry datasets of Secs.~\ref{sec:allometry} and~\ref{sec:ladder}.
+
+\subsection{Population}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Rows per measured device: as delivered, in the standard set, complete
+on the frozen features, and whether the device is scored at the
+30-row threshold. HSX has no standard-set row, which the
+documentation explains: its stored energy is thought to be largely nonthermal
+and it was excluded from ISS04. W7-A's 13 rows stay in
+every training fold.}
+\label{tab:ishcdb-population}
+\begin{tabular}{lrrrc}
+\toprule
+Device & rows delivered & in the standard set & complete & scored \\
+\midrule
+W7-AS & 1156 & 629 & 629 & yes \\
+TJ-II & 1132 & 316 & 316 & yes \\
+ATF & 234 & 229 & 229 & yes \\
+CHS & 196 & 196 & 196 & yes \\
+LHD & 1362 & 162 & 162 & yes \\
+HELE & 121 & 120 & 120 & yes \\
+HELJ & 111 & 54 & 54 & yes \\
+W7-A & 13 & 13 & 13 & no \\
+HSX & 539 & 0 & 0 & no \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:ishcdb-population} counts the rows. The file delivers 4940 rows. Dropping the
+76 predictive rows leaves 4864 measured
+rows over 9 devices, of which the standard set holds
+1719, all complete on the frozen features, over
+8 devices, in 1450 discharges;
+181 discharges contribute more than one time slice,
+the largest 7. Seven devices clear the
+30-row threshold. None of the seven is in HDB5.
+
+\subsection{Validation protocol}
+
+The protocol is the main text's, run by the same code. Cross-validation is
+\texttt{GroupKFold} with 5 folds grouped on device and
+discharge, so every slice of one discharge falls in one fold. The held-out unit
+is the device as the database names it, with no merging. Both splits are
+summarised the same way: a log-RMSE per eligible device, from out-of-fold
+predictions under cross-validation and from held-out predictions under device
+holdout, averaged with each device counting once, so that the split is the only
+thing that differs between the two columns. The models, their settings and their
+seed are those of Sec.~\ref{supp:spec}, untouched, with no tuning on this database for any
+reason. Distance is the Mahalanobis distance of a device's mean log-feature
+vector from its training rows, as in the main text. The paired interval is the
+percentile bootstrap over devices, 2000 resamples
+seeded at 20240617, and the win count carries an exact sign
+test, both read as the main text reads them. The verdict rule fixed in the lock
+counts a reproduction only when the flexible model wins cross-validation, loses
+device holdout on average and on more than half the devices, and degrades at least
+1.5 times as much as the power law does, measured
+by $D$, the ratio of the two models' holdout-to-cross-validation ratios; a
+crossing smaller than that falls through to ``no important differential
+degradation''.
+
+\subsection{Primary result}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Each model under both splits. Pooled CV is one log-RMSE over every
+row; matched CV and device held out are per-device scores averaged with each
+device counting once, and the ratio is the second over the first. The rank
+columns of the main text are not repeated because the ordering is visible: on
+the standard set the three primary models trade places exactly as in
+Table~1 of the main text. The three ranked models are also reported on every
+measured row, a secondary population that adds HSX, LHD's high-beta survey and
+two W7-AS rows whose delivered confinement times run to thousands of seconds,
+which the lock's rule of no outlier removal keeps.}
+\label{tab:ishcdb-result}
+\begin{tabular}{llrrrr}
+\toprule
+Population & Model & pooled CV & matched CV & held out & ratio \\
+\midrule
+standard set & ridge, log-linear & 0.255 & 0.288 & 0.442 & 1.53$\times$ \\
+ & random forest & 0.182 & 0.209 & 0.814 & 3.89$\times$ \\
+ & hist gradient boosting & 0.178 & 0.203 & 0.950 & 4.68$\times$ \\
+ & mean baseline & 1.038 & 0.993 & 1.090 & 1.10$\times$ \\
+ & ridge, log-quadratic & 0.220 & 0.242 & 0.417 & 1.72$\times$ \\
+ & ridge, log-cubic & 0.198 & 0.220 & 1.009 & 4.59$\times$ \\
+ & GP, linear + RBF & 0.167 & 0.195 & 0.409 & 2.10$\times$ \\
+\midrule
+every measured row & ridge, log-linear & 0.323 & 0.361 & 0.699 & 1.94$\times$ \\
+ & random forest & 0.188 & 0.223 & 0.688 & 3.09$\times$ \\
+ & hist gradient boosting & 0.259 & 0.244 & 1.041 & 4.26$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:ishcdb-result} scores every model under both splits. On the standard set the random forest is better than the log-linear power law
+under cross-validation, 0.209 against
+0.288, and worse on every one of the
+7 held-out devices, 0.814
+against 0.442 on average: worse on
+\textbf{7 of
+7}, mean gap
+$+0.373$ with a paired interval of
+$[+0.106,
++0.797]$, and
+$D=2.54$. The gradient
+booster is worse on 7
+of 7, mean gap
+$+0.508$
+$[+0.206,
++0.899]$,
+$D=3.05$. Under
+the predeclared rule both are a reproduction of the inversion. The exact sign
+test returns $p=0.016$ for each,
+which is the smallest value seven devices can return, and the intervals are
+wide; the counts and the sizes of the gaps carry the result, as in the main
+text. The linear-plus-RBF Gaussian process is again the best model under both
+splits, 0.195 and
+0.409, and again does not reverse, so the
+selection rule repairs itself here too once that model is in the candidate set.
+LHD is the hardest device for every model, at the largest distance from the
+rest: the power law scores 0.790 on it and
+the forest 2.378.
+
+\subsection{Extrapolation distance}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{ishcdb}
+\caption{\textbf{The replication on the stellarator database.} Left: each of
+the three primary models under both splits, each device counting once, on the
+standard set. Right: per-device holdout error against the Mahalanobis distance
+of the device from its training rows, for the power law and the random forest,
+with the rank correlation over the seven devices in the legend. The correlation
+is described and not tested at this device count.}
+\label{fig:ishcdb}
+\end{figure}
+
+Figure~\ref{fig:ishcdb} draws both splits and the distance diagnostic. This is the one part of the main text's pattern that did not reproduce. On
+HDB5 the forest's per-label error tracks distance at
+$\rho=+0.85$ and the power law's does not, at
+$\rho=-0.06$. Here both track it: the forest
+at $\rho=+0.64$ and the power law at
+$\rho=+0.57$, over seven points, with the
+Gaussian process flattest at $\rho=+0.21$.
+Sec.~\ref{supp:ishcdb-offset} says why the power law's error rises with
+distance here and did not there.
+
+\subsection{Devices absent from HDB5}
+
+Every scored device is absent from HDB5, so the descriptive subgroup that the
+tokamak replication of Sec.~\ref{supp:disjoint} could not supply is here the whole result. The
+two databases share a lineage and a schema and no machine.
+
+\subsection{The offset the lock predicted}
+\label{supp:ishcdb-offset}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Each ranked model's error under both splits, whole and with each
+device's mean log residual removed. Per device the mean squared residual splits
+exactly into the squared mean and the variance about it; removing the mean
+grants the model a free constant on the held-out device, which is what a
+renormalisation factor is.}
+\label{tab:ishcdb-offset}
+\begin{tabular}{lrrrr}
+\toprule
+Model & CV & CV, centred & held out & held out, centred \\
+\midrule
+ridge, log-linear & 0.288 & 0.257 & 0.442 & 0.260 \\
+random forest & 0.209 & 0.208 & 0.814 & 0.427 \\
+hist gradient boosting & 0.203 & 0.203 & 0.950 & 0.428 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+ISS04 could not fit these devices with one constant. It carries a
+renormalisation factor for each device and configuration, and the lock said in
+advance that a power law refitted on the other devices should therefore be
+expected to miss a held-out stellarator by a roughly constant factor, whatever
+its exponents do, which is the reason the outcome could not be called before it
+was run. That is what happened, and Table~\ref{tab:ishcdb-offset} shows it. With the device offset removed, the power law's
+holdout error is 0.260 against
+0.257 under cross-validation: its whole
+degradation, from 0.288 to
+0.442, is the missing constant, and its
+trends transfer. The forest's centred error is
+0.427 against
+0.208, and the booster's
+0.428 against
+0.203: granted the same constant,
+both still fail, so their trends do not transfer. This is also why the power
+law's error rises with distance here. The factor ISS04 needs is largest for the
+devices furthest from the others, and a constant the model cannot know is what
+the distance is measuring.
+
+\subsection{Secondary arms, interpretation and limitations}
+
+None of the secondary arms can change the verdict, and all are reported. At
+the 10-row threshold, which admits W7-A, the
+forest is worse on
+8 of
+8 with
+$D=2.49$.
+With the diamagnetic confinement time as the target for every device, which
+drops the two devices that have none, it is worse on
+5
+of 6
+with $D=2.89$.
+On every measured row, 4847 rows over
+8 devices, the forest still wins
+cross-validation and degrades more, $D=1.60$,
+but its holdout mean of 0.688
+sits beside the power law's 0.699
+and it is worse on 5
+of 8,
+which under the rule is degradation without a literal inversion. That arm holds
+the rows the database's own curators excluded from ISS04, and the power law
+suffers most from them. The standard set is the primary analysis because the
+lock said so, not because that arm came out weaker.
+
+What this replication is and is not. It is a qualitative replication of the
+pattern: the flexible models win the within-device comparison and lose the
+held-out-device comparison on every device, by the predeclared rule, on a
+database that shares no device with the one the pattern was found on. It is not
+a replication of any number, and it is not evidence about tokamaks beyond what
+HDB5 supplies: these are stellarators and heliotrons, scored on
+5 of ISS04's 6 regressors with no analytic
+law available on the frozen set, on seven devices whose target is defined by
+two conventions, with the distance diagnostic behaving differently and for a
+reason that is itself stellarator-specific. The calibrated-interval collapse,
+the ITER-size-matched cut and the three-kernel experiment of Sec.~\ref{supp:gpladder} were not
+run here, and nothing in this section speaks to them. The choice of this
+database was made while a first external replication, on a database that
+requires an access grant, was still waiting for that grant; its lock stays in
+force and its outcome will be reported whatever it shows.
+% ishcdb:end
+
 \begin{thebibliography}{99}
 \small\setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
 \raggedright
@@ -1403,6 +1739,10 @@ Fusion} \textbf{45}, 1078 (2005).
 trends in noisy tokamak confinement data using geodesic least squares
 regression,'' \emph{Rev.\ Sci.\ Instrum.} \textbf{87}, 11D423 (2016).
 \href{https://doi.org/10.1063/1.4960069}{doi:10.1063/1.4960069}
+\bibitem{iss04} H. Yamada \emph{et al.}, ``Characterization of energy
+confinement in net-current free plasmas using the extended International
+Stellarator Database,'' \emph{Nucl.\ Fusion} \textbf{45}, 1684 (2005).
+\href{https://doi.org/10.1088/0029-5515/45/12/024}{doi:10.1088/0029-5515/45/12/024}
 \end{thebibliography}
 
 \end{document}
