@@ -2483,6 +2483,38 @@ The column is not defective on those rows. The parametrised boundary is the
 wrong shape for them, which is the same point the ratio makes everywhere else
 and is here checkable against a third column.
 
+## Result 22: the reversal reproduces on the stellarator database, under rules fixed in advance
+
+The one external replication so far with a result. The International
+Stellarator-Heliotron Confinement Database is the stellarator counterpart of the
+ITPA one, public, and it shares no device with HDB5. Its rules were written from
+the database's documentation and committed before the file was downloaded
+(`docs/ishcdb-replication-lock.md`), the file and the frozen plan were pinned
+before any model was fitted, and `analysis_ishcdb.py` was run once. Every number
+is in `results/ishcdb.json`, and Sec. S17 of the supplement reports them; none is
+repeated here, because the supplement's numbers are bound to that file by
+`tools/ishcdb_tables.py` and this page is not.
+
+The verdict under the predeclared rule is a reproduction of the inversion. On the
+standard set, seven devices at the manuscript's row threshold, the random forest
+wins cross-validation and loses device holdout on every one of the seven, and
+degrades between the splits more than one and a half times as much as the power
+law does, which is the bar the rule sets; the booster likewise. The Gaussian
+process is again best under both splits and again does not reverse.
+
+Two things did not reproduce. The power law's error rises with distance there,
+where on HDB5 it is flat; the supplement traces that to the device-by-device
+renormalisation factor ISS04 itself needs, which the lock predicted, and shows
+that with each device's constant granted the power law's error is unchanged
+between the splits while the forest's is not. And on every measured row, a
+secondary arm that adds what the database's curators excluded, the two models'
+holdout errors sit together and the arm is degradation without a literal
+inversion. Neither can change the verdict, and both are reported.
+
+A first external replication, on the IAEA/IEA CICLOP database, was locked
+before this one and is waiting on an access grant; its outcome will be reported
+whatever it shows.
+
 ## Limitations
 
 - **The refit population is not IPB98's population.** No ITPA standard-set
