@@ -208,6 +208,9 @@ def abstract_words(paper: Path | None = None) -> list[str]:
     """
     source = (paper or ROOT / "paper" / "paper.tex").read_text()
     body = source.split(r"\begin{abstract}")[1].split(r"\end{abstract}")[0]
+    # A comment is not a word a reader counts. The binding markers that fence a
+    # replication's passages are comment lines and may sit inside the abstract.
+    body = re.sub(r"(?<!\\)%.*", "", body)
     body = re.sub(r"\\cite\{[^}]*\}", "", body)
     body = re.sub(r"\$[^$]*\$", "X", body)
     body = re.sub(r"\\[a-zA-Z]+", "", body)
@@ -313,6 +316,8 @@ EXPECTED_POINTERS = {
     14: "The design matrix and the refit",
     15: "The Connor--Taylor hierarchy",
     16: "Errors in variables",
+    # S17 was appended for the same reason.
+    17: "External replication on the stellarator-heliotron",
 }
 
 

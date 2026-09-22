@@ -260,6 +260,10 @@ def _plain(latex: str) -> str:
         raise ValueError(
             "no ASCII spelling for " + ", ".join(unmapped) + "; add it to MATHS"
         )
+    # A comment is not text. The markers that fence a replication's passages
+    # for the number-binding tests are comment lines, and one pair sits in the
+    # abstract; without this they would be uploaded as words.
+    latex = re.sub(r"(?<!\\)%.*", "", latex)
     latex = re.sub(r"\\cite\{[^}]*\}", "", latex)
     # A link's text is what a reader sees; its URL is the same thing spelled long.
     latex = re.sub(r"\\href\{[^}]*\}\{([^}]*)\}", r"\1", latex)
