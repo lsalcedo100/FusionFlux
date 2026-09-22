@@ -55,9 +55,10 @@ applied.
 ## 4. Target
 
 The confinement time the standard set is defined on: `TAUEDIA` for every device
-except Heliotron E, and `TAUETH` for Heliotron E. That is the documentation's own
-convention, and it is followed and not improved on. It is modelled and scored in
-natural logs. `TAUEDIA` for every device is a secondary analysis.
+except Heliotron E and TJ-II, and `TAUETH` for those two. That is the
+documentation's own convention, stated in its sections IV.A and IV.E, and it is
+followed and not improved on. It is modelled and scored in natural logs.
+`TAUEDIA` for every device is a secondary analysis.
 
 ## 5. Features
 
@@ -174,7 +175,6 @@ adding one, because of what its scores show.
 
 ## Deviations log
 
-None.
-
 | Date | What changed | Why | Before or after the first score |
 | --- | --- | --- | --- |
+| 21 September 2026 | Section 4: TJ-II takes `TAUETH` as its target, as Heliotron E does. The lock as first committed named Heliotron E alone. | The lock's rule is to follow the documentation's convention, and it misread the documentation. Section IV.A, written for ISS95, says the thermal time is used "only for Heliotron-E". Section IV.E, on the TJ-II data added later, says "For TJ-II, the thermal confinement time has been used". The schema pass showed the consequence: the file has no `TAUEDIA` for any TJ-II row, so under the first wording 316 standard-set rows and one of seven devices would have dropped out. The change rests on the documentation and on missingness. | Before any model was fitted, and after the file was opened for the schema pass. |

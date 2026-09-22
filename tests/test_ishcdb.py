@@ -61,7 +61,7 @@ def synthetic_deposit(*, device_factors: bool = False, seed: int = 11) -> pd.Dat
                     0.134 * minor**2.28 * radius**0.64 * power**-0.61 * density**0.54 * field**0.84 * iota**0.41
                     * (factor if device_factors else 1.0) * (2.0 if density > 4.0 else 1.0) * np.exp(rng.normal(0, 0.04))
                 )
-                thermal = device == "HELE"
+                thermal = device in ("HELE", "TJ-II")
                 rows.append({
                     "STELL": device, "STDSET": 1 if shot % 5 else 0, "SHOT": 1000 + shot, "SHOT TIME": time,
                     "PGASA": 1, "RGEO": radius, "AEFF": minor, "BT": -field if shot % 2 else field, "IOTA23": -iota if shot % 3 == 0 else iota,
@@ -79,7 +79,8 @@ def synthetic_deposit(*, device_factors: bool = False, seed: int = 11) -> pd.Dat
 
 def _on_disk(tmp_path: Path, frame: pd.DataFrame | None = None) -> Path:
     path = tmp_path / ishcdb.DEFAULT_ISHCDB_FILENAME
-    (synthetic_deposit() if frame is None else frame).to_csv(path, sep="\t", index=False)
+    # As the real file is delivered: comma-separated UTF-8 behind a byte-order mark.
+    (synthetic_deposit() if frame is None else frame).to_csv(path, index=False, encoding="utf-8-sig")
     return path
 
 
@@ -109,10 +110,12 @@ def test_the_standard_set_is_the_databases_own_flag() -> None:
     assert len(ishcdb.standard_set(measured)) == int(((deposit["STDSET"] == 1) & ~deposit["STELL"].isin(["W7-X", "ITER"])).sum())
 
 
-def test_heliotron_e_takes_the_thermal_confinement_time_and_nobody_else_does() -> None:
+def test_heliotron_e_and_tj2_take_the_thermal_confinement_time_and_nobody_else_does() -> None:
+    """The documentation names both, in IV.A and IV.E. TJ-II has no diamagnetic time in the file at all."""
+    assert ishcdb.THERMAL_TARGET_DEVICES == ("HELE", "TJ-II")
     deposit = synthetic_deposit()
     frame = ishcdb.canonical_frame(deposit)
-    hele = (deposit["STELL"] == "HELE").to_numpy()
+    hele = deposit["STELL"].isin(["HELE", "TJ-II"]).to_numpy()
     assert np.allclose(frame.loc[hele, hdb5.TARGET_COLUMN], deposit.loc[hele, "TAUETH"])
     assert np.allclose(frame.loc[~hele, hdb5.TARGET_COLUMN], deposit.loc[~hele, "TAUEDIA"])
     assert frame.loc[hele, ishcdb.DIAMAGNETIC_TARGET_COLUMN].isna().all()
@@ -214,7 +217,7 @@ class _Response:
 def test_a_download_that_does_not_match_the_pin_never_lands(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import urllib.request
 
-    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: _Response(b"STELL\tSHOT\nLHD\t1\n"))
+    monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: _Response(b"STELL,SHOT\nLHD,1\n"))
     monkeypatch.setattr(ishcdb, "ISHCDB_SHA256", "0" * 64)
     monkeypatch.setattr(ishcdb, "ISHCDB_N_BYTES", 1)
     target = tmp_path / "ishcdb_26.txt"
@@ -226,7 +229,7 @@ def test_a_download_that_does_not_match_the_pin_never_lands(tmp_path: Path, monk
 def test_before_the_pin_exists_a_download_lands_and_is_fingerprinted(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     import urllib.request
 
-    payload = b"STELL\tSHOT\nLHD\t1\n"
+    payload = b"STELL,SHOT\nLHD,1\n"
     monkeypatch.setattr(urllib.request, "urlopen", lambda *a, **k: _Response(payload))
     monkeypatch.setattr(ishcdb, "ISHCDB_SHA256", None)
     target = ishcdb.download_ishcdb(tmp_path / "ishcdb_26.txt")
@@ -347,8 +350,8 @@ def test_the_secondary_arms_are_reported(planted: dict[str, Any]) -> None:
     secondary = planted["secondary"]
     assert secondary["all_measured_rows"]["n_rows"] > planted["primary"]["n_rows"]
     assert "HSX" in secondary["min_rows_10"]["eligible_devices"] and "HSX" not in planted["primary"]["eligible_devices"]
-    # Heliotron E has no diamagnetic time here, so it drops out of that arm.
-    assert "HELE" not in secondary["diamagnetic_target_for_every_device"]["eligible_devices"]
+    # The two thermal-target devices have no diamagnetic time here, so they drop out of that arm.
+    assert not {"HELE", "TJ-II"} & set(secondary["diamagnetic_target_for_every_device"]["eligible_devices"])
     assert set(planted["primary"]["distance"]["spearman"]) == set(planted["primary"]["models"])
 
 

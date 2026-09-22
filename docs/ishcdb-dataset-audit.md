@@ -122,7 +122,38 @@ of it can be offered later as an explanation only when the result needs one.
    result.
 7. The file is from 2012 and lacks Wendelstein 7-X.
 
-## What has to be confirmed from the file
+## What the schema pass found
+
+Added on 21 September 2026, after the file was pinned and opened, and before any
+model was fitted. Everything here is a count, a range of one column, or a
+missingness rate.
+
+- The file is 3311757 bytes, SHA-256 `3a9f857b...fc5f55`, identical in two
+  independent downloads. It is comma-separated UTF-8 behind a byte-order mark,
+  with 4940 rows and 115 columns. Every documented column is present under its
+  documented name.
+- Rows per device: LHD 1362, W7-AS 1156, TJ-II 1132, HSX 539, ATF 234, CHS 196,
+  HELE 121, HELJ 111, W7-A 13, and the predictive rows, W7-X 75 and ITER 1.
+- The standard set holds 1719 rows: W7-AS 629, TJ-II 316, ATF 229, CHS 196, LHD
+  162, HELE 120, HELJ 54 and W7-A 13. Every HSX row has `STDSET = 0`, which the
+  documentation explains: its stored energy is suspected to be largely
+  nonthermal, and it was excluded from ISS04.
+- TJ-II has no `TAUEDIA` in any row, and has `TAUETH` in every row. The
+  documentation's section IV.E says the thermal time is the one used for TJ-II.
+  The lock had named Heliotron E alone, and was amended.
+- `IOTA23` is empty for ATF, CHS, HELE, HELJ and W7-A, and for most of W7-AS. It
+  is present on 39% of the standard set, so the 90% rule drops it and five
+  features remain, which is the floor. ISS04 needs it, so the ISS04 reference
+  cannot be computed on the frozen set. The file carries its own `LOG_TAUE_ISS04`
+  column, which the lock does not name and which is not used.
+- `PTOT` is in watts and `NEBAR` per cubic metre, as documented. `BT` is signed,
+  with LHD's high-beta rows at reversed field below 1 T.
+- Two W7-AS rows, shots 39964 and 39966, carry a `TAUEDIA` of 1159 s and 10290 s.
+  Both have `STDSET = 0`, so they are outside the primary analysis and inside the
+  secondary one on every measured row. The lock has no outlier rule and none is
+  added: they stay, and the result for that arm says they are there.
+
+## What had to be confirmed from the file
 
 Each of these is a column name, a count or a missingness rate. None needs a
 model, and the lock says what follows from each.

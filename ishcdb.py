@@ -74,9 +74,13 @@ MIN_EVALUABLE_FEATURES = 5
 # The documentation: "W7-X and ITER are predictive data". They are not
 # measurements, so they leave before anything else happens, training included.
 PREDICTIVE_DEVICES: tuple[str, ...] = ("W7-X", "ITER")
-# The standard set uses the diamagnetic confinement time, "only for Heliotron-E
-# has the thermal confinement time be used". Followed, not improved on.
-THERMAL_TARGET_DEVICES: tuple[str, ...] = ("HELE",)
+# The standard set uses the diamagnetic confinement time, with two exceptions the
+# documentation states, each in the subsection for that device's data: "only for
+# Heliotron-E has the thermal confinement time be used" (IV.A, written for ISS95),
+# and "For TJ-II, the thermal confinement time has been used" (IV.E). The lock as
+# first committed named only the first. The file has no TAUEDIA for TJ-II at all.
+# The amendment is in the lock's deviations log, dated before any model was fitted.
+THERMAL_TARGET_DEVICES: tuple[str, ...] = ("HELE", "TJ-II")
 
 DEVICE_SOURCE, STANDARD_SET_SOURCE, SHOT_SOURCE = "STELL", "STDSET", "SHOT"
 DIAMAGNETIC_TARGET_SOURCE, THERMAL_TARGET_SOURCE = "TAUEDIA", "TAUETH"
@@ -152,8 +156,10 @@ def load_ishcdb_raw(path: Path | str | None = None, read: dict[str, Any] | None 
     options = dict(read or {})
     frame = pd.read_csv(
         resolved,
-        sep=options.get("separator", "\t"),
-        encoding=options.get("encoding", "latin-1"),
+        # As delivered: comma-separated UTF-8 behind a byte-order mark. The
+        # documentation does not say, and the schema pass found it.
+        sep=options.get("separator", ","),
+        encoding=options.get("encoding", "utf-8-sig"),
         header=int(options.get("header_row", 0)),
         low_memory=False,
     )
@@ -373,8 +379,8 @@ def build_parser() -> argparse.ArgumentParser:
     for name, text in (("schema", "per-column summaries of the delivered file"), ("freeze", f"apply the lock and write {PLAN_FILENAME}")):
         sub = commands.add_parser(name, help=text)
         sub.add_argument("--path", type=Path, default=None)
-        sub.add_argument("--separator", default="\t")
-        sub.add_argument("--encoding", default="latin-1")
+        sub.add_argument("--separator", default=",")
+        sub.add_argument("--encoding", default="utf-8-sig")
         sub.add_argument("--out", type=Path, default=None)
     return parser
 
