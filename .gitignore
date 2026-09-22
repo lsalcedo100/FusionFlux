@@ -56,6 +56,10 @@ data/raw/baad_data.zip
 # there is no fetch command: a person downloads it, and it is pinned by SHA-256
 # in ciclop.py once the plan is frozen.
 data/raw/ciclop*
+# The International Stellarator-Heliotron Confinement Database, version 26, from
+# the open IPP directory (python3 ishcdb.py download). Second locked replication:
+# docs/ishcdb-replication-lock.md
+data/raw/ishcdb*
 site/index.html
 
 # Copied into the package at build time from results/predictor.json by

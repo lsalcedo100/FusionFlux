@@ -26,6 +26,8 @@ on:
       - "spectral.py"
       - "conformal_shift.py"
       - "replication.py"
+      - "ishcdb.py"
+      - "ciclop.py"
       - "allometry.py"
       - "gp.py"
       - "tree_allometry.py"
@@ -94,7 +96,8 @@ jobs:
             data/raw/hdb5_std5.csv
             data/raw/hdb5_db523.csv
             data/raw/allometry_bmr.txt
-          key: hdb5-${{ hashFiles('hdb5.py', 'replication.py', 'allometry.py') }}
+            data/raw/ishcdb_26.txt
+          key: hdb5-${{ hashFiles('hdb5.py', 'replication.py', 'allometry.py', 'ishcdb.py') }}
 
       - name: Fetch and verify the datasets
         # Both are pinned by SHA-256 and verified on the staged download, so a
@@ -104,6 +107,7 @@ jobs:
           python3 hdb5.py verify
           python3 -c "import replication; replication.download_db523()"
           python3 -c "import allometry; allometry.download_allometry()"
+          python3 ishcdb.py download
 
       # Keep the committed artifacts to compare against, since the analyses
       # overwrite results/ in place.
