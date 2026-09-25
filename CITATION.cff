@@ -52,7 +52,7 @@ keywords:
   - allometry
   - model selection
 license: MIT
-version: 0.4.13
+version: 0.4.14
 doi: 10.5281/zenodo.22215142
 references:
   - type: article

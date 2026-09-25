@@ -50,7 +50,7 @@ model\\ rankings in tokamak energy-confinement scaling}}
 \author{Liam Salcedo\thanks{Independent researcher, Montclair, New Jersey, USA.
 \texttt{liamsalcedo100@gmail.com}.
 ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}}.}}
-\date{22 September 2026}
+\date{24 September 2026}
 
 \begin{document}
 \maketitle
@@ -59,7 +59,7 @@ ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}
 Code, results, and reproducibility materials:
 \url{https://github.com/lsalcedo100/FusionFlux}\\
 Archived at \href{https://doi.org/10.5281/zenodo.22859310}{doi:10.5281/zenodo.22859310}
-(v0.4.13; the DOI for all versions is
+(v0.4.14; the DOI for all versions is
 \href{https://doi.org/10.5281/zenodo.22215142}{10.5281/zenodo.22215142})
 \end{center}
 
@@ -1839,7 +1839,17 @@ multi-machine databases that share no device, but the second is a stellarator
 database, scored on the regressors of its own published law, and it reproduces
 the ranking pattern and not the distance diagnostic. The ITER-size-matched
 stress test, the interval collapse and the mechanism experiment rest on HDB5
-alone. Two replications outside fusion, on Kleiber's
+alone.
+% ishcdb:end
+% ciclop:begin
+A further external replication, on the IAEA/IEA CICLOP multi-machine
+database~\cite{litaudon24,litaudon26}, was specified and locked in the archived
+repository named on the title page before its data were requested; the database had not
+been opened to the author by submission, so no result from it is reported, and
+the lock stays in force for whatever the data show.
+% ciclop:end
+% ishcdb:begin
+Two replications outside fusion, on Kleiber's
 % ishcdb:end
 exponent~\cite{kleiber} and on the allometry of the BAAD
 compilation~\cite{baad}, reproduce the extrapolation failure in both while the
@@ -2393,6 +2403,14 @@ coefficients using Gaussian process regression,'' \emph{Nucl.\ Fusion}
 and open R\&D issues,'' \emph{Plasma Phys.\ Control.\ Fusion} \textbf{67},
 065023 (2025).
 \href{https://doi.org/10.1088/1361-6587/add9c9}{doi:10.1088/1361-6587/add9c9}
+\bibitem{litaudon24} X. Litaudon \emph{et al.}, ``Long plasma duration operation
+analyses with an international multi-machine (tokamaks and stellarators)
+database,'' \emph{Nucl.\ Fusion} \textbf{64}, 015001 (2024).
+\href{https://doi.org/10.1088/1741-4326/ad0606}{doi:10.1088/1741-4326/ad0606}
+\bibitem{litaudon26} X. Litaudon \emph{et al.}, ``Investigating long-duration
+plasma operation with the international multi-machine CICLOP database,''
+\emph{Nucl.\ Fusion} \textbf{66}, 095001 (2026).
+\href{https://doi.org/10.1088/1741-4326/ae89cc}{doi:10.1088/1741-4326/ae89cc}
 \bibitem{kleiber} M. Kleiber, ``Body size and metabolism,''
 \emph{Hilgardia} \textbf{6}, 315 (1932).
 \href{https://doi.org/10.3733/hilg.v06n11p315}{doi:10.3733/hilg.v06n11p315}
@@ -2419,7 +2437,7 @@ Allometry Database for woody plants} [dataset], Figshare (2015).
 \href{https://doi.org/10.6084/m9.figshare.c.3307692}{doi:10.6084/m9.figshare.c.3307692}.
 Release v1.0.1, \url{https://github.com/dfalster/baad/releases/tag/v1.0.1}
 \bibitem{zenodo} L. Salcedo, \emph{FusionFlux: extrapolation, long-range
-saturation and physics constraints in confinement scaling}, version v0.4.13,
+saturation and physics constraints in confinement scaling}, version v0.4.14,
 Zenodo (2026).
 \href{https://doi.org/10.5281/zenodo.22859310}{doi:10.5281/zenodo.22859310}
 \end{thebibliography}
