@@ -172,9 +172,15 @@ def test_ciclop_may_only_be_named_inside_a_marked_passage_or_the_bibliography() 
 def test_the_manuscript_prints_no_ciclop_number_the_code_did_not_generate(document: Path) -> None:
     latex = document.read_text(encoding="utf-8")
     if not ct.RESULTS.exists():
-        assert "CICLOP" not in latex and ct.BEGIN not in latex, (
-            f"{document.name} mentions CICLOP, and results/ciclop.json does not exist. Nothing can be "
-            "written about a replication before its result has been generated."
+        # No result exists, so no number about it can. The database may be named,
+        # inside a fence, to say that the replication was locked and is waiting on
+        # its data; that passage may print no numeral at all.
+        assert ct.mentions_outside_blocks(latex) == [], (
+            f"{document.name} names CICLOP outside a fence, and results/ciclop.json does not exist."
+        )
+        assert ct.unbound_numerals(latex, {}) == [], (
+            f"{document.name} prints a number in a CICLOP passage, and results/ciclop.json does not exist. "
+            "Nothing numerical can be written about a replication before its result has been generated."
         )
         return
     known = ct.facts(json.loads(ct.RESULTS.read_text(encoding="utf-8")))
