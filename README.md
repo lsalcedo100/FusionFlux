@@ -131,7 +131,7 @@ That diagnosis makes a prediction. If the failure really is exchangeability, the
 | calibrated on machines | **88%** | 29% |
 | plus distance scaling | 88% | 40% |
 
-**A repair that does not work everywhere is the stronger result.** On a held-out machine every model returns to within two points of nominal, tree ensembles included. Across the size cut none does, because every calibration machine is smaller than every test machine and no recalibration makes those two exchangeable. The constrained power law above is the single exception in the table: its intervals hold at the ITER-size-matched cut under every scheme, including plain split conformal, which fails there for everything else. See [Result 10](results/RESULTS.md#result-10-repairing-the-interval-collapse-and-finding-the-limit-of-the-repair).
+**A repair that does not work everywhere is the stronger result.** On a held-out database label every model returns to within two points of nominal, tree ensembles included; calibrated over physical devices instead, so that the held-out device is genuinely unseen, the linear models still do and the tree ensembles fall short (Sec. S1 of the supplement). Across the size cut none does, because every calibration machine is smaller than every test machine and no recalibration makes those two exchangeable. The constrained power law above is the single exception in the table: its intervals hold at the ITER-size-matched cut under every scheme, including plain split conformal, which fails there for everything else. See [Result 10](results/RESULTS.md#result-10-repairing-the-interval-collapse-and-finding-the-limit-of-the-repair).
 
 ### It reproduces on rows this database does not contain
 

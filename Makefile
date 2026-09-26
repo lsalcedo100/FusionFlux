@@ -194,6 +194,11 @@ submission: paper-fresh
 # arXiv posts, where numbered lines are wrong, so this target switches it on,
 # builds to build/review/, and switches it back without touching the committed
 # PDFs.
+#
+# Not for an IOP upload. ScholarOne adds line numbers to the review copy
+# itself, so a manuscript that already carries them arrives double-numbered;
+# the committed PDFs are what go there. This build is for sending a draft to a
+# reader directly.
 review-pdf:
 	@mkdir -p build/review
 	@# The package goes in the preamble and \linenumbers goes after
@@ -215,4 +220,5 @@ review-pdf:
 	@cp results/*.pdf results/*.png build/review/ 2>/dev/null || true
 	tectonic -X compile build/review/paper.tex --outdir build/review
 	tectonic -X compile build/review/supplementary.tex --outdir build/review
-	@echo "line-numbered PDFs in build/review/. Upload these; do not commit them."
+	@echo "line-numbered PDFs in build/review/, for sending to a reader directly."
+	@echo "IOP's submission system numbers lines itself: upload the committed PDFs there. Do not commit these."

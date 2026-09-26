@@ -855,3 +855,31 @@ def test_main_reads_sys_argv_when_called_without_arguments(
     monkeypatch.setattr(checker, "check", lambda: [])
     assert checker.main() == 0
     assert "ready to submit" in capsys.readouterr().out
+
+
+# --- the supplement's own title and description fit IOP's limits -------------
+#
+# IOP asks each supplementary file to carry, inside the file, a title of at most
+# 30 characters and a description of at most 30 words. The description is the
+# one line a reader of the supplement sees first, and it went on describing
+# sixteen sections after a seventeenth had been added.
+
+
+def test_the_supplement_title_and_description_fit_iops_limits() -> None:
+    source = (ROOT / "paper" / "supplementary.tex").read_text()
+    title = re.search(r"\\title\{(?:\\vspace\{[^}]*\})?\\textbf\{([^}]*)\}\}", source)
+    assert title is not None, "no \\title{\\textbf{...}} in the supplement"
+    assert len(title.group(1)) <= 30, f"the supplement's title is {len(title.group(1))} characters; IOP allows 30"
+    description = re.search(r"\\textbf\{Description\.\}(.*?)\\end\{center\}", source, re.DOTALL)
+    assert description is not None, "no Description line in the supplement"
+    words = re.sub(r"(?<!\\)%.*", "", description.group(1)).split()
+    assert 0 < len(words) <= 30, f"the supplement's description is {len(words)} words; IOP allows 30"
+
+
+def test_the_supplement_description_mentions_the_external_replication() -> None:
+    """S17 is a prospectively specified replication the main text relies on."""
+    source = (ROOT / "paper" / "supplementary.tex").read_text()
+    description = re.search(r"\\textbf\{Description\.\}(.*?)\\end\{center\}", source, re.DOTALL)
+    assert description is not None
+    assert "stellarator" in description.group(1)
+

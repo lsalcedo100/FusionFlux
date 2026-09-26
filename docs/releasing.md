@@ -201,7 +201,9 @@ Full instructions, including the concept-versus-version DOI distinction and the
 licence caveat about the HDB5 data, are in [`../paper/README.md`](../paper/README.md).
 The short version: enable the repository in Zenodo's GitHub integration
 *before* publishing the release, because Zenodo only archives releases published
-after the toggle is on. Then add the badge to the README and the DOI to the
+after the toggle is on, and confirm the record exists afterwards: `v0.4.14`
+was published and never archived, so a missing record is a failure to chase
+on Zenodo's GitHub settings page rather than a delay. Then add the badge to the README and the DOI to the
 paper's title page, and cut a `v0.2.2` for that edit.
 
 ## 3. arXiv
