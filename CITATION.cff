@@ -9,36 +9,37 @@ authors:
     orcid: "https://orcid.org/0009-0001-5039-8147"
 repository-code: "https://github.com/lsalcedo100/FusionFlux"
 abstract: >-
-  Confinement scalings are fitted across existing tokamaks to size machines
-  not yet built, so validation must measure performance on an unseen device.
-  On the ITPA Global H-mode Confinement Database (HDB5, STD5; 6228 slices,
-  18 labels), the conventional cross-validation grouped by discharge scores
-  a random forest 29% better in log error than a power law refitted in the
+  Confinement scalings fitted across existing tokamaks are used to size
+  machines not yet built, so validation must measure performance on an
+  unseen device. On the ITPA Global H-mode Confinement Database (HDB5, STD5;
+  6228 slices, 18 labels), cross-validation grouped by discharge scores a
+  random forest 29% better in log error than a power law refitted in the
   same folds and 36% better than published IPB98(y,2). Holding out one
-  device at a time reverses the order of the three primary models: the two
-  tree ensembles that win cross-validation extrapolate worst, and the forest
-  loses to that power law on 13 of 13 labels. Regressing the stored energy
-  instead, or in dimensionless coordinates that identify no device, leaves
-  the forest worse on 9 of 13 and 11 of 13 labels. The intervals fail more
-  sharply. At a cut inside the database reproducing ITER's 1.82x jump in
-  major radius, nominal 90% split-conformal intervals calibrated on held-out
-  discharges cover 3% and 0% of held-out rows for both ensembles at a width
-  moving under 1.5%. The width cannot respond: a split-conformal half-width
-  is a rank statistic of the calibration residuals, so the interval carries
-  no warning that it has stopped covering. The warning does exist: the
-  forest's error tracks the held-out label's Mahalanobis distance from the
-  training data at rho = +0.85, against -0.06 for the power law. The fault
-  is the candidate set, not cross-validation: a linear-plus-RBF Gaussian
-  process, the best cross-validated model, keeps trending outside the data
-  and does not reverse. At the size cut, that process and Connor-Taylor
-  similarity constraints on the exponents, whose Kadomtsev rung costs
-  nothing in sample, both improve extrapolation. Varying only the long-range
-  mean, with the nonlinear part fixed, identifies the mechanism as
-  saturation rather than flexibility. Includes a rank-deficiency audit of
-  the design matrix, a from-scratch least-squares implementation (Cholesky,
-  QR, SVD), a refit of the IPB98(y,2) exponents decomposed along the
-  singular directions of the data, and a domain-agnostic module packaging
-  the audit for other scaling-law datasets.
+  device at a time reverses the order of the three primary models: both tree
+  ensembles that win cross-validation extrapolate worst, and the forest
+  loses to that power law on 13 of 13 eligible labels, and on 7 of 7
+  eligible devices of a stellarator-heliotron database locked before its
+  data were seen. Regressing the stored energy, or in dimensionless
+  coordinates carrying less device identity, leaves the forest worse on 9 of
+  13 and 11 of 13 labels. At a cut inside the database reproducing ITER's
+  1.82x jump in major radius, nominal 90% split-conformal intervals
+  calibrated on held-out discharges cover 3% and 0% of held-out rows for
+  both ensembles at a width moving under 1.5%. A split-conformal half-width
+  is a rank statistic of the calibration residuals and cannot warn that it
+  has stopped covering. The forest's error can: it tracks the held-out
+  label's Mahalanobis distance from the training data at rho = +0.85,
+  against -0.06 for the power law. Widening the candidate set repairs the
+  rule: a linear-plus-RBF Gaussian process, the best cross-validated model,
+  keeps trending outside the data and does not reverse. At the size cut,
+  that process and Connor-Taylor constraints on the exponents, whose
+  Kadomtsev rung costs nothing in sample, both improve extrapolation.
+  Varying only the long-range mean with the nonlinear part fixed supports
+  saturation, not flexibility alone, as the mechanism in the models tested.
+  Includes a rank-deficiency audit of the design matrix, a from-scratch
+  least-squares implementation (Cholesky, QR, SVD), a refit of the
+  IPB98(y,2) exponents decomposed along the singular directions of the data,
+  and a domain-agnostic module packaging the audit for other scaling-law
+  datasets.
 keywords:
   - fusion
   - tokamak
@@ -52,7 +53,7 @@ keywords:
   - allometry
   - model selection
 license: MIT
-version: 0.4.14
+version: 0.4.15
 doi: 10.5281/zenodo.22215142
 references:
   - type: article

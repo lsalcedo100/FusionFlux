@@ -96,6 +96,7 @@ def test_the_acknowledgement_heading_survives_without_its_credits(anonymous_pape
 def test_the_ai_declaration_keeps_its_body(anonymous_paper: str) -> None:
     """Named systems and versions, which is the part that satisfies the policy."""
     assert "claude-opus-5" in anonymous_paper
+    assert "claude-fable-5-1" in anonymous_paper
     assert "GPT-5.6" in anonymous_paper
 
 
@@ -127,6 +128,10 @@ def test_the_reader_is_told_what_was_withheld(anonymous_paper: str) -> None:
 # faithful, and the first version was not: it dropped every mathematical symbol
 # in the abstract, turning "rho = +0.85" into "=+0.85" and "1.82x" into "1.82",
 # because a LaTeX command spelled into a regex reads as an escape.
+#
+# The declarations and the data-availability statement are extracted the same
+# way now. They used to be retyped on the sheet, and the retyped copy went on
+# saying four datasets after the paper said five.
 
 
 @pytest.fixture(scope="module")
@@ -193,6 +198,52 @@ def test_the_abstract_is_one_line(sheet: str) -> None:
     """ScholarOne's abstract box is a textarea: a wrapped paste keeps its breaks."""
     body = sheet.split("words)\n")[1].split("\n\nKEYWORDS")[0]
     assert body.count("\n") == 0
+
+
+def test_the_data_availability_field_names_every_dataset(sheet: str) -> None:
+    """The retyped sheet said four datasets after the paper said five."""
+    field = sheet.split("DATA AVAILABILITY")[1].split("GENERATIVE AI")[0]
+    assert "Five third-party datasets" in field
+    for filename in ("hdb5_std5.csv", "hdb5_db523.csv", "allometry_bmr.txt", "baad_data.zip", "ISHCDB_26.txt"):
+        assert filename in field, f"{filename} is missing from the data-availability field"
+
+
+def test_the_ai_field_names_every_model_the_paper_names(sheet: str) -> None:
+    """IOP asks for the model and version of every tool used; the sheet must match the paper."""
+    field = sheet.split("GENERATIVE AI")[1].split("FILES")[0]
+    declared = re.findall(r"\\texttt\{(claude-[a-z0-9.-]+)\}", PAPER.read_text())
+    assert len(declared) >= 2, "the paper names fewer Claude model identifiers than it used to"
+    for model in declared:
+        assert model in field, f"{model} is in the paper's disclosure and not on the sheet"
+    assert "Claude Fable 5.1" in field
+    assert "GPT-5.6 Sol" in field
+    assert "not an author" in field or "is an author" in field
+
+
+def test_citations_in_the_declarations_print_as_numbers(sheet: str) -> None:
+    """A deleted \\cite left "described in Ref. ." on the sheet."""
+    field = sheet.split("DATA AVAILABILITY")[1].split("GENERATIVE AI")[0]
+    assert re.search(r"Ref\. \[\d+\]", field), field
+    assert "Ref. ." not in field
+    assert "sec:" not in sheet, "a \\ref survived as its label"
+
+
+def test_the_private_half_fills_when_present() -> None:
+    """Untracked, so this only runs on the author's machine; there it must fill."""
+    if not make_submission.LOCAL.exists():
+        pytest.skip(f"no {make_submission.LOCAL.name}; it is untracked")
+    text = make_submission.private_half(PAPER.read_text(), 31, 16, make_submission.LOCAL.read_text())
+    assert "{{" not in text
+    assert "Plasma Physics and Controlled Fusion" in text
+
+
+def test_the_private_half_is_ignored_by_git() -> None:
+    """It names referees and describes private correspondence, and the repository is public."""
+    ignored = (ROOT / ".gitignore").read_text().split("\n")
+    assert "paper/*.local.txt" in ignored
+    assert not (ROOT / "paper" / "scholarone_metadata.template.txt").exists(), (
+        "the public referee sheet is back; nominations and correspondence belong in the untracked half"
+    )
 
 
 def test_the_author_line_is_readable(sheet: str) -> None:
@@ -321,41 +372,27 @@ def test_the_page_count_is_read_from_the_pdf() -> None:
     assert make_submission._page_count(IDENTIFIED) > 20
 
 
-def test_a_template_missing_a_placeholder_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_a_template_missing_a_placeholder_is_refused() -> None:
     """Half a field sheet would go to ScholarOne looking complete."""
-    stand_in = tmp_path / "template.txt"
-    stand_in.write_text("TITLE\n{{TITLE}}\n")
-    monkeypatch.setattr(make_submission, "TEMPLATE", stand_in)
     with pytest.raises(SystemExit) as refused:
-        make_submission.scholarone_metadata(PAPER.read_text(), 31, 16)
+        make_submission.scholarone_metadata(PAPER.read_text(), 31, 16, template="TITLE\n{{TITLE}}\n")
     assert "ABSTRACT" in str(refused.value)
 
 
-def test_an_unfilled_placeholder_is_refused(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    stand_in = tmp_path / "template.txt"
-    stand_in.write_text(
-        "\n".join(
-            f"{{{{{key}}}}}"
-            for key in (
-                "TITLE",
-                "ABSTRACT",
-                "ABSTRACT_WORDS",
-                "KEYWORDS",
-                "AUTHOR",
-                "MANUSCRIPT_PAGES",
-                "SUPPLEMENT_PAGES",
-                "REF_HDB5",
-                "REF_HALL",
-                "REF_HALL26",
-                "SEC_KARDAUN",
-            )
-        )
-        + "\n{{INVENTED}}\n"
-    )
-    monkeypatch.setattr(make_submission, "TEMPLATE", stand_in)
+def test_an_unfilled_placeholder_is_refused() -> None:
+    template = "\n".join(f"{{{{{key}}}}}" for key in make_submission.PUBLIC_PLACEHOLDERS) + "\n{{INVENTED}}\n"
     with pytest.raises(SystemExit) as refused:
-        make_submission.scholarone_metadata(PAPER.read_text(), 31, 16)
+        make_submission.scholarone_metadata(PAPER.read_text(), 31, 16, template=template)
     assert "unfilled placeholder" in str(refused.value)
+    assert "INVENTED" in str(refused.value)
+
+
+def test_the_private_half_may_use_a_subset_of_placeholders() -> None:
+    """It names the conflict by reference number and nothing else, and that is enough."""
+    text = make_submission.private_half(PAPER.read_text(), 31, 16, "Hall: Refs. [{{REF_HALL}}] and [{{REF_HALL26}}]\n")
+    assert re.fullmatch(r"Hall: Refs\. \[\d+\] and \[\d+\]\n", text), text
+    with pytest.raises(SystemExit):
+        make_submission.private_half(PAPER.read_text(), 31, 16, "{{INVENTED}}\n")
 
 
 def test_the_two_documents_agree_on_the_affiliation() -> None:

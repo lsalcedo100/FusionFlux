@@ -83,3 +83,9 @@ scaling-audit/scaling_audit.py
 # planning rather than science, and this repository is public and linked from
 # the emails themselves.
 docs/*.local.md
+
+# The private half of the submission field sheet: the review-model choice, the
+# referee nominations and the disclosure of prior correspondence. Judgement
+# about named people rather than science, and this repository is public.
+# tools/make_submission.py appends it to the generated sheet when it exists.
+paper/*.local.txt

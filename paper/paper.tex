@@ -50,7 +50,7 @@ model\\ rankings in tokamak energy-confinement scaling}}
 \author{Liam Salcedo\thanks{Independent researcher, Montclair, New Jersey, USA.
 \texttt{liamsalcedo100@gmail.com}.
 ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}}.}}
-\date{24 September 2026}
+\date{25 September 2026}
 
 \begin{document}
 \maketitle
@@ -59,23 +59,24 @@ ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}
 Code, results, and reproducibility materials:
 \url{https://github.com/lsalcedo100/FusionFlux}\\
 Archived at \href{https://doi.org/10.5281/zenodo.22859310}{doi:10.5281/zenodo.22859310}
-(v0.4.14; the DOI for all versions is
+(v0.4.15; the DOI for all versions is
 \href{https://doi.org/10.5281/zenodo.22215142}{10.5281/zenodo.22215142})
 \end{center}
 
 \begin{abstract}
 \noindent
-Confinement scalings fitted across existing tokamaks size machines not yet
-built, so validation must measure performance on an unseen device. On the
+Confinement scalings fitted across existing tokamaks are used to size
+machines not yet built, so validation must measure performance on an unseen
+device. On the
 ITPA Global H-mode Confinement Database (HDB5, STD5; 6228 slices, 18 labels),
-conventional cross-validation grouped by discharge scores a random forest
+cross-validation grouped by discharge scores a random forest
 29\% better in log error than a power law refitted in the same folds and 36\%
 better than published IPB98(y,2). Holding out one device at a time reverses
-the order of the three primary models: the two tree ensembles that win
+the order of the three primary models: both tree ensembles that win
 cross-validation extrapolate worst, and the forest loses to that power law on
 % ishcdb:begin
-\textbf{13 of 13} labels, and on \textbf{7 of 7} stellarators in a second
-database locked before its data were seen.
+\textbf{13 of 13} eligible labels, and on \textbf{7 of 7} eligible devices
+of a stellarator-heliotron database locked before its data were seen.
 % ishcdb:end
 Regressing the stored energy, or in
 dimensionless coordinates carrying less device identity, leaves the forest worse on
@@ -84,16 +85,17 @@ the database reproducing ITER's $1.82\times$ jump in major radius, nominal
 90\% split-conformal intervals calibrated on held-out discharges cover
 \textbf{3\%} and \textbf{0\%} of held-out rows for both ensembles at a width
 moving under 1.5\%. A split-conformal half-width is
-a rank statistic of the calibration residuals, so the interval carries no
-warning that it has stopped covering. The warning exists: the forest's
-error tracks the held-out label's Mahalanobis distance from the training data
-at $\rho=+0.85$, against $-0.06$ for the power law. The fault is the candidate
-set, not cross-validation: a linear-plus-RBF Gaussian process, the best
-cross-validated model, keeps trending outside the data and does not reverse.
-At the size cut, that process and Connor--Taylor similarity constraints on the
+a rank statistic of the calibration residuals and cannot warn that it has
+stopped covering. The forest's error can: it tracks the held-out label's
+Mahalanobis distance from the training data at $\rho=+0.85$, against $-0.06$
+for the power law. Widening the candidate set repairs the rule: a
+linear-plus-RBF Gaussian process, the best cross-validated model, keeps
+trending outside the data and does not reverse.
+At the size cut, that process and Connor--Taylor constraints on the
 exponents, whose Kadomtsev rung costs nothing in sample, both improve
-extrapolation. Varying only the long-range mean, with the nonlinear part
-fixed, identifies the mechanism as saturation rather than flexibility.
+extrapolation. Varying only the long-range mean with the nonlinear part fixed
+supports saturation, not flexibility alone, as the mechanism in the models
+tested.
 \end{abstract}
 
 \begin{center}\small
@@ -298,8 +300,9 @@ an entire size range, and because its held-out side is 96\% one physical machine
 it is reported as a stress test across one large jump rather than as a fourth
 rung, with no claim resting on it alone. Under the second step the ranking of
 the three primary fitted models reverses, and the best cross-validated model
-\emph{of those three} loses to a log-linear power law on every held-out database
-label and every physical device. That qualifier is load-bearing, and it bounds
+\emph{of those three} loses to a log-linear power law on every eligible held-out
+database label and every eligible physical device. That qualifier is
+load-bearing, and it bounds
 the selection claim: applied to those three the convention picks the one that
 extrapolates worst, but the best cross-validated model in this work is the
 Gaussian process of Sec.~\ref{sec:gp}, and it does not reverse, so widening the
@@ -309,7 +312,8 @@ The same comparison is then run, under rules fixed and archived before the data
 were downloaded, on the stellarator-heliotron confinement
 database~\cite{iss04}, which was assembled by a different collaboration and
 shares no device with the tokamak one; Sec.~S17 of the Supplementary Material
-reports it, and the inversion reproduces there on every held-out device.
+reports it, and the inversion reproduces there on every eligible held-out
+device.
 % ishcdb:end
 
 
@@ -983,7 +987,7 @@ and averaged, the random forest is better than the log-linear power law under
 cross-validation, 0.209 against
 0.288, and worse on
 \textbf{7 of
-7} held-out devices,
+7} eligible held-out devices,
 0.814 against 0.442,
 a paired gap of $+0.373$
 $[+0.106,
@@ -2004,8 +2008,9 @@ kernel are the two things that work here and nothing has tried them together.
 
 On real confinement data, the model that wins cross-validation by 29\% over a
 log-linear power law refitted inside the same folds loses to that same power law
-on all 13 held-out database labels and on all 11 physical devices once the JET
-and ASDEX Upgrade variants are collapsed, and to the published IPB98(y,2) law as
+on all 13 eligible held-out database labels and on all 11 eligible physical
+devices once the JET and ASDEX Upgrade variants are collapsed, and to the
+published IPB98(y,2) law as
 well, which is the historical reference of Sec.~\ref{sec:intro} rather than a
 fold-fitted competitor.
 
@@ -2015,9 +2020,10 @@ exactly and a tree cannot. The two controls of Sec.~\ref{sec:robustness}
 separate what that identity carries from what it does not: it carries the
 unanimity and the exact tests, which fall below significance under either
 control, and it does not carry the effect. The mean-function ablation of
-Sec.~\ref{sec:meanfunction} then identifies the mechanism as long-range
-saturation, which the three diagnostics on their own cannot separate from
-flexibility. That ablation runs in the engineering coordinates, where several
+Sec.~\ref{sec:meanfunction} then supports long-range saturation, rather than
+flexibility alone, as the mechanism across the model families tested; the
+three diagnostics on their own cannot separate the two. That ablation runs in
+the engineering coordinates, where several
 features are close to device labels, so it establishes the mechanism in the
 coordinates the literature fits in rather than in general; the reversal itself
 survives the change to dimensionless coordinates, at a reduced margin. At the
@@ -2092,12 +2098,18 @@ author's alone.
 % the contributions paragraph by name and keeps the three required declarations,
 % and it still fails loudly if the generative-AI paragraph goes missing.
 \paragraph*{Use of generative AI.}
-Two generative AI systems were used in
-preparing this work, and each is named with its version and its role.
+Generative AI tools were used in preparing this work, and each is named with
+its version and its role.
 
-Anthropic Claude Opus 5 (model \texttt{claude-opus-5}) assisted with developing,
-debugging and executing author-specified analysis code in the accompanying
-repository, and with drafting and editing passages of this manuscript.
+Anthropic Claude models assisted with developing, debugging and executing
+author-specified analysis code in the accompanying repository, and with
+drafting and editing passages of this manuscript: Claude Opus 5 (model
+\texttt{claude-opus-5}) until mid-September 2026, and Claude Fable 5.1 (model
+\texttt{claude-fable-5-1}) from then on, including the external replication
+of Sec.~S17 of the Supplementary Material and the revisions made before
+submission. One restructuring of the repository, in July 2026, used Claude
+Opus 4.8. The repository's commit history records which model assisted with
+each change.
 
 OpenAI GPT-5.6 Sol was used to critique complete drafts against journal policy
 and for scientific and historical accuracy, to support the literature review,
@@ -2111,7 +2123,7 @@ Sec.~\ref{sec:shift}; and several of the references in Secs.~S14 and~S3 of the
 Supplementary Material, which the author then located and checked against their
 published records.
 
-Neither system is an author. The author designed the study, decided which
+None of these systems is an author. The author designed the study, decided which
 suggestions to pursue, specified and implemented every analysis reported here,
 verified every reported number against the generated artefacts, checked every
 reference against its published record, and takes full responsibility for the
@@ -2437,7 +2449,7 @@ Allometry Database for woody plants} [dataset], Figshare (2015).
 \href{https://doi.org/10.6084/m9.figshare.c.3307692}{doi:10.6084/m9.figshare.c.3307692}.
 Release v1.0.1, \url{https://github.com/dfalster/baad/releases/tag/v1.0.1}
 \bibitem{zenodo} L. Salcedo, \emph{FusionFlux: extrapolation, long-range
-saturation and physics constraints in confinement scaling}, version v0.4.14,
+saturation and physics constraints in confinement scaling}, version v0.4.15,
 Zenodo (2026).
 \href{https://doi.org/10.5281/zenodo.22859310}{doi:10.5281/zenodo.22859310}
 \end{thebibliography}

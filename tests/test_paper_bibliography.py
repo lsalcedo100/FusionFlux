@@ -176,7 +176,7 @@ def _printed_order(document: Path) -> list[str]:
 
 
 def test_references_are_numbered_in_order_of_first_citation() -> None:
-    """Nuclear Fusion asks for the Vancouver system, and both documents drifted.
+    """IOP journals ask for the Vancouver system, and both documents drifted.
 
     Vancouver numbers references in the order the text first cites them. Both
     reference lists were kept in the order entries happened to be added, so the
