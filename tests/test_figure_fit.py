@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DOCUMENTS = (ROOT / "paper" / "paper.tex", ROOT / "paper" / "supplementary.tex")
 
 PT_PER_CM = 72.27 / 2.54
-# \documentclass[12pt,a4paper] with \usepackage[margin=2.4cm]{geometry}, in both documents.
+# The supplement: \documentclass[12pt,a4paper] with \usepackage[margin=2.4cm]{geometry}.
 PAGE_CM, MARGIN_CM = (21.0, 29.7), 2.4
 LINEWIDTH_PT = (PAGE_CM[0] - 2 * MARGIN_CM) * PT_PER_CM
 TEXTHEIGHT_PT = (PAGE_CM[1] - 2 * MARGIN_CM) * PT_PER_CM
@@ -40,6 +40,15 @@ TEXTHEIGHT_PT = (PAGE_CM[1] - 2 * MARGIN_CM) * PT_PER_CM
 # and the article class's 10 pt \abovecaptionskip.
 CAPTION_BASELINE_PT, ABOVE_CAPTION_PT = 13.6, 10.0
 CHARACTERS_PER_LINE = 90
+
+# The main text: REVTeX 4.2 with aip,pop,preprint, measured from the class with
+# \typeout rather than looked up. The text block is 468 x 665.5 pt on US letter,
+# and preprint mode double-spaces captions, 10.95 pt type on a 21.75 pt baseline,
+# which is what pushed the first REVTeX build's Figure 1 77 pt off the page.
+REVTEX_CLASS = r"\documentclass[aip,pop,preprint,amsmath,amssymb]{revtex4-2}"
+REVTEX = {"linewidth": 468.0, "textheight": 665.5, "baseline": 21.75, "above": 10.0}
+ARTICLE = {"linewidth": LINEWIDTH_PT, "textheight": TEXTHEIGHT_PT, "baseline": CAPTION_BASELINE_PT, "above": ABOVE_CAPTION_PT}
+GEOMETRY = {"paper.tex": REVTEX, "supplementary.tex": ARTICLE}
 
 FIGURE = re.compile(
     r"\\begin\{figure\}.*?\\includegraphics\[width=\\linewidth\]\{(?P<name>\w+)\}.*?"
@@ -63,9 +72,9 @@ def _printed_length(caption: str, label: str) -> int:
     return len(label) + len(text)
 
 
-def float_height_pt(image_height_over_width: float, n_caption_characters: int) -> float:
+def float_height_pt(image_height_over_width: float, n_caption_characters: int, geometry: dict = ARTICLE) -> float:
     lines = math.ceil(n_caption_characters / CHARACTERS_PER_LINE)
-    return LINEWIDTH_PT * image_height_over_width + ABOVE_CAPTION_PT + lines * CAPTION_BASELINE_PT
+    return geometry["linewidth"] * image_height_over_width + geometry["above"] + lines * geometry["baseline"]
 
 
 def _figures() -> list[tuple[str, str, float, int]]:
@@ -80,11 +89,12 @@ def _figures() -> list[tuple[str, str, float, int]]:
 
 def test_the_geometry_is_the_one_the_documents_declare() -> None:
     """The sum below is only as good as these two lines of each preamble."""
-    for document in DOCUMENTS:
-        latex = document.read_text(encoding="utf-8")
-        assert r"\documentclass[12pt,a4paper]{article}" in latex, document.name
-        assert r"\usepackage[margin=2.4cm]{geometry}" in latex, document.name
-        assert r"\captionsetup{font=small" in latex, document.name
+    paper, supplement = (document.read_text(encoding="utf-8") for document in DOCUMENTS)
+    assert REVTEX_CLASS in paper, "paper.tex"
+    assert "geometry}" not in paper and "captionsetup" not in paper, "paper.tex overrides REVTeX's layout"
+    assert r"\documentclass[12pt,a4paper]{article}" in supplement, "supplementary.tex"
+    assert r"\usepackage[margin=2.4cm]{geometry}" in supplement, "supplementary.tex"
+    assert r"\captionsetup{font=small" in supplement, "supplementary.tex"
 
 
 def test_the_sum_reproduces_the_overflow_latex_reported() -> None:
@@ -101,10 +111,12 @@ def test_every_figure_is_found() -> None:
 
 @pytest.mark.parametrize("document,name,aspect,characters", _figures(), ids=lambda value: str(value)[:24])
 def test_the_figure_and_its_caption_fit_the_text_block(document: str, name: str, aspect: float, characters: int) -> None:
-    height = float_height_pt(aspect, characters)
-    assert height <= TEXTHEIGHT_PT, (
+    geometry = GEOMETRY[document]
+    height = float_height_pt(aspect, characters, geometry)
+    block = geometry["textheight"]
+    assert height <= block, (
         f"{name} in {document} needs about {height:.0f} pt with its caption and the text block is "
-        f"{TEXTHEIGHT_PT:.0f} pt, so LaTeX will set it {height - TEXTHEIGHT_PT:.0f} pt too large and the page "
+        f"{block:.0f} pt, so LaTeX will set it {height - block:.0f} pt too large and the page "
         "number will print over the caption. Make the figure shorter at its source, not smaller in the "
         "document: scaling it down takes its labels under the 8 pt floor figures.py holds them at."
     )

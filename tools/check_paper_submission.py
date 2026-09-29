@@ -232,10 +232,16 @@ def stale_pdf_sections(paper: Path = PAPER, pdf: Path = PDF) -> list[str]:
     # rejoins a word TeX split, and keeping it rejoins a compound that happened
     # to break at its own hyphen ("size- matched"). A title is present if it
     # matches any of the three readings.
-    candidates = (
-        normalized,
-        normalized.replace("- ", ""),
-        normalized.replace("- ", "-"),
+    # REVTeX, the class AIP journals use, sets section headings in capitals, so
+    # the comparison ignores case: "Introduction" is present when the PDF says
+    # "INTRODUCTION".
+    candidates = tuple(
+        reading.casefold()
+        for reading in (
+            normalized,
+            normalized.replace("- ", ""),
+            normalized.replace("- ", "-"),
+        )
     )
 
     latex = _strip_comments(paper.read_text())
@@ -251,7 +257,13 @@ def stale_pdf_sections(paper: Path = PAPER, pdf: Path = PDF) -> list[str]:
         for glyph, replacement in TYPESET_SUBSTITUTIONS.items():
             plain = plain.replace(glyph, replacement)
         plain = re.sub(r"\s+", " ", plain).strip()
-        if plain and not any(plain in candidate for candidate in candidates):
+        # Capitals are kerned, and the PDF text layer can split a kerned pair
+        # ("INTER V ALS"), so a title that fails every reading above is also
+        # compared with all spaces removed from both sides.
+        folded = plain.casefold()
+        if plain and not any(folded in candidate for candidate in candidates) and not (
+            folded.replace(" ", "") in candidates[0].replace(" ", "")
+        ):
             missing.append(plain)
     return missing
 

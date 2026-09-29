@@ -72,16 +72,15 @@ def test_the_identified_source_does_contain_those_strings() -> None:
     (
         "\\paragraph*{Use of generative AI.}",
         "\\paragraph*{Funding.}",
-        "\\paragraph*{Competing interests.}",
+        "\\paragraph*{Conflict of interest.}",
         "\\section*{Data availability}",
     ),
 )
 def test_required_declarations_survive(anonymous_paper: str, declaration: str) -> None:
-    """IOP puts the first three inside Acknowledgements, so that is where they sit.
+    """AIP places these in Methods, Acknowledgments and Author Declarations.
 
-    Anonymisation can therefore no longer drop that section wholesale, and what
-    it removes instead is the credit prose that opens it and the contributions
-    paragraph. The heading stays, carrying the declarations under it.
+    Anonymisation removes only the credit prose that opens Acknowledgments and
+    the contributions paragraph; every required declaration stays.
     """
     assert declaration in anonymous_paper
 
@@ -104,7 +103,7 @@ def test_the_ai_declaration_keeps_its_body(anonymous_paper: str) -> None:
 def test_credit_paragraphs_are_gone(anonymous_paper: str, credit: str) -> None:
     """The one declaration of the four that names anyone."""
     assert f"\\paragraph*{{{credit}}}" not in anonymous_paper
-    assert "Sole author, in CRediT" not in anonymous_paper
+    assert "Conceptualization (lead)" not in anonymous_paper
 
 
 def test_the_paper_still_compiles_in_shape(anonymous_paper: str) -> None:
@@ -159,10 +158,12 @@ def test_the_abstract_keeps_its_symbols(sheet: str) -> None:
     previous version of this.
     """
     abstract = sheet.split("ABSTRACT")[1].split("KEYWORDS")[0]
-    assert "rho" in abstract, "the correlations lost their rho"
-    assert "1.82x" in abstract, "a multiplication sign was dropped"
     for command in ("\\rho", "\\times", "\\textbf", "$"):
         assert command not in abstract, f"{command} survived into the plain-text abstract"
+    # The shortened abstract carries fewer symbols than the first one did, so the
+    # symbol classes are also checked on a sentence that has all of them.
+    assert make_submission._plain(r"at $\rho=+0.85$ and $1.82\times$ the size") == "at rho=+0.85 and 1.82x the size"
+    assert "1.82-fold" in abstract, "the maths in the abstract was dropped"
 
 
 def test_the_pasted_sheet_is_ascii(sheet: str) -> None:
@@ -203,13 +204,15 @@ def test_the_abstract_is_one_line(sheet: str) -> None:
 def test_the_data_availability_field_names_every_dataset(sheet: str) -> None:
     """The retyped sheet said four datasets after the paper said five."""
     field = sheet.split("DATA AVAILABILITY")[1].split("GENERATIVE AI")[0]
-    assert "Five third-party datasets" in field
+    # Read with whitespace collapsed: the sheet is wrapped at 78 columns, and
+    # where the wrap falls is not what this checks.
+    assert "Five third-party datasets" in re.sub(r"\s+", " ", field)
     for filename in ("hdb5_std5.csv", "hdb5_db523.csv", "allometry_bmr.txt", "baad_data.zip", "ISHCDB_26.txt"):
         assert filename in field, f"{filename} is missing from the data-availability field"
 
 
 def test_the_ai_field_names_every_model_the_paper_names(sheet: str) -> None:
-    """IOP asks for the model and version of every tool used; the sheet must match the paper."""
+    """AIP asks for the maker, model and version of every tool used; the sheet must match the paper."""
     field = sheet.split("GENERATIVE AI")[1].split("FILES")[0]
     declared = re.findall(r"\\texttt\{(claude-[a-z0-9.-]+)\}", PAPER.read_text())
     assert len(declared) >= 2, "the paper names fewer Claude model identifiers than it used to"
@@ -223,7 +226,9 @@ def test_the_ai_field_names_every_model_the_paper_names(sheet: str) -> None:
 def test_citations_in_the_declarations_print_as_numbers(sheet: str) -> None:
     """A deleted \\cite left "described in Ref. ." on the sheet."""
     field = sheet.split("DATA AVAILABILITY")[1].split("GENERATIVE AI")[0]
-    assert re.search(r"Ref\. \[\d+\]", field), field
+    # Superscript citations in the AIP class follow the word they support, so
+    # the sheet prints them as a bracketed number after it.
+    assert re.search(r"[a-z]\[\d+\]", field), field
     assert "Ref. ." not in field
     assert "sec:" not in sheet, "a \\ref survived as its label"
 
@@ -234,7 +239,7 @@ def test_the_private_half_fills_when_present() -> None:
         pytest.skip(f"no {make_submission.LOCAL.name}; it is untracked")
     text = make_submission.private_half(PAPER.read_text(), 31, 16, make_submission.LOCAL.read_text())
     assert "{{" not in text
-    assert "Plasma Physics and Controlled Fusion" in text
+    assert "Physics of Plasmas" in text
 
 
 def test_the_private_half_is_ignored_by_git() -> None:
@@ -405,7 +410,12 @@ def test_the_two_documents_agree_on_the_affiliation() -> None:
     import re
 
     def affiliation(path: Path) -> str:
-        block = re.search(r"\\author\{.*?\\thanks\{(.*?)\.\s*\n", path.read_text(), re.DOTALL)
+        # REVTeX gives the affiliation its own command; the supplement, still an
+        # article, carries it in the author footnote.
+        text = path.read_text()
+        block = re.search(r"\\affiliation\{([^}]*)\}", text) or re.search(
+            r"\\author\{.*?\\thanks\{(.*?)\.\s*\n", text, re.DOTALL
+        )
         assert block is not None, f"no author block in {path.name}"
         return block.group(1).strip()
 

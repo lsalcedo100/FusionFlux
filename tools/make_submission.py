@@ -1,8 +1,11 @@
-"""Assemble the ScholarOne upload from the built paper, in both variants.
+"""Assemble the journal upload from the built paper, in both variants.
 
-An IOP journal takes the manuscript as a PDF plus its sources, and some in
-the portfolio let the author choose single- or double-anonymous review at
-upload. Which one applies is not known until then, so this writes both:
+Physics of Plasmas takes one compiled manuscript PDF and a separate
+supplementary-material PDF at initial submission, through Peer X-Press. The
+first submission went to an IOP journal through ScholarOne, which is where the
+field sheet's name comes from. AIP does not state a review model for the
+journal, and single-anonymous is the reading of its policies, but which one
+applies is not certain until upload, so this writes both:
 `submission/` carries the identified manuscript, and `submission/anonymous/`
 the same paper with the author block, the repository and archive links, and
 the acknowledgments removed.
@@ -69,14 +72,15 @@ def identifying_tokens(sources: "list[Path] | None" = None) -> tuple[str, ...]:
     return tuple(dict.fromkeys((*IDENTIFYING, *sorted(found))))
 
 
-# IOP requires the generative-AI disclosure, the funding statement, the competing
-# interests and the contributions to sit in Acknowledgements, so paper.tex keeps
-# all four there as run-in paragraphs. Anonymisation can therefore no longer drop
-# that section wholesale: it would take three required declarations with it. What
-# comes out instead is the credit prose that opens the section, and the
-# contributions paragraph, which is the only one of the four that names anyone.
+# AIP's order puts the generative-AI disclosure in Methods, the funding
+# statement in Acknowledgments, and the conflict-of-interest statement and the
+# CRediT contributions under Author Declarations. Each is a run-in paragraph, so
+# anonymisation removes only what names someone: the credit prose that opens
+# Acknowledgments, and the contributions paragraph.
 ACKNOWLEDGMENT_HEAD = "\\section*{Acknowledgments}"
-FIRST_DECLARATION = "\\paragraph*{Use of generative AI.}"
+FIRST_DECLARATION = "\\paragraph*{Funding.}"
+AI_DECLARATION = "\\paragraph*{Use of generative AI.}"
+CONFLICT_DECLARATION = "\\paragraph*{Conflict of interest.}"
 ANONYMISE_PARAGRAPHS = ("Author contributions.",)
 
 
@@ -127,34 +131,31 @@ def _strip_acknowledgment_credits(text: str) -> str:
 
 def anonymise(text: str) -> str:
     """Remove the author block, the availability links and the credit sections."""
-    # The author block runs from \author to the line before \date, and the
-    # \thanks footnote inside it carries the affiliation and the email.
+    # The author block runs from \author to the line before \date: REVTeX's
+    # \email, \homepage (the ORCID) and \affiliation all sit inside it.
     text, n = re.subn(r"\\author\{.*?\n\\date\{", "\\\\author{}\n\\\\date{", text, count=1, flags=re.DOTALL)
     if n != 1:
         raise SystemExit("could not find the \\author{...}\\date{...} block")
 
-    # The centred availability block on the title page names the repository and
-    # both DOIs. It is one \begin{center} immediately after \maketitle.
+    # Both archive DOIs are printed as links in the Data availability section.
     text, n = re.subn(
-        r"\\begin\{center\}\\small\s*\nCode, results.*?\\end\{center\}\n",
-        "",
+        r"\\href\{https://doi\.org/10\.5281/zenodo\.\d+\}\{[^}]*\}",
+        "[archive DOI withheld for anonymous review]",
         text,
-        count=1,
-        flags=re.DOTALL,
     )
-    if n != 1:
-        raise SystemExit("could not find the title-page availability block")
+    if n < 1:
+        raise SystemExit("could not find the archive DOI links")
 
-    # The three required declarations live inside Acknowledgements because IOP
-    # puts them there, so what is removed is the credit prose that opens the
-    # section and the one paragraph that names the author. This is checked
+    # The required declarations are run-in paragraphs, so what is removed is the
+    # credit prose that opens Acknowledgments and the one paragraph that names
+    # the author. This is checked
     # rather than assumed: a required declaration disappearing is the kind of
     # loss that does not announce itself.
     text = _strip_acknowledgment_credits(text)
     for title in ANONYMISE_PARAGRAPHS:
         text = _strip_paragraph(text, title)
 
-    for required in (FIRST_DECLARATION, "\\paragraph*{Funding.}", "\\paragraph*{Competing interests.}"):
+    for required in (AI_DECLARATION, FIRST_DECLARATION, CONFLICT_DECLARATION):
         if required not in text:
             raise SystemExit(f"anonymisation removed a required declaration: {required}")
 
@@ -237,7 +238,7 @@ which is not tracked, and it is appended below this half when it exists.
 The abstract is already flattened to plain text: the form's abstract box is
 not a markup field, so paste from here rather than from the PDF.
 
-ARTICLE TYPE   Paper (not a Letter)
+ARTICLE TYPE   Regular Article
 
 TITLE
 {{TITLE}}
@@ -254,7 +255,7 @@ AUTHOR
 FUNDING
 {{FUNDING}}
 
-COMPETING INTERESTS
+CONFLICT OF INTEREST
 {{COMPETING_INTERESTS}}
 
 CONTRIBUTIONS
@@ -269,8 +270,8 @@ GENERATIVE AI
 FILES
   ./manuscript.pdf ({{MANUSCRIPT_PAGES}} pp) and ./supplementary_material.pdf
   ({{SUPPLEMENT_PAGES}} pp), each a single PDF with its figures and tables
-  embedded. IOP's submission system adds line numbers to the review copy
-  itself, so these are the committed PDFs and not the make review-pdf build.
+  embedded: AIP asks for one compiled manuscript PDF and a separate
+  supplementary-material PDF at initial submission.
 """
 
 # The placeholders the public half must carry. A template missing one would
@@ -349,7 +350,7 @@ def _plain(latex: str) -> str:
     latex = latex.replace(r"\%", "%").replace("~", " ")
     # Escaped characters and the ellipsis spell themselves; the catch-all below
     # would drop the ellipsis and leave the escaping backslash on an underscore.
-    latex = latex.replace(r"\_", "_").replace(r"\ldots", "...")
+    latex = latex.replace(r"\_", "_").replace(r"\ldots", "...").replace(r"\&", "&")
     # A footnote is separate text, so deleting the command that opens one runs
     # the name into the affiliation: "Liam SalcedoIndependent researcher".
     latex = latex.replace(r"\thanks{", ". ")
@@ -446,13 +447,13 @@ def _paragraphs(latex: str, paper: str) -> list[str]:
 
 
 def _declaration(paper: str, start: str, end: str) -> str:
-    """One run-in declaration from the Acknowledgements, wrapped for the sheet."""
+    """One run-in declaration, wrapped for the sheet."""
     return "\n\n".join(_wrap(p) for p in _paragraphs(_between(paper, start, end), paper))
 
 
 def _data_availability(paper: str) -> str:
     """The Data availability section, its itemized list as a bulleted one."""
-    body = _uncommented(_between(paper, "\\section*{Data availability}", "\\noindent The pinned fingerprints"))
+    body = _uncommented(_between(paper, "\\section*{Data availability}", "\\noindent The code, analysis scripts"))
     body = re.sub(r"\\begin\{itemize\}(?:\\setlength\{[^}]*\}\{[^}]*\})*", "", body)
     body = body.replace("\\end{itemize}", "")
     intro, *items = body.split("\\item")
@@ -470,8 +471,16 @@ def _values(paper: str, manuscript_pages: int, supplement_pages: int) -> dict[st
     # \vspace and \textbf survive as their arguments; the title carries both.
     title = title.replace("-1.4cm", "").strip()
     abstract = _plain(_between(paper, "\\begin{abstract}", "\\end{abstract}"))
-    keywords = _plain(_between(paper, "Keywords:}", "\\end{center}"))
-    author = _plain(_between(paper, "\\author{", "}}\n\\date"))
+    keywords = _plain(_between(paper, "\\keywords{", "}\n"))
+    orcid = _between(paper, "\\homepage{https://orcid.org/", "}")
+    author = ". ".join(
+        (
+            _plain(_between(paper, "\\author{", "}")),
+            _plain(_between(paper, "\\affiliation{", "}")),
+            _plain(_between(paper, "\\email{", "}")),
+            f"ORCID: {orcid}",
+        )
+    ) + "."
     return {
         "TITLE": _wrap(title),
         # One paragraph on one line: the field is a textarea, and a hard-wrapped
@@ -480,13 +489,11 @@ def _values(paper: str, manuscript_pages: int, supplement_pages: int) -> dict[st
         "ABSTRACT_WORDS": str(len(abstract.split())),
         "KEYWORDS": _wrap(keywords),
         "AUTHOR": _wrap(author),
-        "FUNDING": _declaration(paper, "\\paragraph*{Funding.}", "\\paragraph*{Competing interests.}"),
-        "COMPETING_INTERESTS": _declaration(
-            paper, "\\paragraph*{Competing interests.}", "\\paragraph*{Author contributions.}"
-        ),
+        "FUNDING": _declaration(paper, FIRST_DECLARATION, "\\section*{Author Declarations}"),
+        "COMPETING_INTERESTS": _declaration(paper, CONFLICT_DECLARATION, "\\paragraph*{Author contributions.}"),
         "CONTRIBUTIONS": _declaration(paper, "\\paragraph*{Author contributions.}", "\\section*{Data availability}"),
         "DATA_AVAILABILITY": _data_availability(paper),
-        "GENERATIVE_AI": _declaration(paper, "\\paragraph*{Use of generative AI.}", "\\paragraph*{Funding.}"),
+        "GENERATIVE_AI": _declaration(paper, AI_DECLARATION, "\n\\section{"),
         "MANUSCRIPT_PAGES": str(manuscript_pages),
         "SUPPLEMENT_PAGES": str(supplement_pages),
         "REF_HDB5": _reference_number(paper, "hdb5"),
@@ -630,7 +637,7 @@ def main() -> int:  # pragma: no cover - builds PDFs and writes the bundle
 
     # The figures, so the sources build outside this repository. Without them a
     # reviewer or a production editor unpacking submission/ hits a missing-file
-    # error on the first \includegraphics, and IOP asks for source plus figures
+    # error on the first \includegraphics, and journals ask for source plus figures
     # at revision. \graphicspath's flat-directory entry resolves them here.
     for figure in FIGURES:
         shutil.copy2(ROOT / "results" / figure, OUT / figure)

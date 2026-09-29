@@ -95,6 +95,7 @@ def artifacts() -> dict[str, object]:
         "boundedness": _json("boundedness.json"),
         "stored": _json("stored_energy.json"),
         "dimensionless": _json("dimensionless.json"),
+        "power_ablation": _json("power_ablation.json"),
         "mechanism": _json("mechanism.json"),
         "forecast_rows": _json("forecast.json"),
         "per_machine": _csv("extrapolation_per_machine.csv", "tokamak"),
@@ -539,14 +540,14 @@ CLAIMS: tuple[Claim, ...] = (
         "3.27",
         lambda a: _headroom(a, "MAST"),
         lambda v: f"{-v:.2f}",
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     Claim(
         "JET-ILW headroom below the forest ceiling",
         "1.31",
         lambda a: _headroom(a, "JETILW"),
         lambda v: f"{-v:.2f}",
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     Claim(
         "forest margin on NSTX",
@@ -601,7 +602,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.173",
         lambda a: _published(a, "ITPA20", "machine_equal"),
         _r(3),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     Claim(
         "ITPA20-IL at the ITER-size-matched cut",
@@ -757,7 +758,7 @@ CLAIMS: tuple[Claim, ...] = (
         "+0.78",
         lambda a: _dimensionless(a, "distance_agreement"),
         lambda v: f"{v:+.2f}",
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     Claim(
         "rho* displacement across the size cut, in training standard deviations",
@@ -824,6 +825,9 @@ CLAIMS: tuple[Claim, ...] = (
         lambda a: _dimensionless(a, "device_identity", "arms", "dimensionless_groups", "by_label", "n_forest_worse"),
         lambda v: f"{int(v)} of 13",
         documents=(PAPER, PAPER_PDF),
+        # Tied in the source, so that no line or page break can fall inside it
+        # and put a page number between "of" and "13" in the PDF text.
+        phrases=lambda literal: (literal, literal.replace(" ", "~")),
     ),
     Claim(
         "devices the forest loses in dimensionless coordinates",
@@ -840,6 +844,126 @@ CLAIMS: tuple[Claim, ...] = (
         documents=(PAPER, PAPER_PDF),
     ),
     # -- Sec. 4.2: the sub-unity elongation ratios are indentation ---------
+    # -- the controls table of Sec. 3.2 ------------------------------------
+    # The table collects the loss-power and device-identity controls in one
+    # place. Its cells are read back from the files the arms wrote, and each
+    # claim is anchored to its row so that a bare number elsewhere cannot
+    # satisfy it: the tex spells a row with "&", the PDF with spaces, and the
+    # supplement states the same value in prose.
+    Claim(
+        "controls table, forest CV with the loss power deleted",
+        "0.198",
+        lambda a: a["power_ablation"]["ablated"]["cv_rmsle"]["random_forest"],
+        _r(3),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"loss power deleted & {literal} /", f"loss power deleted {literal} /", f"a wider margin, {literal} against"),
+    ),
+    Claim(
+        "controls table, power law CV with the loss power deleted",
+        "0.315",
+        lambda a: a["power_ablation"]["ablated"]["cv_rmsle"]["ridge_loglinear"],
+        _r(3),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"0.198 / {literal} &", f"0.198 / {literal} 10", f"0.198 against {literal} where"),
+        # The first manuscript printed 0.316 here, which nothing bound and no
+        # artifact carries: the ablated ridge scores 0.31548.
+    ),
+    Claim(
+        "controls table, labels lost with the loss power deleted",
+        "10",
+        lambda a: a["power_ablation"]["ablated"]["forest_worse_by_label"]["n_worse"],
+        lambda v: str(int(v)),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda literal: (f"0.315 & {literal} & 9 &", f"0.315 {literal} 9 +0.051"),
+    ),
+    Claim(
+        "controls table, label gap with the loss power deleted",
+        "+0.051",
+        lambda a: a["power_ablation"]["ablated"]["forest_worse_by_label"]["mean_difference"],
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"& 9 & ${literal}$ &", f"10 9 {literal} +0.070", f"to ${literal}$ by label", f"to {literal} by label"),
+    ),
+    Claim(
+        "controls table, device gap with the loss power deleted",
+        "+0.070",
+        lambda a: a["power_ablation"]["ablated"]["forest_worse_by_device"]["mean_difference"],
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"$+0.051$ & ${literal}$", f"+0.051 {literal}", f"to ${literal}$ by device", f"to {literal} by device"),
+    ),
+    Claim(
+        "controls table, forest CV in dimensionless coordinates",
+        "0.229",
+        lambda a: _dimensionless(a, "device_identity", "arms", "dimensionless_groups", "cv_rmsle", "random_forest"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"dimensionless groups & {literal} /", f"dimensionless groups {literal} /", f"the forest scores {literal} against"),
+    ),
+    Claim(
+        "controls table, power law CV in dimensionless coordinates",
+        "0.322",
+        lambda a: _dimensionless(a, "device_identity", "arms", "dimensionless_groups", "cv_rmsle", "ridge_loglinear"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"0.229 / {literal} &", f"0.229 / {literal} 11", f"{literal}. The margins"),
+    ),
+    Claim(
+        "controls table, label gap in dimensionless coordinates",
+        "+0.074",
+        lambda a: _dimensionless(a, "device_identity", "arms", "dimensionless_groups", "by_label", "mean_difference"),
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"& 11 & 9 & ${literal}$", f"11 9 {literal} +0.130", f"mean gaps of ${literal}$", f"mean gaps of {literal}"),
+    ),
+    Claim(
+        "controls table, device gap in dimensionless coordinates",
+        "+0.130",
+        lambda a: _dimensionless(a, "device_identity", "arms", "dimensionless_groups", "by_device", "mean_difference"),
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"$+0.074$ & ${literal}$", f"+0.074 {literal}", f"$+0.074$ and ${literal}$", f"+0.074 and {literal}"),
+    ),
+    Claim(
+        "controls table, forest CV on the within-device features",
+        "0.157",
+        lambda a: _dimensionless(a, "device_identity", "arms", "within_device_features_only", "cv_rmsle", "random_forest"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"within-device features only & {literal} /", f"within-device features only {literal} /", f"{literal} for the forest"),
+    ),
+    Claim(
+        "controls table, power law CV on the within-device features",
+        "0.315",
+        lambda a: _dimensionless(a, "device_identity", "arms", "within_device_features_only", "cv_rmsle", "ridge_loglinear"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"0.157 / {literal} &", f"0.157 / {literal} 6", f"against {literal} for the power law"),
+    ),
+    Claim(
+        "controls table, labels lost on the within-device features",
+        "6",
+        lambda a: _dimensionless(a, "device_identity", "arms", "within_device_features_only", "by_label", "n_forest_worse"),
+        lambda v: str(int(v)),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"0.315 & {literal} & 5 &", f"0.315 {literal} 5 -0.033", f"on {literal} of 13 labels"),
+    ),
+    Claim(
+        "controls table, label gap on the within-device features",
+        "-0.033",
+        lambda a: _dimensionless(a, "device_identity", "arms", "within_device_features_only", "by_label", "mean_difference"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"& 6 & 5 & ${literal}$", f"6 5 {literal} -0.018", f"mean gaps of ${literal}$", f"mean gaps of {literal}"),
+    ),
+    Claim(
+        "controls table, device gap on the within-device features",
+        "-0.018",
+        lambda a: _dimensionless(a, "device_identity", "arms", "within_device_features_only", "by_device", "mean_difference"),
+        _r(3),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda literal: (f"$-0.033$ & ${literal}$", f"-0.033 {literal}", f"$-0.033$ and ${literal}$", f"-0.033 and {literal}"),
+    ),
     Claim(
         "PBX-M median indentation",
         "0.154",
@@ -1033,6 +1157,7 @@ CLAIMS: tuple[Claim, ...] = (
         "rank 8",
         lambda a: a["analysis"]["rank_audit"]["rank"],
         lambda v: f"rank {v}",
+        documents=MOVED_TO_SUPPLEMENT,
     ),
     Claim("rank deficiency", "2", lambda a: a["analysis"]["rank_audit"]["rank_deficiency"]),
     # -- Result 8: physics as a constraint --------------------------------
@@ -1055,7 +1180,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.0045",
         lambda a: _constraint(a, "ipb98y2_published", "collisionless"),
         _r(4),
-        documents=LATE_RESULTS,
+        documents=MOVED_TO_SUPPLEMENT,
     ),
     # How often the two ensembles keep the order the headline needs. The
     # per-seed scores were already in the artifact and nothing read them, which
@@ -1079,7 +1204,7 @@ CLAIMS: tuple[Claim, ...] = (
         "-0.688",
         lambda a: _stored_arm(a, "confinement_time", "loss_power_exponent"),
         _r(3),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda literal: (f"goes from\n{literal}", f"goes from {literal}"),
     ),
     Claim(
@@ -1087,7 +1212,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.308",
         lambda a: _stored_arm(a, "stored_energy", "loss_power_exponent"),
         _r(3),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda literal: (f"to $+{literal}$, one unit", f"to +{literal}, one unit"),
     ),
     # --- Result 19: the leave-one-device-out column ------------------------
@@ -1198,7 +1323,7 @@ CLAIMS: tuple[Claim, ...] = (
         "7",
         _device_reader("powerlaw_kadomtsev", "n_worse_than_power_law"),
         _r(0),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda n: (f"unconstrained one on \\textbf{{{n}}} of them", f"unconstrained one on {n} of them"),
     ),
     Claim(
@@ -1206,7 +1331,7 @@ CLAIMS: tuple[Claim, ...] = (
         "5",
         _device_reader("powerlaw_collisionless", "n_worse_than_power_law"),
         _r(0),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda n: (f"is worse on \\textbf{{{n}}}, at", f"is worse on {n}, at"),
     ),
     Claim(
@@ -1214,7 +1339,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.001",
         _device_reader("powerlaw_kadomtsev", "mean_difference_vs_power_law"),
         lambda v: f"{abs(v):.3f}",
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda literal: (f"of {literal} in its favour",),
     ),
     Claim(
@@ -1222,7 +1347,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.009",
         _device_reader("powerlaw_collisionless", "mean_difference_vs_power_law"),
         lambda v: f"{abs(v):.3f}",
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda literal: (f", at {literal}",),
     ),
     Claim(
@@ -1230,7 +1355,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.00008",
         _device_reader("powerlaw_free", "mean_difference_vs_power_law"),
         lambda v: f"{v:.5f}",
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda literal: (f"separated by {literal} per device",),
     ),
     Claim(
@@ -1308,7 +1433,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.0031",
         lambda a: _constraint(a, "free_refit", "kadomtsev"),
         _r(4),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         # The PDF sets "refit" with an fi ligature, so the row label cannot carry
         # the phrase; "(this database)" is ligature-free and just as specific.
         phrases=lambda literal: (f"(this database) & {literal}", f"(this database) {literal}"),
@@ -1318,7 +1443,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.0147",
         lambda a: _constraint(a, "itpa20_published", "kadomtsev"),
         _r(4),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda literal: (
             f"ITPA20, published & \\textbf{{{literal}}}",
             f"ITPA20, published {literal}",
@@ -1329,7 +1454,7 @@ CLAIMS: tuple[Claim, ...] = (
         "0.0142",
         lambda a: _constraint(a, "itpa20_il_published", "kadomtsev"),
         _r(4),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda literal: (
             f"ITPA20-IL, published & \\textbf{{{literal}}}",
             f"ITPA20-IL, published {literal}",
@@ -1735,8 +1860,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    125: "One hundred and twenty-five",
-    162: "one hundred and sixty-two",
+    123: "One hundred and twenty-three",
+    176: "one hundred and seventy-six",
 }
 
 

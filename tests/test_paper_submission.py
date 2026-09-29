@@ -189,14 +189,12 @@ def test_the_freshness_check_still_catches_a_genuinely_absent_section(tmp_path: 
 
 # --- the abstract fits the journal's limit ---------------------------------
 #
-# IOP asks for abstracts of no more than 300 words and warns that a manuscript
-# may be returned for rewriting above it. That is a hard submission gate, and a
-# word count written into prose goes stale the first time the abstract is
-# edited, so it is computed here instead. The ceiling is 290 rather than 300 so
-# that no disagreement between counting methods, and no later one-sentence
-# addition, can push the submitted version over the real limit unnoticed.
+# AIP asks Physics of Plasmas authors for a one-paragraph abstract of 250 words.
+# A word count written into prose goes stale the first time the abstract is
+# edited, so it is computed here instead. (The first submission went to IOP,
+# whose limit is 300; this repository held itself to 290 then.)
 
-ABSTRACT_WORD_CEILING = 290
+ABSTRACT_WORD_CEILING = 250
 
 
 def abstract_words(paper: Path | None = None) -> list[str]:
@@ -221,8 +219,8 @@ def abstract_words(paper: Path | None = None) -> list[str]:
 def test_abstract_is_within_the_journal_word_limit() -> None:
     words = abstract_words()
     assert len(words) <= ABSTRACT_WORD_CEILING, (
-        f"the abstract is {len(words)} words, above the {ABSTRACT_WORD_CEILING} "
-        "this repository holds itself to and close to IOP's hard limit of 300. "
+        f"the abstract is {len(words)} words, above AIP's limit of "
+        f"{ABSTRACT_WORD_CEILING} for Physics of Plasmas. "
         "Shorten it rather than raising the ceiling."
     )
 
@@ -318,6 +316,11 @@ EXPECTED_POINTERS = {
     16: "Errors in variables",
     # S17 was appended for the same reason.
     17: "External replication on the stellarator-heliotron",
+    # S18 to S20 were appended when the main text was cut for Physics of
+    # Plasmas, again so that no existing pointer had to move.
+    18: "Controls on the loss-power identity and on device identity",
+    19: "The distance diagnostic and the training-target bound",
+    20: "Provenance of every input and number",
 }
 
 
@@ -700,12 +703,12 @@ def test_no_section_cross_references_itself() -> None:
 
 BACK_POINTERS = {
     "2": "Data and methods",
-    "3": "The ranking inversion",
-    "3.1": "Three diagnostics of the failure",
-    "3.2": "Sensitivity to population, aggregation, and device definition",
-    "4": "A size-extrapolation stress test matched to ITER",
-    "6": "Dimensional constraints from Connor--Taylor similarity",
-    "8.1": "The same experiment with the nonlinear component specified identically",
+    "3": "Holding out a device reverses the ranking",
+    "3.1": "Why the forest fails",
+    "3.2": "Controls",
+    "4": "A size cut matched to ITER",
+    "6.1": "Connor--Taylor constraints on the exponents",
+    "6.2": "Flexibility or long-range saturation?",
 }
 
 BACK_TABLES = {
@@ -865,15 +868,16 @@ def test_main_reads_sys_argv_when_called_without_arguments(
 # sixteen sections after a seventeenth had been added.
 
 
-def test_the_supplement_title_and_description_fit_iops_limits() -> None:
+def test_the_supplement_title_and_description_stay_short() -> None:
+    """IOP's limits at the first submission, kept as a sensible length for any form."""
     source = (ROOT / "paper" / "supplementary.tex").read_text()
     title = re.search(r"\\title\{(?:\\vspace\{[^}]*\})?\\textbf\{([^}]*)\}\}", source)
     assert title is not None, "no \\title{\\textbf{...}} in the supplement"
-    assert len(title.group(1)) <= 30, f"the supplement's title is {len(title.group(1))} characters; IOP allows 30"
+    assert len(title.group(1)) <= 30, f"the supplement's title is {len(title.group(1))} characters; keep it to 30"
     description = re.search(r"\\textbf\{Description\.\}(.*?)\\end\{center\}", source, re.DOTALL)
     assert description is not None, "no Description line in the supplement"
     words = re.sub(r"(?<!\\)%.*", "", description.group(1)).split()
-    assert 0 < len(words) <= 30, f"the supplement's description is {len(words)} words; IOP allows 30"
+    assert 0 < len(words) <= 30, f"the supplement's description is {len(words)} words; keep it to 30"
 
 
 def test_the_supplement_description_mentions_the_external_replication() -> None:
