@@ -114,6 +114,13 @@ def test_the_paper_s_claims_about_this_table_still_hold(committed: dict) -> None
     assert booster < forest, "the booster is supposed to recover less than the forest"
     assert booster < 0.85
 
+    # 3b. With each device counted once the trees still collapse under plain
+    #     split conformal, so the collapse is not a product of pooling rows.
+    for model in ("random_forest", "hist_gradient_boosting"):
+        for row in committed[arm]:
+            if row["model_name"] == model and row["method"] == "split":
+                assert row["device_weighted_coverage"] < 0.50
+
     # 4. Both linear models sit near nominal under every scheme.
     for model in ("ridge_loglinear", "powerlaw_collisionless"):
         for method in ("machine_cv", "machine_cv_distance"):

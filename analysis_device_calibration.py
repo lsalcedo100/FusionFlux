@@ -75,9 +75,9 @@ def analyse(dataset: pd.DataFrame) -> dict[str, Any]:
     split = hdb5.iter_matched_split(devices, splits)
     _, cut = cs.coverage_size_split(devices, split, zoo)
 
-    def _pooled(summary: pd.DataFrame) -> list[dict[str, Any]]:
+    def _pooled(summary: pd.DataFrame, *, per_device: bool = False) -> list[dict[str, Any]]:
         pooled = summary[summary["scope"] == "__pooled__"]
-        return [
+        entries = [
             {
                 "model_name": str(row.model_name),
                 "method": str(row.method),
@@ -87,6 +87,20 @@ def analyse(dataset: pd.DataFrame) -> dict[str, Any]:
             }
             for row in pooled.itertuples()
         ]
+        if per_device:
+            # Pooled coverage is a row average, and JET and ASDEX Upgrade supply
+            # most of the rows. Averaging the per-device coverages instead counts
+            # each held-out device once, however many rows it has.
+            by_device = (
+                summary[summary["scope"] != "__pooled__"]
+                .groupby(["model_name", "method"])["empirical_coverage"]
+                .mean()
+            )
+            for entry in entries:
+                entry["device_weighted_coverage"] = float(
+                    by_device.loc[(entry["model_name"], entry["method"])]
+                )
+        return entries
 
     return {
         "dataset_sha256": hdb5.HDB5_STD5_SHA256,
@@ -100,7 +114,7 @@ def analyse(dataset: pd.DataFrame) -> dict[str, Any]:
             "n_test_units": len(split.test_machines),
             "size_ratio": float(split.size_ratio),
         },
-        "leave_one_device_out": _pooled(lomo),
+        "leave_one_device_out": _pooled(lomo, per_device=True),
         "size_cut_coverage": _pooled(cut),
     }
 
