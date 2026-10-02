@@ -49,7 +49,7 @@
 \author{Liam Salcedo\thanks{Independent researcher, Montclair, New Jersey, USA.
 \texttt{liamsalcedo100@gmail.com}.
 ORCID: \href{https://orcid.org/0009-0001-5039-8147}{\texttt{0009-0001-5039-8147}}.}}
-\date{28 September 2026}
+\date{1 October 2026}
 
 \begin{document}
 \maketitle
@@ -219,6 +219,15 @@ booster on a device it has never seen. Both linear models are unaffected within
 a point or two. The cost is visible in the widths: the trees buy that coverage
 at roughly $2.3$ to $2.8\times$ multiplicative half-width against $1.23\times$
 under plain split conformal, where the linear models stay near $1.4\times$.
+
+Those coverages pool rows, and JET and ASDEX Upgrade supply most of the rows.
+Averaging the 11 per-device coverages instead, so that each device counts once,
+plain split conformal covers 23\% for the forest and 43\% for the booster. The
+collapse does not depend on the aggregation. The size of the repair does.
+Calibrated by device, the forest and the booster both reach 93\% with devices
+weighted equally, against 84\% and 77\% pooled, so what the repair leaves
+uncovered lies mostly in the devices with the most rows. The three linear rows
+move by at most six points under any scheme.
 
 Across the size cut with the same device grouping the picture is unchanged in
 kind. The forest and booster remain far from nominal at 41\% and 12\% by device
@@ -720,7 +729,7 @@ of Sec.~6.2 of the main text instead fits both components jointly by maximising 
 marginal likelihood, and scores 0.191. None of the three is a disagreement about
 the mechanism, which all of them exhibit. What separates them is where the trend
 comes from, and on this database the trend that transfers best came from outside
-the fit entirely. The kernel is marginally the best cross-validated model here,
+the fit entirely. The kernel has marginally the lowest cross-validated score here,
 at 0.11179 against the IPB98-mean arm's 0.11196, which is a tie at any precision
 worth quoting; out of distribution the two part company, 0.218 against 0.189 on
 a held-out label. None of the three beats the constrained fit of
@@ -836,10 +845,13 @@ $n+1$ exchangeable scores, and where that rank exceeds $n$ the half-width is
 reported as infinite rather than as a finite but invalid number. Ties need no
 rule, since the quantile is a rank on a sorted array. The interval is
 symmetric in $\log\tau$ and is a pointwise interval for a new observation, not
-for a latent mean. Under grouped cross-validation the per-fold coverages are
-pooled over rows; under leave-one-label-out each held-out label is
-calibrated and scored on its own fold and the coverages are then averaged over
-machines.
+for a latent mean. Every coverage in the main text's table is pooled over
+rows. Grouped cross-validation pools the rows of all five folds.
+Leave-one-label-out calibrates and scores each held-out label on its own fold,
+then pools the rows of the 13 labels. The size cut pools the 2730 rows above
+it. The main text also gives these coverages with each held-out label weighted
+equally, computed from the per-label file
+\texttt{results/conformal\_per\_machine.csv}.
 
 Holding out whole discharges keeps a calibration row and a test row from coming
 out of the same shot, but the conformity unit is still the row, and rows arrive
@@ -1730,10 +1742,11 @@ the predeclared rule both are a reproduction of the inversion. The exact sign
 test returns $p=0.016$ for each,
 which is the smallest value seven devices can return, and the intervals are
 wide; the counts and the sizes of the gaps carry the result, as in the main
-text. The linear-plus-RBF Gaussian process is again the best model under both
+text. The linear-plus-RBF Gaussian process again scores lowest under both
 splits, 0.195 and
-0.409, and again does not reverse, so the
-selection rule repairs itself here too once that model is in the candidate set.
+0.409, and again does not reverse, so
+cross-validation's choice does not collapse here either once that model is in
+the candidate set.
 LHD is the hardest device for every model, at the largest distance from the
 rest: the power law scores 0.790 on it and
 the forest 2.378.
@@ -1951,8 +1964,8 @@ doubles, from 0.214 to 0.477: the reversal needs features carrying size, and
 this cannot say whether because they carry size or because they name the
 machine.
 
-The dimensionless coordinates separate exactly those two things, and they are
-not coordinates constructed here. Fitting this database in them is established
+The dimensionless coordinates come closer to separating those two things, and
+they are not coordinates constructed here. Fitting this database in them is established
 practice on the regression side as well as the experimental one: Cordey
 \emph{et al.}~\cite{cordey} fit the confinement time against $\beta$ and
 collisionality directly, and the reference description of the revision analysed
@@ -1973,10 +1986,9 @@ of $+0.074$ and $+0.130$; under cross-validation the forest scores 0.229 against
 the power law's 0.322. The margins are smaller than the engineering-space
 ones and the direction and the counts are the same.
 
-So the reversal is not an artefact of the features naming the machine. It is
-also not established at the strength the engineering-space numbers suggest: a
-part of that $+0.315$ is device identity, and $+0.130$ is what survives in
-coordinates where identity is unavailable. Both numbers are reported, and the
+So features that name the machine account for part of the engineering-space
+margin and not all of it: a part of that $+0.315$ is device identity, and
+$+0.130$ is what survives in coordinates that carry much less of it. Both numbers are reported, and the
 dimensionless one is the smaller. Three limits attach to it, and the third
 decides how it should be read. The temperature it needs comes from the stored
 energy of the control above, so it is scored on 6214 rows rather than 6228.

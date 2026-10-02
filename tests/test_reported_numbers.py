@@ -100,6 +100,7 @@ def artifacts() -> dict[str, object]:
         "forecast_rows": _json("forecast.json"),
         "per_machine": _csv("extrapolation_per_machine.csv", "tokamak"),
         "conformal_per_machine": pd.read_csv(RESULTS / "conformal_per_machine.csv"),
+        "device_calibration": _json("device_calibration.json"),
     }
 
 
@@ -345,6 +346,36 @@ def _booster_rows_covered(a: dict) -> int:
     frame = a["conformal_per_machine"]
     cut = frame[(frame["split"] == "size_cut") & (frame["model_name"] == "hist_gradient_boosting")]
     return int(round(float((cut["empirical_coverage"] * cut["n_rows"]).sum())))
+
+
+def _label_weighted_coverage(a: dict, model: str) -> float:
+    """Held-out-label coverage with each label counted once, however many rows it has."""
+    frame = a["conformal_per_machine"]
+    rows = frame[
+        (frame["split"] == "leave_one_tokamak_out")
+        & (frame["model_name"] == model)
+        & (frame["scope"] != "__pooled__")
+    ]
+    return float(rows["empirical_coverage"].mean())
+
+
+def _device_weighted_coverage(a: dict, model: str, method: str) -> float:
+    """Held-out-device coverage with each of the 11 devices counted once."""
+    for row in a["device_calibration"]["leave_one_device_out"]:
+        if row["model_name"] == model and row["method"] == method:
+            return float(row["device_weighted_coverage"])
+    raise AssertionError(f"no device-weighted coverage for {model} under {method}")
+
+
+def _best_tree_coverage_above_the_cut(a: dict) -> float:
+    """The most either tree ensemble's interval covers of any one label above the size cut."""
+    frame = a["conformal_per_machine"]
+    rows = frame[
+        (frame["split"] == "size_cut")
+        & frame["model_name"].isin(["random_forest", "hist_gradient_boosting"])
+        & (frame["scope"] != "__pooled__")
+    ]
+    return float(rows["empirical_coverage"].max())
 
 
 def _arm(a: dict, name: str) -> dict:
@@ -992,6 +1023,64 @@ CLAIMS: tuple[Claim, ...] = (
         _booster_rows_covered,
         documents=(README, RESULTS_MD, PAPER, PAPER_PDF),
     ),
+    # -- Sec. 5: the same collapse with each held-out label weighted equally --
+    Claim(
+        "forest coverage on an unseen label, labels weighted equally",
+        "26%",
+        lambda a: _label_weighted_coverage(a, "random_forest"),
+        _pct(),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"becomes {n}",),
+    ),
+    Claim(
+        "booster coverage on an unseen label, labels weighted equally",
+        "41%",
+        lambda a: _label_weighted_coverage(a, "hist_gradient_boosting"),
+        _pct(),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"becomes {n}",),
+    ),
+    Claim(
+        "most a tree ensemble's interval covers of any label above the cut",
+        "6%",
+        _best_tree_coverage_above_the_cut,
+        _pct(),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"more than {n}",),
+    ),
+    # -- Sec. S1: the device-level table with each device weighted equally --
+    Claim(
+        "forest coverage on an unseen device, devices weighted equally",
+        "23%",
+        lambda a: _device_weighted_coverage(a, "random_forest", "split"),
+        _pct(),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"covers {n} for the forest",),
+    ),
+    Claim(
+        "booster coverage on an unseen device, devices weighted equally",
+        "43%",
+        lambda a: _device_weighted_coverage(a, "hist_gradient_boosting", "split"),
+        _pct(),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"and {n} for the booster",),
+    ),
+    Claim(
+        "forest coverage calibrated by device, devices weighted equally",
+        "93%",
+        lambda a: _device_weighted_coverage(a, "random_forest", "machine_cv"),
+        _pct(),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"both reach {n}",),
+    ),
+    Claim(
+        "booster coverage calibrated by device, devices weighted equally",
+        "93%",
+        lambda a: _device_weighted_coverage(a, "hist_gradient_boosting", "machine_cv"),
+        _pct(),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"both reach {n}", f"or {n} with each device weighted equally"),
+    ),
     Claim(
         "paired gap, forest against power law",
         "+0.251",
@@ -1398,7 +1487,7 @@ CLAIMS: tuple[Claim, ...] = (
         lambda a: _robustness(a, "lomo_by_physical_device", "random_forest", "pooled_rows"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=lambda literal: (f"leave-one-device-out (11) & {literal}", f"(11) {literal}"),
+        phrases=lambda literal: (f"LODO, 11 devices & {literal}", f"11 devices {literal}"),
     ),
     Claim(
         "Table 2, device row, ridge pooled over rows",
@@ -1860,8 +1949,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    123: "One hundred and twenty-three",
-    176: "one hundred and seventy-six",
+    127: "One hundred and twenty-seven",
+    183: "one hundred and eighty-three",
 }
 
 
