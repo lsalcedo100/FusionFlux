@@ -9,32 +9,26 @@ authors:
     orcid: "https://orcid.org/0009-0001-5039-8147"
 repository-code: "https://github.com/lsalcedo100/FusionFlux"
 abstract: >-
-  Confinement scalings fitted across existing tokamaks are used to size
-  machines not yet built, so validation must measure performance on an
-  unseen device. On the ITPA Global H-mode Confinement Database (HDB5, STD5;
-  6228 slices, 18 labels), cross-validation grouped by discharge scores a
-  random forest 29% better in log error than a power law refitted in the
-  same folds and 36% better than published IPB98(y,2). Holding out one
-  device at a time reverses the order of the three primary models: both tree
-  ensembles that win cross-validation extrapolate worst, and the forest
-  loses to that power law on 13 of 13 eligible labels, and on 7 of 7
-  eligible devices of a stellarator-heliotron database locked before its
-  data were seen. Regressing the stored energy, or in dimensionless
-  coordinates carrying less device identity, leaves the forest worse on 9 of
-  13 and 11 of 13 labels. At a cut inside the database reproducing ITER's
-  1.82x jump in major radius, nominal 90% split-conformal intervals
-  calibrated on held-out discharges cover 3% and 0% of held-out rows for
-  both ensembles at a width moving under 1.5%. A split-conformal half-width
-  is a rank statistic of the calibration residuals and cannot warn that it
-  has stopped covering. The forest's error can: it tracks the held-out
-  label's Mahalanobis distance from the training data at rho = +0.85,
-  against -0.06 for the power law. Widening the candidate set repairs the
-  rule: a linear-plus-RBF Gaussian process, the best cross-validated model,
-  keeps trending outside the data and does not reverse. At the size cut,
-  that process and Connor-Taylor constraints on the exponents, whose
-  Kadomtsev rung costs nothing in sample, both improve extrapolation.
-  Varying only the long-range mean with the nonlinear part fixed supports
-  saturation, not flexibility alone, as the mechanism in the models tested.
+  Confinement scaling laws are fitted to existing tokamaks and used to size
+  ones not yet built, so what matters is accuracy on an unseen device. On
+  the ITPA Global H-mode Confinement Database (6228 time slices, 16
+  devices), cross-validation that holds out discharges ranks a random forest
+  29% more accurate than a refitted power law. Holding out whole devices
+  reverses the ranking: the forest is worse than the power law on all 11
+  devices with enough data to score. The reversal survives, though not on
+  every device, when stored energy replaces confinement time as the target
+  and when the features are replaced by dimensionless groups that carry less
+  device identity. It reproduces on all 7 eligible devices of the
+  stellarator-heliotron confinement database, in an analysis fixed before
+  those data were downloaded. At a size cut matching ITER's 1.82-fold step
+  in major radius, 90% split-conformal intervals cover 3% and 0% of held-out
+  rows for the two tree ensembles, with widths that change by under 1.5%, so
+  they give no sign of failing. Connor-Taylor constraints on the exponents
+  and a Gaussian process with a linear kernel term both improve
+  extrapolation. An ablation that varies only the long-range mean points to
+  saturation, rather than flexibility alone, as the cause in the models
+  tested. Four reporting checks follow, three of which need no extra
+  fitting.
   Includes a rank-deficiency audit of the design matrix, a from-scratch
   least-squares implementation (Cholesky, QR, SVD), a refit of the
   IPB98(y,2) exponents decomposed along the singular directions of the data,
@@ -53,7 +47,7 @@ keywords:
   - allometry
   - model selection
 license: MIT
-version: 0.4.15
+version: 0.4.16
 doi: 10.5281/zenodo.22215142
 references:
   - type: article

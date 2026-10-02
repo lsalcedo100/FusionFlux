@@ -177,7 +177,7 @@ dist:
 paper-fresh:
 	python3 tools/check_paper_submission.py --check-pdf-fresh --check-provenance
 
-# The ScholarOne upload, in both review variants.
+# The journal upload, in both review variants.
 #
 # Writes to submission/, not build/: `dist` opens with `rm -rf build`, and so do
 # the packaging tests, so a bundle under build/ vanishes on the next `make
@@ -195,10 +195,9 @@ submission: paper-fresh
 # builds to build/review/, and switches it back without touching the committed
 # PDFs.
 #
-# Not for an IOP upload. ScholarOne adds line numbers to the review copy
-# itself, so a manuscript that already carries them arrives double-numbered;
-# the committed PDFs are what go there. This build is for sending a draft to a
-# reader directly.
+# Not for the journal upload. AIP reformats a manuscript under REVTeX's preprint
+# option for review and does not ask for line numbers, so the committed PDFs are
+# what go there. This build is for sending a draft to a reader directly.
 review-pdf:
 	@mkdir -p build/review
 	@# The package goes in the preamble and \linenumbers goes after
@@ -221,4 +220,4 @@ review-pdf:
 	tectonic -X compile build/review/paper.tex --outdir build/review
 	tectonic -X compile build/review/supplementary.tex --outdir build/review
 	@echo "line-numbered PDFs in build/review/, for sending to a reader directly."
-	@echo "IOP's submission system numbers lines itself: upload the committed PDFs there. Do not commit these."
+	@echo "Upload the committed PDFs to the journal, not these. Do not commit these."

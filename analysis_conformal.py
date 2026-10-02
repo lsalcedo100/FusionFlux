@@ -97,7 +97,7 @@ HYBRID_SHRINKAGE = 1.0
 
 SPLIT_LABELS = {
     "grouped_cv": "grouped CV, by discharge",
-    "leave_one_tokamak_out": "leave one tokamak out",
+    "leave_one_tokamak_out": "leave one label out",
     "size_cut": "ITER-size-matched cut",
 }
 
@@ -547,7 +547,7 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
     axes[1].set_yticks(np.arange(0.0, 1.01, 0.2))
     axes[1].axhline(0.0, color=MUTED, linewidth=0.8, zorder=2)
     axes[1].set_xlabel(
-        "Mahalanobis distance of the machine from the training data", fontsize=FONT_LABEL, color=INK
+        "Mahalanobis distance of the held-out label from the training data", fontsize=FONT_LABEL, color=INK
     )
     axes[1].set_ylabel(
         f"empirical coverage of {nominal * 100:.0f}% intervals", fontsize=FONT_LABEL, color=INK

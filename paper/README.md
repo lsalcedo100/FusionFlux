@@ -85,7 +85,7 @@ passes to resolve the table and figure references.
 
 Dropping the extension is what lets `\DeclareGraphicsExtensions{.pdf,.png}`
 choose: `figures.py` writes every figure as both, and the paper takes the
-vector copy. IOP asks for vector line art in preference to raster, and for these
+vector copy. Journals prefer vector line art to raster, and for these
 axes the PDF is the smaller file as well, roughly 195 KB against 1.1 MB for a
 raster at matching effective resolution. The PNG stays because the README and
 the built page need something that renders inline, and it is the fallback for a
@@ -160,44 +160,44 @@ right one is *Plasma Phys. Control. Fusion* **57**, 014008.
 
 ## Submitting to a journal
 
-The paper is written for an IOP plasma-physics journal: IPB98, HDB5,
-Connor-Taylor and ITPA20 all appeared in IOP journals, and the readership is
-the one the result is aimed at. Which journal, the review model chosen, the
-referee nominations and the cover letter are submission logistics rather than
-science, and they change between attempts, so they are not written down here.
-They live in local, untracked files, `../docs/cover-letter.local.md` and
+The paper is formatted for Physics of Plasmas (AIP Publishing), in REVTeX 4.2
+with the `aip,pop,preprint` options; `preprint` is the layout AIP uses for
+review. Which journal, the review model, the referee nominations and
+the cover letter are submission logistics rather than science, and they change
+between attempts, so they are not written down here. They live in local,
+untracked files, `../docs/cover-letter-pop.local.md` and
 `scholarone_metadata.local.txt`, both matched by `.gitignore`.
 
-IOP is format-free at initial submission, so `article` is fine and `iopart.cls`
-is optional: IOP accepts common TeX formats for submission, and production
-handles journal styling after acceptance. Their abstract limit is 300 words, and
-IOP warns that a manuscript may be returned for rewriting above it, so
-`tests/test_paper_submission.py` counts the rendered abstract and fails past
-290. The count is not written down here, because a number in prose goes stale
-and a test does not. Submission goes through ScholarOne, which asks separately
-for the things now carried in the source: affiliation, ORCID, funding, competing
-interests, author contributions, a data availability statement, and a statement
-on the use of AI tools.
+AIP asks for one compiled manuscript PDF and a separate supplementary-material
+PDF at initial submission, and for a one-paragraph abstract of 250 words, which
+`tests/test_paper_submission.py` enforces on the rendered count. The back matter
+follows AIP's order: Supplementary Material, Acknowledgments (with the funding
+statement), Author Declarations (conflict of interest and CRediT
+contributions), then Data availability. The generative-AI disclosure sits in
+Methods, because AIP's policy puts any AI use that could affect the findings
+there, with the tool's name, version and maker, what it did and why. Physics of
+Plasmas also requires authors to tell the editors about any earlier submission
+of the manuscript to another journal, and the cover letter does.
 
-`make submission` assembles what ScholarOne wants into `submission/`: the
-manuscript and supplement as PDFs, their sources, `references.bib`, and the
-metadata answers in `scholarone_metadata.txt`. That sheet has two halves. The
+`make submission` assembles the upload into `submission/`: the manuscript and
+supplement as PDFs, their sources, `references.bib`, and the metadata answers in
+`scholarone_metadata.txt`, named for the ScholarOne system it was first written for; the fields
+are the ones Peer X-Press asks for as well. That sheet has two halves. The
 public half is generated from `paper.tex`, so the title, abstract, keywords,
 author line, declarations and data-availability statement cannot drift from
 the PDF beside them; it used to be retyped, and it still said four datasets
 after the paper said five. The private half, the review-model choice, the
 referee nominations and the disclosure of prior correspondence, is
 `scholarone_metadata.local.txt`, untracked, and is appended when it exists.
-IOP journals run single- or double-anonymous review depending on the journal,
-and some let the author choose at upload, so the bundle carries both, the
-anonymous pair under `anonymous/`. Upload the committed PDFs rather than the
-`make review-pdf` build: IOP's submission system adds line numbers to the
-review copy itself.
+AIP does not state a review model for Physics of Plasmas, and its policies read
+as single-anonymous, so the bundle still carries both variants, the anonymous
+pair under `anonymous/`. Upload the committed PDFs rather than the
+`make review-pdf` build.
 
 Anonymising LaTeX is easy to do incompletely, and the failures are quiet. The
 first pass here matched one spelling of the Zenodo link and left the other on
 the title page; a later one removed the generative-AI declaration along with the
-Acknowledgments it sits inside, which strips a disclosure IOP requires and that
+Acknowledgments it then sat inside, which strips a required disclosure that
 names nobody. So `tools/make_submission.py` reads the *rendered text* of the
 built PDFs back against a list of identifying strings, and
 `tests/test_submission_bundle.py` runs the same transform on every commit.
@@ -220,8 +220,8 @@ Two things to settle that are not in any file here:
   author unsure what the paper is. The constraint still appears, second, with
   the prospective Kadomtsev result in front of it.
 
-A preprint is compatible with IOP policy either way, and journal submission
-needs no arXiv endorsement, so the endorsement problem in `docs/releasing.md`
+A preprint is compatible with AIP policy, which asks for its DOI at submission,
+and journal submission needs no arXiv endorsement, so the endorsement problem in `docs/releasing.md`
 does not gate this.
 
 ## Submitting to arXiv
