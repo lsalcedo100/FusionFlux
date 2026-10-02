@@ -1469,7 +1469,7 @@ CLAIMS: tuple[Claim, ...] = (
         _device_reader("mean_ipb98_rbf"),
         _r(3),
         documents=(PAPER, PAPER_PDF),
-        phrases=_row_phrases("\\textbf{{0.189}} & \\textbf{{{0}}}", "0.189 {0}"),
+        phrases=_row_phrases("0.189 & {0}", "0.189 {0}"),
     ),
     Claim(
         "device arm, GP linear+RBF",
@@ -1534,7 +1534,7 @@ CLAIMS: tuple[Claim, ...] = (
         _r(4),
         documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda literal: (
-            f"ITPA20, published & \\textbf{{{literal}}}",
+            f"ITPA20, published & {literal}",
             f"ITPA20, published {literal}",
         ),
     ),
@@ -1545,7 +1545,7 @@ CLAIMS: tuple[Claim, ...] = (
         _r(4),
         documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda literal: (
-            f"ITPA20-IL, published & \\textbf{{{literal}}}",
+            f"ITPA20-IL, published & {literal}",
             f"ITPA20-IL, published {literal}",
         ),
     ),

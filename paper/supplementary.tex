@@ -160,10 +160,10 @@ cut. The device-level counterpart is Table~\ref{tab:supdevice}.}
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}
 Model & LOLO & cut & LOLO & cut & LOLO & cut \\
 \midrule
-random forest & 35\% & 3\% & \textbf{88\%} & 29\% & 88\% & 40\% \\
-hist grad.\ boosting & 45\% & 0\% & \textbf{90\%} & 4\% & 89\% & 13\% \\
+random forest & 35\% & 3\% & 88\% & 29\% & 88\% & 40\% \\
+hist grad.\ boosting & 45\% & 0\% & 90\% & 4\% & 89\% & 13\% \\
 ridge, log-linear & 83\% & 70\% & 91\% & 77\% & 92\% & 82\% \\
-power law, collisionless & 85\% & 91\% & 91\% & \textbf{95\%} & 92\% & 92\% \\
+power law, collisionless & 85\% & 91\% & 91\% & 95\% & 92\% & 92\% \\
 IPB98(y,2)$^{*}$ & 89\% & 88\% & 89\% & 89\% & 89\% & 87\% \\
 \bottomrule
 \end{tabular}
@@ -341,10 +341,10 @@ the text below. The complete input vector for each device is recorded in
 & SPARC & JT-60SA & ITER \\
 & \SI{1.85}{\metre} & \SI{2.96}{\metre} (operating) & \SI{6.2}{\metre} \\
 \midrule
-IPB98(y,2)$^{*}$ & 0.765 [0.58, 1.00] & 0.479 [0.35, 0.66] & \textbf{3.591 [2.66, 4.85]} \\
+IPB98(y,2)$^{*}$ & 0.765 [0.58, 1.00] & 0.479 [0.35, 0.66] & 3.591 [2.66, 4.85] \\
 power law, collisionless & 0.724 [0.55, 0.96] & 0.428 [0.31, 0.59] & 2.837 [2.09, 3.84] \\
 ridge, log-linear & 0.720 [0.53, 0.98] & 0.444 [0.32, 0.62] & 2.858 [2.07, 3.95] \\
-random forest & 0.136 [0.03, 0.53] & 0.449 [0.23, 0.87] & \textbf{0.435 [0.19, 0.98]} \\
+random forest & 0.136 [0.03, 0.53] & 0.449 [0.23, 0.87] & 0.435 [0.19, 0.98] \\
 hist grad.\ boosting & 0.305 [0.14, 0.69] & 0.418 [0.24, 0.74] & 0.444 [0.24, 0.84] \\
 \bottomrule
 \end{tabular}
@@ -474,7 +474,7 @@ functional form. Refitting the exponent freely gives 0.687 against Kleiber's
 \toprule
 Model & CV, by species & leave-one-order-out & widest mass cut \\
 \midrule
-Kleiber, exponent 3/4 & 0.396 & 0.440 & \textbf{0.374} \\
+Kleiber, exponent 3/4 & 0.396 & 0.440 & 0.374 \\
 power law, free exponent & 0.374 & 0.432 & 0.496 \\
 hist grad.\ boosting & 0.418 & 0.487 & 0.889 \\
 random forest & 0.437 & 0.517 & 0.710 \\
@@ -667,7 +667,7 @@ refitted within these folds.}
 \toprule
 model & CV & held-out & ITER cut & $\rho$ \\
 \midrule
-GP, linear $+$ RBF & \textbf{0.112} & 0.218 & \textbf{0.191} & $-0.01$ \\
+GP, linear $+$ RBF & 0.112 & 0.218 & 0.191 & $-0.01$ \\
 GP, RBF only & 0.142 & 0.541 & 1.948 & $+0.65$ \\
 GP, linear only & 0.181 & 0.214 & 0.278 & $-0.06$ \\
 random forest & 0.128 & 0.465 & 0.938 & $+0.85$ \\
@@ -1446,10 +1446,10 @@ from every surface and the two best across the cut. The numerical rows are in
 \toprule
 exponents & Kadomtsev & collisionless & electrostatic & ITER cut \\
 \midrule
-IPB98(y,2), published      & \textbf{0.00096} & 0.0045 & 0.501 & 0.194 \\
+IPB98(y,2), published      & 0.00096 & 0.0045 & 0.501 & 0.194 \\
 free refit (this database) & 0.0031 & 0.064 & 0.817 & 0.279 \\
-ITPA20, published          & \textbf{0.0147} & 0.089 & 0.745 & \textbf{0.165} \\
-ITPA20-IL, published       & \textbf{0.0142} & 0.106 & 0.853 & \textbf{0.158} \\
+ITPA20, published          & 0.0147 & 0.089 & 0.745 & 0.165 \\
+ITPA20-IL, published       & 0.0142 & 0.106 & 0.853 & 0.158 \\
 \bottomrule
 \end{tabular}
 \end{table}

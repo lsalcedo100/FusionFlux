@@ -570,10 +570,10 @@ the third.}
 \begin{tabular}{lrrr}
 Model & discharge CV & LOLO & size cut \\
 \hline
-IPB98(y,2) & 0.199 & 0.188 & \textbf{0.194} \\
-ridge, log-linear & 0.181 & 0.214 & \textbf{0.278} \\
-random forest & 0.128 & 0.465 & \textbf{0.938} \\
-hist grad.\ boosting & 0.130 & 0.359 & \textbf{1.072} \\
+IPB98(y,2) & 0.199 & 0.188 & 0.194 \\
+ridge, log-linear & 0.181 & 0.214 & 0.278 \\
+random forest & 0.128 & 0.465 & 0.938 \\
+hist grad.\ boosting & 0.130 & 0.359 & 1.072 \\
 mean baseline & 0.869 & 0.994 & 1.459 \\
 \end{tabular}
 \end{ruledtabular}
@@ -626,8 +626,8 @@ Model & CV & LOLO & ITER cut & width \\
 IPB98(y,2) & 90\% & 89\% & 88\% & 1.40$\times$ \\
 ridge, log-linear & 90\% & 83\% & 70\% & 1.33$\times$ \\
 bounded hybrid & 90\% & 64\% & 76\% & 1.26$\times$ \\
-hist grad.\ boosting & 91\% & 45\% & \textbf{0\%} & 1.23$\times$ \\
-random forest & 91\% & 35\% & \textbf{3\%} & 1.23$\times$ \\
+hist grad.\ boosting & 91\% & 45\% & 0\% & 1.23$\times$ \\
+random forest & 91\% & 35\% & 3\% & 1.23$\times$ \\
 \end{tabular}
 \end{ruledtabular}
 \end{table}
@@ -745,7 +745,7 @@ for one model, calibrates that column.}
 \begin{tabular}{lrrrrcr}
 Model & in sample & CV & LOLO & LODO & worse on & ITER cut \\
 \hline
-power law, collisionless & 0.1818 & 0.182 & 0.206 & 0.203 & 5/11 & \textbf{0.183} \\
+power law, collisionless & 0.1818 & 0.182 & 0.206 & 0.203 & 5/11 & 0.183 \\
 IPB98(y,2), analytic$^{*}$ & n/a & 0.199 & 0.188 & 0.184 & 4/11 & 0.194 \\
 bounded hybrid (Sec.~S9) & n/a & 0.151 & 0.246 & 0.246 & 5/11 & 0.206 \\
 power law, electrostatic & 0.2245 & 0.225 & 0.241 & 0.226 & 8/11 & 0.237 \\
@@ -851,7 +851,7 @@ $m(x)$ in Eq.~\eqref{eq:meanfunction} & CV & held-out & LODO & ITER cut \\
 \hline
 constant & 0.142 & 0.541 & 0.693 & 1.948 \\
 fitted power law & 0.115 & 0.212 & 0.212 & 0.278 \\
-IPB98(y,2), unfitted & \textbf{0.112} & \textbf{0.189} & \textbf{0.186} & \textbf{0.186} \\
+IPB98(y,2), unfitted & 0.112 & 0.189 & 0.186 & 0.186 \\
 \end{tabular}
 \end{ruledtabular}
 \label{tab:meanfunction}
@@ -1132,7 +1132,7 @@ and figure in this paper and its supplementary material are openly available
 under the MIT licence at \url{https://github.com/lsalcedo100/FusionFlux}, and
 the version used here is archived with a persistent identifier\cite{zenodo} at
 \href{https://doi.org/10.5281/zenodo.23096142}{doi:10.5281/zenodo.23096142}
-(v0.4.16; the DOI for all versions is
+(v0.4.17; the DOI for all versions is
 \href{https://doi.org/10.5281/zenodo.22215142}{10.5281/zenodo.22215142}). Every
 number and figure was produced at commit
 \texttt{8ab13e44f048bba7e1b3c84e59d96d6b824b3cd2}, and every script verifies the
@@ -1328,7 +1328,7 @@ Allometry Database for woody plants} [dataset], Figshare (2015).
 \href{https://doi.org/10.6084/m9.figshare.c.3307692}{doi:10.6084/m9.figshare.c.3307692}.
 Release v1.0.1, \url{https://github.com/dfalster/baad/releases/tag/v1.0.1}
 \bibitem{zenodo} L. Salcedo, \emph{FusionFlux: extrapolation, long-range
-saturation and physics constraints in confinement scaling}, version v0.4.16,
+saturation and physics constraints in confinement scaling}, version v0.4.17,
 Zenodo (2026).
 \href{https://doi.org/10.5281/zenodo.23096142}{doi:10.5281/zenodo.23096142}
 \end{thebibliography}
