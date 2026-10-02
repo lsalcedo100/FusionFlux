@@ -261,8 +261,11 @@ def stale_pdf_sections(paper: Path = PAPER, pdf: Path = PDF) -> list[str]:
         # ("INTER V ALS"), so a title that fails every reading above is also
         # compared with all spaces removed from both sides.
         folded = plain.casefold()
-        if plain and not any(folded in candidate for candidate in candidates) and not (
-            folded.replace(" ", "") in candidates[0].replace(" ", "")
+        squeezed = folded.replace(" ", "")
+        if (
+            plain
+            and not any(folded in candidate for candidate in candidates)
+            and squeezed not in candidates[0].replace(" ", "")
         ):
             missing.append(plain)
     return missing
