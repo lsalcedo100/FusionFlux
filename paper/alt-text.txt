@@ -4,50 +4,55 @@ for energy-confinement scaling" (L. Salcedo), prepared to AIP Publishing's
 request for a separate alt-text file. Supplementary figures carry their alt
 text beneath their captions in the supplementary PDF.
 
-FIGURE 1. Three panels. The random forest's log-RMSE rises from 0.128 under
-held-out discharges to 0.465 under held-out labels while the power law stays
-near 0.2; the forest's per-label error rises with distance from the training
-data and the power law's does not; worst-label error grows with flexibility.
+FIGURE 1. Three panels. The random forest's error more than triples when the
+held-out unit changes from a discharge to a database label while the power
+law's barely moves; the forest's per-label error rises with distance from the
+training data and the power law's does not; and the worst-label error grows
+with model flexibility.
 
-FIGURE 2. Empirical coverage of nominal 90 percent intervals: every model
-covers about 90 percent under cross-validation, but the two tree ensembles fall
-to 45 and 35 percent on a held-out label and to 0.3 and 3 percent at the size
-cut. Below, per-label coverage falls with distance for the trees only.
+FIGURE 2. Every model's nominal 90 percent interval covers about 90 percent
+under cross-validation, but the two tree ensembles' coverage collapses on a
+held-out label and almost vanishes at the size cut, while the power laws stay
+well above half. Below, per-label coverage falls with distance for the trees
+only.
 
-FIGURE 3. Top: held-out error against the size ratio each cut demands, with the
-collisionless constraint lowest and the unconstrained fit highest up to a ratio
-of 2. Bottom: each constraint's in-sample cost against its gain at the size
-cut, where the collisionless rung reaches 0.183 at a cost of 0.001.
+FIGURE 3. Top: across the size-ordered sweep the collisionless constraint
+gives the lowest held-out error and the unconstrained fit the highest, up to
+the ratio where cuts become underpowered. Bottom: each constraint's in-sample
+cost against its gain at the size cut; the collisionless rung gains most at
+almost no cost.
 
 TABLE I. Six fitted models and the historical IPB98(y,2) law under
 discharge-grouped cross-validation and held-out labels. The random forest is
-best under cross-validation (0.128) and worst under held-out labels (0.465);
-the power law moves only from 0.181 to 0.214.
+best under cross-validation and worst under held-out labels, and the two tree
+ensembles trade places with the log-linear power law between the columns.
 
 TABLE II. The random forest and the power law under four splits, pooled over
 rows and with each unit weighted equally. The forest leads under both
 cross-validation rows and trails under both leave-one-out rows in all eight
 cells.
 
-TABLE III. Five control arms. The forest loses to the power law on 13 of 13
-labels and 11 of 11 devices with the nine features, and still on 9 to 11
-labels and 9 devices under the stored-energy, loss-power-deleted and
-dimensionless arms; only within-device features remove the reversal.
+TABLE III. Five control arms. The forest loses to the power law on every
+label and device with the nine engineering features, and still on most of
+them when stored energy is the target, when the loss power is deleted and in
+the dimensionless diagnostic; only restricting to within-device features
+removes the reversal.
 
 TABLE IV. Five models under three splits of increasing difficulty. At the size
-cut the random forest scores 0.938 and the gradient booster 1.072, nearer the
-constant baseline's 1.459 than the power law's 0.278.
+cut the two tree ensembles score nearer the constant baseline than the power
+law, while the historical law barely changes across the three splits.
 
 TABLE V. Empirical coverage of nominal 90 percent split-conformal intervals.
-The two tree ensembles fall from 91 percent under cross-validation to 45 and
-35 percent on a held-out label and to 0.3 and 3 percent at the size cut, at a
-half-width that does not change.
+The two tree ensembles cover about half of rows on a held-out label and
+almost none at the size cut, at a half-width that does not change, so the
+intervals give no sign of failing.
 
 TABLE VI. The Connor-Taylor hierarchy in order, with each row's selection
-status. The prospective Kadomtsev constraint improves the size cut from 0.279
-to 0.254 at no in-sample cost; the exploratory collisionless constraint
-reaches 0.183.
+status. The prospective Kadomtsev constraint improves the size cut at no
+in-sample cost, and the exploratory collisionless constraint improves it
+most; the electrostatic constraint costs accuracy everywhere.
 
-TABLE VII. One RBF covariance family with three mean functions. At the size cut
-a constant mean scores 1.948, a fitted power-law mean 0.278, and IPB98(y,2)'s
-published exponents as the mean 0.186.
+TABLE VII. One RBF covariance family with three mean functions. A constant
+mean fails badly at the size cut, a fitted power-law mean matches plain ridge
+there, and IPB98(y,2)'s published exponents as the mean give the lowest error
+on every split.

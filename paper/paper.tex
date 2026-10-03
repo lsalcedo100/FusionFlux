@@ -56,8 +56,9 @@ rankings for energy-confinement scaling}
 
 \begin{abstract}
 Confinement scaling laws are fitted to existing tokamaks and used to size ones
-not yet built, so what matters is accuracy on an unseen device. On the ITPA
-Global H-mode Confinement Database (6228 time slices, 16 devices),
+not yet built, so what matters is accuracy on an unseen device. On the
+6228-row file the OSF deposit distributes as the standard analysis set of the
+ITPA Global H-mode Confinement Database (DB5.2.3; 16 devices),
 cross-validation that holds out discharges ranks a random forest 29\% more
 accurate than a refitted power law. Holding out whole devices reverses the
 ranking: the forest is worse than the power law on all 11 devices with enough
@@ -1137,12 +1138,13 @@ against a pinned SHA-256 on load, and Sec.~S20 of the supplementary material
 lists the fingerprints.
 
 \begin{itemize}\setlength{\itemsep}{2pt}
-\item \textbf{ITPA Global H-mode Confinement Database, standard analysis set
-STD5 (DB5.2.3).} The basis of every fusion result. Openly available from the
-OSF deposit \emph{International Global H-Mode Confinement Database}\cite{osfdb}
-and described in its reference paper\cite{hdb5}. File \texttt{hdb5\_std5.csv}.
-\item \textbf{The full DB5.2.3 revision.} Used for the replication on rows STD5
-excludes (Sec.~S2) and for the stored-energy, dimensionless and elongation
+\item \textbf{The OSF-distributed DB5.2.3 STD5 file analysed here (6228
+rows).} The basis of every fusion result; Sec.~\ref{sec:data} says how it
+relates to the published STD5 selection. Openly available from the OSF deposit
+\emph{International Global H-Mode Confinement Database}\cite{osfdb} and
+described in its reference paper\cite{hdb5}. File \texttt{hdb5\_std5.csv}.
+\item \textbf{The full DB5.2.3 revision.} Used for the membership audit, for
+the replication on rows the analysed file excludes (Sec.~S2) and for the stored-energy, dimensionless and elongation
 controls, which take \texttt{WTH} and \texttt{KAPPA} from it. A separate
 download from the same OSF project (\url{https://osf.io/download/zhwa3/}). File
 \texttt{hdb5\_db523.csv}.
@@ -1163,7 +1165,7 @@ and figure in this paper and its supplementary material are openly available
 under the MIT licence at \url{https://github.com/lsalcedo100/FusionFlux}, and
 the version used here is archived with a persistent identifier\cite{zenodo} at
 \href{https://doi.org/10.5281/zenodo.23121710}{doi:10.5281/zenodo.23121710}
-(v0.4.18; the DOI for all versions is
+(v0.4.19; the DOI for all versions is
 \href{https://doi.org/10.5281/zenodo.22215142}{10.5281/zenodo.22215142}). Every
 number and figure was produced at commit
 \texttt{84cf8f62e07120e848297370d13f830a7f5a7276}, and every script verifies the
@@ -1347,7 +1349,7 @@ regression,'' \emph{Rev.\ Sci.\ Instrum.} \textbf{87}, 11D423 (2016).
 \emph{International Stellarator-Heliotron Confinement Database}, version 26
 [dataset], IPP Greifswald and NIFS. \url{https://ishpdb.ipp-hgw.mpg.de/ISS/}
 \bibitem{zenodo} L. Salcedo, \emph{FusionFlux: extrapolation, long-range
-saturation and physics constraints in confinement scaling}, version v0.4.18,
+saturation and physics constraints in confinement scaling}, version v0.4.19,
 Zenodo (2026).
 \href{https://doi.org/10.5281/zenodo.23121710}{doi:10.5281/zenodo.23121710}
 \end{thebibliography}

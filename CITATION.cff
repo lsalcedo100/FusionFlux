@@ -11,14 +11,15 @@ repository-code: "https://github.com/lsalcedo100/FusionFlux"
 abstract: >-
   Confinement scaling laws are fitted to existing tokamaks and used to
   size ones not yet built, so what matters is accuracy on an unseen
-  device. On the ITPA Global H-mode Confinement Database (6228 time
-  slices, 16 devices), cross-validation that holds out discharges ranks a
-  random forest 29% more accurate than a refitted power law. Holding out
-  whole devices reverses the ranking: the forest is worse than the power
-  law on all 11 devices with enough data to score. The reversal survives,
-  though not on every device, when stored energy replaces confinement time
-  as the target and, in a diagnostic that is not blind to the target, when
-  the features are replaced by dimensionless groups that carry less device
+  device. On the 6228-row file the OSF deposit distributes as the standard
+  analysis set of the ITPA Global H-mode Confinement Database (DB5.2.3; 16
+  devices), cross-validation that holds out discharges ranks a random
+  forest 29% more accurate than a refitted power law. Holding out whole
+  devices reverses the ranking: the forest is worse than the power law on
+  all 11 devices with enough data to score. The reversal survives, though
+  not on every device, when stored energy replaces confinement time as the
+  target and, in a diagnostic that is not blind to the target, when the
+  features are replaced by dimensionless groups that carry less device
   identity. It reproduces on all 7 eligible devices of the stellarator-
   heliotron confinement database, in an analysis fixed before those data
   were downloaded. At a size cut matching ITER's 1.82-fold step in major
@@ -48,7 +49,7 @@ keywords:
   - allometry
   - model selection
 license: MIT
-version: 0.4.18
+version: 0.4.19
 doi: 10.5281/zenodo.22215142
 references:
   - type: article

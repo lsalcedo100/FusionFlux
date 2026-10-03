@@ -525,7 +525,7 @@ everywhere, so its spread sits near zero however good its in-range fit was: the
 same failure a tree ensemble shows when it cannot exceed its largest training
 target, reached by a different route.}
 \label{fig:gp}
-\par\smallskip\noindent{\footnotesize\emph{Alt text.} Top: log-RMSE under a held-out label and the ITER-size-matched cut for three Gaussian-process kernels and three reference models. The bounded RBF kernel rises to 1.948, worse than the trees; the linear-plus-RBF kernel falls to 0.191. Bottom: the RBF kernel's predictions spread far less than the truth, the other two about as much.}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Top: held-out error under a held-out label and the size cut for three Gaussian-process kernels and three reference models. The bounded RBF kernel degrades past the tree ensembles at the cut; the linear-plus-RBF kernel improves. Bottom: the RBF kernel's predictions spread far less than the truth, the other two about as much.}
 \end{figure}
 
 The control behaves as intended: the linear-kernel process and ridge agree to $0.0000$ under
@@ -784,7 +784,7 @@ mean baseline. Bottom: the sweep across every cut, with underpowered cuts drawn
 faint and excluded from claims. The power law holds across the sweep and the
 trees do not recover.}
 \label{fig:size}
-\par\smallskip\noindent{\footnotesize\emph{Alt text.} Top: log-RMSE under held-out shot, held-out label and a label larger than anything in training. The two tree ensembles rise to 0.938 and 1.072, the ridge power law to 0.278, IPB98(y,2) stays near 0.19. Bottom: the size-ordered sweep, with the trees near 1.0 and the power laws near 0.2 to 0.3 across the powered cuts.}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Top: error under held-out shot, held-out label and a label larger than anything in training. The two tree ensembles rise steeply, the ridge power law moderately, and the historical law barely at all. Bottom: across the size-ordered sweep the trees sit near the constant baseline and the power laws far below it on every powered cut.}
 \end{figure}
 
 \section{A power law with a bounded correction}
@@ -1610,7 +1610,7 @@ of the device from its training rows, for the power law and the random forest,
 with the rank correlation over the seven devices in the legend. The correlation
 is described and not tested at this device count.}
 \label{fig:ishcdb}
-\par\smallskip\noindent{\footnotesize\emph{Alt text.} Left: on the stellarator database the power law rises from 0.288 under cross-validation to 0.442 with a device held out, while the forest starts lower at 0.209 and rises above it to 0.814, so the lines cross. Right: per-device error rises with distance for both models, with LHD furthest and worst.}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Left: on the stellarator database the power law's error rises moderately from cross-validation to a held-out device, while the forest starts lower and rises above it, so the lines cross. Right: per-device error rises with distance from the training rows for both models, with LHD the furthest and the worst.}
 \end{figure}
 
 Figure~\ref{fig:ishcdb} draws both splits and the distance diagnostic. This is the one part of the main text's pattern that did not reproduce. On
