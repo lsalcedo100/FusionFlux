@@ -73,8 +73,8 @@ text. Sections~S1 to~S3 are fusion analyses whose headline numbers are stated in
 the main text and whose construction, tables and caveats are given here in full:
 repairing the interval collapse and finding the limit of the repair, replicating
 the ranking inversion on rows the standard analysis set excludes, and a locked
-forecast at three device operating points. Sections~S4 and~S5 are the two
-replications outside fusion. Sections~S6 to~S8 are supporting material for
+forecast at three device operating points. Sections~S4 and~S5 are reserved
+(see below). Sections~S6 to~S8 are supporting material for
 results the main text states in prose: the three-kernel Gaussian-process ladder
 behind the mean-function ablation, the full model, kernel and split
 specification, and the per-label scores with the eligibility-threshold sweep.
@@ -96,9 +96,9 @@ sentence: the construction of the loss-power and device-identity controls, the
 distance diagnostic and the training-target bound in detail, and the provenance
 of every input and number.
 
-Secs.~\ref{sec:allometry} and~\ref{sec:ladder} are stubs: the two
-replications outside fusion they held are repository-only and no confinement
-result depends on them.
+Secs.~\ref{sec:allometry} and~\ref{sec:ladder} are reserved for two
+repository-only analyses outside fusion that are omitted from the submitted
+supplementary material; no confinement result depends on them.
 
 Section and equation numbers prefixed S refer to this document; unprefixed
 section names refer to the main text.
@@ -159,7 +159,7 @@ cut. The device-level counterpart is Table~\ref{tab:supdevice}.}
 Model & LOLO & cut & LOLO & cut & LOLO & cut \\
 \midrule
 random forest & 35\% & 3\% & 88\% & 29\% & 88\% & 40\% \\
-hist grad.\ boosting & 45\% & 0\% & 90\% & 4\% & 89\% & 13\% \\
+hist grad.\ boosting & 45\% & 0.3\% & 90\% & 4\% & 89\% & 13\% \\
 ridge, log-linear & 83\% & 70\% & 91\% & 77\% & 92\% & 82\% \\
 power law, collisionless & 85\% & 91\% & 91\% & 95\% & 92\% & 92\% \\
 IPB98(y,2)$^{*}$ & 89\% & 88\% & 89\% & 89\% & 89\% & 87\% \\
@@ -245,8 +245,9 @@ is a historical reference rather than a fold-fitted competitor.
 
 Everything above rests on one file, which is a central limitation of the preceding analysis; Sec.~\ref{sec:ishcdb} adds a second database.
 The same OSF project publishes the full database revision, DB5.2.3, with 14153
-rows against STD5's 6228, and it is pinned by its own SHA-256. Matching on
-(tokamak, shot, time) shows STD5 is an ELMy-H-mode quality selection out of it
+rows against the 6228 of the deposited STD5 file analysed in the main text,
+and it is pinned by its own SHA-256. Matching on (tokamak, shot, time) shows
+that file is an ELMy-H-mode quality selection out of it
 and leaves two populations this study had not analysed: \textbf{5358 H-mode rows
 STD5 does not contain} (12 labels, zero row overlap) and \textbf{3860 ohmic
 and L-mode rows} in a different confinement regime, scored against
@@ -445,19 +446,17 @@ would have missed it.
 \section{The same audit on a scaling law from another science}
 \label{sec:allometry}
 
-This section and the next are not part of the submitted supplementary
-material. They ran the audit of the main text on two scaling laws outside
-fusion, Kleiber's law for mammalian basal metabolic rate and the allometry of
-woody plants, and no confinement result depends on either. Their
-construction, tables and figures are in the public repository
-(\texttt{analysis\_allometry.py}, \texttt{analysis\_tree\_allometry.py} and
-\texttt{results/RESULTS.md}). The section numbers are kept so that every
-pointer from the main text to Secs.~S6 to~S20 stays valid.
+Sections S4 and S5 are reserved for two repository-only analyses outside
+fusion, omitted from the submitted supplementary material; no confinement
+result depends on them. They are in the public repository as
+\texttt{analysis\_allometry.py} and \texttt{analysis\_tree\_allometry.py},
+with their prose in \texttt{results/RESULTS.md}. The numbers are kept so that
+every pointer from the main text to Secs.~S6 to~S20 holds.
 
 \section{The reversal's precondition, measured directly}
 \label{sec:ladder}
 
-See Sec.~\ref{sec:allometry}: repository only.
+Reserved.
 
 \section{The three-kernel Gaussian-process ladder}
 \label{supp:gpladder}
@@ -526,7 +525,7 @@ everywhere, so its spread sits near zero however good its in-range fit was: the
 same failure a tree ensemble shows when it cannot exceed its largest training
 target, reached by a different route.}
 \label{fig:gp}
-\par\smallskip\noindent{\footnotesize\emph{Alt text.} Two stacked panels. Top: log-RMSE on a log axis under the held-out label and the ITER-size-matched cut for three Gaussian-process kernels and, in grey, the forest, booster and ridge power law. The bounded RBF kernel rises from about 0.54 to 1.948, above the trees' 0.938 and 1.072; the linear kernel and the ridge power law coincide at 0.278; the linear-plus-RBF kernel falls from about 0.22 to 0.191. Bottom: the spread of each kernel's predictions against the spread of the true values on the held-out rows, with a dotted diagonal where the two are equal. At a truth spread of 0.45 the linear and linear-plus-RBF kernels sit near 0.42 and 0.40, close to the diagonal, and the RBF kernel at 0.22, far below it.}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Top: log-RMSE under a held-out label and the ITER-size-matched cut for three Gaussian-process kernels and three reference models. The bounded RBF kernel rises to 1.948, worse than the trees; the linear-plus-RBF kernel falls to 0.191. Bottom: the RBF kernel's predictions spread far less than the truth, the other two about as much.}
 \end{figure}
 
 The control behaves as intended: the linear-kernel process and ridge agree to $0.0000$ under
@@ -785,7 +784,7 @@ mean baseline. Bottom: the sweep across every cut, with underpowered cuts drawn
 faint and excluded from claims. The power law holds across the sweep and the
 trees do not recover.}
 \label{fig:size}
-\par\smallskip\noindent{\footnotesize\emph{Alt text.} Two stacked panels. Top: log-RMSE on a log axis for five models under three splits, held-out shot, held-out label and a label larger than anything in training. The random forest and gradient booster rise from about 0.13 to 0.938 and 1.072, the ridge power law from 0.18 to 0.278, IPB98(y,2) stays near 0.19 and ends at 0.194, and the mean baseline ends at 1.459. Bottom: the size-ordered sweep, log-RMSE on every label above the cut against the size ratio the cut demands, from 1.1 to 5, with a dotted line at the ITER jump of 1.82 and the region beyond 2.4 shaded as underpowered (fewer than 1000 training rows). The trees sit near 1.0 and the mean baseline near 1.4 across the powered range, while the ridge power law stays near 0.3 and IPB98(y,2) near 0.2.}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Top: log-RMSE under held-out shot, held-out label and a label larger than anything in training. The two tree ensembles rise to 0.938 and 1.072, the ridge power law to 0.278, IPB98(y,2) stays near 0.19. Bottom: the size-ordered sweep, with the trees near 1.0 and the power laws near 0.2 to 0.3 across the powered cuts.}
 \end{figure}
 
 \section{A power law with a bounded correction}
@@ -1611,7 +1610,7 @@ of the device from its training rows, for the power law and the random forest,
 with the rank correlation over the seven devices in the legend. The correlation
 is described and not tested at this device count.}
 \label{fig:ishcdb}
-\par\smallskip\noindent{\footnotesize\emph{Alt text.} Two panels for the stellarator database. Left: log-RMSE with each of the seven devices weighted equally, under cross-validation and with a device held out, for the ridge power law, the random forest and the gradient booster. The power law rises from 0.288 to 0.442; the two trees start lower, the forest at 0.209, and rise above it, the forest to 0.814, so the lines cross. Right: per-device log-RMSE against Mahalanobis distance from the training rows for the power law and the forest, with the seven devices named; both rise with distance, at correlations of $+0.57$ and $+0.64$, and LHD, the furthest device, has the forest at 2.378 and the power law at 0.790.}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Left: on the stellarator database the power law rises from 0.288 under cross-validation to 0.442 with a device held out, while the forest starts lower at 0.209 and rises above it to 0.814, so the lines cross. Right: per-device error rises with distance for both models, with LHD furthest and worst.}
 \end{figure}
 
 Figure~\ref{fig:ishcdb} draws both splits and the distance diagnostic. This is the one part of the main text's pattern that did not reproduce. On
@@ -1987,15 +1986,18 @@ matches a row of the full file on device, shot and time; the deposit's
 \texttt{IND} column is the full file's row number; every matched row carries
 the full file's \texttt{SELDB5} flag; and every one has an ELMy H-mode phase
 (\texttt{HGELM}, \texttt{HSELM}, \texttt{HGELMH} or \texttt{HSELMH}). The
-full file flags 7568 rows, against the 7537 the database description gives for
-STD5. Of the 7568, 1304 have phase \texttt{H}, H-mode with no ELM
+full deposited revision flags 7568 rows, 31 more than the 7537 the database
+description gives for STD5, so exact identity with the published membership
+cannot be established from the deposited files. Of the 7568, 1304 have phase
+\texttt{H}, H-mode with no ELM
 classification, and none of them is delivered; 6264 are ELMy, of which 6228
 are delivered and 36 are not. The 36 are listed in the audit file; no column of
 the full file separates them from the delivered rows, so the reason they are
 absent is not recorded in either file. The two devices the published count
 includes and the delivered file lacks, T-10 and TUMAN-3M, have no ELMy rows.
-The delivered file is therefore the ELMy H-mode part of STD5, which is the
-population the ELMy H-mode scalings were fitted to, less 36 rows.
+The delivered file is therefore the ELMy H-mode rows of the deposited STD5
+selection, the population the ELMy H-mode scalings were fitted to, less 36
+rows.
 
 \noindent The locked forecast of Sec.~\ref{supp:forecast} also carries a
 content digest over its input rows, so that a later edit to the operating
