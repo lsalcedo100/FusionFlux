@@ -1,0 +1,113 @@
+{
+  "dataset_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b",
+  "n_rows": 6214,
+  "within_device_features": [
+    "log_ip_ma",
+    "log_bt_t",
+    "log_ne_line_1e19_m3",
+    "log_p_loss_mw"
+  ],
+  "arms": {
+    "stored_energy_nine_features": {
+      "n_features": 9,
+      "features": [
+        "log_ip_ma",
+        "log_bt_t",
+        "log_ne_line_1e19_m3",
+        "log_p_loss_mw",
+        "log_r_m",
+        "log_kappa",
+        "log_inverse_aspect_ratio",
+        "log_m_eff_amu",
+        "log_a_m"
+      ],
+      "target": "w_th_j",
+      "cv_rmsle": {
+        "random_forest": 0.12294500591556888,
+        "hist_gradient_boosting": 0.12411392568939265,
+        "ridge_loglinear": 0.19317165905358363,
+        "mean_baseline": 1.3947074520683842,
+        "ipb98y2_analytic": 15.639117100695517
+      },
+      "cv_gain_of_forest": 0.36354532275635043,
+      "by_label": {
+        "n_units": 13,
+        "n_forest_worse": 9,
+        "mean_difference": 0.22037915051524798,
+        "forest_mean_rmsle": 0.467693894061744,
+        "power_law_mean_rmsle": 0.24731474354649594
+      },
+      "by_device": {
+        "n_units": 11,
+        "n_forest_worse": 9,
+        "mean_difference": 0.34768659831689347,
+        "forest_mean_rmsle": 0.5962793553168381,
+        "power_law_mean_rmsle": 0.24859275699994463
+      }
+    },
+    "confinement_time_within_device_features": {
+      "n_features": 4,
+      "features": [
+        "log_ip_ma",
+        "log_bt_t",
+        "log_ne_line_1e19_m3",
+        "log_p_loss_mw"
+      ],
+      "target": "tau_th_s",
+      "cv_rmsle": {
+        "random_forest": 0.1565881254609474,
+        "hist_gradient_boosting": 0.1610509119840613,
+        "ipb98y2_analytic": 0.19932029810234295,
+        "ridge_loglinear": 0.31510405445803435,
+        "mean_baseline": 0.8694547860807613
+      },
+      "cv_gain_of_forest": 0.503058995130125,
+      "by_label": {
+        "n_units": 13,
+        "n_forest_worse": 6,
+        "mean_difference": -0.03340923474300236,
+        "forest_mean_rmsle": 0.44381347135321064,
+        "power_law_mean_rmsle": 0.47722270609621315
+      },
+      "by_device": {
+        "n_units": 11,
+        "n_forest_worse": 5,
+        "mean_difference": -0.01811441809322033,
+        "forest_mean_rmsle": 0.5008000646805469,
+        "power_law_mean_rmsle": 0.5189144827737674
+      }
+    },
+    "stored_energy_within_device_features": {
+      "n_features": 4,
+      "features": [
+        "log_ip_ma",
+        "log_bt_t",
+        "log_ne_line_1e19_m3",
+        "log_p_loss_mw"
+      ],
+      "target": "w_th_j",
+      "cv_rmsle": {
+        "random_forest": 0.15299897927814052,
+        "hist_gradient_boosting": 0.16108257750429772,
+        "ridge_loglinear": 0.3230683835239451,
+        "mean_baseline": 1.3947074520683842,
+        "ipb98y2_analytic": 15.639117100695517
+      },
+      "cv_gain_of_forest": 0.5264192131422214,
+      "by_label": {
+        "n_units": 13,
+        "n_forest_worse": 5,
+        "mean_difference": 0.001718253066146066,
+        "forest_mean_rmsle": 0.4604827062349449,
+        "power_law_mean_rmsle": 0.45876445316879877
+      },
+      "by_device": {
+        "n_units": 11,
+        "n_forest_worse": 6,
+        "mean_difference": 0.05034751424230946,
+        "forest_mean_rmsle": 0.550748038659557,
+        "power_law_mean_rmsle": 0.5004005244172475
+      }
+    }
+  }
+}
