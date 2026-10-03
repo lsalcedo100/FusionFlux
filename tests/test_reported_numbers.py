@@ -101,6 +101,8 @@ def artifacts() -> dict[str, object]:
         "per_machine": _csv("extrapolation_per_machine.csv", "tokamak"),
         "conformal_per_machine": pd.read_csv(RESULTS / "conformal_per_machine.csv"),
         "device_calibration": _json("device_calibration.json"),
+        "ols": _json("ols_baseline.json"),
+        "membership": _json("std5_membership.json"),
     }
 
 
@@ -365,6 +367,14 @@ def _device_weighted_coverage(a: dict, model: str, method: str) -> float:
         if row["model_name"] == model and row["method"] == method:
             return float(row["device_weighted_coverage"])
     raise AssertionError(f"no device-weighted coverage for {model} under {method}")
+
+
+def _ols(a: dict, arm: str, *path: str) -> Union[float, int]:
+    """One field of the least-squares comparison, by label or by device."""
+    node: object = a["ols"][arm]
+    for key in path:
+        node = node[key]  # type: ignore[index]
+    return node  # type: ignore[return-value]
 
 
 def _best_tree_coverage_above_the_cut(a: dict) -> float:
@@ -929,7 +939,7 @@ CLAIMS: tuple[Claim, ...] = (
         lambda a: _dimensionless(a, "device_identity", "arms", "dimensionless_groups", "cv_rmsle", "random_forest"),
         _r(3),
         documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
-        phrases=lambda literal: (f"dimensionless groups & {literal} /", f"dimensionless groups {literal} /", f"the forest scores {literal} against"),
+        phrases=lambda literal: (f"dimensionless groups, diagnostic & {literal} /", f"dimensionless groups, diagnostic {literal} /", f"the forest scores {literal} against"),
     ),
     Claim(
         "controls table, power law CV in dimensionless coordinates",
@@ -1047,6 +1057,72 @@ CLAIMS: tuple[Claim, ...] = (
         _pct(),
         documents=(PAPER, PAPER_PDF),
         phrases=lambda n: (f"more than {n}",),
+    ),
+    # -- Sec. 3.2 and S11: the power law without its ridge penalty -------------
+    Claim(
+        "forest losses to unpenalised least squares, by label",
+        "13",
+        lambda a: _ols(a, "by_label", "random_forest", "n_worse_than_ols"),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"still loses on {n} of 13", f"loses on {n} of 13 labels and 11 of 11 devices"),
+    ),
+    Claim(
+        "forest losses to unpenalised least squares, by device",
+        "11",
+        lambda a: _ols(a, "by_device", "random_forest", "n_worse_than_ols"),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"13 of 13 labels and {n} of 11 devices, the booster", f"13 of 13 labels and {n} of 11 devices, at"),
+    ),
+    Claim(
+        "booster losses to unpenalised least squares, by label",
+        "12",
+        lambda a: _ols(a, "by_label", "hist_gradient_boosting", "n_worse_than_ols"),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"the booster on {n} of 13",),
+    ),
+    Claim(
+        "booster losses to unpenalised least squares, by device",
+        "10",
+        lambda a: _ols(a, "by_device", "hist_gradient_boosting", "n_worse_than_ols"),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"12 of 13 and {n} of 11",),
+    ),
+    Claim(
+        "unpenalised minus ridge mean held-out score, by device",
+        "0.0001",
+        lambda a: abs(_ols(a, "by_device", "ols_minus_ridge_mean")),
+        _r(4),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"by {n} in mean", f"erence of {n}. Against"),
+    ),
+    # -- Sec. 2 and S20: what the delivered STD5 file is ------------------------
+    Claim(
+        "STD5-flagged rows in the full DB5.2.3 file",
+        "7568",
+        lambda a: a["membership"]["seldb5_rows_in_full_file"],
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"{n} rows",),
+    ),
+    Claim(
+        "STD5-flagged rows without an ELM classification",
+        "1304",
+        lambda a: a["membership"]["seldb5_non_elmy_rows"],
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"{n} are H-mode rows", f"{n} have phase"),
+    ),
+    Claim(
+        "STD5-flagged ELMy rows",
+        "6264",
+        lambda a: a["membership"]["seldb5_elmy_rows"],
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"{n} are ELMy",),
+    ),
+    Claim(
+        "ELMy STD5 rows the deposit omits",
+        "36",
+        lambda a: a["membership"]["seldb5_elmy_rows_omitted"],
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"and {n} are absent", f"and {n} are not"),
     ),
     # -- Sec. S1: the device-level table with each device weighted equally --
     Claim(
@@ -1949,8 +2025,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    127: "One hundred and twenty-seven",
-    183: "one hundred and eighty-three",
+    136: "One hundred and thirty-six",
+    192: "one hundred and ninety-two",
 }
 
 

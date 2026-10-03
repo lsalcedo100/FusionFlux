@@ -535,6 +535,7 @@ models as it does on the ITPA H-mode database. Bottom: the mass-ordered sweep, w
 points marking cuts where the random forest is held inside its training
 range.}
 \label{fig:allometry}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Three stacked panels. Top: log-RMSE for Kleiber's 3/4 law, a free power law, a random forest and a gradient booster under two splits, held-out species and held-out order; all four rise from the first to the second, the trees from 0.437 and 0.418 to 0.517 and 0.487, the free power law from 0.374 to 0.432, and Kleiber's law from 0.396 to 0.440, so the order of the four does not invert. Middle: per-order log-RMSE against the distance of the held-out order from the rest, from 0.3 to 2.1, with the trees' errors rising fastest (correlations +0.64 and +0.65 against +0.39 and +0.45 for the two power laws). Bottom: the mass-ordered sweep, log-RMSE on every heavier order against the number of orders in the training half, 3 to 10; the booster stays near 1.0, the forest between 0.5 and 0.7 with its points circled, and the two power laws between 0.37 and 0.5.}
 \end{figure}
 
 \section{The reversal's precondition, measured directly}
@@ -612,6 +613,7 @@ entire species held out. The rows, splits and model specifications are held
 fixed; each rung adds one named predictor to the nested set. The top curves
 cross; the bottom ones do not.}
 \label{fig:ladder}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Two stacked panels of log-RMSE against the number of predictors the models may see, 1 to 4, for a log-linear power law, a random forest and a gradient booster on 3599 plants. Top, the interpolation split: the three lines fall from about 0.56 to 0.61 at one predictor to about 0.31 to 0.34 at four, and the trees cross below the power law at three predictors, marked by a dotted line. Bottom, with an entire species held out: the power law is lowest at every count, from 0.50 to 0.27, and the trees stay above it, from 0.59 and 0.55 to 0.30 and 0.31, so the crossing seen above does not appear.}
 \end{figure}
 
 So the extrapolation failure reproduces in all three datasets tested here, at
@@ -692,6 +694,7 @@ everywhere, so its spread sits near zero however good its in-range fit was: the
 same failure a tree ensemble shows when it cannot exceed its largest training
 target, reached by a different route.}
 \label{fig:gp}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Two stacked panels. Top: log-RMSE on a log axis under the held-out label and the ITER-size-matched cut for three Gaussian-process kernels and, in grey, the forest, booster and ridge power law. The bounded RBF kernel rises from about 0.54 to 1.948, above the trees' 0.938 and 1.072; the linear kernel and the ridge power law coincide at 0.278; the linear-plus-RBF kernel falls from about 0.22 to 0.191. Bottom: the spread of each kernel's predictions against the spread of the true values on the held-out rows, with a dotted diagonal where the two are equal. At a truth spread of 0.45 the linear and linear-plus-RBF kernels sit near 0.42 and 0.40, close to the diagonal, and the RBF kernel at 0.22, far below it.}
 \end{figure}
 
 The control behaves as intended: the linear-kernel process and ridge agree to $0.0000$ under
@@ -950,6 +953,7 @@ mean baseline. Bottom: the sweep across every cut, with underpowered cuts drawn
 faint and excluded from claims. The power law holds across the sweep and the
 trees do not recover.}
 \label{fig:size}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Two stacked panels. Top: log-RMSE on a log axis for five models under three splits, held-out shot, held-out label and a label larger than anything in training. The random forest and gradient booster rise from about 0.13 to 0.938 and 1.072, the ridge power law from 0.18 to 0.278, IPB98(y,2) stays near 0.19 and ends at 0.194, and the mean baseline ends at 1.459. Bottom: the size-ordered sweep, log-RMSE on every label above the cut against the size ratio the cut demands, from 1.1 to 5, with a dotted line at the ITER jump of 1.82 and the region beyond 2.4 shaded as underpowered (fewer than 1000 training rows). The trees sit near 1.0 and the mean baseline near 1.4 across the powered range, while the ridge power law stays near 0.3 and IPB98(y,2) near 0.2.}
 \end{figure}
 
 \section{A power law with a bounded correction}
@@ -1180,6 +1184,18 @@ Tuning therefore widens the interpolation margin that later inverts and does
 not repair the extrapolation failure, which is what the training-target bound
 predicts: no setting of these hyperparameters moves a ceiling that comes from
 averaging training targets.
+
+\paragraph{The penalty on the power law.} The headline power law is a ridge
+regression with scikit-learn's default penalty, $\alpha=1$ on standardised
+columns, where confinement scalings are historically fitted by unpenalised
+least squares. \texttt{analysis\_ols\_baseline.py} scores the unpenalised
+fit, the unconstrained rung of the Connor--Taylor hierarchy, beside the two
+tree ensembles under both leave-one-out splits. The two power laws are
+indistinguishable: 0.214 against 0.214 by label and 0.212 against 0.211 by
+device, a mean difference of 0.0001. Against the unpenalised fit the forest
+loses on 13 of 13 labels and 11 of 11 devices, at mean gaps of $+0.251$ and
+$+0.315$, and the booster on 12 of 13 and 10 of 11: the same counts as against
+ridge. The penalty is not what the reversal rests on.
 
 \paragraph{Two conventions this paper does not follow.} Neither the population
 nor the weighting used above matches how the ITPA scalings were produced, and
@@ -1763,6 +1779,7 @@ of the device from its training rows, for the power law and the random forest,
 with the rank correlation over the seven devices in the legend. The correlation
 is described and not tested at this device count.}
 \label{fig:ishcdb}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Two panels for the stellarator database. Left: log-RMSE with each of the seven devices weighted equally, under cross-validation and with a device held out, for the ridge power law, the random forest and the gradient booster. The power law rises from 0.288 to 0.442; the two trees start lower, the forest at 0.209, and rise above it, the forest to 0.814, so the lines cross. Right: per-device log-RMSE against Mahalanobis distance from the training rows for the power law and the forest, with the seven devices named; both rise with distance, at correlations of $+0.57$ and $+0.64$, and LHD, the furthest device, has the forest at 2.378 and the power law at 0.790.}
 \end{figure}
 
 Figure~\ref{fig:ishcdb} draws both splits and the distance diagnostic. This is the one part of the main text's pattern that did not reproduce. On
@@ -1972,8 +1989,9 @@ collisionality directly, and the reference description of the revision analysed
 here~\cite{hdb5} reports that transforming an engineering-variable scaling into
 dimensionless form leaves large error bars on the result, proposes regression in
 the space of dimensionless variables as the alternative, and carries it out.
-What this arm adds is the use they are put to: a control on the device-label
-pathway, scored under the held-out-device split against the same models. In
+What this arm adds is the use they are put to: a diagnostic on the
+device-label pathway and not a target-blind control, scored under the
+held-out-device split against the same models. In
 $(\rho^{*},\beta,\nu^{*},q,\epsilon,\kappa,M)$ the size, field and density
 dependence is retained while no coordinate is a device label: $\rho^{*}$ moves
 26.6\% within a device, $\beta$ 35.4\%, $\nu^{*}$ 66.6\% and $q$ 70.4\%, against
@@ -2124,10 +2142,32 @@ file & SHA-256 \\
  & \texttt{7f0594d74f8917888169993ce668571e} \\[2pt]
 \texttt{baad\_data.zip} & \texttt{0375f012475658c039e3dcef398951e8} \\
  & \texttt{f68cdeb5430eec8cd65548965496cfe2} \\[2pt]
+% ishcdb:begin
+\texttt{ISHCDB\_26.txt} & \texttt{3a9f857b768ebd601385a9d8e25ac7df} \\
+ & \texttt{4d48b3403795a43dc484ba6b17fc5f55} \\[2pt]
+% ishcdb:end
 \bottomrule
 \end{tabular}
 \end{table}
 
+
+\noindent What the delivered STD5 file contains, relative to the published
+count, is settled by matching its rows to the full DB5.2.3 file
+(\texttt{tools/audit\_std5\_membership.py}, which writes
+\texttt{results/std5\_membership.json}). Every one of the 6228 delivered rows
+matches a row of the full file on device, shot and time; the deposit's
+\texttt{IND} column is the full file's row number; every matched row carries
+the full file's \texttt{SELDB5} flag; and every one has an ELMy H-mode phase
+(\texttt{HGELM}, \texttt{HSELM}, \texttt{HGELMH} or \texttt{HSELMH}). The
+full file flags 7568 rows, against the 7537 the database description gives for
+STD5. Of the 7568, 1304 have phase \texttt{H}, H-mode with no ELM
+classification, and none of them is delivered; 6264 are ELMy, of which 6228
+are delivered and 36 are not. The 36 are listed in the audit file; no column of
+the full file separates them from the delivered rows, so the reason they are
+absent is not recorded in either file. The two devices the published count
+includes and the delivered file lacks, T-10 and TUMAN-3M, have no ELMy rows.
+The delivered file is therefore the ELMy H-mode part of STD5, which is the
+population the ELMy H-mode scalings were fitted to, less 36 rows.
 
 \noindent The locked forecast of Sec.~\ref{supp:forecast} also carries a
 content digest over its input rows, so that a later edit to the operating
