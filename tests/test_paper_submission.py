@@ -299,29 +299,24 @@ EXPECTED_POINTERS = {
     1: "Repairing the intervals",
     2: "Robustness on rows the standard analysis set excludes",
     3: "Locked predictions at three device operating points",
-    # S4 and S5 are stubs: the two replications outside fusion are repository
-    # only, and the main text no longer points at them. The numbers are kept so
-    # that nothing below moves.
-    6: "The three-kernel Gaussian-process ladder",
-    7: "Full model, kernel and split specification",
-    8: "Per-label scores and the eligibility-threshold sweep",
-    9: "A power law with a bounded correction",
-    10: "The estimator this split design is usually paired with",
-    11: "Choices that do not carry the reversal",
-    12: "The same distance in dimensionless coordinates",
-    13: "What the elongation substitution costs",
-    # S14 to S16 were appended when the main text was shortened, so that no
-    # existing pointer above had to move.
-    14: "The design matrix and the refit",
-    15: "The Connor--Taylor hierarchy",
-    16: "Errors in variables",
-    # S17 was appended for the same reason.
-    17: "External replication on the stellarator-heliotron",
-    # S18 to S20 were appended when the main text was cut for Physics of
-    # Plasmas, again so that no existing pointer had to move.
-    18: "Controls on the loss-power identity and on device identity",
-    19: "The distance diagnostic and the training-target bound",
-    20: "Provenance of every input and number",
+    # The two replications outside fusion (formerly S4 and S5) left the
+    # submitted supplement for the Physics of Plasmas revision and everything
+    # after them moved up by two.
+    4: "The three-kernel Gaussian-process ladder",
+    5: "Full model, kernel and split specification",
+    6: "Per-label scores and the eligibility-threshold sweep",
+    7: "A power law with a bounded correction",
+    8: "The estimator this split design is usually paired with",
+    9: "Choices that do not carry the reversal",
+    10: "The same distance in dimensionless coordinates",
+    11: "What the elongation substitution costs",
+    12: "The design matrix and the refit",
+    13: "The Connor--Taylor hierarchy",
+    14: "Errors in variables",
+    15: "External replication on the stellarator-heliotron",
+    16: "Controls on the loss-power identity and on device identity",
+    17: "The distance diagnostic and the training-target bound",
+    18: "Provenance of every input and number",
 }
 
 

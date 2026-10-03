@@ -73,12 +73,11 @@ text. Sections~S1 to~S3 are fusion analyses whose headline numbers are stated in
 the main text and whose construction, tables and caveats are given here in full:
 repairing the interval collapse and finding the limit of the repair, replicating
 the ranking inversion on rows the standard analysis set excludes, and a locked
-forecast at three device operating points. Sections~S4 and~S5 are reserved
-(see below). Sections~S6 to~S8 are supporting material for
+forecast at three device operating points. Sections~S4 to~S6 are supporting material for
 results the main text states in prose: the three-kernel Gaussian-process ladder
 behind the mean-function ablation, the full model, kernel and split
 specification, and the per-label scores with the eligibility-threshold sweep.
-Sections~S9 to~S16 are results the main text summarises in a paragraph or a
+Sections~S7 to~S14 are results the main text summarises in a paragraph or a
 sentence each: a power law with a bounded correction; the mixed model the
 clustered-validation literature pairs with this split design; the choices that
 do not carry the reversal; the distance diagnostic in dimensionless
@@ -87,24 +86,20 @@ the ITPA20 laws; the rank audit of the design matrix and the refit of the
 published exponents; the Connor--Taylor hierarchy and a shrinkage prior in
 place of the constraint; and the errors-in-variables refit.
 % ishcdb:begin
-Section~S17 reports the external replication on the International
+Section~S15 reports the external replication on the International
 Stellarator-Heliotron Confinement Database, specified and archived before its
 data were downloaded, on devices the tokamak database does not contain.
 % ishcdb:end
-Sections~S18 to~S20 hold material the main text states in a table or a
+Sections~S16 to~S18 hold material the main text states in a table or a
 sentence: the construction of the loss-power and device-identity controls, the
 distance diagnostic and the training-target bound in detail, and the provenance
 of every input and number.
 
-Secs.~\ref{sec:allometry} and~\ref{sec:ladder} are reserved for two
-repository-only analyses outside fusion that are omitted from the submitted
-supplementary material; no confinement result depends on them.
 
 Section and equation numbers prefixed S refer to this document; unprefixed
 section names refer to the main text.
 
-Each section here, other than the two stubs, is a result the main text states
-and relies on. What moved is the construction, the tables and the caveats, not
+Each section here is a result the main text states and relies on. What moved is the construction, the tables and the caveats, not
 the finding.
 
 \section{Repairing the intervals, and the limit of the repair}
@@ -162,9 +157,12 @@ random forest & 35\% & 3\% & 88\% & 29\% & 88\% & 40\% \\
 hist grad.\ boosting & 45\% & 0.3\% & 90\% & 4\% & 89\% & 13\% \\
 ridge, log-linear & 83\% & 70\% & 91\% & 77\% & 92\% & 82\% \\
 power law, collisionless & 85\% & 91\% & 91\% & 95\% & 92\% & 92\% \\
-IPB98(y,2)$^{*}$ & 89\% & 88\% & 89\% & 89\% & 89\% & 87\% \\
+IPB98(y,2)$^{\mathrm{a)}}$ & 89\% & 88\% & 89\% & 89\% & 89\% & 87\% \\
 \bottomrule
 \end{tabular}
+\\[2pt]
+{\footnotesize $^{\mathrm{a)}}$Historical reference, not refitted within these folds.}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Empirical coverage of nominal 90\% intervals for five models under split-conformal, by-label and distance-scaled calibration, on a held-out database label and across the ITER-size-matched cut. By-label calibration brings held-out-label coverage close to nominal for every model; coverage across the size cut remains well below nominal for the tree ensembles.}
 \end{table}
 
 Both arms behave as the diagnosis predicts. On a held-out label, empirical
@@ -197,11 +195,12 @@ random forest            & 31\% (1.23$\times$) & 84\% (2.46$\times$) & 88\% (2.7
 hist grad.\ boosting     & 38\% (1.24$\times$) & 77\% (2.29$\times$) & 80\% (2.53$\times$) \\
 ridge, log-linear        & 85\% (1.34$\times$) & 92\% (1.40$\times$) & 93\% (1.43$\times$) \\
 power law, collisionless & 88\% (1.34$\times$) & 92\% (1.39$\times$) & 93\% (1.42$\times$) \\
-IPB98(y,2)$^{*}$         & 90\% (1.39$\times$) & 90\% (1.39$\times$) & 90\% (1.39$\times$) \\
+IPB98(y,2)$^{\mathrm{a)}}$ & 90\% (1.39$\times$) & 90\% (1.39$\times$) & 90\% (1.39$\times$) \\
 \bottomrule
 \end{tabular}
 \\[2pt]
-{\footnotesize $^{*}$historical reference, not refitted within these folds.}
+{\footnotesize $^{\mathrm{a)}}$Historical reference, not refitted within these folds.}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Pooled row-level coverage of nominal 90\% intervals on a physically unseen held-out device, under split conformal, by-device and distance-scaled calibration, with median half-widths in brackets. Tree ensembles climb from well below nominal towards it only as interval widths roughly double, while the other models stay near nominal throughout.}
 \end{table}
 
 Table~\ref{tab:supdevice} says the diagnosis holds and the repair is less complete
@@ -340,13 +339,18 @@ the text below. The complete input vector for each device is recorded in
 & SPARC & JT-60SA & ITER \\
 & \SI{1.85}{\metre} & \SI{2.96}{\metre} (operating) & \SI{6.2}{\metre} \\
 \midrule
-IPB98(y,2)$^{*}$ & 0.765 [0.58, 1.00] & 0.479 [0.35, 0.66] & 3.591 [2.66, 4.85] \\
+IPB98(y,2)$^{\mathrm{a)}}$ & 0.765 [0.58, 1.00] & 0.479 [0.35, 0.66] & 3.591 [2.66, 4.85] \\
 power law, collisionless & 0.724 [0.55, 0.96] & 0.428 [0.31, 0.59] & 2.837 [2.09, 3.84] \\
 ridge, log-linear & 0.720 [0.53, 0.98] & 0.444 [0.32, 0.62] & 2.858 [2.07, 3.95] \\
 random forest & 0.136 [0.03, 0.53] & 0.449 [0.23, 0.87] & 0.435 [0.19, 0.98] \\
 hist grad.\ boosting & 0.305 [0.14, 0.69] & 0.418 [0.24, 0.74] & 0.444 [0.24, 0.84] \\
 \bottomrule
 \end{tabular}
+\\[2pt]
+{\footnotesize $^{\mathrm{a)}}$Historical reference, evaluated analytically at the
+operating point and not refitted; its interval is built by the same
+distance-scaled held-out-label calibration as the fitted rows.}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Predicted energy confinement times in seconds, with nominal 90\% intervals, for SPARC, JT-60SA and ITER from IPB98(y,2) and four fitted models. Predictions agree closely for JT-60SA and diverge for SPARC and ITER, where the tree ensembles predict much shorter times than the scaling laws.}
 \end{table}
 
 \paragraph{How these intervals are built.} They are not the plain
@@ -443,21 +447,6 @@ Alcator C-Mod, and every other label in the database tops out at or below
 leaves the data behind, and an extrapolation audit organised around size alone
 would have missed it.
 
-\section{The same audit on a scaling law from another science}
-\label{sec:allometry}
-
-Sections S4 and S5 are reserved for two repository-only analyses outside
-fusion, omitted from the submitted supplementary material; no confinement
-result depends on them. They are in the public repository as
-\texttt{analysis\_allometry.py} and \texttt{analysis\_tree\_allometry.py},
-with their prose in \texttt{results/RESULTS.md}. The numbers are kept so that
-every pointer from the main text to Secs.~S6 to~S20 holds.
-
-\section{The reversal's precondition, measured directly}
-\label{sec:ladder}
-
-Reserved.
-
 \section{The three-kernel Gaussian-process ladder}
 \label{supp:gpladder}
 
@@ -509,6 +498,7 @@ mean baseline & 0.869 & 0.994 & 1.459 & $+0.56$ \\
 \bottomrule
 \end{tabular}
 \label{tab:supgp}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Table of log-RMSE under cross-validation, a held-out label and the ITER-size-matched cut, with the rank correlation of per-label error against extrapolation distance, for three Gaussian-process kernels, a random forest, the IPB98(y,2) scaling and a mean baseline. Models without a long-range trend term show error rising with distance.}
 \end{table}
 
 \begin{figure}[!htbp]
@@ -693,9 +683,10 @@ in correlated clusters of quasi-stationary slices from one discharge. The
 standard finite-sample guarantee assumes exchangeable conformity scores and
 clustered rows do not supply that, so every coverage number in the main text is empirical
 row-level coverage rather than a guaranteed rate. A discharge-level conformity
-score, or a cluster-aware conformal method of the jackknife+ and CV+
-family~\cite{jackknife}, would be the way to recover a guarantee, and neither is
-used here.
+score, or a group-level conformal construction (the jackknife+ and CV+
+family~\cite{jackknife} adapted to clusters; the standard forms are not
+cluster-aware as they stand), would be the way to recover a guarantee, and
+neither is used here.
 
 
 \subsection{Seeds and determinism}
@@ -753,6 +744,7 @@ NSTX & 185 & 7.8 & 0.222 & 0.289 & 0.686 & 0.857 \\
 PBXM & 59 & 10.2 & 0.172 & 0.274 & 0.559 & 0.727 \\
 \bottomrule
 \end{tabular}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Table listing, for each of thirteen held-out tokamak labels, its row count, Mahalanobis distance from the training mean, and leave-one-label-out log-RMSE for the IPB98 power law, ridge, histogram gradient boosting and random forest. Tree-model errors grow with distance while power-law errors stay roughly level.}
 \end{table}
 
 \begin{table}[!htbp]
@@ -773,6 +765,7 @@ min.\ rows & labels scored & power law & forest & forest worse on & $p$ \\
 50 & 11 & 0.223 & 0.449 & 11 of 11 & $9.8\times10^{-4}$ \\
 \bottomrule
 \end{tabular}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Leave-one-label-out scores at four minimum-row thresholds: labels scored, log-RMSE of the power law and the forest, the number of labels on which the forest's error is higher, and the sign-test p-value. At every threshold the forest's error is roughly twice the power law's and higher on nearly every label.}
 \end{table}
 
 \begin{figure}[!htbp]
@@ -784,7 +777,7 @@ mean baseline. Bottom: the sweep across every cut, with underpowered cuts drawn
 faint and excluded from claims. The power law holds across the sweep and the
 trees do not recover.}
 \label{fig:size}
-\par\smallskip\noindent{\footnotesize\emph{Alt text.} Top: error under held-out shot, held-out label and a label larger than anything in training. The two tree ensembles rise steeply, the ridge power law moderately, and the historical law barely at all. Bottom: across the size-ordered sweep the trees sit near the constant baseline and the power laws far below it on every powered cut.}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Top: error under held-out shot, held-out label and a label larger than anything in training. The two tree ensembles rise steeply, the ridge power law moderately, and the historical law barely at all. Bottom: across the size-ordered sweep the trees climb to the constant baseline once the demanded ratio exceeds the smallest cuts, while the power laws stay far below it throughout.}
 \end{figure}
 
 \section{A power law with a bounded correction}
@@ -1248,6 +1241,7 @@ collisionless & $\rho^{*}$, $\beta$ & 2 \\
 electrostatic & $\rho^{*}$ & 3 \\
 \bottomrule
 \end{tabular}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Table listing the three Connor--Taylor similarity constraints, Kadomtsev, collisionless and electrostatic, with the dimensionless groups each holds fixed and the number of linear equations each contributes to the exponent fit. Holding fewer groups fixed admits more scale transformations and so imposes more constraint rows.}
 \end{table}
 
 \noindent Fixing fewer groups admits more transformations and therefore imposes
@@ -1275,7 +1269,8 @@ a subspace, and approaches a hard constraint as its variance goes to zero.
 \paragraph{Where the newer published laws sit on these surfaces.} The same
 machinery places the published laws on the surfaces. The two that transfer best
 across the ITER-size-matched cut (Sec.~4 of the main text) are also the two
-furthest from every surface derived here. Their triangularity
+furthest from the Kadomtsev and collisionless surfaces derived here. Their
+triangularity
 term is dimensionless and contributes no column to $C$, so the eight exponents
 the constraint is written over compare directly.
 
@@ -1286,7 +1281,7 @@ the constraint is written over compare directly.
 $\lVert Cb-d\rVert$ over the eight exponents the constraint is written over,
 beside the score each set of exponents gives across the ITER-size-matched cut.
 The two published laws fitted to this database revision are the two furthest
-from every surface and the two best across the cut. The numerical rows are in
+from the Kadomtsev and collisionless surfaces and the two best across the cut. The numerical rows are in
 \texttt{results/dimensional.json}.}
 \label{tab:surfacedistance}
 \begin{tabular}{lrrrr}
@@ -1299,6 +1294,7 @@ ITPA20, published          & 0.0147 & 0.089 & 0.745 & 0.165 \\
 ITPA20-IL, published       & 0.0142 & 0.106 & 0.853 & 0.158 \\
 \bottomrule
 \end{tabular}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Table giving, for four sets of scaling-law exponents, the distance from three Connor--Taylor surfaces alongside the score across the ITER-size-matched cut. The two published ITPA20 laws lie furthest from the Kadomtsev and collisionless surfaces yet score lowest at the cut, so proximity to a surface does not order the four.}
 \end{table}
 
 Proximity to a surface therefore does not order these four, and no claim here
@@ -1459,6 +1455,7 @@ toroidal field & \texttt{BT} & T, absolute value & used \\
 rotational transform $\iotatwothirds$ & \texttt{IOTA23} & absolute value & omitted, finite and positive on 39\% of rows, below 90\% \\
 \bottomrule
 \end{tabular}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Table mapping the confinement time and the six stellarator scaling regressors to their ISHCDB columns, with each column's conversion and status. The confinement time is the target, five regressors are used as delivered, rescaled or in absolute value, and the rotational transform is omitted because too few rows carry it.}
 \end{table}
 
 Table~\ref{tab:ishcdb-mapping} gives the mapping. The target follows the standard set's own convention: the diamagnetic
@@ -1501,6 +1498,7 @@ W7-A & 13 & 13 & 13 & no \\
 HSX & 539 & 0 & 0 & no \\
 \bottomrule
 \end{tabular}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Rows per stellarator device delivered, in the standard set and complete on the frozen features, with whether each is scored. Every standard-set row is complete, the standard set roughly matches the delivered count for some devices and is much smaller for others, and seven devices are scored while two are not.}
 \end{table}
 
 Table~\ref{tab:ishcdb-population} counts the rows. The file delivers 4940 rows. Dropping the
@@ -1566,6 +1564,7 @@ every measured row & ridge, log-linear & 0.323 & 0.361 & 0.699 & 1.94$\times$ \\
  & hist gradient boosting & 0.259 & 0.244 & 1.041 & 4.26$\times$ \\
 \bottomrule
 \end{tabular}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Logarithmic root-mean-square error on the stellarator database under pooled cross-validation, matched cross-validation and device holdout, with the holdout-to-cross-validation ratio, for the standard set and for every measured row. The tree-based models score lower than the log-linear power law under cross-validation and show larger holdout-to-cross-validation ratios in both populations.}
 \end{table}
 
 Table~\ref{tab:ishcdb-result} scores every model under both splits. On the standard set the random forest is better than the log-linear power law
@@ -1649,6 +1648,7 @@ random forest & 0.209 & 0.208 & 0.814 & 0.427 \\
 hist gradient boosting & 0.203 & 0.203 & 0.950 & 0.428 \\
 \bottomrule
 \end{tabular}
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Error of the three ranked models on the stellarator database under cross-validation and device holdout, each whole and with every device's mean log residual removed. Centring brings the power law's holdout error back to its cross-validation level, while the two tree models remain roughly twice their cross-validation error.}
 \end{table}
 
 ISS04 could not fit these devices with one constant. It carries a
@@ -1858,6 +1858,22 @@ engineering variables. This arm is a different experiment carrying a different c
 rather than a stricter version of the same one. The specification is in
 \texttt{analysis\_dimensionless.py}.
 
+\paragraph{Both objections at once.} The two controls above each remove one
+confound and leave the other in place, and the dimensionless arm that would
+combine them is not blind to the target. \texttt{analysis\_joint\_control.py}
+removes both with nothing derived from the target: the target is
+$\log W_{\mathrm{th}}$ and the features are the four within-device columns,
+plasma current, toroidal field, density and loss power, every one known
+before a machine runs. On the 6214 rows that carry a stored energy the forest
+wins cross-validation, 0.153 against the power law's 0.323, and held out it
+is level with the power law: worse on 5 of 13 labels and 6 of 11 devices, at
+mean gaps of $+0.002$ and $+0.050$. The same script scores the two single
+controls on the same rows for comparison, and reproduces their numbers. This
+arm deletes the size dependence along with the identity, as the within-device
+arm does, so it cannot say which of the two the reversal needs; what it shows
+is that the reversal does not survive the removal of the features that carry
+both, whichever target is used.
+
 \section{The distance diagnostic and the training-target bound in detail}
 \label{supp:distance}
 
@@ -1975,6 +1991,9 @@ file & SHA-256 \\
 % ishcdb:end
 \bottomrule
 \end{tabular}
+% ishcdb:begin
+\par\smallskip\noindent{\footnotesize\emph{Alt text.} Table listing the third-party input files, two from the ITPA H-mode confinement database and the stellarator database file, each paired with the SHA-256 fingerprint checked on load. A file whose bytes differ from the printed fingerprint is refused rather than analysed.}
+% ishcdb:end
 \end{table}
 
 

@@ -103,6 +103,7 @@ def artifacts() -> dict[str, object]:
         "device_calibration": _json("device_calibration.json"),
         "ols": _json("ols_baseline.json"),
         "membership": _json("std5_membership.json"),
+        "joint": _json("joint_control.json"),
     }
 
 
@@ -489,8 +490,8 @@ LATE_RESULTS = (README, RESULTS_MD, PAPER, PAPER_PDF)
 MOVED_TO_SUPPLEMENT = (README, RESULTS_MD, SUPPLEMENTARY, SUPPLEMENTARY_PDF)
 
 # Result 13's numbers. The two replications outside fusion are repository-only
-# since the Physics of Plasmas revision: S4 and S5 of the supplement are stubs,
-# so these bind to the README and RESULTS.md, where the numbers still live.
+# since the Physics of Plasmas revision, so these bind to the README and
+# RESULTS.md, where the numbers still live.
 ALLOMETRY = (README, RESULTS_MD)
 
 # Result 14 is carried by the README and the full writeup. The paper is a
@@ -659,7 +660,7 @@ CLAIMS: tuple[Claim, ...] = (
         _r(3),
         documents=(PAPER, PAPER_PDF),
     ),
-    # These seven moved to the supplement with Sec. S13 and the trimmed
+    # These seven moved to the supplement with Sec. S11 and the trimmed
     # mixed-model paragraph. The claims did not silently follow: all seven
     # failed on the move, which is what the second half of each claim is for.
     Claim(
@@ -827,14 +828,14 @@ CLAIMS: tuple[Claim, ...] = (
         "2.837",
         lambda a: _forecast(a, "powerlaw_collisionless"),
         _r(3),
-        documents=(PAPER, PAPER_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     Claim(
         "IPB98(y,2)'s ITER prediction",
         "3.591",
         lambda a: _forecast(a, "ipb98y2_analytic"),
         _r(3),
-        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
     ),
     # -- Sec. 4.2: do the features name the machine? -----------------------
     Claim(
@@ -1056,7 +1057,7 @@ CLAIMS: tuple[Claim, ...] = (
         documents=(PAPER, PAPER_PDF),
         phrases=lambda n: (f"more than {n}",),
     ),
-    # -- Sec. 3.2 and S11: the power law without its ridge penalty -------------
+    # -- Sec. 3.2 and S9: the power law without its ridge penalty --------------
     Claim(
         "forest losses to unpenalised least squares, by label",
         "13",
@@ -1093,7 +1094,96 @@ CLAIMS: tuple[Claim, ...] = (
         documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda n: (f"by {n} in mean", f"erence of {n}. Against"),
     ),
-    # -- Sec. 2 and S20: what the delivered STD5 file is ------------------------
+    # -- Sec. 7: the constrained fit against IPB98(y,2) at ITER ---------------
+    Claim(
+        "constrained fit below IPB98(y,2) at the ITER reference point",
+        "21%",
+        lambda a: 1.0 - _forecast(a, "powerlaw_collisionless") / _forecast(a, "ipb98y2_analytic"),
+        _pct(),
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"sits \\textbf{{{n}}} below", f"sits {n} below"),
+    ),
+    # -- Sec. 3.1: the device gap without resampling ---------------------------
+    Claim(
+        "median device gap, forest against ridge",
+        "+0.349",
+        lambda a: _ols(a, "by_device", "random_forest", "median_gap_vs_ridge"),
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"median device gap is ${n}$", f"median device gap is {n}"),
+    ),
+    Claim(
+        "smallest device gap, forest against ridge",
+        "+0.006",
+        lambda a: _ols(a, "by_device", "random_forest", "min_gap_vs_ridge"),
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"the smallest ${n}$", f"the smallest {n}"),
+    ),
+    Claim(
+        "drop-one-device mean gap, low end",
+        "+0.290",
+        lambda a: _ols(a, "by_device", "random_forest", "drop_one_unit_mean_gap_vs_ridge", "min"),
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"between ${n}$ and", f"between {n} and"),
+    ),
+    Claim(
+        "drop-one-device mean gap, high end",
+        "+0.346",
+        lambda a: _ols(a, "by_device", "random_forest", "drop_one_unit_mean_gap_vs_ridge", "max"),
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF),
+        phrases=lambda n: (f"and ${n}$. The inversion", f"and {n}. The inversion"),
+    ),
+    # -- Sec. 3.2 and S16: both objections removed at once ---------------------
+    Claim(
+        "joint control, forest CV",
+        "0.153",
+        lambda a: a["joint"]["arms"]["stored_energy_within_device_features"]["cv_rmsle"]["random_forest"],
+        _r(3),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"{n} against", f"{n} /"),
+    ),
+    Claim(
+        "joint control, power law CV",
+        "0.323",
+        lambda a: a["joint"]["arms"]["stored_energy_within_device_features"]["cv_rmsle"]["ridge_loglinear"],
+        _r(3),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"against {n}", f"/ {n}", f"s {n}, and held"),
+    ),
+    Claim(
+        "joint control, labels the forest loses",
+        "5",
+        lambda a: a["joint"]["arms"]["stored_energy_within_device_features"]["by_label"]["n_forest_worse"],
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"worse on {n} of 13 labels and 6 of 11",),
+    ),
+    Claim(
+        "joint control, devices the forest loses",
+        "6",
+        lambda a: a["joint"]["arms"]["stored_energy_within_device_features"]["by_device"]["n_forest_worse"],
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"5 of 13 labels and {n} of 11 devices",),
+    ),
+    Claim(
+        "joint control, label gap",
+        "+0.002",
+        lambda a: a["joint"]["arms"]["stored_energy_within_device_features"]["by_label"]["mean_difference"],
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"gaps of ${n}$", f"gaps of {n}", f"& ${n}$ &"),
+    ),
+    Claim(
+        "joint control, device gap",
+        "+0.050",
+        lambda a: a["joint"]["arms"]["stored_energy_within_device_features"]["by_device"]["mean_difference"],
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"and ${n}$", f"and {n}"),
+    ),
+    # -- Sec. 2 and S18: what the delivered STD5 file is ------------------------
     Claim(
         "STD5-flagged rows in the full DB5.2.3 file",
         "7568",
@@ -1114,22 +1204,22 @@ CLAIMS: tuple[Claim, ...] = (
         "STD5-flagged rows without an ELM classification",
         "1304",
         lambda a: a["membership"]["seldb5_non_elmy_rows"],
-        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda n: (f"{n} are H-mode rows", f"{n} have phase"),
     ),
     Claim(
         "STD5-flagged ELMy rows",
         "6264",
         lambda a: a["membership"]["seldb5_elmy_rows"],
-        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
-        phrases=lambda n: (f"{n} are ELMy",),
+        documents=(SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"{n} are ELMy", f"{n}"),
     ),
     Claim(
         "ELMy STD5 rows the deposit omits",
         "36",
         lambda a: a["membership"]["seldb5_elmy_rows_omitted"],
         documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
-        phrases=lambda n: (f"and {n} are absent", f"and {n} are not"),
+        phrases=lambda n: (f"less {n} rows", f"and {n} are not"),
     ),
     # -- Sec. S1: the device-level table with each device weighted equally --
     Claim(
@@ -2032,8 +2122,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    137: "One hundred and thirty-seven",
-    174: "one hundred and seventy-four",
+    144: "One hundred and forty-four",
+    185: "one hundred and eighty-five",
 }
 
 

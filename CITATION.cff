@@ -20,17 +20,17 @@ abstract: >-
   not on every device, when stored energy replaces confinement time as the
   target and, in a diagnostic that is not blind to the target, when the
   features are replaced by dimensionless groups that carry less device
-  identity. It reproduces on all 7 eligible devices of the stellarator-
-  heliotron confinement database, in an analysis fixed before those data
-  were downloaded. At a size cut matching ITER's 1.82-fold step in major
-  radius, 90% split-conformal intervals cover 3% and 0.3% of held-out rows
-  for the two tree ensembles, with widths that change by under 1.5%, so
-  they give no sign of failing. Across that cut, Connor-Taylor constraints
-  on the exponents and a Gaussian process with a linear kernel term both
-  reduce the error. An ablation that varies only the long-range mean is
-  consistent with saturation, rather than flexibility alone, as the main
-  failure mechanism in the models tested. Four reporting checks follow,
-  three of which need no extra fitting.
+  identity. It reproduces on all 7 eligible devices of the
+  stellarator-heliotron confinement database, in an analysis fixed before
+  those data were downloaded. At a size cut matching ITER's 1.82-fold step
+  in major radius, 90% split-conformal intervals cover 3% and 0.3% of
+  held-out rows for the two tree ensembles, with widths that change by
+  under 1.5%, so they give no sign of failing. Across that cut,
+  Connor-Taylor constraints on the exponents and a Gaussian process with a
+  linear kernel term both reduce the error. An ablation that varies only
+  the long-range mean is consistent with loss of a continuing trend as one
+  contributor, beyond flexibility alone, in the models tested. Four
+  reporting checks follow, three of which need no extra fitting.
   Includes a rank-deficiency audit of the design matrix, a from-scratch
   least-squares implementation (Cholesky, QR, SVD), a refit of the
   IPB98(y,2) exponents decomposed along the singular directions of the data,

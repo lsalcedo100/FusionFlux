@@ -1,58 +1,64 @@
 Alternative text for the figures and tables of
 "Holding out whole tokamaks reverses tree-ensemble versus power-law rankings
 for energy-confinement scaling" (L. Salcedo), prepared to AIP Publishing's
-request for a separate alt-text file. Supplementary figures carry their alt
-text beneath their captions in the supplementary PDF.
+request for a separate alt-text file. Supplementary figures and tables carry
+their alt text beneath their captions in the supplementary PDF.
 
-FIGURE 1. Three panels. The random forest's error more than triples when the
-held-out unit changes from a discharge to a database label while the power
-law's barely moves; the forest's per-label error rises with distance from the
-training data and the power law's does not; and the worst-label error grows
-with model flexibility.
+FIGURE 1. Three panels. A slope chart of log-RMSE under held-out discharges and
+held-out labels, in which the two tree ensembles' lines rise steeply and the
+two power laws' lines stay nearly level; a scatter of per-label error against
+distance from the training data, rising for the random forest and level for
+the ridge power law; and a flexibility ladder on which the worst-label error
+rises with the degree of the polynomial.
 
-FIGURE 2. Every model's nominal 90 percent interval covers about 90 percent
-under cross-validation, but the two tree ensembles' coverage collapses on a
-held-out label and almost vanishes at the size cut, while the power laws stay
-well above half. Below, per-label coverage falls with distance for the trees
-only.
+FIGURE 2. Grouped bars of empirical coverage of nominal 90 percent intervals
+under three splits. Every model's cross-validation bar sits near the nominal
+line; the two tree ensembles' bars are far lower on a held-out label and lower
+still at the size cut, while the linear laws' bars stay closer to it. Below,
+per-label coverage against distance falls with distance for the two tree
+ensembles and not for the ridge power law.
 
-FIGURE 3. Top: across the size-ordered sweep the collisionless constraint
-gives the lowest held-out error and the unconstrained fit the highest, up to
-the ratio where cuts become underpowered. Bottom: each constraint's in-sample
-cost against its gain at the size cut; the collisionless rung gains most at
-almost no cost.
+FIGURE 3. Top: held-out error against the size ratio each cut demands, for
+the unconstrained power law, three constrained power laws and the historical
+law; the collisionless line lies below the unconstrained line at every
+well-powered cut, and cuts at larger ratios are drawn faint. Bottom: each
+constraint's in-sample cost against its score at the size cut; the Kadomtsev
+point sits at the unconstrained fit's cost and the collisionless point just
+above it, both lower at the cut, and the electrostatic point at a higher cost.
 
 TABLE I. Six fitted models and the historical IPB98(y,2) law under
-discharge-grouped cross-validation and held-out labels. The random forest is
-best under cross-validation and worst under held-out labels, and the two tree
-ensembles trade places with the log-linear power law between the columns.
+discharge-grouped cross-validation and held-out labels. The random forest has
+the lowest cross-validation error and the highest held-out-label error among
+the three primary models; the relative order of the tree ensembles and the
+log-linear fit changes between the two columns.
 
 TABLE II. The random forest and the power law under four splits, pooled over
-rows and with each unit weighted equally. The forest leads under both
-cross-validation rows and trails under both leave-one-out rows in all eight
-cells.
+rows and with each unit weighted equally. The forest's error is the lower one
+under both cross-validation rows and the higher one under both leave-one-out
+rows in all eight cells.
 
-TABLE III. Five control arms. The forest loses to the power law on every
-label and device with the nine engineering features, and still on most of
-them when stored energy is the target, when the loss power is deleted and in
-the dimensionless diagnostic; only restricting to within-device features
-removes the reversal.
+TABLE III. Six control arms. The forest's error exceeds the power law's on
+every label and device with the nine engineering features, on most of them
+when stored energy is the target, when the loss power is deleted and in the
+dimensionless diagnostic, on fewer than half with within-device features
+only, and on about half with stored energy as the target on those features.
 
 TABLE IV. Five models under three splits of increasing difficulty. At the size
-cut the two tree ensembles score nearer the constant baseline than the power
-law, while the historical law barely changes across the three splits.
+cut the two tree ensembles' errors lie nearer the constant baseline's than the
+power law's, while the historical law's error changes little across the three
+splits.
 
 TABLE V. Empirical coverage of nominal 90 percent split-conformal intervals.
-The two tree ensembles cover about half of rows on a held-out label and
-almost none at the size cut, at a half-width that does not change, so the
-intervals give no sign of failing.
+The two tree ensembles cover between a third and a half of rows on a held-out
+label and almost none at the size cut; the table lists one multiplicative
+half-width per model.
 
 TABLE VI. The Connor-Taylor hierarchy in order, with each row's selection
-status. The prospective Kadomtsev constraint improves the size cut at no
-in-sample cost, and the exploratory collisionless constraint improves it
-most; the electrostatic constraint costs accuracy everywhere.
+status. The prospective Kadomtsev constraint lowers the size-cut error at no
+in-sample cost, the exploratory collisionless constraint lowers it most, and
+the electrostatic constraint raises the in-sample and leave-one-out errors
+above the unconstrained fit's.
 
-TABLE VII. One RBF covariance family with three mean functions. A constant
-mean fails badly at the size cut, a fitted power-law mean matches plain ridge
-there, and IPB98(y,2)'s published exponents as the mean give the lowest error
-on every split.
+TABLE VII. One RBF covariance family with three mean functions. The
+constant-mean row has the highest error on every split; the row with
+IPB98(y,2)'s published exponents as the mean has the lowest on every split.
