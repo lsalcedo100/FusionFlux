@@ -18,7 +18,10 @@ STD5-disjoint rows and the locked device forecast.
 carries twenty sections. S1 to S3 are fusion analyses whose headline numbers stay
 in the main text while their construction, tables and caveats moved here when
 the paper was shortened: the interval repair, the STD5-disjoint replication and
-the locked forecast. S4 and S5 are the two replications outside fusion. S6 is
+the locked forecast. S4 and S5 are stubs: the two replications outside fusion
+they held are repository-only since the Physics of Plasmas revision (see
+`analysis_allometry.py`, `analysis_tree_allometry.py` and `../results/RESULTS.md`),
+and the numbers are kept so that no later pointer moves. S6 is
 the three-kernel Gaussian-process ladder, S7 the full model, kernel and split
 specification, and S8 the per-label scores and the eligibility-threshold sweep.
 S9 to S13 are supporting results the main text summarises in a sentence or two:

@@ -299,8 +299,9 @@ EXPECTED_POINTERS = {
     1: "Repairing the intervals",
     2: "Robustness on rows the standard analysis set excludes",
     3: "Locked predictions at three device operating points",
-    4: "The same audit on a scaling law from another science",
-    5: "The reversal's precondition, measured directly",
+    # S4 and S5 are stubs: the two replications outside fusion are repository
+    # only, and the main text no longer points at them. The numbers are kept so
+    # that nothing below moves.
     6: "The three-kernel Gaussian-process ladder",
     7: "Full model, kernel and split specification",
     8: "Per-label scores and the eligibility-threshold sweep",

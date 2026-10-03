@@ -202,12 +202,12 @@ def test_the_abstract_is_one_line(sheet: str) -> None:
 
 
 def test_the_data_availability_field_names_every_dataset(sheet: str) -> None:
-    """The retyped sheet said four datasets after the paper said five."""
+    """The retyped sheet once said four datasets after the paper said five."""
     field = sheet.split("DATA AVAILABILITY")[1].split("GENERATIVE AI")[0]
     # Read with whitespace collapsed: the sheet is wrapped at 78 columns, and
     # where the wrap falls is not what this checks.
-    assert "Five third-party datasets" in re.sub(r"\s+", " ", field)
-    for filename in ("hdb5_std5.csv", "hdb5_db523.csv", "allometry_bmr.txt", "baad_data.zip", "ISHCDB_26.txt"):
+    assert "Three third-party datasets" in re.sub(r"\s+", " ", field)
+    for filename in ("hdb5_std5.csv", "hdb5_db523.csv", "ISHCDB_26.txt"):
         assert filename in field, f"{filename} is missing from the data-availability field"
 
 

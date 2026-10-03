@@ -954,12 +954,6 @@ repository before its data were requested; the database had not been opened to
 the author by submission, so no result from it is reported, and the lock stays
 in force for whatever the data show.
 % ciclop:end
-Two replications outside fusion, on Kleiber's exponent\cite{kleiber} and on the
-allometry of the BAAD compilation\cite{baad}, reproduce the extrapolation
-failure (Secs.~S4 and~S5). They also do what these nine features cannot: they
-include cases where the flexible model does not win the interpolation split,
-and the failure appears there too, which is the case that gives no warning at
-all.
 
 \subsection{What this changes in practice}
 \label{sec:checklist}
@@ -1064,9 +1058,7 @@ closest analogue of a conformal interval but not the same construction, and the
 kernels are tuned on a seeded subsample of each training fold (Sec.~S6). The
 Gaussian-process result is for one kernel family,
 and a process with a linear part constrained as in Sec.~\ref{sec:dimensional},
-which would combine the two things that work here, is untested. The two
-replications outside fusion carry their own limits, given in Secs.~S4 and~S5.
-Of the three locked forecasts, only JT-60SA's can be checked in the near term,
+which would combine the two things that work here, is untested. Of the three locked forecasts, only JT-60SA's can be checked in the near term,
 and only once it runs an H-mode campaign.
 
 \section{Conclusion}
@@ -1107,9 +1099,7 @@ maintained by the ITPA Confinement Database and Modelling Topical Group and by
 the teams operating the contributing tokamaks. The author thanks them, and the
 authors of the database description\cite{hdb5}, for releasing the standard
 analysis set publicly: an independent recomputation of this kind is possible
-only because they did. The replications outside fusion use the BAAD
-compilation\cite{baad}, released under CC0, and the metabolic-rate compilation
-deposited on Figshare that the supplementary material describes.
+only because they did.
 % ishcdb:begin
 The stellarator replication uses the International Stellarator-Heliotron
 Confinement Database, assembled under the IEA stellarator-heliotron
@@ -1137,7 +1127,7 @@ draft (lead); Writing -- review \& editing (lead).
 
 \section*{Data availability}
 
-The data that support the findings of this study are openly available. Five
+The data that support the findings of this study are openly available. Three
 third-party datasets underlie this work, and none is redistributed here: each is
 fetched from its public source by a script in the repository and verified
 against a pinned SHA-256 on load, and Sec.~S20 of the supplementary material
@@ -1153,13 +1143,6 @@ excludes (Sec.~S2) and for the stored-energy, dimensionless and elongation
 controls, which take \texttt{WTH} and \texttt{KAPPA} from it. A separate
 download from the same OSF project (\url{https://osf.io/download/zhwa3/}). File
 \texttt{hdb5\_db523.csv}.
-\item \textbf{Mammalian basal metabolic rate.} The Figshare deposit of
-Capellini, Venditti and Barton\cite{capellini}. Used in the supplementary
-material. File \texttt{allometry\_bmr.txt}.
-\item \textbf{Biomass And Allometry Database (BAAD) v1.0.1.} Released CC0; the
-data paper is cited above\cite{baad} and the archive analysed here is release
-v1.0.1\cite{baadrelease}. Used in the supplementary material. File
-\texttt{baad\_data.zip}.
 % ishcdb:begin
 \item \textbf{International Stellarator-Heliotron Confinement Database,
 version 26.} The external replication of Sec.~S17 of the supplementary
@@ -1183,7 +1166,7 @@ number and figure was produced at commit
 \texttt{84cf8f62e07120e848297370d13f830a7f5a7276}, and every script verifies the
 pinned data fingerprints as it loads and refuses to run if they disagree.
 \textbf{One hundred and thirty-six} of the numbers printed in this paper, and
-\textbf{one hundred and ninety-two} across it and its supplementary material, are tied by
+\textbf{one hundred and seventy-three} across it and its supplementary material, are tied by
 test to the field of the generated file they came from, so a rerun that moved a
 value, or an edit that changed one, fails the test suite (Sec.~S20).
 
@@ -1349,13 +1332,6 @@ database,'' \emph{Nucl.\ Fusion} \textbf{64}, 015001 (2024).
 plasma operation with the international multi-machine CICLOP database,''
 \emph{Nucl.\ Fusion} \textbf{66}, 095001 (2026).
 \href{https://doi.org/10.1088/1741-4326/ae89cc}{doi:10.1088/1741-4326/ae89cc}
-\bibitem{kleiber} M. Kleiber, ``Body size and metabolism,''
-\emph{Hilgardia} \textbf{6}, 315 (1932).
-\href{https://doi.org/10.3733/hilg.v06n11p315}{doi:10.3733/hilg.v06n11p315}
-\bibitem{baad} D.S. Falster \emph{et al.}, ``BAAD: a Biomass And Allometry
-Database for woody plants,'' \emph{Ecology} \textbf{96}, 1445 (2015).
-Released CC0.
-\href{https://doi.org/10.1890/14-1889.1}{doi:10.1890/14-1889.1}
 \bibitem{loarte} A. Loarte \emph{et al.}, ``The new ITER baseline, research plan
 and open R\&D issues,'' \emph{Plasma Phys.\ Control.\ Fusion} \textbf{67},
 065023 (2025).
@@ -1364,14 +1340,6 @@ and open R\&D issues,'' \emph{Plasma Phys.\ Control.\ Fusion} \textbf{67},
 trends in noisy tokamak confinement data using geodesic least squares
 regression,'' \emph{Rev.\ Sci.\ Instrum.} \textbf{87}, 11D423 (2016).
 \href{https://doi.org/10.1063/1.4960069}{doi:10.1063/1.4960069}
-\bibitem{capellini} I. Capellini, C. Venditti and R.A. Barton, ``Supplement 1:
-data on basal metabolic rate with experimental animal body mass'' [dataset],
-Figshare (2016).
-\href{https://doi.org/10.6084/m9.figshare.3549807.v1}{doi:10.6084/m9.figshare.3549807.v1}
-\bibitem{baadrelease} D.S. Falster \emph{et al.}, \emph{BAAD: a Biomass And
-Allometry Database for woody plants} [dataset], Figshare (2015).
-\href{https://doi.org/10.6084/m9.figshare.c.3307692}{doi:10.6084/m9.figshare.c.3307692}.
-Release v1.0.1, \url{https://github.com/dfalster/baad/releases/tag/v1.0.1}
 \bibitem{ishcdbdata} IEA Stellarator-Heliotron Collaboration,
 \emph{International Stellarator-Heliotron Confinement Database}, version 26
 [dataset], IPP Greifswald and NIFS. \url{https://ishpdb.ipp-hgw.mpg.de/ISS/}

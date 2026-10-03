@@ -488,11 +488,10 @@ LATE_RESULTS = (README, RESULTS_MD, PAPER, PAPER_PDF)
 # now and the guard follows them rather than the other way round.
 MOVED_TO_SUPPLEMENT = (README, RESULTS_MD, SUPPLEMENTARY, SUPPLEMENTARY_PDF)
 
-# Result 13's numbers. The replication itself is in the Supplementary Material,
-# not the main text, so these are bound to it rather than to the paper; where a
-# document words something differently the claim carries both spellings rather
-# than being dropped.
-ALLOMETRY = (README, RESULTS_MD, SUPPLEMENTARY, SUPPLEMENTARY_PDF)
+# Result 13's numbers. The two replications outside fusion are repository-only
+# since the Physics of Plasmas revision: S4 and S5 of the supplement are stubs,
+# so these bind to the README and RESULTS.md, where the numbers still live.
+ALLOMETRY = (README, RESULTS_MD)
 
 # Result 14 is carried by the README and the full writeup. The paper is a
 # nine-page condensation that predates it and has no section for it yet.
@@ -503,9 +502,8 @@ ALLOMETRY = (README, RESULTS_MD, SUPPLEMENTARY, SUPPLEMENTARY_PDF)
 # that rebuild instead, via `tools/check_paper_submission.py --check-pdf-fresh`.
 GP = (README, RESULTS_MD, PAPER)
 
-# Result 15 is likewise reported in the Supplementary Material rather than the
-# main text.
-TREE = (README, RESULTS_MD, SUPPLEMENTARY)
+# Result 15 is likewise repository-only since the Physics of Plasmas revision.
+TREE = (README, RESULTS_MD)
 
 CLAIMS: tuple[Claim, ...] = (
     # -- dataset scale -----------------------------------------------------
@@ -2026,7 +2024,7 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 
 SPELLED = {
     136: "One hundred and thirty-six",
-    192: "one hundred and ninety-two",
+    173: "one hundred and seventy-three",
 }
 
 
