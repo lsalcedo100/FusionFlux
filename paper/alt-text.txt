@@ -1,0 +1,91 @@
+Alternative text for the figures and tables of
+"Holding out whole tokamaks reverses tree-ensemble versus power-law rankings
+for energy-confinement scaling" (L. Salcedo), prepared to AIP Publishing's
+request for a separate alt-text file. Supplementary figures carry their alt
+text beneath their captions in the supplementary PDF.
+
+FIGURE 1. Three stacked panels. Top: a slope chart of log-RMSE for four models
+under two splits, held-out discharge on the left and held-out label on the
+right. The random forest rises from 0.128 to 0.465 and the gradient booster
+from 0.130 to 0.359, each with a wide vertical interval bar on the right; the
+log-linear ridge power law moves from 0.181 to 0.214 and the analytic
+IPB98(y,2) law from 0.199 to 0.188, so the two lines for the trees cross the
+two nearly flat lines for the power laws. Middle: a scatter of per-label
+log-RMSE against Mahalanobis distance from the training data on a log axis
+from about 1.2 to 10, with the thirteen labels named. The random forest's
+points rise with distance from about 0.3 at AUG to 0.86 at NSTX and 0.72 at
+PBX-M, with a Spearman correlation of +0.85; the ridge points stay between
+0.1 and 0.3 at every distance, correlation -0.06. JET is circled. Bottom: the
+flexibility ladder, log-RMSE on a log axis against five models. For the
+polynomial rungs of degree 1, 2 and 3 the median over labels rises slowly
+from 0.22 to 0.29 while the worst label rises from 0.29 to 1.08 to 4.6. To the
+right of a dotted divider the two tree ensembles sit at a median of about
+0.3 to 0.45 and a worst label of 0.7 to 0.9, both circled.
+
+FIGURE 2. Two stacked panels. Top: grouped bars of empirical coverage of
+nominal 90 percent split-conformal intervals for five models under three
+splits, grouped cross-validation, leave one label out, and the
+ITER-size-matched cut, against a dashed line at 90 percent. Every model's
+cross-validation bar sits at 90 or 91. IPB98(y,2) stays at 89 and 88 on the
+other two splits and the ridge power law at 83 and 70; the bounded hybrid
+falls to 64 and 76; the gradient booster falls to 45 and 0.3, and the random
+forest to 35 and 3. Bottom: per-label coverage against Mahalanobis distance
+on a log axis for three models under the held-out-label split, with the
+thirteen label names in a gutter below the axis. The ridge line stays between
+0.65 and 1.0 across all distances, correlation +0.27; the booster and forest
+lines fall from about 0.5 near distance 1 to about 0.1 at distances above 5,
+correlations -0.54 and -0.77.
+
+FIGURE 3. Two stacked panels. Top: log-RMSE on held-out labels against the
+size ratio each cut demands, from 1.1 to 5, for the unconstrained, Kadomtsev,
+collisionless and electrostatic power laws and for the analytic IPB98(y,2)
+law as a dashed black line. A dotted vertical line at 1.82 marks the
+ITER-size-matched cut. Up to a ratio of about 2 the collisionless line is
+lowest at about 0.18 to 0.2, the Kadomtsev line next at about 0.25, the
+unconstrained line highest at about 0.28; beyond a ratio of 2.4 the points are
+drawn faint and are excluded from claims. Bottom: a scatter of what each
+constraint costs in sample (x, 0.18 to 0.225) against what it buys at the cut
+(y, 0.18 to 0.28). The unconstrained fit sits at (0.181, 0.279), Kadomtsev at
+(0.181, 0.254), collisionless at (0.182, 0.183) and electrostatic at
+(0.2245, 0.237).
+
+TABLE I. Six fitted models and the historical IPB98(y,2) law, with their
+log-RMSE under discharge-grouped cross-validation and leave-one-label-out and
+the ratio between the two. The rows are ordered by cross-validation score, and
+the order under held-out labels is close to the reverse: the random forest
+goes from 0.128 to 0.465 (ratio 3.6) and the log-linear ridge from 0.181 to
+0.214 (ratio 1.2).
+
+TABLE II. The random forest and the power law scored under four splits, each
+pooled over rows and with each unit weighted equally. The forest leads under
+both cross-validation rows and trails under both leave-one-out rows in all
+eight cells.
+
+TABLE III. Five control arms, each giving the cross-validation scores of the
+forest and the power law, the number of held-out labels (of 13) and devices
+(of 11) on which the forest is worse, and the mean paired gaps. The forest
+loses on 13 and 11 with the nine engineering features, 9 and 9 with stored
+energy as the target, 10 and 9 with the loss power deleted, 11 and 9 in the
+dimensionless diagnostic, and 6 and 5 with within-device features only.
+
+TABLE IV. Five models under three splits of increasing difficulty. Across the
+ITER-size-matched cut the random forest scores 0.938 and the gradient booster
+1.072, nearer the constant baseline's 1.459 than the power law's 0.278 and
+IPB98(y,2)'s 0.194.
+
+TABLE V. Empirical coverage of nominal 90 percent split-conformal intervals
+for five models under cross-validation, held-out label and the size cut, with
+the multiplicative half-width. The two tree ensembles fall from 91 percent
+to 45 and 35 percent and then to 0.3 and 3 percent, at a half-width of 1.23
+that does not change.
+
+TABLE VI. The Connor-Taylor hierarchy of constrained power laws in the order
+of the hierarchy, with each row's selection status, in-sample, cross-validated,
+held-out-label and held-out-device scores, the count of devices on which it is
+worse than the unconstrained fit, and its score at the ITER-size-matched cut.
+The prospective Kadomtsev row improves the cut from 0.279 to 0.254 at no
+in-sample cost; the exploratory collisionless row reaches 0.183.
+
+TABLE VII. One RBF covariance family with three mean functions. A constant
+mean scores 1.948 at the ITER-size-matched cut, a fitted power-law mean 0.278,
+and IPB98(y,2)'s published exponents as the mean 0.186.

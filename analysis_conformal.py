@@ -85,7 +85,7 @@ REPORTED_MODELS = (
 MODEL_LABELS = {
     "ipb98y2_analytic": "IPB98(y,2), analytic",
     "ridge_loglinear": "ridge, log-linear",
-    "hybrid_gbm_s1": "hybrid (Result 6)",
+    "hybrid_gbm_s1": "bounded hybrid",
     "hist_gradient_boosting": "hist gradient boosting",
     "random_forest": "random forest",
 }
@@ -360,8 +360,10 @@ def plot_conformal(analysis: ConformalAnalysis) -> Path | None:
         # Direct labels: with three bars per group a legend alone would make the
         # reader count positions to recover a number that is the whole point.
         for position, value in zip(positions + offset, values, strict=True):
+            # A coverage under one percent is printed to a decimal: "0" would
+            # say the interval never covers, and the booster covers 8 rows.
             axes[0].annotate(
-                f"{value * 100:.0f}",
+                f"{value * 100:.1f}" if 0 < value < 0.01 else f"{value * 100:.0f}",
                 xy=(position, value),
                 xytext=(0, 3),
                 textcoords="offset points",

@@ -37,7 +37,7 @@ BIB = ROOT / "paper" / "references.bib"
 # have no DOI either: the OSF deposit has none registered (checked against the
 # OSF API) and its GUID is the persistent identifier, and the BAAD archive is a
 # tagged software release whose data paper carries the DOI instead.
-NO_DOI = {"kadomtsev", "shiftcp", "ovadia", "hall", "hall26", "osfdb", "jt60saplan"}
+NO_DOI = {"kadomtsev", "shiftcp", "ovadia", "hall", "hall26", "osfdb", "ishcdbdata", "jt60saplan"}
 
 
 def _strip_comments(text: str) -> str:

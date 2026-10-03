@@ -1,0 +1,367 @@
+{
+  "std5_file_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b",
+  "db523_file_sha256": "7a48e34379663e3e298924990f05cd8f16b8581516bcfa7bb8f438f83ae80ab6",
+  "delivered_rows": 6228,
+  "delivered_rows_matched_in_full_file": 6228,
+  "delivered_rows_unmatched": 0,
+  "ind_is_full_file_row_number": true,
+  "delivered_rows_with_seldb5": 6228,
+  "delivered_phase_counts": {
+    "HGELM": 3630,
+    "HSELM": 1612,
+    "HGELMH": 906,
+    "HSELMH": 80
+  },
+  "full_file_rows": 14153,
+  "seldb5_rows_in_full_file": 7568,
+  "seldb5_rows_by_phase": {
+    "HGELM": 3634,
+    "HSELM": 1644,
+    "H": 1304,
+    "HGELMH": 906,
+    "HSELMH": 80
+  },
+  "seldb5_elmy_rows": 6264,
+  "seldb5_elmy_rows_delivered": 6228,
+  "seldb5_elmy_rows_omitted": 36,
+  "seldb5_elmy_rows_omitted_by_device": {
+    "JET": 24,
+    "MAST": 4,
+    "AUG": 3,
+    "TDEV": 3,
+    "COMPASS": 1,
+    "JFT2M": 1
+  },
+  "seldb5_non_elmy_rows": 1304,
+  "seldb5_non_elmy_rows_delivered": 0,
+  "seldb5_devices_absent_from_delivered_file": [
+    "T10",
+    "TUMAN3M"
+  ],
+  "omitted_elmy_rows": [
+    {
+      "TOK": "AUG",
+      "SHOT": 12599,
+      "TIME": 1.9,
+      "DATE": 19990806,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-II",
+      "full_row": 2160
+    },
+    {
+      "TOK": "AUG",
+      "SHOT": 12599,
+      "TIME": 4.25,
+      "DATE": 19990806,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-II",
+      "full_row": 2161
+    },
+    {
+      "TOK": "AUG",
+      "SHOT": 12600,
+      "TIME": 2.5,
+      "DATE": 19990806,
+      "PHASE": "HGELM",
+      "ELMTYPE": "TYPE-I",
+      "full_row": 2162
+    },
+    {
+      "TOK": "COMPASS",
+      "SHOT": 11768,
+      "TIME": 0.135,
+      "DATE": 19940204,
+      "PHASE": "HSELM",
+      "ELMTYPE": "UNKNOWN",
+      "full_row": 3975
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54102,
+      "TIME": 67.86376953,
+      "DATE": 20010316,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9195
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54103,
+      "TIME": 67.86376953,
+      "DATE": 20010316,
+      "PHASE": "HGELM",
+      "ELMTYPE": "TYPE-I",
+      "full_row": 9196
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54128,
+      "TIME": 65.62817383,
+      "DATE": 20010319,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9197
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54130,
+      "TIME": 64.88299561,
+      "DATE": 20010319,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9198
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54142,
+      "TIME": 68.40197754,
+      "DATE": 20010320,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9200
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54145,
+      "TIME": 65.13134766,
+      "DATE": 20010320,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9201
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54146,
+      "TIME": 64.63458252,
+      "DATE": 20010320,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9202
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54146,
+      "TIME": 66.387146,
+      "DATE": 20010320,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9203
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54146,
+      "TIME": 68.38818359,
+      "DATE": 20010320,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9204
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54147,
+      "TIME": 66.125,
+      "DATE": 20010320,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9205
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54148,
+      "TIME": 68.12597656,
+      "DATE": 20010320,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9206
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54149,
+      "TIME": 65.87658691,
+      "DATE": 20010320,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9207
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54157,
+      "TIME": 60.63259888,
+      "DATE": 20010321,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9208
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54158,
+      "TIME": 61.3777771,
+      "DATE": 20010321,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9209
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54159,
+      "TIME": 63.37878418,
+      "DATE": 20010321,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9210
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54176,
+      "TIME": 63.87557983,
+      "DATE": 20010322,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9211
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54185,
+      "TIME": 62.6473999,
+      "DATE": 20010322,
+      "PHASE": "HGELM",
+      "ELMTYPE": "TYPE-I",
+      "full_row": 9212
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54186,
+      "TIME": 62.89578247,
+      "DATE": 20010322,
+      "PHASE": "HGELM",
+      "ELMTYPE": "TYPE-I",
+      "full_row": 9213
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54197,
+      "TIME": 62.37139893,
+      "DATE": 20010323,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9215
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 54218,
+      "TIME": 61.61239624,
+      "DATE": 20010326,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9218
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 63084,
+      "TIME": 61.11560059,
+      "DATE": 20040217,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9702
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 63084,
+      "TIME": 64.38616943,
+      "DATE": 20040217,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9703
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 63085,
+      "TIME": 61.11560059,
+      "DATE": 20040217,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9704
+    },
+    {
+      "TOK": "JET",
+      "SHOT": 63085,
+      "TIME": 64.38616943,
+      "DATE": 20040217,
+      "PHASE": "HSELM",
+      "ELMTYPE": "TYPE-III",
+      "full_row": 9705
+    },
+    {
+      "TOK": "JFT2M",
+      "SHOT": 78913,
+      "TIME": 0.78,
+      "DATE": 19940714,
+      "PHASE": "HSELM",
+      "ELMTYPE": "UNKNOWN",
+      "full_row": 11416
+    },
+    {
+      "TOK": "MAST",
+      "SHOT": 6249,
+      "TIME": 0.25,
+      "DATE": 20020508,
+      "PHASE": "HSELM",
+      "ELMTYPE": "UNKNOWN",
+      "full_row": 11804
+    },
+    {
+      "TOK": "MAST",
+      "SHOT": 6271,
+      "TIME": 0.21,
+      "DATE": 20020508,
+      "PHASE": "HSELM",
+      "ELMTYPE": "UNKNOWN",
+      "full_row": 11806
+    },
+    {
+      "TOK": "MAST",
+      "SHOT": 6761,
+      "TIME": 0.33,
+      "DATE": 20020704,
+      "PHASE": "HSELM",
+      "ELMTYPE": "UNKNOWN",
+      "full_row": 11807
+    },
+    {
+      "TOK": "MAST",
+      "SHOT": 6762,
+      "TIME": 0.33,
+      "DATE": 20020704,
+      "PHASE": "HSELM",
+      "ELMTYPE": "UNKNOWN",
+      "full_row": 11808
+    },
+    {
+      "TOK": "TDEV",
+      "SHOT": 32813,
+      "TIME": 0.7,
+      "DATE": 19980324,
+      "PHASE": "HSELM",
+      "ELMTYPE": "UNKNOWN",
+      "full_row": 12552
+    },
+    {
+      "TOK": "TDEV",
+      "SHOT": 32819,
+      "TIME": 0.75,
+      "DATE": 19980324,
+      "PHASE": "HSELM",
+      "ELMTYPE": "UNKNOWN",
+      "full_row": 12553
+    },
+    {
+      "TOK": "TDEV",
+      "SHOT": 33119,
+      "TIME": 0.8,
+      "DATE": 19980407,
+      "PHASE": "HSELM",
+      "ELMTYPE": "UNKNOWN",
+      "full_row": 12562
+    }
+  ]
+}
