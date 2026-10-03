@@ -225,7 +225,7 @@ def _escape(text: str) -> str:
 
 
 def result_table(analysis: dict[str, Any]) -> str:
-    """S17.5: each model under both splits, CICLOP beside HDB5 on the same features."""
+    """S15.5: each model under both splits, CICLOP beside HDB5 on the same features."""
     lines = [
         r"\begin{tabular}{llrrrr}", r"\toprule",
         r"Dataset & Model & pooled CV & matched CV & device held out & ratio \\", r"\midrule",
@@ -247,7 +247,7 @@ def result_table(analysis: dict[str, Any]) -> str:
 
 
 def population_table(analysis: dict[str, Any]) -> str:
-    """S17.3: one row per physical tokamak."""
+    """S15.3: one row per physical tokamak."""
     plan, eligible = analysis["plan"], set(analysis["plan"]["eligible_devices"])
     lines = [r"\begin{tabular}{lrcc}", r"\toprule", r"Device & complete pulses & in HDB5 & scored \\", r"\midrule"]
     for device, rows in sorted(plan["complete_rows_per_device"].items(), key=lambda item: -item[1]):
@@ -259,7 +259,7 @@ def population_table(analysis: dict[str, Any]) -> str:
 
 
 def mapping_table(plan_file: dict[str, Any]) -> str:
-    """S17.2: what stands for each of the study's quantities, from the frozen plan."""
+    """S15.2: what stands for each of the study's quantities, from the frozen plan."""
     mapping, frozen = plan_file["mapping"], set(plan_file["frozen_features"])
     lines = [r"\begin{tabular}{llll}", r"\toprule", r"Quantity & HDB5 & CICLOP column & status \\", r"\midrule"]
     for quantity, (name, hdb5_column) in QUANTITY_NAMES.items():

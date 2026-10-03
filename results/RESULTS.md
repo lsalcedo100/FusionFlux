@@ -1355,8 +1355,8 @@ The two right-hand columns are the counterexample the paper reports rather than
 leaves to a referee. ITPA20 and ITPA20-IL were fitted to selections out of
 DB5.2.3 and are the two best across the ITER-size-matched cut, at 0.165 and
 0.158 against IPB98(y,2)'s 0.194 (both scored on the areal elongation `KAPPAA`
-they are written on, as IPB98(y,2) is), and they are also the two furthest from every
-surface here. The free refit is closer to the kadomtsev surface than either and
+they are written on, as IPB98(y,2) is), and they are also the two furthest from the
+Kadomtsev and collisionless surfaces here. The free refit is closer to the kadomtsev surface than either and
 scores 0.279, the worst of the four. So distance from a surface does not order
 these four by transfer, and nothing in Results 8 or 9 reads it as though it did:
 what the hierarchy measures is what a constraint buys *one* refit on *these*
@@ -2491,7 +2491,7 @@ ITPA one, public, and it shares no device with HDB5. Its rules were written from
 the database's documentation and committed before the file was downloaded
 (`docs/ishcdb-replication-lock.md`), the file and the frozen plan were pinned
 before any model was fitted, and `analysis_ishcdb.py` was run once. Every number
-is in `results/ishcdb.json`, and Sec. S17 of the supplement reports them; none is
+is in `results/ishcdb.json`, and Sec. S15 of the supplement reports them; none is
 repeated here, because the supplement's numbers are bound to that file by
 `tools/ishcdb_tables.py` and this page is not.
 
@@ -2701,9 +2701,11 @@ whatever it shows.
 - **Result 14 does not make the GP the recommended model.** It wins
   cross-validation and comes second at the ITER-size-matched cut, but it does not
   beat the power law on a held-out machine (0.218 against 0.214), and Result
-  8's constrained fit still produces the best blind score at the ITER cut with
-  no hyperparameters at all. `fusionflux predict` still recommends the
-  constrained power law, and Result 14 does not change that.
+  8's constrained fit still produces the lowest score at the ITER cut of any
+  model fitted without the held-out rows, with no hyperparameters at all,
+  though that rung was chosen after the size-cut scores were seen.
+  `fusionflux predict` still selects the constrained power law, and Result 14
+  does not change that.
 - **Result 15's ladder is one ordering of one set of predictors.** Height, then
   leaf area, then leaf mass is a reasonable order of increasing measurement
   difficulty and not the only one. A different sequence could cross zero at a
