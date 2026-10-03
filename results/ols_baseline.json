@@ -1,0 +1,42 @@
+{
+  "dataset_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b",
+  "ols_model": "powerlaw_free",
+  "by_label": {
+    "n_units": 13,
+    "ols_mean_rmsle": 0.2140645545338596,
+    "ridge_mean_rmsle": 0.21407599766914132,
+    "ols_minus_ridge_mean": -1.1443135281681027e-05,
+    "random_forest": {
+      "mean_rmsle": 0.46489304181310953,
+      "n_worse_than_ols": 13,
+      "mean_gap_vs_ols": 0.25082848727924995,
+      "n_worse_than_ridge": 13
+    },
+    "hist_gradient_boosting": {
+      "mean_rmsle": 0.35929191010201667,
+      "n_worse_than_ols": 12,
+      "mean_gap_vs_ols": 0.145227355568157,
+      "n_worse_than_ridge": 12
+    },
+    "unit": "label"
+  },
+  "by_device": {
+    "n_units": 11,
+    "ols_mean_rmsle": 0.2115615892137134,
+    "ridge_mean_rmsle": 0.2114800825557646,
+    "ols_minus_ridge_mean": 8.150665794881803e-05,
+    "random_forest": {
+      "mean_rmsle": 0.5266735840073635,
+      "n_worse_than_ols": 11,
+      "mean_gap_vs_ols": 0.3151119947936501,
+      "n_worse_than_ridge": 11
+    },
+    "hist_gradient_boosting": {
+      "mean_rmsle": 0.4087268827424101,
+      "n_worse_than_ols": 10,
+      "mean_gap_vs_ols": 0.19716529352869666,
+      "n_worse_than_ridge": 10
+    },
+    "unit": "device"
+  }
+}

@@ -61,6 +61,8 @@ results:
 	python3 analysis_dimensional.py
 	python3 analysis_conformal_shift.py
 	python3 analysis_device_calibration.py
+	python3 analysis_ols_baseline.py
+	python3 tools/audit_std5_membership.py
 	python3 analysis_replication.py
 	python3 analysis_forecast.py
 	python3 analysis_allometry.py
