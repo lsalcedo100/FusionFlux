@@ -1102,6 +1102,15 @@ CLAIMS: tuple[Claim, ...] = (
         phrases=lambda n: (f"{n} rows",),
     ),
     Claim(
+        "flagged rows beyond the published STD5 count",
+        "31",
+        # 7537 is the count the database description prints; the file is the
+        # artifact, the description is the literature.
+        lambda a: a["membership"]["seldb5_rows_in_full_file"] - 7537,
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"{n} more than",),
+    ),
+    Claim(
         "STD5-flagged rows without an ELM classification",
         "1304",
         lambda a: a["membership"]["seldb5_non_elmy_rows"],
@@ -2023,8 +2032,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    136: "One hundred and thirty-six",
-    173: "one hundred and seventy-three",
+    137: "One hundred and thirty-seven",
+    174: "one hundred and seventy-four",
 }
 
 

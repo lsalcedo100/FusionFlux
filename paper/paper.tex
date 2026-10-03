@@ -197,9 +197,10 @@ here is an inversion between families.
 \section{Data and methods}
 \label{sec:data}
 
-\paragraph{Data.} The ITPA Global H-mode Confinement Database, standard
-analysis set STD5 of revision DB5.2.3\cite{hdb5}, obtained from the Open
-Science Framework (OSF) deposit\cite{osfdb}. The file holds 6228 rows from 4471
+\paragraph{Data.} The ITPA Global H-mode Confinement Database, revision
+DB5.2.3\cite{hdb5}, in the file the Open Science Framework (OSF)
+deposit\cite{osfdb} distributes as its standard analysis set STD5. The file
+holds 6228 rows from 4471
 discharges across 18 device/wall labels, which are 16 physical devices once the
 two JET entries and the two ASDEX Upgrade entries are each merged. No row fails
 the cleaning rule, which requires every used column to be finite and positive,
@@ -208,13 +209,15 @@ description gives STD5 as 7537 points from 18 machines, and the deposit
 delivers 6228 under that name. Matching every delivered row to the full
 DB5.2.3 file on device, shot and time settles what they are: all 6228 carry
 the full file's STD5 flag, and all are ELMy H-mode rows, phases HGELM, HSELM,
-HGELMH and HSELMH. The full file flags 7568 rows. Of those, 1304 are H-mode
-rows with no ELM classification, none of them delivered, and 6264 are ELMy,
-of which 6228 are delivered and 36 are absent for a reason the files do not
-record; the two devices in the published count that the file lacks, T-10 and
-TUMAN-3M, have no ELMy rows. The delivered file is therefore the ELMy H-mode
-part of STD5, and it is analysed as delivered (Sec.~S20 gives the audit). The
-target is the
+HGELMH and HSELMH. The full deposited revision flags 7568 rows, 31 more than
+the 7537 the description reports, so exact identity with the published STD5
+membership cannot be established from the deposited files. Of the 7568, 1304
+are H-mode rows with no ELM classification, none of them delivered, and 6264
+are ELMy, of which 6228 are delivered and 36 are absent for a reason the
+files do not record; the two devices in the published count that the file
+lacks, T-10 and TUMAN-3M, have no ELMy rows. The analysed file is therefore
+the ELMy H-mode rows of the deposited STD5 selection, less 36, and it is
+analysed as delivered (Sec.~S20 gives the audit). The target is the
 thermal confinement time \texttt{TAUTH}. The file is pinned by SHA-256 and
 verified on load, so every number below refers to one set of bytes.
 
@@ -1160,13 +1163,13 @@ and figure in this paper and its supplementary material are openly available
 under the MIT licence at \url{https://github.com/lsalcedo100/FusionFlux}, and
 the version used here is archived with a persistent identifier\cite{zenodo} at
 \href{https://doi.org/10.5281/zenodo.23114029}{doi:10.5281/zenodo.23114029}
-(v0.4.17; the DOI for all versions is
+(v0.4.18; the DOI for all versions is
 \href{https://doi.org/10.5281/zenodo.22215142}{10.5281/zenodo.22215142}). Every
 number and figure was produced at commit
 \texttt{84cf8f62e07120e848297370d13f830a7f5a7276}, and every script verifies the
 pinned data fingerprints as it loads and refuses to run if they disagree.
-\textbf{One hundred and thirty-six} of the numbers printed in this paper, and
-\textbf{one hundred and seventy-three} across it and its supplementary material, are tied by
+\textbf{One hundred and thirty-seven} of the numbers printed in this paper, and
+\textbf{one hundred and seventy-four} across it and its supplementary material, are tied by
 test to the field of the generated file they came from, so a rerun that moved a
 value, or an edit that changed one, fails the test suite (Sec.~S20).
 
@@ -1344,7 +1347,7 @@ regression,'' \emph{Rev.\ Sci.\ Instrum.} \textbf{87}, 11D423 (2016).
 \emph{International Stellarator-Heliotron Confinement Database}, version 26
 [dataset], IPP Greifswald and NIFS. \url{https://ishpdb.ipp-hgw.mpg.de/ISS/}
 \bibitem{zenodo} L. Salcedo, \emph{FusionFlux: extrapolation, long-range
-saturation and physics constraints in confinement scaling}, version v0.4.17,
+saturation and physics constraints in confinement scaling}, version v0.4.18,
 Zenodo (2026).
 \href{https://doi.org/10.5281/zenodo.23114029}{doi:10.5281/zenodo.23114029}
 \end{thebibliography}
