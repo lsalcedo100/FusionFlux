@@ -221,7 +221,7 @@ Two things to settle that are not in any file here:
   so leading with it hands the editor the first referee objection unprompted.
   And a letter whose lead contribution the title does not mention reads as an
   author unsure what the paper is. The constraint still appears, second, with
-  the prospective Kadomtsev result in front of it.
+  the literature-fixed Kadomtsev result in front of it.
 
 A preprint is compatible with AIP policy, which asks for its DOI at submission,
 and journal submission needs no arXiv endorsement, so the endorsement problem in `docs/releasing.md`
