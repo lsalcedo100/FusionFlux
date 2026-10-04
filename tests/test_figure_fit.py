@@ -32,8 +32,9 @@ ROOT = Path(__file__).resolve().parent.parent
 DOCUMENTS = (ROOT / "paper" / "paper.tex", ROOT / "paper" / "supplementary.tex")
 
 PT_PER_CM = 72.27 / 2.54
-# The supplement: \documentclass[12pt,a4paper] with \usepackage[margin=2.4cm]{geometry}.
-PAGE_CM, MARGIN_CM = (21.0, 29.7), 2.4
+# The supplement: \documentclass[12pt,letterpaper] with \usepackage[margin=2.4cm]{geometry},
+# US letter like the REVTeX main text, so the two PDFs share a page size.
+PAGE_CM, MARGIN_CM = (21.59, 27.94), 2.4
 LINEWIDTH_PT = (PAGE_CM[0] - 2 * MARGIN_CM) * PT_PER_CM
 TEXTHEIGHT_PT = (PAGE_CM[1] - 2 * MARGIN_CM) * PT_PER_CM
 # \captionsetup{font=small} under a 12 pt class: 10.95 pt type on a 13.6 pt baseline,
@@ -92,15 +93,21 @@ def test_the_geometry_is_the_one_the_documents_declare() -> None:
     paper, supplement = (document.read_text(encoding="utf-8") for document in DOCUMENTS)
     assert REVTEX_CLASS in paper, "paper.tex"
     assert "geometry}" not in paper and "captionsetup" not in paper, "paper.tex overrides REVTeX's layout"
-    assert r"\documentclass[12pt,a4paper]{article}" in supplement, "supplementary.tex"
+    assert r"\documentclass[12pt,letterpaper]{article}" in supplement, "supplementary.tex"
     assert r"\usepackage[margin=2.4cm]{geometry}" in supplement, "supplementary.tex"
     assert r"\captionsetup{font=small" in supplement, "supplementary.tex"
 
 
 def test_the_sum_reproduces_the_overflow_latex_reported() -> None:
-    """The old Figure 1: 9.4 in tall at 6.6 in wide, under an eight-line caption."""
+    """The old Figure 1: 9.4 in tall at 6.6 in wide, under an eight-line caption.
+
+    LaTeX reported that overflow while the supplement was set on A4, so the
+    calibration is checked against the A4 text block it was measured on, not
+    the US-letter block the supplement uses now.
+    """
+    a4 = {**ARTICLE, "linewidth": (21.0 - 2 * MARGIN_CM) * PT_PER_CM, "textheight": (29.7 - 2 * MARGIN_CM) * PT_PER_CM}
     eight_lines = 8 * CHARACTERS_PER_LINE
-    overflow = float_height_pt(9.4 / 6.6, eight_lines) - TEXTHEIGHT_PT
+    overflow = float_height_pt(9.4 / 6.6, eight_lines, a4) - a4["textheight"]
     assert overflow == pytest.approx(66.8, abs=0.3)
 
 
