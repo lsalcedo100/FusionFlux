@@ -579,7 +579,7 @@ def predict(
             f"Any range-bounded model is capped at {card.training_ceiling_s:.3f} s here, the "
             f"largest confinement time in the training data, which is a factor of "
             f"{recommended_tau / card.training_ceiling_s:.1f} below the {recommended_tau:.2f} s "
-            "recommended above. By Result 4c a tree ensemble averages training targets, so no "
+            "selected above. By Result 4c a tree ensemble averages training targets, so no "
             "random forest or gradient booster can return the right answer for this machine "
             "whatever its inputs, features or tuning. It is structurally wrong here rather than "
             "merely uncertain, and that is decidable from the inputs alone."
@@ -622,7 +622,10 @@ def format_prediction(result: ConfinementPrediction) -> str:
             f"{'(cannot exceed)':>22}{'NO':>8}"
         )
     lines.append("")
-    lines.append(f"  * recommended: {MODEL_LABELS[result.recommended_model]}")
+    lines.append(
+        f"  * selected: {MODEL_LABELS[result.recommended_model]} (the constrained fit that scored lowest "
+        "at the size cut; that rung was chosen after the size-cut scores were seen)"
+    )
     for warning in result.warnings:
         lines.append("")
         for chunk in _wrap(warning, 76):

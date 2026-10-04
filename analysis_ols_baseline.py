@@ -50,11 +50,20 @@ def _comparison(per_unit: pd.DataFrame, unit: str) -> dict[str, Any]:
     }
     for name in ENSEMBLES:
         gap = scores[name] - scores[OLS]
+        ridge_gap = scores[name] - scores[RIDGE]
+        # With eleven or thirteen dependent units the mean gap's bootstrap
+        # interval is a loose summary; the median, and how far the mean moves
+        # when any one unit is dropped, say the same thing with no resampling.
+        drop_one = [float(ridge_gap.drop(unit).mean()) for unit in ridge_gap.index]
         out[name] = {
             "mean_rmsle": float(scores[name].mean()),
             "n_worse_than_ols": int((gap > 0).sum()),
             "mean_gap_vs_ols": float(gap.mean()),
-            "n_worse_than_ridge": int((scores[name] - scores[RIDGE] > 0).sum()),
+            "n_worse_than_ridge": int((ridge_gap > 0).sum()),
+            "mean_gap_vs_ridge": float(ridge_gap.mean()),
+            "median_gap_vs_ridge": float(ridge_gap.median()),
+            "min_gap_vs_ridge": float(ridge_gap.min()),
+            "drop_one_unit_mean_gap_vs_ridge": {"min": min(drop_one), "max": max(drop_one)},
         }
     out["unit"] = unit
     return out

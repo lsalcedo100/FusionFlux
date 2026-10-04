@@ -227,7 +227,8 @@ def test_report_names_the_ceiling_when_it_applies() -> None:
     card = _card_or_skip()
     text = predictor.format_prediction(predictor.predict(**ITER, card=card))
     assert "cannot exceed" in text
-    assert "recommended" in text
+    assert "selected:" in text
+    assert "recommended" not in text
     assert "cannot exceed" not in predictor.format_prediction(predictor.predict(**IN_RANGE, card=card))
 
 
