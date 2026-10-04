@@ -63,6 +63,7 @@ results:
 	python3 analysis_device_calibration.py
 	python3 analysis_ols_baseline.py
 	python3 analysis_joint_control.py
+	python3 analysis_eight_features.py
 	python3 tools/audit_std5_membership.py
 	python3 analysis_replication.py
 	python3 analysis_forecast.py
