@@ -54,7 +54,7 @@ label and almost none at the size cut; the table lists one multiplicative
 half-width per model.
 
 TABLE VI. The Connor-Taylor hierarchy in order, with each row's selection
-status. The prospective Kadomtsev constraint lowers the size-cut error at no
+status. The literature-fixed Kadomtsev constraint lowers the size-cut error at no
 in-sample cost, the exploratory collisionless constraint lowers it most, and
 the electrostatic constraint raises the in-sample and leave-one-out errors
 above the unconstrained fit's.

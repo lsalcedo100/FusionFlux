@@ -104,6 +104,7 @@ def artifacts() -> dict[str, object]:
         "ols": _json("ols_baseline.json"),
         "membership": _json("std5_membership.json"),
         "joint": _json("joint_control.json"),
+        "eight": _json("eight_features.json"),
     }
 
 
@@ -1093,6 +1094,45 @@ CLAIMS: tuple[Claim, ...] = (
         _r(4),
         documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
         phrases=lambda n: (f"by {n} in mean", f"erence of {n}. Against"),
+    ),
+    # -- Sec. 2 and S9: the eight independent features ----------------------
+    Claim(
+        "eight features, forest losses by label",
+        "13",
+        lambda a: a["eight"]["arms"]["eight_features"]["by_label"]["n_forest_worse"],
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"still loses on {n} of 13 labels and 11", f"loses to the power law on {n} of 13"),
+    ),
+    Claim(
+        "eight features, forest losses by device",
+        "11",
+        lambda a: a["eight"]["arms"]["eight_features"]["by_device"]["n_forest_worse"],
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"13 of 13 labels and {n} of 11 devices, at gaps of $+0.240$", f"13 of 13 labels and {n} of 11 devices at mean gaps of $+0.240$", f"{n} of 11 devices, at gaps of +0.240", f"{n} of 11 devices at mean gaps of +0.240"),
+    ),
+    Claim(
+        "eight features, label gap",
+        "+0.240",
+        lambda a: a["eight"]["arms"]["eight_features"]["by_label"]["mean_difference"],
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"gaps of ${n}$", f"gaps of {n}"),
+    ),
+    Claim(
+        "eight features, device gap",
+        "+0.304",
+        lambda a: a["eight"]["arms"]["eight_features"]["by_device"]["mean_difference"],
+        lambda v: f"{v:+.3f}",
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"and ${n}$", f"and {n}"),
+    ),
+    Claim(
+        "eight features, forest at the size cut",
+        "0.973",
+        lambda a: a["eight"]["arms"]["eight_features"]["size_cut_rmsle"]["random_forest"],
+        _r(3),
+        documents=(PAPER, PAPER_PDF, SUPPLEMENTARY, SUPPLEMENTARY_PDF),
+        phrases=lambda n: (f"scores {n} against",),
     ),
     # -- Sec. 7: the constrained fit against IPB98(y,2) at ITER ---------------
     Claim(
@@ -2122,8 +2162,8 @@ def test_the_margin_check_is_reading_something(artifacts: dict) -> None:
 # claim. Spelled out in the prose, so the numerals are written here.
 
 SPELLED = {
-    144: "One hundred and forty-four",
-    185: "one hundred and eighty-five",
+    149: "One hundred and forty-nine",
+    190: "one hundred and ninety",
 }
 
 

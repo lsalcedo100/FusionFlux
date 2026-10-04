@@ -57,27 +57,27 @@ rankings for energy-confinement scaling}
 \begin{abstract}
 Confinement scaling laws are fitted to existing tokamaks and used to size ones
 not yet built, so what matters is accuracy on an unseen device. On the
-6228-row file the OSF deposit distributes as the standard analysis set of the
-ITPA Global H-mode Confinement Database (DB5.2.3; 16 devices),
-cross-validation that holds out discharges ranks a random forest 29\% more
-accurate than a refitted power law. Holding out whole devices reverses the
+6228-row file distributed as the standard analysis set of the ITPA Global
+H-mode Confinement Database (DB5.2.3; 16 devices), cross-validation that holds
+out discharges gives a random forest 29\% lower log-RMSE than a refitted power
+law. Holding out whole devices reverses the
 ranking: the forest is worse than the power law on all 11 devices with enough
-data to score. The reversal survives, though not on every device, when stored
-energy replaces confinement time as the target and, in a diagnostic that is
-not blind to the target, when the features are replaced by dimensionless groups
-that carry less device identity.
+data to score. The reversal survives, on most devices, with stored energy as the target and,
+in a diagnostic not blind to the target, in dimensionless groups carrying less
+device identity.
 % ishcdb:begin
 It reproduces on all 7 eligible devices of the stellarator-heliotron
-confinement database, in an analysis fixed before those data were downloaded.
+confinement database, in an analysis fixed before the data were downloaded.
 % ishcdb:end
-At a size cut matching ITER's $1.82$-fold step in major radius, 90\%
-split-conformal intervals cover 3\% and 0.3\% of held-out rows for the two
-tree ensembles, with widths that change by under 1.5\%, so they give no sign
-of failing. Across that cut, Connor--Taylor constraints on the exponents and a
-Gaussian process with a linear kernel term both reduce the error. An ablation
-that varies only the long-range mean is consistent with loss of a continuing
-trend as one contributor, beyond flexibility alone, in the models tested. Four
-reporting checks follow, three of which need no extra fitting.
+At an internal size cut matching ITER's $1.82$-fold step in major radius,
+with one device supplying 96\% of the held-out rows, 90\% split-conformal
+intervals calibrated on held-out discharges cover 3\% and 0.3\% of those rows
+for the two tree ensembles at widths that change by under 1.5\%: width does
+not diagnose the loss of coverage. Across that cut, Connor--Taylor
+constraints on the exponents and a Gaussian process with a linear kernel term
+both reduce the error, and an ablation that varies only the long-range mean
+is consistent with loss of a continuing trend as one contributor, beyond
+flexibility alone. Four reporting checks follow, three without extra fitting.
 \end{abstract}
 
 \keywords{tokamak energy confinement; confinement scaling; machine learning;
@@ -100,8 +100,8 @@ that does not exist yet\cite{ipb98}: a power law in the engineering parameters,
 \end{equation}
 fitted by least squares across discharges from the multi-machine confinement
 database. In log space Eq.~\eqref{eq:powerlaw} is a linear model. The
-reference fit is IPB98(y,2)\cite{ipb98}, whose exponents were used to size
-ITER. The database is still maintained and republished\cite{hdb5}, and the 2007
+reference fit is IPB98(y,2)\cite{ipb98}, which served as the reference
+H-mode confinement scaling in ITER's design and performance projections. The database is still maintained and republished\cite{hdb5}, and the 2007
 revision of the ITER physics basis kept IPB98(y,2) as the reference H-mode
 scaling\cite{doyle07}.
 
@@ -128,8 +128,8 @@ ensembles\cite{xiong}, deep ensembles with features aligned across
 machines\cite{namseo}, and a Kolmogorov--Arnold network learned as a residual
 on a power law\cite{wang}. Measured the usual way, the flexible models win. On
 the rows used here, a random forest scores 0.128 in log-RMSE against 0.181 for
-a power law refitted in the same folds, a margin of 29\%, and 0.199 for the
-published IPB98(y,2) law, a margin of 36\%.
+a power law refitted in the same folds, 29\% lower, and 0.199 for the
+published IPB98(y,2) law, 36\% lower.
 
 That comparison holds out discharges, and every machine in a held-out fold also
 appears in the training folds. A held-out row has hundreds of near neighbours
@@ -159,7 +159,8 @@ downloaded on the stellarator-heliotron confinement database\cite{iss04}, which
 shares no device with the tokamak one, reproduces the inversion on every
 eligible held-out device.
 % ishcdb:end
-\item \emph{Calibrated intervals fail without warning.} At a size cut matched to
+\item \emph{Discharge-calibrated intervals fail under device shift without
+warning.} At a size cut matched to
 ITER's step in major radius, split-conformal intervals set to 90\% cover 3\%
 and 0.3\% of held-out rows for the two tree ensembles, and their width moves
 by under 1.5\%.
@@ -173,13 +174,13 @@ in the models tested.
 need no refit.
 \end{enumerate}
 
-The closest prior work covers parts of this picture. Wang \emph{et al.}\cite{wang}, on the same
-database revision, find that an unanchored network behaves unpredictably
+The closest prior work covers parts of this picture. Wang \emph{et al.}\cite{wang},
+in a preprint on the same database revision, find that an unanchored network behaves unpredictably
 outside the training distribution and that anchoring it to a power law helps.
 Their held-out cohorts are defined by thresholds on parameter ranges, inside
 the population of machines already seen, and they note that their approach
-cannot substitute for device coverage. Butt \emph{et al.}\cite{butt} hold out
-whole machines on the same standard set and find that adding parameters to a
+cannot substitute for device coverage. Butt \emph{et al.}\cite{butt}, also
+in a preprint, hold out whole machines on the same standard set and find that adding parameters to a
 power law improves the in-sample fit and worsens extrapolation, but they score
 no flexible model. Nam and Seo\cite{namseo} build a cross-machine framework,
 aligning features across devices and predicting with deep ensembles, and score
@@ -237,12 +238,15 @@ Gaussian-process models joined with or after that analysis, as controls. None
 is tuned for the headline comparison. Every
 consequential setting is written out in Sec.~S5 of the supplementary material,
 and Sec.~\ref{sec:robustness} reports a nested search. Minor radius is
-reconstructed as $a=\epsilon R$ and kept, because the tree ensembles see only
-the columns they are given and a minor radius is what a modeller would hand
-them, so the nine features carry one exact dependency; the refit of
-Eq.~\eqref{eq:powerlaw} on the eight independent variables plus an intercept
-has condition number 10.7, and Sec.~S12 audits the rank of the design and the
-refitted exponents. IPB98(y,2), evaluated analytically, is a historical reference and
+reconstructed as $a=\epsilon R$ and kept, because a minor radius is what a
+modeller would hand a model, so the nine features carry one exact dependency;
+the refit of Eq.~\eqref{eq:powerlaw} on the eight independent variables plus
+an intercept has condition number 10.7, and Sec.~S12 audits the rank of the
+design and the refitted exponents. A tree can split on $a$, $R$ and
+$\epsilon$ separately, so the three primary models are also scored on the
+eight independent features: the forest still loses on 13 of 13 labels and 11
+of 11 devices, at gaps of $+0.240$ and $+0.304$, and scores 0.973 against the
+power law's 0.278 across the size cut (Sec.~S9). IPB98(y,2), evaluated analytically, is a historical reference and
 not a competitor. It was fitted in 1998 to DB2.8, a predecessor that overlaps
 this database heavily in devices and regimes\cite{hdb5}, so it has seen most
 of the machines held out below. Its prediction is never used as a feature, and
@@ -367,8 +371,8 @@ IPB98(y,2), analytic     & 0.199 & 0.188 & 1.0$\times$ \\
 Table~\ref{tab:reversal} is the central result. Of the three primary models, a
 power law, a random forest and a gradient booster, the forest is best under
 cross-validation and worst on a label it has not seen. Against the power law
-refitted in the same folds it is 29\% better in the CV column and 117\% worse
-in the LOLO column. What holds in every partition tested is that the power law
+refitted in the same folds its log-RMSE is 29\% lower in the CV column and
+117\% higher in the LOLO column. What holds in every partition tested is that the power law
 and the two ensembles trade places. The order of the two ensembles between
 themselves does not hold: they are 0.002 apart under cross-validation, and over
 ten shuffled partitions the forest is ahead of the booster in 2 of 10. The two
@@ -377,7 +381,7 @@ polynomial rungs are controls, outside the ranking claim.
 The labels differ enormously in difficulty, so the right test is the paired
 per-label difference. The random forest is worse than the log-linear power law
 on \textbf{13 of 13} database labels, at a mean gap of $+0.251$ with a 95\%
-interval of $[+0.157,+0.342]$, and the gradient booster is worse on 12 of 13.
+descriptive bootstrap interval of $[+0.157,+0.342]$, and the gradient booster is worse on 12 of 13.
 Over the 11 physical devices the forest loses on all 11, and the gap widens to
 $+0.315$, $[+0.221,+0.408]$; the median device gap is $+0.349$, the smallest
 $+0.006$, and dropping any one device leaves the mean between $+0.290$ and
@@ -650,7 +654,7 @@ this cut $\log\rho^{*}$ and $\log\nu^{*}$ separate as well as size does
 collisionality, and no claim rests on it alone. The claim that rests on many
 machines is the leave-one-device-out result of Sec.~\ref{sec:reversal}.
 
-\section{Calibrated intervals that miss without widening}
+\section{Discharge-calibrated intervals that miss under device shift without widening}
 \label{sec:conformal}
 
 For a next-step device the point error is not the deliverable; the interval is.
@@ -797,7 +801,8 @@ constraint is the only difference.
 hierarchy, scored at the ITER-size-matched cut. Among the four power-law
 rows only the constraint differs: the same features, the same solver, no
 hyperparameter. \emph{Status} says how each row entered: the Kadomtsev row is
-prospective, fixed by the literature before this analysis; the collisionless
+literature-fixed, specified by prior physics rather than selected here, though
+every rung was scored at the cut in the same run; the collisionless
 and electrostatic rows and the hybrid are exploratory, scored and compared
 after the size-cut scores had been seen. LODO is the held-out score over the
 11 physical devices. \emph{Worse on} counts the devices on which a row scores
@@ -809,7 +814,7 @@ calibrates that column.}
 Model & status & in sample & CV & LOLO & LODO & worse on & ITER cut \\
 \hline
 power law, unconstrained & reference & 0.1808 & 0.181 & 0.214 & 0.212 & 8/11$^{\mathrm{b)}}$ & 0.279 \\
-power law, Kadomtsev & prospective & 0.1808 & 0.181 & 0.210 & 0.211 & 7/11 & 0.254 \\
+power law, Kadomtsev & literature-fixed & 0.1808 & 0.181 & 0.210 & 0.211 & 7/11 & 0.254 \\
 power law, collisionless & exploratory & 0.1818 & 0.182 & 0.206 & 0.203 & 5/11 & 0.183 \\
 power law, electrostatic & exploratory & 0.2245 & 0.225 & 0.241 & 0.226 & 8/11 & 0.237 \\
 bounded hybrid (Sec.~S7) & exploratory & n/a & 0.151 & 0.246 & 0.246 & 5/11 & 0.206 \\
@@ -822,8 +827,11 @@ unconstrained fit scored against the ridge spelling of the same power law: the
 calibration for the column, not a result.}
 \end{table*}
 
-The Kadomtsev rung is \emph{prospective}. Kadomtsev specified it in 1975, and it
-was enforced when IPB98(y,2) was fitted, so nothing about it was selected here.
+The Kadomtsev rung is \emph{literature-fixed}. Kadomtsev specified it in 1975,
+and it was enforced when IPB98(y,2) was fitted, so nothing about it was
+selected here; it was not, however, registered before the size-cut scores
+existed in the way the external replication of Sec.~S15 was, and all three
+rungs were scored in one run.
 It is free: at 0.1808 in sample it matches the unconstrained fit to four
 decimals, because the data already satisfy it. It still beats the unconstrained
 fit at every one of the 15 cuts in the size sweep, including all 8 well-powered
@@ -842,7 +850,7 @@ fitted here without the held-out rows. It was chosen after the three rungs had
 been scored at that cut, so 0.183 is the best of the surfaces examined and not
 a prediction. ITER is expected to be less collisional than the machines in the
 database, which points at this rung for a reason outside the data, but that does
-not make the result prospective. Two published laws score lower at the cut,
+not make the result a prediction. Two published laws score lower at the cut,
 ITPA20-IL at 0.158 and ITPA20 at 0.165, and both had seen the machines above
 it. One rung further, the electrostatic law degrades to 0.237. Cross-validation
 prefers none of the constraints, so it cannot select the rung that transfers
@@ -886,14 +894,16 @@ $\rho=-0.01$.
 
 A linear term enlarges the function class as well as changing the asymptote, so
 that ladder suggests the mechanism without isolating it. The ablation of
-Table~\ref{tab:meanfunction} isolates it. Write the model as a mean function
+Table~\ref{tab:meanfunction} tests it more directly. Write the model as a mean
+function
 plus a residual process,
 \begin{equation}
 \log\tau = m(x) + g_{\text{RBF}}(x),
 \label{eq:meanfunction}
 \end{equation}
-and fit $g$ identically in every arm, with the same covariance family, tuning
-subsample, seed and optimiser; only $m$ changes. With a constant mean the model
+and hold the covariance family, tuning subsample, initialisation, seed and
+optimiser fixed across the arms, re-optimising the hyperparameters within each;
+only $m$ is changed by hand. With a constant mean the model
 reproduces the squared-exponential rung to every digit computed, which is the
 control. A fitted power-law mean moves the cut from 1.948 to 0.278, a factor of
 7.0, and 0.278 is plain ridge's score there to six decimals: far from the data
@@ -901,8 +911,8 @@ the residual process has decayed and the model returns its mean. A third arm
 keeps that from being a tautology. Its mean also trends, with IPB98(y,2)'s
 published exponents, fitted to nothing here. Swapping it in moves the cut to
 \textbf{0.186} and the held-out label score from 0.212 to 0.189. Within this
-kernel family a continuing long-range trend is necessary, and the form of the
-trend changes the answer materially.
+kernel family, keeping a continuing long-range trend improves extrapolation
+substantially, and the form of the trend changes the answer materially.
 
 \begin{table}[t]
 \caption{One RBF covariance family and fitting procedure, three mean functions.
@@ -1022,8 +1032,8 @@ linear kernel term are unrelated operations, and both supply long-range
 structure. For practice, the cheaper model was also the stronger one: a power
 law refitted on the same rows costs one least-squares solve and is a stronger
 baseline out of distribution than any tree ensemble scored here. Where a flexible model is wanted, the
-evidence favours one that keeps trending. On this database the prospective
-Kadomtsev constraint is free in sample and the collisionless rung costs 0.001,
+evidence favours one that keeps trending. On this database the
+literature-fixed Kadomtsev constraint is free in sample and the collisionless rung costs 0.001,
 inside the resolution of Sec.~\ref{sec:limitations}; only the electrostatic
 rung costs more than that.
 
@@ -1070,11 +1080,12 @@ rungs, kernels, mean functions, size cuts, thresholds, partitions, feature sets
 and targets, this paper reports of order forty out-of-distribution comparisons,
 with no correction for multiplicity; every $p$-value among them is a nominal
 sign or permutation test over at most thirteen dependent units. The descriptive gaps that carry the paper are
-far clear of its resolution, but its constructive results come from a search,
-and exactly one of them is prospective: the Kadomtsev rung. The collisionless
-rung, the damping of the bounded correction and the interval scheme of the
-locked forecast were each chosen after a held-out score had been seen, and
-should be read as exploratory.
+far clear of its resolution, but its constructive results come from a search.
+The Kadomtsev rung was specified from prior physics rather than selected by
+searching the hierarchy, though it was scored alongside the other rungs; the
+collisionless rung, the damping of the bounded correction and the interval
+scheme of the locked forecast were each chosen after a held-out score had been
+seen, and all of them should be read as exploratory.
 
 \emph{Errors in variables.} Every power-law fit treats the engineering
 parameters as exact, which the confinement-scaling literature has long objected
@@ -1094,8 +1105,9 @@ and only once it runs an H-mode campaign.
 
 \section{Conclusion}
 
-On real confinement data, the model that wins cross-validation by 29\% over a
-log-linear power law refitted in the same folds loses to that power law on all
+On real confinement data, the model with 29\% lower cross-validated log-RMSE
+than a log-linear power law refitted in the same folds loses to that power law
+on all
 13 eligible held-out database labels and on all 11 eligible physical devices.
 A control for the loss power in the target and a diagnostic in dimensionless
 coordinates remove the unanimity of that count but not the effect, although
@@ -1110,9 +1122,10 @@ major radius, the two tree ensembles land closer to a constant predictor than
 to the power law, and their nominal 90\% intervals cover 3\% and 0.3\% of
 held-out rows at unchanged width.
 
-What improved extrapolation here was long-range structure: a Connor--Taylor
-constraint on the exponents, whose Kadomtsev rung costs nothing in sample, and
-a Gaussian process whose mean keeps trending. Across the models tested, poor
+Two interventions that supplied long-range structure improved extrapolation
+across that internal stress test: a Connor--Taylor constraint on the
+exponents, whose Kadomtsev rung costs nothing in sample, and a Gaussian
+process whose mean keeps trending. Across the models tested, poor
 extrapolation goes with predictions that stop tracking the features once the
 input leaves the training data, not with flexibility as such; device identity
 in the features and the loss power in the target each carry part of the
@@ -1178,7 +1191,8 @@ described in its reference paper\cite{hdb5}. File \texttt{hdb5\_std5.csv}.
 \item \textbf{The full DB5.2.3 revision.} Used for the membership audit, for
 the replication on rows the analysed file excludes (Sec.~S2) and for the stored-energy, dimensionless and elongation
 controls, which take \texttt{WTH} and \texttt{KAPPA} from it. A separate
-download from the same OSF project (\url{https://osf.io/download/zhwa3/}). File
+download from the same OSF project\cite{osfdb}
+(\url{https://osf.io/download/zhwa3/}). File
 \texttt{hdb5\_db523.csv}.
 % ishcdb:begin
 \item \textbf{International Stellarator-Heliotron Confinement Database,
@@ -1197,13 +1211,13 @@ and figure in this paper and its supplementary material are openly available
 under the MIT licence at \url{https://github.com/lsalcedo100/FusionFlux}, and
 the version used here is archived with a persistent identifier\cite{zenodo} at
 \href{https://doi.org/10.5281/zenodo.23137601}{doi:10.5281/zenodo.23137601}
-(v0.4.19; the DOI for all versions is
+(v0.4.20; the DOI for all versions is
 \href{https://doi.org/10.5281/zenodo.22215142}{10.5281/zenodo.22215142}). Every
 number and figure was produced at commit
-\texttt{206570233c16068eafa8b15d9bac2851e4c57686}, and every script verifies the
+\texttt{61133011484aef3168ba22df8f3230ab7a348a1c}, and every script verifies the
 pinned data fingerprints as it loads and refuses to run if they disagree.
-\textbf{One hundred and forty-four} of the numbers printed in this paper, and
-\textbf{one hundred and eighty-five} across it and its supplementary material, are tied by
+\textbf{One hundred and forty-nine} of the numbers printed in this paper, and
+\textbf{one hundred and ninety} across it and its supplementary material, are tied by
 test to the field of the generated file they came from, so a rerun that moved a
 value, or an edit that changed one, fails the test suite (Sec.~S18).
 
@@ -1386,7 +1400,7 @@ regression,'' \emph{Rev.\ Sci.\ Instrum.} \textbf{87}, 11D423 (2016).
 \emph{International Stellarator-Heliotron Confinement Database}, version 26
 [dataset], IPP Greifswald and NIFS. \url{https://ishpdb.ipp-hgw.mpg.de/ISS/}
 \bibitem{zenodo} L. Salcedo, \emph{FusionFlux: extrapolation, long-range
-saturation and physics constraints in confinement scaling}, version v0.4.19,
+saturation and physics constraints in confinement scaling}, version v0.4.20,
 Zenodo (2026).
 \href{https://doi.org/10.5281/zenodo.23137601}{doi:10.5281/zenodo.23137601}
 \end{thebibliography}

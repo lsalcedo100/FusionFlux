@@ -11,26 +11,26 @@ repository-code: "https://github.com/lsalcedo100/FusionFlux"
 abstract: >-
   Confinement scaling laws are fitted to existing tokamaks and used to
   size ones not yet built, so what matters is accuracy on an unseen
-  device. On the 6228-row file the OSF deposit distributes as the standard
-  analysis set of the ITPA Global H-mode Confinement Database (DB5.2.3; 16
-  devices), cross-validation that holds out discharges ranks a random
-  forest 29% more accurate than a refitted power law. Holding out whole
-  devices reverses the ranking: the forest is worse than the power law on
-  all 11 devices with enough data to score. The reversal survives, though
-  not on every device, when stored energy replaces confinement time as the
-  target and, in a diagnostic that is not blind to the target, when the
-  features are replaced by dimensionless groups that carry less device
-  identity. It reproduces on all 7 eligible devices of the
-  stellarator-heliotron confinement database, in an analysis fixed before
-  those data were downloaded. At a size cut matching ITER's 1.82-fold step
-  in major radius, 90% split-conformal intervals cover 3% and 0.3% of
-  held-out rows for the two tree ensembles, with widths that change by
-  under 1.5%, so they give no sign of failing. Across that cut,
-  Connor-Taylor constraints on the exponents and a Gaussian process with a
-  linear kernel term both reduce the error. An ablation that varies only
-  the long-range mean is consistent with loss of a continuing trend as one
-  contributor, beyond flexibility alone, in the models tested. Four
-  reporting checks follow, three of which need no extra fitting.
+  device. On the 6228-row file distributed as the standard analysis set of
+  the ITPA Global H-mode Confinement Database (DB5.2.3; 16 devices),
+  cross-validation that holds out discharges gives a random forest 29%
+  lower log-RMSE than a refitted power law. Holding out whole devices
+  reverses the ranking: the forest is worse than the power law on all 11
+  devices with enough data to score. The reversal survives, on most
+  devices, with stored energy as the target and, in a diagnostic not blind
+  to the target, in dimensionless groups carrying less device identity. It
+  reproduces on all 7 eligible devices of the stellarator-heliotron
+  confinement database, in an analysis fixed before the data were
+  downloaded. At an internal size cut matching ITER's 1.82-fold step in
+  major radius, with one device supplying 96% of the held-out rows, 90%
+  split-conformal intervals calibrated on held-out discharges cover 3% and
+  0.3% of those rows for the two tree ensembles at widths that change by
+  under 1.5%: width does not diagnose the loss of coverage. Across that
+  cut, Connor-Taylor constraints on the exponents and a Gaussian process
+  with a linear kernel term both reduce the error, and an ablation that
+  varies only the long-range mean is consistent with loss of a continuing
+  trend as one contributor, beyond flexibility alone. Four reporting
+  checks follow, three without extra fitting.
   Includes a rank-deficiency audit of the design matrix, a from-scratch
   least-squares implementation (Cholesky, QR, SVD), a refit of the
   IPB98(y,2) exponents decomposed along the singular directions of the data,
@@ -49,7 +49,7 @@ keywords:
   - allometry
   - model selection
 license: MIT
-version: 0.4.19
+version: 0.4.20
 doi: 10.5281/zenodo.22215142
 references:
   - type: article
