@@ -1,0 +1,89 @@
+{
+  "dataset_sha256": "67601c2da5c51f90cf6298ff499cccc74d09ac80c2b98c7dde0d8db3ebb9ac5b",
+  "dropped_feature": "log_a_m",
+  "arms": {
+    "nine_features": {
+      "n_features": 9,
+      "features": [
+        "log_ip_ma",
+        "log_bt_t",
+        "log_ne_line_1e19_m3",
+        "log_p_loss_mw",
+        "log_r_m",
+        "log_kappa",
+        "log_inverse_aspect_ratio",
+        "log_m_eff_amu",
+        "log_a_m"
+      ],
+      "target": "tau_th_s",
+      "cv_rmsle": {
+        "random_forest": 0.1277352778940419,
+        "hist_gradient_boosting": 0.12963313235633495,
+        "ridge_loglinear": 0.18123437655884575,
+        "ipb98y2_analytic": 0.19934284163621757,
+        "mean_baseline": 0.8685778027876655
+      },
+      "cv_gain_of_forest": 0.29519288603303684,
+      "by_label": {
+        "n_units": 13,
+        "n_forest_worse": 13,
+        "mean_difference": 0.25081704414396827,
+        "forest_mean_rmsle": 0.46489304181310953,
+        "power_law_mean_rmsle": 0.21407599766914132
+      },
+      "by_device": {
+        "n_units": 11,
+        "n_forest_worse": 11,
+        "mean_difference": 0.3151935014515989,
+        "forest_mean_rmsle": 0.5266735840073635,
+        "power_law_mean_rmsle": 0.2114800825557646
+      },
+      "size_cut_rmsle": {
+        "ridge_loglinear": 0.27782310857361403,
+        "random_forest": 0.9377674151597658,
+        "hist_gradient_boosting": 1.0717519585509527
+      }
+    },
+    "eight_features": {
+      "n_features": 8,
+      "features": [
+        "log_ip_ma",
+        "log_bt_t",
+        "log_ne_line_1e19_m3",
+        "log_p_loss_mw",
+        "log_r_m",
+        "log_kappa",
+        "log_inverse_aspect_ratio",
+        "log_m_eff_amu"
+      ],
+      "target": "tau_th_s",
+      "cv_rmsle": {
+        "random_forest": 0.12781696957628483,
+        "hist_gradient_boosting": 0.13173045645605097,
+        "ridge_loglinear": 0.1812342037112521,
+        "ipb98y2_analytic": 0.19934284163621757,
+        "mean_baseline": 0.8685778027876655
+      },
+      "cv_gain_of_forest": 0.29474146182733396,
+      "by_label": {
+        "n_units": 13,
+        "n_forest_worse": 13,
+        "mean_difference": 0.2400668064000908,
+        "forest_mean_rmsle": 0.4541974495086943,
+        "power_law_mean_rmsle": 0.2141306431086036
+      },
+      "by_device": {
+        "n_units": 11,
+        "n_forest_worse": 11,
+        "mean_difference": 0.30433422235828245,
+        "forest_mean_rmsle": 0.5158842866541872,
+        "power_law_mean_rmsle": 0.21155006429590484
+      },
+      "size_cut_rmsle": {
+        "ridge_loglinear": 0.27778902939261313,
+        "random_forest": 0.9726947728399766,
+        "hist_gradient_boosting": 1.0789912495434422
+      }
+    }
+  }
+}

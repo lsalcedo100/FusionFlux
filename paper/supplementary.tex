@@ -99,8 +99,9 @@ of every input and number.
 Section and equation numbers prefixed S refer to this document; unprefixed
 section names refer to the main text.
 
-Each section here is a result the main text states and relies on. What moved is the construction, the tables and the caveats, not
-the finding.
+Each section supports, stress-tests or documents a result or a methodological
+choice the main text summarises. What moved is the construction, the tables
+and the caveats, not the finding.
 
 \section{Repairing the intervals, and the limit of the repair}
 \label{supp:shift}
@@ -363,8 +364,8 @@ best size-cut calibration for the models that fail most severely there, applied
 with the whole
 database as the training set. Two disclosures belong with that. The scheme was
 chosen after comparing the three in Table~\ref{tab:supshift}, so these intervals
-are exploratory rather than prospectively selected, in the same sense as the
-constraint rung of the constraint section of the main text. And it calibrates over database
+are exploratory rather than specified in advance, in the same sense as the
+collisionless rung of the constraint section of the main text. And it calibrates over database
 labels rather than physical devices, so these are not device-level conformal
 intervals: Table~\ref{tab:supdevice} measures what that distinction costs, and for
 the tree ensembles it is not negligible. The label-level scheme is retained here
@@ -1020,6 +1021,17 @@ device, a mean difference of 0.0001. Against the unpenalised fit the forest
 loses on 13 of 13 labels and 11 of 11 devices, at mean gaps of $+0.251$ and
 $+0.315$, and the booster on 12 of 13 and 10 of 11: the same counts as against
 ridge. The penalty is not what the reversal rests on.
+
+\paragraph{The reconstructed minor radius.} The nine engineering features
+carry one exact dependency, $a=\epsilon R$, which a tree can split on
+separately. \texttt{analysis\_eight\_features.py} scores the three primary
+models on the eight independent features, with the minor radius dropped,
+under every split of the main text. Nothing moves that matters: the forest's
+cross-validation score is 0.128 on both sets, it loses to the power law on
+13 of 13 labels and 11 of 11 devices at mean gaps of $+0.240$ and $+0.304$
+against $+0.251$ and $+0.315$ with nine, and across the ITER-size-matched cut
+it scores 0.973 against 0.938 with nine, where the power law scores 0.278 on
+either set. The redundant column neither helps nor hurts the ensembles.
 
 \paragraph{Two conventions this paper does not follow.} Neither the population
 nor the weighting used above matches how the ITPA scalings were produced, and
