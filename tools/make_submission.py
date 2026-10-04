@@ -238,7 +238,9 @@ which is not tracked, and it is appended below this half when it exists.
 The abstract is already flattened to plain text: the form's abstract box is
 not a markup field, so paste from here rather than from the PDF.
 
-ARTICLE TYPE   Regular Article
+ARTICLE TYPE   Research article: the standard full-length paper, under the name
+               the live Peer X-Press menu gives it (not a Letter or Brief
+               Communication)
 
 TITLE
 {{TITLE}}
