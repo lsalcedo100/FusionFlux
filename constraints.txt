@@ -11,7 +11,7 @@ pandas==2.3.3
 pypdf==6.19.0
 pytest==9.1.1
 pytest-cov==7.1.0
-ruff==0.16.8
+ruff==0.16.9
 scikit-learn==1.7.2
 # Pulled in by scikit-learn rather than named directly, but it supplies the
 # LAPACK paths behind several fits, so it is pinned like anything else the
