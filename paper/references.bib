@@ -7,6 +7,11 @@
 % keys, same DOIs, in both directions. Editing one without the other fails the
 % suite rather than shipping two reference lists that disagree.
 %
+% Physics of Plasmas requires the first ten author names in every reference
+% before "et al." (quality check of 2026-10-06), so every entry here and every
+% printed \bibitem names at least ten authors, or all of them when there are
+% ten or fewer. Author lists were taken from Crossref and arXiv.
+%
 % Every DOI here was resolved against Crossref rather than reconstructed from
 % the volume and page. That check found one error: the symbolic-regression paper
 % cited as Nucl. Fusion 55, 073009 is Plasma Phys. Control. Fusion 57, 014008.
@@ -33,7 +38,8 @@
 
 @article{doyle07,
   author  = {Doyle, E. J. and Houlberg, W. A. and Kamada, Y. and Mukhovatov, V.
-             and Osborne, T. H. and Polevoi, A. and others},
+             and Osborne, T. H. and Polevoi, A. and Bateman, G. and Connor, J. W.
+             and Cordey, J. G. and Fujita, T. and others},
   title   = {Chapter 2: Plasma confinement and transport},
   journal = {Nuclear Fusion},
   volume  = {47},
@@ -73,7 +79,7 @@
 @article{sparccore,
   author  = {Rodriguez-Fernandez, P. and Howard, N. T. and Greenwald, M. J. and
              Creely, A. J. and Hughes, J. W. and Wright, J. C. and Holland, C. and
-             Lin, Y. and Sciortino, F.},
+             Lin, Y. and Sciortino, F. and {the SPARC team}},
   title   = {Predictions of core plasma performance for the {SPARC} tokamak},
   journal = {Journal of Plasma Physics},
   volume  = {86},
@@ -148,7 +154,9 @@
 
 @article{hdb5,
   author  = {Verdoolaege, G. and Kaye, S. M. and Angioni, C. and Kardaun, O. J. W. F.
-             and Maslov, M. and Romanelli, M. and Ryter, F. and Thomsen, K.},
+             and Maslov, M. and Romanelli, M. and Ryter, F. and Thomsen, K.
+             and {the ASDEX Upgrade Team} and {the EUROfusion MST1 Team}
+             and {JET Contributors}},
   title   = {The updated {ITPA} global {H}-mode confinement database:
              description and analysis},
   journal = {Nuclear Fusion},
@@ -202,7 +210,8 @@
 
 @article{creely,
   author  = {Creely, A. J. and Greenwald, M. J. and Ballinger, S. B. and Brunner, D.
-             and Canik, J. and Doody, J. and others},
+             and Canik, J. and Doody, J. and F{\"u}l{\"o}p, T. and Garnier, D. T.
+             and Granetz, R. and Gray, T. K. and others},
   title   = {Overview of the {SPARC} tokamak},
   journal = {Journal of Plasma Physics},
   volume  = {86},
@@ -247,7 +256,9 @@
 
 @article{degrave,
   author  = {Degrave, Jonas and Felici, Federico and Buchli, Jonas and Neunert, Michael
-             and Tracey, Brendan and Carpanese, Francesco and others},
+             and Tracey, Brendan and Carpanese, Francesco and Ewalds, Timo
+             and Hafner, Roland and Abdolmaleki, Abbas and {de las Casas}, Diego
+             and others},
   title   = {Magnetic control of tokamak plasmas through deep reinforcement learning},
   journal = {Nature},
   volume  = {602},
@@ -292,7 +303,9 @@
 
 @article{roberts,
   author  = {Roberts, David R. and Bahn, Volker and Ciuti, Simone and Boyce, Mark S.
-             and Elith, Jane and Guillera-Arroita, Gurutzeta and others},
+             and Elith, Jane and Guillera-Arroita, Gurutzeta and Hauenstein, Severin
+             and Lahoz-Monfort, Jos{\'e} J. and Schr{\"o}der, Boris
+             and Thuiller, Wilfried and others},
   title   = {Cross-validation strategies for data with temporal, spatial,
              hierarchical, or phylogenetic structure},
   journal = {Ecography},
@@ -350,7 +363,8 @@
 }
 
 @article{gao,
-  author  = {Gao, E. and others},
+  author  = {Gao, E. and Wan, C. and Hu, Y. and Wang, M. and Lu, J. and Qu, Z.
+             and Wen, X. and Huang, J. and Chen, Y. and Guo, H. and others},
   title   = {Bayesian neural networks for predicting tokamak energy confinement
              time with uncertainty quantification},
   journal = {Nuclear Fusion},
@@ -408,7 +422,9 @@
 }
 
 @article{yoshida25,
-  author  = {Yoshida, M. and McDermott, R. and Angioni, C. and others},
+  author  = {Yoshida, M. and McDermott, R. M. and Angioni, C. and Camenen, Y.
+             and Citrin, J. and Jakubowski, M. and Hughes, J. W. and Idomura, Y.
+             and Mantica, P. and Mariani, A. and others},
   title   = {Transport and confinement physics: Chapter 2 of the special issue: on the path to tokamak burning plasma operation},
   journal = {Nuclear Fusion},
   volume  = {65},
@@ -433,7 +449,9 @@
 }
 
 @article{jt60saop1,
-  author  = {Yoshida, M. and others},
+  author  = {Yoshida, M. and Wakatsuki, T. and Urano, H. and Inoue, S.
+             and Fukumoto, M. and Nakano, T. and Ohtani, Y. and Sano, R.
+             and Yokoyama, T. and Szepesi, T.},
   title   = {Overview of plasma operation and control studies in the first
              plasma campaign of {JT}-60{SA}},
   journal = {Plasma Physics and Controlled Fusion},
@@ -445,7 +463,9 @@
 }
 
 @article{jt60saop2,
-  author  = {Garcia, J. and others},
+  author  = {Garcia, J. and Yoshida, M. and Urano, H. and Takahashi, K.
+             and Davis, S. and Tomarchio, V. and Phillips, G. and Abe, T.
+             and Aiba, N. and Akazawa, Y. and others},
   title   = {Overview of first {JT}-60{SA} plasma operation and plans in view
              of {ITER} and {DEMO}},
   journal = {Nuclear Fusion},
@@ -501,7 +521,9 @@
 
 @article{cordey,
   author  = {Cordey, J. G. and Thomsen, K. and Chudnovskiy, A. and
-             Kardaun, O. J. W. F. and Takizuka, T. and others},
+             Kardaun, O. J. W. F. and Takizuka, T. and Snipes, J. A.
+             and Greenwald, M. and Sugiyama, L. and Ryter, F. and Kus, A.
+             and others},
   title   = {Scaling of the energy confinement time with $\beta$ and
              collisionality approaching {ITER} conditions},
   journal = {Nuclear Fusion},
@@ -534,7 +556,9 @@
 }
 
 @article{leyland,
-  author  = {Leyland, M. J. and Beurskens, M. N. A. and Frassinetti, L. and Giroud, C. and others},
+  author  = {Leyland, M. J. and Beurskens, M. N. A. and Frassinetti, L. and Giroud, C.
+             and Saarelma, S. and Snyder, P. B. and Flanagan, J. and Jachmich, S.
+             and Kempenaars, M. and Lomas, P. and others},
   title   = {The {H}-mode pedestal structure and its role on confinement in {JET} with a carbon and metal wall},
   journal = {Nuclear Fusion},
   volume  = {55},
@@ -544,7 +568,9 @@
 }
 
 @article{loarte,
-  author  = {Loarte, A. and Pitts, R. A. and Wauters, T. and Nunes, I. and de Vries, P. and others},
+  author  = {Loarte, A. and Pitts, R. A. and Wauters, T. and Nunes, I. and de Vries, P.
+             and Kim, S. H. and K{\"o}chl, F. and Polevoi, A. and Lehnen, M.
+             and Artola, J. and others},
   title   = {The new {ITER} baseline, research plan and open {R\&D} issues},
   journal = {Plasma Physics and Controlled Fusion},
   volume  = {67},
@@ -580,7 +606,8 @@
 
 @article{litaudon24,
   author  = {Litaudon, X. and Bosch, H.-S. and Morisaki, T. and Barbarino, M.
-             and Bock, A. and Belonohy, E. and others},
+             and Bock, A. and Belonohy, E. and Brezinsek, S. and Bucalossi, J.
+             and Coda, S. and Daniel, R. and others},
   title   = {Long plasma duration operation analyses with an international
              multi-machine (tokamaks and stellarators) database},
   journal = {Nuclear Fusion},
@@ -593,7 +620,8 @@
 
 @article{litaudon26,
   author  = {Litaudon, X. and Lerche, E. and Grulke, O. and Holcomb, C. T.
-             and Huang, J. and Jakubowski, M. and others},
+             and Huang, J. and Jakubowski, M. and Kim, H. S. and Manas, P.
+             and Morisaki, T. and Turco, F. and others},
   title   = {Investigating long-duration plasma operation with the international
              multi-machine {CICLOP} database},
   journal = {Nuclear Fusion},
