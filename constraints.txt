@@ -4,14 +4,14 @@
 joblib==1.6.0
 jupyter==1.1.1
 matplotlib==3.10.9
-mypy==2.3.1
+mypy==2.4.1
 numpy==2.2.6
 openpyxl==3.1.5
 pandas==2.3.3
-pypdf==6.19.0
-pytest==9.1.1
+pypdf==6.21.4
+pytest==9.2.0
 pytest-cov==7.1.0
-ruff==0.16.8
+ruff==0.17.3
 scikit-learn==1.7.2
 # Pulled in by scikit-learn rather than named directly, but it supplies the
 # LAPACK paths behind several fits, so it is pinned like anything else the
@@ -32,4 +32,4 @@ scikit-learn==1.7.2
 scipy==1.18.1 ; python_version >= "3.12"
 scipy==1.15.3 ; python_version < "3.12"
 seaborn==0.13.2
-tomli==2.4.1 ; python_version < "3.11"
+tomli==2.5.0 ; python_version < "3.11"
